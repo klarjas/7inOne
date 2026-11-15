@@ -158,10 +158,45 @@ async function ratingsFor(vendorIds) {
 
 app.get('/health', (_req, res) => res.json({ status: 'ok', service: 'EcomStore', database: Boolean(supabase) }));
 // Only the Supabase anon/publishable key is exposed to the browser. Never return the service-role key.
-app.get('/api/config', (_req, res) => res.json({
-  supabaseUrl: supabaseUrl || process.env.NEXT_PUBLIC_SUPABASE_URL || null,
-  supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || null
-}));
+const DEFAULT_MAINTENANCE_MESSAGE = 'ប្រព័ន្ធកំពុងធ្វើការអភិវឌ្ឍន៍ និងបន្ថែមមុខងារថ្មីៗ សូមអធ្យាស្រ័យចំពោះការរំខាន!';
+async function getMaintenanceSettings() {
+  if (!supabase) return { maintenanceMode: false, maintenanceMessage: DEFAULT_MAINTENANCE_MESSAGE };
+  const { data, error } = await supabase.from('site_settings').select('value').eq('key', 'maintenance_mode').maybeSingle();
+  if (error) {
+    console.error('Could not read maintenance settings:', error.message);
+    return { maintenanceMode: false, maintenanceMessage: DEFAULT_MAINTENANCE_MESSAGE };
+  }
+  const value = data?.value || {};
+  return { maintenanceMode: value.maintenanceMode === true, maintenanceMessage: clean(value.maintenanceMessage, 1000) || DEFAULT_MAINTENANCE_MESSAGE };
+}
+app.get('/api/config', async (_req, res) => {
+  const maintenance = await getMaintenanceSettings();
+  res.set('Cache-Control', 'no-store');
+  res.json({ supabaseUrl: supabaseUrl || process.env.NEXT_PUBLIC_SUPABASE_URL || null, supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || null, ...maintenance });
+});
+app.patch('/api/admin/settings', authenticate, requireAdmin, async (req, res) => {
+  if (typeof req.body.maintenanceMode !== 'boolean') return fail(res, 400, 'maintenanceMode must be a boolean.');
+  const settings = { maintenanceMode: req.body.maintenanceMode, maintenanceMessage: clean(req.body.maintenanceMessage, 1000) || DEFAULT_MAINTENANCE_MESSAGE };
+  const { error } = await supabase.from('site_settings').upsert({ key: 'maintenance_mode', value: settings, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+  if (error) { console.error('Could not save maintenance settings:', error.message); return fail(res, 500, 'Could not save system status. Apply the site_settings database migration first.'); }
+  res.json({ data: settings });
+});
+app.use('/api', async (req, res, nextMiddleware) => {
+  if (!['POST','PUT','PATCH','DELETE'].includes(req.method) || req.path === '/admin/settings') return nextMiddleware();
+  try {
+    const settings = await getMaintenanceSettings();
+    if (!settings.maintenanceMode) return nextMiddleware();
+    const token = req.headers.authorization?.replace(/^Bearer\s+/i, '');
+    if (token && supabase) {
+      const { data, error } = await supabase.auth.getUser(token);
+      if (!error && data.user && await isAdmin(data.user.id)) return nextMiddleware();
+    }
+    return res.status(503).json({ error: 'ប្រព័ន្ធកំពុងអភិវឌ្ឍន៍។ សូមព្យាយាមម្តងទៀតនៅពេលក្រោយ។', maintenanceMode: true, maintenanceMessage: settings.maintenanceMessage });
+  } catch (error) {
+    console.error('Maintenance write guard failed:', error.message);
+    return fail(res, 503, 'ប្រព័ន្ធកំពុងអភិវឌ្ឍន៍។ សូមព្យាយាមម្តងទៀតនៅពេលក្រោយ។');
+  }
+});
 
 // Permanent backend media URLs; Telegram file_path is resolved on every request because it expires.
 app.get('/api/media/telegram/:fileId', async (req, res) => {
