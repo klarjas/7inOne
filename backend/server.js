@@ -537,7 +537,7 @@ app.post('/api/vendors/:id/reviews', authenticate, async (req, res) => {
 
 app.get('/api/offers', authenticate, async (req, res) => {
   const [{ data: vendor }, admin] = await Promise.all([vendorFor(req.user.id), isAdmin(req.user.id)]);
-  let query = supabase.from('offers').select('*,products(id,title,price,product_images(id,file_id,sort_order)),vendors(store_name)')
+  let query = supabase.from('offers').select('*,products(id,title,price,product_images(id,file_id,image_url,sort_order)),vendors(store_name)')
     .order('created_at', { ascending: false }).limit(100);
   if (admin) {
     // Admin can review all offer records.
