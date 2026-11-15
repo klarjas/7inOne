@@ -318,7 +318,7 @@ app.patch('/api/products/:id', authenticate, async (req, res) => {
   const admin = await isAdmin(req.user.id);
   const { data: existing } = await supabase.from('products').select('id,vendor_id').eq('id', req.params.id).maybeSingle();
   if (!existing) return fail(res, 404, 'Product not found');
-  if (!admin && (!vendor || vendor.id !== existing.vendor_id)) return fail(res, 403, 'Not allowed');
+  if (!admin && (!vendor || vendor.status !== 'approved' || vendor.id !== existing.vendor_id)) return fail(res, 403, 'Approved store ownership required');
   const patch = {};
   for (const key of ['title','description','category','location','condition']) if (req.body[key] !== undefined) patch[key] = clean(req.body[key], key === 'description' ? 5000 : key === 'title' ? 160 : 100);
   if (req.body.price !== undefined) patch.price = Number(req.body.price);
@@ -342,7 +342,7 @@ app.delete('/api/products/:id', authenticate, async (req, res) => {
   const [{ data: vendor }, admin] = await Promise.all([vendorFor(req.user.id), isAdmin(req.user.id)]);
   const { data: product } = await supabase.from('products').select('id,vendor_id,product_images(id,telegram_message_id)').eq('id', req.params.id).maybeSingle();
   if (!product) return fail(res, 404, 'Product not found');
-  if (!admin && (!vendor || product.vendor_id !== vendor.id)) return fail(res, 403, 'Not allowed');
+  if (!admin && (!vendor || vendor.status !== 'approved' || product.vendor_id !== vendor.id)) return fail(res, 403, 'Approved store ownership required');
   const { count: soldCount } = await supabase.from('order_items').select('id', { count: 'exact', head: true }).eq('product_id', product.id);
   if ((soldCount || 0) > 0) {
     const { error } = await supabase.from('products').update({ status: 'archived', updated_at: new Date().toISOString() }).eq('id', product.id);
