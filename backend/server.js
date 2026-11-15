@@ -220,6 +220,8 @@ app.post('/api/me/media', authenticate, upload.single('file'), async (req, res) 
   if (!['avatar','cover'].includes(type)) return fail(res, 400, 'Invalid profile image type');
   if (!file || !['image/jpeg','image/png','image/webp'].includes(file.mimetype)) return fail(res, 400, 'Choose a JPG, PNG or WEBP image');
   const extension = file.mimetype === 'image/png' ? 'png' : file.mimetype === 'image/webp' ? 'webp' : 'jpg';
+  const { data: priorProfile } = await supabase.from('profiles').select('avatar_path,cover_path').eq('id', req.user.id).maybeSingle();
+  const oldPath = type === 'avatar' ? priorProfile?.avatar_path : priorProfile?.cover_path;
   const path = `${req.user.id}/${type}-${Date.now()}-${randomUUID()}.${extension}`;
   const { error: storageError } = await supabase.storage.from('profile-media').upload(path, file.buffer, { contentType: file.mimetype, upsert: false });
   if (storageError) return fail(res, 502, 'Could not upload profile image. Run the marketplace migration first.');
@@ -229,6 +231,7 @@ app.post('/api/me/media', authenticate, upload.single('file'), async (req, res) 
     await supabase.storage.from('profile-media').remove([path]);
     return fail(res, 500, 'Could not save profile image');
   }
+  if (oldPath && oldPath !== path) await supabase.storage.from('profile-media').remove([oldPath]);
   res.status(201).json({ data: { ...data, avatar_url: publicMediaUrl(data.avatar_path), cover_url: publicMediaUrl(data.cover_path) } });
 });
 app.post('/api/vendors/register', authenticate, upload.single('document'), async (req, res) => {
@@ -253,6 +256,9 @@ app.post('/api/vendors/register', authenticate, upload.single('document'), async
   if (result.error) {
     await supabase.storage.from('seller-verification').remove([path]);
     return fail(res, 400, 'Could not submit seller application');
+  }
+  if (existing?.document_path && existing.document_path !== path) {
+    await supabase.storage.from('seller-verification').remove([existing.document_path]);
   }
   // A pending applicant remains a customer. Vendor privileges are granted only after Admin approval.
   res.status(existing ? 200 : 201).json({ data: result.data });
