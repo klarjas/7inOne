@@ -13,7 +13,9 @@ Full-stack marketplace for Cambodia and international customers. One Render Web 
 - Vendor dashboard: create products, upload up to five images per product to Telegram, manage stock and view orders.
 - Admin dashboard: marketplace metrics, approve/reject/block vendors, approve/reject products and update order/payment statuses.
 - Telegram image proxy; Telegram bot token is never sent to the browser.
-- Role escalation protection: customer accounts cannot update their own profile role.
+- Role escalation protection: customer accounts cannot update their own profile role; Admin role is read from the protected database profile.
+- Public product views, persistent wishlists, buyer-to-seller offers, and reviews restricted to buyers with a completed order.
+- Private seller verification documents are delivered to Admins as short-lived signed URLs; they are not exposed through public product or profile responses.
 - Products with order history are archived instead of physically deleted.
 
 ## Stack
@@ -21,14 +23,16 @@ Full-stack marketplace for Cambodia and international customers. One Render Web 
 - Next.js 15 / React 19 / TypeScript / Tailwind CSS 4
 - Express 5 (ES modules)
 - Supabase Auth + PostgreSQL
-- Telegram Bot API for product image storage
+- Telegram Bot API for product image storage (server-side uploads and image proxy)
+- Supabase Storage: public `profile-media` bucket for avatars/covers; private `seller-verification` bucket for ID/business documents
 
 ## Supabase setup
 
 1. Open the Supabase SQL Editor for the EcomStore project.
-2. Run the complete current `supabase/schema.sql` file from this repository. It is safe to re-run and includes the checkout function and security migration.
-3. Create a customer account through the storefront.
-4. To make your own account the first administrator, replace the email below with the exact email used for that account and run this SQL in the SQL Editor:
+2. Run the complete `supabase/schema.sql` file from this repository.
+3. Run `supabase/p2p_marketplace_migration.sql` after the base schema. This adds profile media, private seller-document storage, saved items, real seller ratings, offers, listing locations/conditions, and listing view counts.
+4. Create a customer account through the storefront.
+5. To make your own account the first administrator, replace the email below with the exact email used for that account and run this SQL in the SQL Editor:
 
 ```sql
 update public.profiles
@@ -39,7 +43,7 @@ where id = (
 );
 ```
 
-The profile row is created automatically the first time the signed-in account calls the API (for example, by opening `/dashboard`). Do not set the role using the public browser client.
+The profile row is created automatically the first time the signed-in account calls the API. Do not set the role using the public browser client. Pending seller applications remain customer accounts; the backend grants the `vendor` role only after an administrator approves the application.
 
 ## Render: one Web Service
 
@@ -71,8 +75,13 @@ Checkout currently supports cash on delivery and a bank-transfer option that rec
 
 - `GET /health`
 - `GET /api/products`, `GET /api/products/:id`, `GET /api/categories`
-- `GET /api/me`, `PATCH /api/me`
-- `POST /api/vendors/register`
+- `GET /api/config` (public Supabase URL + anon key only)
+- `GET /api/me`, `PATCH /api/me`, `POST /api/me/media`
+- `POST /api/vendors/register` (multipart upload to private document storage)
+- `GET /api/vendors/:id/ratings`, `POST /api/vendors/:id/reviews`
+- `GET /api/saved`, `POST/DELETE /api/saved/:productId`
+- `GET /api/offers`, `POST /api/products/:id/offers`, `PATCH /api/offers/:id`
+- `GET /api/vendor/overview`
 - `GET /api/vendor/products`, `POST /api/products`, `PATCH/DELETE /api/products/:id`
 - `POST/DELETE /api/products/:id/images...`
 - `POST /api/orders`, `GET /api/orders`
@@ -80,6 +89,13 @@ Checkout currently supports cash on delivery and a bank-transfer option that rec
 - `GET /api/admin/overview`, `GET /api/admin/vendors`, `PATCH /api/admin/vendors/:id`
 - `GET /api/admin/products`, `PATCH /api/admin/products/:id`
 - `GET /api/admin/orders`, `PATCH /api/admin/orders/:id`
+
+## Storage and authentication
+
+- Product photos continue to use the configured private Telegram channel and are served through the backend image proxy.
+- Avatar and cover uploads use the public Supabase `profile-media` bucket. Seller ID/business documents use the private `seller-verification` bucket.
+- Email/password sign-in uses Supabase Auth. Phone/password sign-in and phone registration require the phone provider and SMS delivery to be enabled in Supabase Auth settings; email sign-up may require email confirmation depending on your Supabase settings.
+- The marketplace frontend no longer includes a demo role switcher or localStorage-based mock seller/admin approvals. The role shown in the UI is read from `/api/me` and privileged actions are checked again by the backend.
 
 ## Important
 
