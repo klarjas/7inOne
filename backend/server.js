@@ -19,6 +19,8 @@ const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const supabase = supabaseUrl && serviceKey ? createClient(supabaseUrl, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } }) : null;
 
 app.disable('x-powered-by');
+// Render sits behind one trusted reverse proxy; use its forwarded client IP for rate limiting.
+app.set('trust proxy', 1);
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors({ origin: process.env.FRONTEND_ORIGIN ? process.env.FRONTEND_ORIGIN.split(',').map(v => v.trim()) : true }));
 app.use(express.json({ limit: '1mb' }));
