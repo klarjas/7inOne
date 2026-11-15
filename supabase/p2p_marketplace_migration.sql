@@ -116,3 +116,16 @@ alter table public.vendors
   add column if not exists document_file_id text,
   add column if not exists document_message_id text,
   add column if not exists document_mime_type text;
+
+
+-- Admin-controlled marketplace maintenance / under-development mode.
+-- The backend uses the service-role client; no public table policies are created.
+create table if not exists public.site_settings (
+  key text primary key,
+  value jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now()
+);
+alter table public.site_settings enable row level security;
+insert into public.site_settings (key, value)
+values ('maintenance_mode', jsonb_build_object('maintenanceMode', false, 'maintenanceMessage', 'ប្រព័ន្ធកំពុងធ្វើការអភិវឌ្ឍន៍ និងបន្ថែមមុខងារថ្មីៗ សូមអធ្យាស្រ័យចំពោះការរំខាន!'))
+on conflict (key) do nothing;
