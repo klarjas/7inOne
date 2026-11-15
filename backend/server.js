@@ -76,15 +76,15 @@ function assertTelegramStorageConfig() {
 }
 async function telegram(method, payload) {
   assertTelegramStorageConfig();
-  const response = await fetch(\`https://api.telegram.org/bot\${process.env.TELEGRAM_BOT_TOKEN}/\${method}\`, payload);
+  const response = await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/${method}`, payload);
   let json;
   try { json = await response.json(); } catch { throw new Error('Telegram returned an invalid response.'); }
   if (!response.ok || !json.ok) {
-    const description = clean(json?.description || \`Telegram HTTP \${response.status}\`, 300);
+    const description = clean(json?.description || `Telegram HTTP ${response.status}`, 300);
     if (/not enough rights|administrator|chat not found|bot was blocked|have no rights/i.test(description)) {
       throw new Error('Telegram bot cannot post to the storage channel. Add the bot as an administrator and allow it to post messages.');
     }
-    throw new Error(\`Telegram upload failed: \${description}\`);
+    throw new Error(`Telegram upload failed: ${description}`);
   }
   return json.result;
 }
@@ -110,7 +110,7 @@ async function deleteTelegramMessage(messageId) {
     });
   } catch (error) { console.warn('Telegram cleanup failed:', error.message); }
 }
-const telegramMediaUrl = fileId => fileId ? \`/api/media/telegram/\${encodeURIComponent(fileId)}\` : null;
+const telegramMediaUrl = fileId => fileId ? `/api/media/telegram/${encodeURIComponent(fileId)}` : null;
 function publicMediaUrl(path) {
   if (!path || !supabase) return null;
   return supabase.storage.from('profile-media').getPublicUrl(path).data.publicUrl;
@@ -131,7 +131,7 @@ async function streamTelegramFile(fileId, res, mimeType = 'application/octet-str
     method: 'POST', headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ file_id: fileId })
   });
-  const fileResponse = await fetch(\`https://api.telegram.org/file/bot\${process.env.TELEGRAM_BOT_TOKEN}/\${file.file_path}\`);
+  const fileResponse = await fetch(`https://api.telegram.org/file/bot${process.env.TELEGRAM_BOT_TOKEN}/${file.file_path}`);
   if (!fileResponse.ok) throw new Error('Telegram file download failed.');
   const detectedType = fileResponse.headers.get('content-type') || mimeType;
   res.set('Content-Type', detectedType);
@@ -681,7 +681,7 @@ app.get('/api/admin/vendors', authenticate, requireAdmin, async (_req, res) => {
   if (error) return fail(res, 500, 'Could not load vendors');
   const enriched = (data || []).map(vendor => {
     const { document_path, document_file_id, document_message_id, ...safeVendor } = vendor;
-    return { ...safeVendor, document_url: vendor.document_file_id ? \`/api/admin/vendors/\${encodeURIComponent(vendor.id)}/document\` : vendor.document_url || null };
+    return { ...safeVendor, document_url: vendor.document_file_id ? `/api/admin/vendors/${encodeURIComponent(vendor.id)}/document` : vendor.document_url || null };
   });
   res.json({ data: enriched });
 });
