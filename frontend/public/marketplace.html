@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#4F46E5">
+  <meta name="description" content="EcomStore — ផ្សារទិញលក់ទំនិញថ្មី និងប្រើរួចនៅកម្ពុជា។">
+  <title>EcomStore — ផ្សារទិញលក់អនឡាញនៅកម្ពុជា</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { khmer: ['Kantumruy Pro', 'sans-serif'] },
+          colors: { brand: '#4F46E5', emerald: '#10B981' }
+        }
+      }
+    };
+  </script>
+  <style>
+    :root{--brand:#4F46E5;--brand-dark:#3730A3;--emerald:#10B981;--ink:#172033;--muted:#778197;--line:#E8ECF4;--page:#F8FAFC}
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:var(--page);color:var(--ink);font-family:'Kantumruy Pro',sans-serif;-webkit-font-smoothing:antialiased}
+    button,input,select,textarea{font:inherit}
+    button{cursor:pointer}
+    .glass{background:rgba(255,255,255,.84);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+    .container-main{width:min(1320px,calc(100% - 40px));margin-inline:auto}
+    .brand-gradient{background:linear-gradient(135deg,#4F46E5 0%,#6366F1 55%,#818CF8 100%)}
+    .hero-glow{background:radial-gradient(circle at 82% 28%,rgba(199,210,254,.48),transparent 28%),radial-gradient(circle at 10% 100%,rgba(129,140,248,.20),transparent 34%),linear-gradient(120deg,#EEF2FF 0%,#F5F7FF 52%,#EDE9FE 100%)}
+    .post-glow{box-shadow:0 8px 24px rgba(79,70,229,.25),0 0 0 0 rgba(99,102,241,.22);animation:softGlow 3s ease-in-out infinite}
+    @keyframes softGlow{0%,100%{box-shadow:0 8px 24px rgba(79,70,229,.20),0 0 0 0 rgba(99,102,241,.15)}50%{box-shadow:0 10px 28px rgba(79,70,229,.30),0 0 0 7px rgba(99,102,241,.06)}}
+    .category-strip{scrollbar-width:none}.category-strip::-webkit-scrollbar{display:none}
+    .category-pill{white-space:nowrap;transition:all .22s ease;border:1px solid #E7EAF2;background:#fff;color:#5E687D}
+    .category-pill:hover{border-color:#C7D2FE;color:var(--brand);transform:translateY(-1px)}
+    .category-pill.active{background:#EEF2FF;border-color:#C7D2FE;color:#4338CA;box-shadow:0 3px 10px rgba(79,70,229,.08)}
+    .product-card{animation:cardEnter .62s cubic-bezier(.16,1,.3,1) both;transition:transform .3s cubic-bezier(.2,.8,.2,1),box-shadow .3s ease,border-color .3s ease}
+    .product-card:hover{transform:translateY(-5px) scale(1.008);box-shadow:0 18px 38px rgba(30,41,59,.10);border-color:#D9DDFB}
+    .product-image{transition:transform .55s cubic-bezier(.2,.8,.2,1)}
+    .product-card:hover .product-image{transform:scale(1.055)}
+    @keyframes cardEnter{from{opacity:0;transform:translateY(18px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
+    .heart-btn{transition:transform .22s cubic-bezier(.2,1.7,.4,1),background .2s ease,color .2s ease}
+    .heart-btn:active{transform:scale(1.28)}
+    .heart-btn.saved{color:#EF476F;background:#FFF0F3}
+    .heart-btn.saved svg{fill:currentColor}
+    .skeleton{position:relative;overflow:hidden;background:#E9EDF5}
+    .skeleton:after{content:"";position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,rgba(255,255,255,.72),transparent);animation:shimmer 1.1s infinite}
+    @keyframes shimmer{100%{transform:translateX(100%)}}
+    .modal-layer{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(15,23,42,.48);backdrop-filter:blur(5px);opacity:0;visibility:hidden;transition:opacity .24s ease,visibility .24s ease}
+    .modal-layer.visible{opacity:1;visibility:visible}
+    .modal-panel{width:min(100%,780px);max-height:min(92vh,900px);overflow:auto;background:white;border-radius:26px;box-shadow:0 30px 90px rgba(15,23,42,.24);transform:translateY(18px) scale(.97);transition:transform .34s cubic-bezier(.16,1,.3,1)}
+    .modal-layer.visible .modal-panel{transform:translateY(0) scale(1)}
+    .modal-panel::-webkit-scrollbar{width:7px}.modal-panel::-webkit-scrollbar-thumb{background:#D9DEEA;border-radius:20px}
+    .field{width:100%;border:1px solid #E4E8F0;border-radius:13px;padding:12px 14px;outline:none;background:#fff;transition:border .2s,box-shadow .2s}
+    .field:focus{border-color:#818CF8;box-shadow:0 0 0 4px rgba(99,102,241,.11)}
+    .field::placeholder{color:#A2AABC}
+    .dropdown{opacity:0;visibility:hidden;transform:translateY(8px);transition:all .18s ease;pointer-events:none}
+    .dropdown.open{opacity:1;visibility:visible;transform:translateY(0);pointer-events:auto}
+    .toast{animation:toastIn .35s cubic-bezier(.16,1,.3,1) both}
+    @keyframes toastIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+    .no-scroll{overflow:hidden}
+    @media(max-width:640px){.container-main{width:min(100% - 28px,1320px)}.modal-layer{padding:10px;align-items:flex-end}.modal-panel{border-radius:24px 24px 18px 18px;max-height:94vh}.hero-title{font-size:2rem;line-height:1.35}}
+  </style>
+</head>
+<body class="font-khmer">
+  <header class="glass sticky top-0 z-50 border-b border-white/70 shadow-[0_3px_18px_rgba(30,41,59,.045)]">
+    <div class="container-main flex min-h-[76px] items-center gap-4 py-3">
+      <a href="#" class="flex shrink-0 items-center gap-2.5" aria-label="EcomStore ទំព័រដើម">
+        <span class="brand-gradient grid h-11 w-11 place-items-center rounded-2xl text-white shadow-lg shadow-indigo-200">
+          <svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5z"/><path d="m4.5 7.8 7.5 4.4 7.5-4.4M12 12.3V21"/></svg>
+        </span>
+        <span class="leading-tight"><span class="block text-[19px] font-bold tracking-tight text-slate-900">Ecom<span class="text-indigo-600">Store</span></span><span class="block text-[10px] font-medium tracking-wide text-slate-400">ផ្សារទិញលក់កម្ពុជា</span></span>
+      </a>
+
+      <form id="searchForm" class="order-3 flex w-full items-center rounded-2xl border border-slate-200/90 bg-slate-50/90 p-1.5 transition focus-within:border-indigo-300 focus-within:bg-white focus-within:shadow-[0_0_0_4px_rgba(99,102,241,.08)] md:order-none md:ml-5 md:flex-1 md:max-w-[650px]">
+        <div class="relative hidden sm:block">
+          <select id="searchCategory" aria-label="ជ្រើសរើសប្រភេទទំនិញ" class="h-10 max-w-[150px] cursor-pointer appearance-none bg-transparent pl-3 pr-7 text-[13px] font-semibold text-slate-600 outline-none">
+            <option value="all">គ្រប់ប្រភេទ</option><option value="phones">ទូរស័ព្ទ & អេឡិចត្រូនិក</option><option value="vehicles">រថយន្ត & ម៉ូតូ</option><option value="property">អចលនទ្រព្យ</option><option value="fashion">សម្លៀកបំពាក់</option><option value="furniture">គ្រឿងសង្ហារិម</option>
+          </select>
+          <span class="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-400" id="searchChevron"></span>
+        </div>
+        <span class="hidden h-7 w-px bg-slate-200 sm:block"></span>
+        <span class="ml-2 text-slate-400" id="searchIcon"></span>
+        <input id="searchInput" type="search" placeholder="ស្វែងរកទំនិញដែលអ្នកចង់បាន..." class="h-10 min-w-0 flex-1 bg-transparent px-2.5 text-[13px] text-slate-700 outline-none placeholder:text-slate-400" autocomplete="off">
+        <button type="submit" class="brand-gradient grid h-10 w-11 shrink-0 place-items-center rounded-xl text-white shadow-md shadow-indigo-200 transition hover:brightness-110 active:scale-95" aria-label="ស្វែងរក" id="searchButton"></button>
+      </form>
+
+      <div class="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">
+        <button id="postAdBtn" class="post-glow hidden items-center gap-2 rounded-xl brand-gradient px-4 py-3 text-[13px] font-bold text-white transition hover:-translate-y-0.5 active:scale-[.98] sm:flex">
+          <span id="postPlusIcon"></span><span>ដាក់លក់ទំនិញ</span>
+        </button>
+        <button id="mobilePostBtn" class="post-glow grid h-10 w-10 place-items-center rounded-xl brand-gradient text-white sm:hidden" aria-label="ដាក់លក់ទំនិញ"></button>
+
+        <div class="relative">
+          <button id="notificationBtn" class="relative grid h-10 w-10 place-items-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:border-indigo-200 hover:text-indigo-600" aria-label="ការជូនដំណឹង">
+            <span id="bellIcon"></span><span class="absolute right-[7px] top-[6px] h-2 w-2 rounded-full border-2 border-white bg-rose-500"></span>
+          </button>
+          <div id="notificationMenu" class="dropdown absolute right-0 top-[calc(100%+12px)] z-[60] w-[min(330px,calc(100vw-28px))] rounded-2xl border border-slate-100 bg-white p-4 shadow-2xl">
+            <div class="mb-3 flex items-center justify-between"><p class="font-bold text-slate-800">ការជូនដំណឹង</p><span class="rounded-full bg-indigo-50 px-2 py-1 text-[10px] font-bold text-indigo-600">ថ្មី ៣</span></div>
+            <div class="space-y-3">
+              <div class="flex gap-3 rounded-xl bg-indigo-50/70 p-3"><span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-indigo-100 text-indigo-600" id="noticeHeart"></span><div><p class="text-[12px] font-semibold">មានអ្នកចាប់អារម្មណ៍លើទំនិញរបស់អ្នក</p><p class="mt-1 text-[10px] text-slate-400">១៥ នាទីមុន</p></div></div>
+              <div class="flex gap-3 rounded-xl p-2"><span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-emerald-50 text-emerald-600" id="noticeCheck"></span><div><p class="text-[12px] font-semibold">សូមស្វាគមន៍មកកាន់ EcomStore</p><p class="mt-1 text-[10px] text-slate-400">ម្សិលមិញ</p></div></div>
+              <div class="flex gap-3 rounded-xl p-2"><span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-amber-50 text-amber-600" id="noticeTag"></span><div><p class="text-[12px] font-semibold">ទំនិញថ្មីៗកំពុងរង់ចាំអ្នក</p><p class="mt-1 text-[10px] text-slate-400">២ ថ្ងៃមុន</p></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="relative">
+          <button id="profileBtn" class="flex items-center gap-2 rounded-xl p-1 pr-0.5 transition hover:bg-slate-100" aria-label="គណនីរបស់ខ្ញុំ">
+            <img src="https://i.pravatar.cc/100?img=12" alt="រូបអ្នកប្រើ" class="h-9 w-9 rounded-full border-2 border-white object-cover shadow-sm">
+            <span class="hidden text-left leading-tight lg:block"><span class="block text-[12px] font-bold text-slate-700">គណនីខ្ញុំ</span><span class="block text-[10px] text-slate-400">សមាជិក</span></span>
+            <span class="hidden text-slate-400 lg:block" id="profileChevron"></span>
+          </button>
+          <div id="profileMenu" class="dropdown absolute right-0 top-[calc(100%+12px)] z-[60] w-56 rounded-2xl border border-slate-100 bg-white p-2 shadow-2xl">
+            <div class="border-b border-slate-100 px-3 py-3"><p class="text-sm font-bold">សួស្តី! 👋</p><p class="text-[11px] text-slate-400">រីករាយក្នុងការទិញលក់</p></div>
+            <button data-profile-action="saved" class="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-[12px] font-semibold text-slate-600 hover:bg-indigo-50 hover:text-indigo-600"><span id="menuSavedIcon"></span>ទំនិញដែលបានរក្សាទុក</button>
+            <button data-profile-action="mine" class="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-[12px] font-semibold text-slate-600 hover:bg-indigo-50 hover:text-indigo-600"><span id="menuMineIcon"></span>ការផ្សាយរបស់ខ្ញុំ</button>
+            <button data-profile-action="all" class="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-[12px] font-semibold text-slate-600 hover:bg-indigo-50 hover:text-indigo-600"><span id="menuAllIcon"></span>មើលទំនិញទាំងអស់</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="container-main pt-7 sm:pt-9">
+      <div class="hero-glow relative overflow-hidden rounded-[28px] border border-indigo-100/80 px-6 py-8 sm:px-10 sm:py-10 lg:px-14">
+        <div class="pointer-events-none absolute -right-16 -top-28 h-72 w-72 rounded-full border-[42px] border-white/40"></div>
+        <div class="pointer-events-none absolute bottom-[-90px] right-[30%] h-52 w-52 rounded-full bg-indigo-200/25 blur-3xl"></div>
+        <div class="relative z-10 grid gap-8 md:grid-cols-[1.1fr_.9fr] md:items-center">
+          <div class="max-w-[650px]">
+            <div class="mb-4 inline-flex items-center gap-2 rounded-full border border-indigo-200/80 bg-white/70 px-3 py-1.5 text-[11px] font-bold text-indigo-700 shadow-sm">
+              <span class="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_0_4px_rgba(16,185,129,.12)]"></span> ផ្សារអនឡាញសម្រាប់អ្នកទាំងអស់គ្នា
+            </div>
+            <h1 class="hero-title max-w-[620px] text-[34px] font-bold leading-[1.36] tracking-tight text-slate-900 sm:text-[42px] lg:text-[47px]">ទិញលក់ងាយៗ <span class="text-indigo-600">នៅជិតអ្នក</span></h1>
+            <p class="mt-3 max-w-[520px] text-[13px] leading-7 text-slate-600 sm:text-[15px]">ស្វែងរកទំនិញដែលអ្នកស្រឡាញ់ ឬដាក់លក់របស់ដែលអ្នកមិនប្រើ។ ភ្ជាប់អ្នកទិញ និងអ្នកលក់នៅទូទាំងប្រទេសកម្ពុជា។</p>
+            <div class="mt-6 flex flex-wrap items-center gap-2">
+              <span class="mr-1 text-[11px] font-semibold text-slate-500">ស្វែងរកពេញនិយម៖</span>
+              <button data-tag="iPhone" class="rounded-full border border-indigo-200 bg-white/70 px-3 py-1.5 text-[11px] font-semibold text-indigo-700 transition hover:bg-white">iPhone</button>
+              <button data-tag="Toyota" class="rounded-full border border-indigo-200 bg-white/70 px-3 py-1.5 text-[11px] font-semibold text-indigo-700 transition hover:bg-white">Toyota</button>
+              <button data-tag="ខុនដូ" class="rounded-full border border-indigo-200 bg-white/70 px-3 py-1.5 text-[11px] font-semibold text-indigo-700 transition hover:bg-white">ខុនដូ</button>
+              <button data-tag="កុំព្យូទ័រ" class="rounded-full border border-indigo-200 bg-white/70 px-3 py-1.5 text-[11px] font-semibold text-indigo-700 transition hover:bg-white">កុំព្យូទ័រ</button>
+            </div>
+            <div class="mt-7 flex flex-wrap items-center gap-5 text-[11px] font-semibold text-slate-500">
+              <span class="flex items-center gap-2"><span class="text-emerald-600" id="heroShield"></span> អ្នកលក់ដែលបានផ្ទៀងផ្ទាត់</span>
+              <span class="flex items-center gap-2"><span class="text-indigo-600" id="heroUsers"></span> សហគមន៍អ្នកទិញលក់</span>
+            </div>
+          </div>
+          <div class="relative mx-auto hidden h-[250px] w-full max-w-[445px] md:block lg:h-[285px]">
+            <div class="absolute right-[7%] top-2 h-[215px] w-[72%] rotate-[5deg] overflow-hidden rounded-[25px] border-[7px] border-white/90 bg-white shadow-[0_24px_55px_rgba(79,70,229,.18)] lg:h-[245px]">
+              <img src="https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=900&q=85" alt="ទូរស័ព្ទទំនើប" class="h-full w-full object-cover">
+            </div>
+            <div class="absolute bottom-2 left-[1%] z-10 flex items-center gap-3 rounded-2xl border border-white bg-white/95 p-3 shadow-xl">
+              <img src="https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=180&q=80" alt="រថយន្ត" class="h-12 w-14 rounded-xl object-cover">
+              <div><p class="text-[10px] font-semibold text-slate-400">ទំនិញពេញនិយម</p><p class="text-[13px] font-bold text-slate-800">រថយន្តល្អៗ</p><p class="text-[11px] font-bold text-emerald-600">ចាប់ពី $8,500</p></div>
+            </div>
+            <div class="absolute right-0 top-0 z-20 flex items-center gap-2 rounded-full border border-white bg-white/90 px-3 py-2 shadow-lg"><span class="h-2 w-2 rounded-full bg-emerald-500"></span><span class="text-[10px] font-bold text-slate-600">ទិញលក់បានគ្រប់ពេល</span></div>
+            <div class="absolute bottom-1 right-[9%] z-20 grid h-12 w-12 place-items-center rounded-2xl bg-indigo-600 text-white shadow-lg shadow-indigo-300" id="heroSparkle"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="container-main pt-8 sm:pt-10">
+      <div class="mb-4 flex items-center justify-between">
+        <div><p class="text-[11px] font-bold tracking-wide text-slate-400">ស្វែងរកតាមប្រភេទ</p><h2 class="mt-1 text-lg font-bold text-slate-800">ប្រភេទទំនិញ</h2></div>
+        <span class="hidden text-[11px] text-slate-400 sm:block">រុញទៅឆ្វេង ឬស្តាំដើម្បីមើលបន្ថែម</span>
+      </div>
+      <div id="categoryStrip" class="category-strip flex gap-2.5 overflow-x-auto pb-2">
+        <button class="category-pill active flex items-center gap-2 rounded-full px-4 py-2.5 text-[12px] font-bold" data-category="all"><span id="catAllIcon"></span>ទាំងអស់</button>
+        <button class="category-pill flex items-center gap-2 rounded-full px-4 py-2.5 text-[12px] font-semibold" data-category="phones"><span id="catPhoneIcon"></span>ទូរស័ព្ទ & អេឡិចត្រូនិក</button>
+        <button class="category-pill flex items-center gap-2 rounded-full px-4 py-2.5 text-[12px] font-semibold" data-category="vehicles"><span id="catCarIcon"></span>រថយន្ត & ម៉ូតូ</button>
+        <button class="category-pill flex items-center gap-2 rounded-full px-4 py-2.5 text-[12px] font-semibold" data-category="property"><span id="catHomeIcon"></span>អចលនទ្រព្យ</button>
+        <button class="category-pill flex items-center gap-2 rounded-full px-4 py-2.5 text-[12px] font-semibold" data-category="fashion"><span id="catFashionIcon"></span>សម្លៀកបំពាក់</button>
+        <button class="category-pill flex items-center gap-2 rounded-full px-4 py-2.5 text-[12px] font-semibold" data-category="furniture"><span id="catFurnitureIcon"></span>គ្រឿងសង្ហារិម</button>
+      </div>
+    </section>
+
+    <section id="listings" class="container-main pb-16 pt-7 sm:pt-9">
+      <div class="mb-5 flex flex-wrap items-end justify-between gap-3">
+        <div><div class="flex items-center gap-2"><span class="h-2 w-2 rounded-full bg-emerald-500"></span><p class="text-[11px] font-bold tracking-wide text-emerald-600">បានបង្ហោះថ្មីៗ</p></div><h2 id="listingHeading" class="mt-1 text-xl font-bold text-slate-900 sm:text-2xl">ទំនិញដែលគួរឱ្យចាប់អារម្មណ៍</h2><p id="listingSubheading" class="mt-1 text-[11px] text-slate-400">រកឃើញទំនិញល្អៗពីអ្នកលក់នៅជិតអ្នក</p></div>
+        <div class="flex items-center gap-2">
+          <span id="resultCount" class="hidden text-[11px] text-slate-400 sm:block">៨ មុខ</span>
+          <div class="relative">
+            <select id="sortSelect" aria-label="តម្រៀបតាម" class="h-10 appearance-none rounded-xl border border-slate-200 bg-white pl-3 pr-8 text-[11px] font-semibold text-slate-600 outline-none focus:border-indigo-300">
+              <option value="newest">ថ្មីៗមុន</option><option value="low">តម្លៃទាបមុន</option><option value="high">តម្លៃខ្ពស់មុន</option>
+            </select><span class="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400" id="sortChevron"></span>
+          </div>
+        </div>
+      </div>
+
+      <div id="skeletonGrid" class="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
+        <div class="overflow-hidden rounded-2xl border border-slate-100 bg-white p-2.5"><div class="skeleton aspect-[1.2] rounded-xl"></div><div class="p-2 pt-3"><div class="skeleton mb-3 h-3 w-1/3 rounded"></div><div class="skeleton mb-2 h-4 w-4/5 rounded"></div><div class="skeleton mb-4 h-4 w-2/5 rounded"></div><div class="skeleton h-8 w-full rounded-lg"></div></div></div>
+        <div class="overflow-hidden rounded-2xl border border-slate-100 bg-white p-2.5"><div class="skeleton aspect-[1.2] rounded-xl"></div><div class="p-2 pt-3"><div class="skeleton mb-3 h-3 w-1/3 rounded"></div><div class="skeleton mb-2 h-4 w-4/5 rounded"></div><div class="skeleton mb-4 h-4 w-2/5 rounded"></div><div class="skeleton h-8 w-full rounded-lg"></div></div></div>
+        <div class="hidden overflow-hidden rounded-2xl border border-slate-100 bg-white p-2.5 sm:block"><div class="skeleton aspect-[1.2] rounded-xl"></div><div class="p-2 pt-3"><div class="skeleton mb-3 h-3 w-1/3 rounded"></div><div class="skeleton mb-2 h-4 w-4/5 rounded"></div><div class="skeleton mb-4 h-4 w-2/5 rounded"></div><div class="skeleton h-8 w-full rounded-lg"></div></div></div>
+        <div class="hidden overflow-hidden rounded-2xl border border-slate-100 bg-white p-2.5 sm:block"><div class="skeleton aspect-[1.2] rounded-xl"></div><div class="p-2 pt-3"><div class="skeleton mb-3 h-3 w-1/3 rounded"></div><div class="skeleton mb-2 h-4 w-4/5 rounded"></div><div class="skeleton mb-4 h-4 w-2/5 rounded"></div><div class="skeleton h-8 w-full rounded-lg"></div></div></div>
+      </div>
+      <div id="productGrid" class="hidden grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4"></div>
+      <div id="emptyState" class="hidden rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center">
+        <div class="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-indigo-50 text-indigo-500" id="emptyIcon"></div>
+        <h3 class="mt-4 font-bold text-slate-800">រកមិនឃើញទំនិញទេ</h3><p class="mt-1 text-[12px] text-slate-400">សាកល្បងពាក្យស្វែងរក ឬប្រភេទផ្សេងទៀត។</p><button id="clearFilters" class="mt-4 rounded-xl bg-indigo-50 px-4 py-2 text-[12px] font-bold text-indigo-600 hover:bg-indigo-100">បង្ហាញទំនិញទាំងអស់</button>
+      </div>
+      <div class="mt-8 flex justify-center"><button id="showAllBtn" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-[12px] font-bold text-slate-600 transition hover:border-indigo-200 hover:text-indigo-600">មើលទំនិញទាំងអស់ <span id="showAllArrow"></span></button></div>
+    </section>
+
+    <section class="container-main pb-14">
+      <div class="relative overflow-hidden rounded-[26px] brand-gradient px-6 py-8 text-white sm:px-10 sm:py-10">
+        <div class="pointer-events-none absolute -right-12 -top-24 h-64 w-64 rounded-full border-[40px] border-white/10"></div>
+        <div class="relative z-10 flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-center">
+          <div><div class="mb-2 inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-[10px] font-semibold"><span id="sellSpark"></span> ចាប់ផ្តើមដោយឥតគិតថ្លៃ</div><h2 class="text-2xl font-bold sm:text-[28px]">មានរបស់ចង់លក់មែនទេ?</h2><p class="mt-2 max-w-xl text-[12px] leading-6 text-indigo-100">បង្កើតការផ្សាយរបស់អ្នកក្នុងរយៈពេលតែប៉ុន្មាននាទី ហើយឱ្យអ្នកទិញទូទាំងកម្ពុជាបានឃើញ។</p></div>
+          <button id="bannerPostBtn" class="inline-flex shrink-0 items-center gap-2 rounded-xl bg-white px-5 py-3 text-[12px] font-bold text-indigo-700 shadow-lg transition hover:-translate-y-1 hover:shadow-xl"><span id="bannerPlus"></span> ដាក់លក់ឥឡូវនេះ</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="border-t border-slate-200 bg-white">
+    <div class="container-main flex flex-col gap-4 py-7 sm:flex-row sm:items-center sm:justify-between">
+      <div class="flex items-center gap-2"><span class="brand-gradient grid h-8 w-8 place-items-center rounded-xl text-[12px] font-bold text-white">E</span><div><p class="text-[13px] font-bold">EcomStore</p><p class="text-[10px] text-slate-400">ផ្សារទិញលក់អនឡាញនៅកម្ពុជា</p></div></div>
+      <p class="text-[10px] text-slate-400">© <span id="yearNow"></span> EcomStore. រក្សាសិទ្ធិគ្រប់យ៉ាង។</p>
+      <div class="flex items-center gap-4 text-[10px] font-semibold text-slate-500"><a href="#listings" class="hover:text-indigo-600">ស្វែងរកទំនិញ</a><button id="footerPostBtn" class="hover:text-indigo-600">ដាក់លក់ទំនិញ</button><a href="#top" class="hover:text-indigo-600">ត្រឡប់ទៅលើ ↑</a></div>
+    </div>
+  </footer>
+
+  <!-- Product quick view -->
+  <div id="productModal" class="modal-layer" aria-hidden="true">
+    <section class="modal-panel relative">
+      <button data-close="productModal" class="absolute right-4 top-4 z-20 grid h-9 w-9 place-items-center rounded-full bg-white/95 text-slate-500 shadow-md transition hover:bg-slate-100" aria-label="បិទ"></button>
+      <div id="productModalContent"></div>
+    </section>
+  </div>
+
+  <!-- Create listing -->
+  <div id="postModal" class="modal-layer" aria-hidden="true">
+    <section class="modal-panel max-w-[650px] p-5 sm:p-7">
+      <div class="mb-5 flex items-start justify-between gap-3">
+        <div><div class="mb-1 flex items-center gap-2 text-[10px] font-bold text-indigo-600"><span id="postModalSpark"></span> ផ្សព្វផ្សាយទៅកាន់អ្នកទិញ</div><h2 class="text-xl font-bold text-slate-900 sm:text-2xl">ដាក់លក់ទំនិញថ្មី</h2><p class="mt-1 text-[11px] text-slate-400">បំពេញព័ត៌មានខាងក្រោម ដើម្បីបង្កើតការផ្សាយរបស់អ្នក។</p></div>
+        <button data-close="postModal" class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-slate-100 text-slate-500 transition hover:bg-slate-200" aria-label="បិទ"></button>
+      </div>
+      <form id="postForm" class="space-y-4">
+        <div class="grid gap-4 sm:grid-cols-2">
+          <label class="block sm:col-span-2"><span class="mb-1.5 block text-[11px] font-bold text-slate-700">ឈ្មោះទំនិញ <span class="text-rose-500">*</span></span><input id="postTitle" class="field text-[12px]" maxlength="90" required placeholder="ឧ. iPhone 14 Pro Max 256GB"></label>
+          <label class="block"><span class="mb-1.5 block text-[11px] font-bold text-slate-700">តម្លៃលក់ (USD) <span class="text-rose-500">*</span></span><div class="relative"><span class="absolute left-3 top-1/2 -translate-y-1/2 text-[12px] font-bold text-slate-400">$</span><input id="postPrice" type="number" class="field pl-8 text-[12px]" min="0.01" step="0.01" required placeholder="0.00"></div></label>
+          <label class="block"><span class="mb-1.5 block text-[11px] font-bold text-slate-700">ប្រភេទទំនិញ <span class="text-rose-500">*</span></span><select id="postCategory" class="field text-[12px]" required><option value="">ជ្រើសរើសប្រភេទ</option><option value="phones">ទូរស័ព្ទ & អេឡិចត្រូនិក</option><option value="vehicles">រថយន្ត & ម៉ូតូ</option><option value="property">អចលនទ្រព្យ</option><option value="fashion">សម្លៀកបំពាក់</option><option value="furniture">គ្រឿងសង្ហារិម</option></select></label>
+          <label class="block"><span class="mb-1.5 block text-[11px] font-bold text-slate-700">ទីតាំង <span class="text-rose-500">*</span></span><select id="postLocation" class="field text-[12px]" required><option value="">ជ្រើសរើសទីតាំង</option><option>ភ្នំពេញ</option><option>សៀមរាប</option><option>បាត់ដំបង</option><option>កំពង់ចាម</option><option>ព្រះសីហនុ</option><option>កណ្តាល</option><option>តាកែវ</option><option>កំពត</option><option>កំពង់ស្ពឺ</option><option>ផ្សេងៗ</option></select></label>
+          <label class="block"><span class="mb-1.5 block text-[11px] font-bold text-slate-700">ស្ថានភាពទំនិញ</span><select id="postCondition" class="field text-[12px]"><option value="ប្រើរួចស្អាត">ប្រើរួចស្អាត</option><option value="ថ្មី ១០០%">ថ្មី ១០០%</option><option value="ល្អដូចថ្មី">ល្អដូចថ្មី</option></select></label>
+          <label class="block sm:col-span-2"><span class="mb-1.5 block text-[11px] font-bold text-slate-700">ការពិពណ៌នាអំពីទំនិញ</span><textarea id="postDescription" class="field min-h-[88px] resize-y text-[12px]" maxlength="600" placeholder="សរសេរព័ត៌មានលម្អិតអំពីទំនិញរបស់អ្នក..."></textarea></label>
+        </div>
+        <div>
+          <span class="mb-1.5 block text-[11px] font-bold text-slate-700">រូបភាពទំនិញ</span>
+          <label for="postImage" class="flex cursor-pointer items-center gap-4 rounded-2xl border border-dashed border-indigo-200 bg-indigo-50/50 p-3 transition hover:bg-indigo-50">
+            <span class="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-xl bg-white text-indigo-500" id="imagePreviewWrap"><span id="uploadImageIcon"></span><img id="imagePreview" class="hidden h-full w-full object-cover" alt="រូបភាពមើលជាមុន"></span>
+            <span class="min-w-0 flex-1"><span class="block text-[11px] font-bold text-slate-700" id="uploadTitle">ចុចដើម្បីជ្រើសរើសរូបភាព</span><span class="mt-1 block text-[10px] text-slate-400">PNG, JPG ឬ WEBP · អាចរំលងបាន</span></span><span class="rounded-lg bg-white px-3 py-2 text-[10px] font-bold text-indigo-600 shadow-sm">ជ្រើសរើសរូប</span>
+          </label>
+          <input id="postImage" type="file" accept="image/png,image/jpeg,image/webp" class="hidden">
+        </div>
+        <div class="flex flex-col-reverse gap-2 border-t border-slate-100 pt-4 sm:flex-row sm:justify-end">
+          <button type="button" data-close="postModal" class="rounded-xl border border-slate-200 px-5 py-3 text-[12px] font-bold text-slate-600 transition hover:bg-slate-50">បោះបង់</button>
+          <button type="submit" class="brand-gradient inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3 text-[12px] font-bold text-white shadow-lg shadow-indigo-200 transition hover:brightness-110 active:scale-[.98]"><span id="submitPostIcon"></span> បង្ហោះទំនិញ</button>
+        </div>
+      </form>
+    </section>
+  </div>
+
+  <!-- Seller chat -->
+  <div id="chatModal" class="modal-layer" aria-hidden="true">
+    <section class="modal-panel flex max-w-[470px] flex-col overflow-hidden" style="height:min(650px,90vh)">
+      <div class="flex items-center gap-3 border-b border-slate-100 p-4">
+        <img id="chatAvatar" src="https://i.pravatar.cc/100?img=12" alt="" class="h-10 w-10 rounded-full object-cover">
+        <div class="min-w-0 flex-1"><p id="chatSellerName" class="text-[13px] font-bold"></p><p class="text-[10px] text-emerald-600">● កំពុងប្រើប្រាស់</p></div>
+        <button data-close="chatModal" class="grid h-9 w-9 place-items-center rounded-full bg-slate-100 text-slate-500" aria-label="បិទ"></button>
+      </div>
+      <div class="flex-1 space-y-3 overflow-y-auto bg-slate-50 p-4" id="chatMessages">
+        <div class="max-w-[85%] rounded-2xl rounded-tl-sm bg-white p-3 text-[11px] leading-6 text-slate-600 shadow-sm">សួស្តី! សូមសរសេរសាររបស់អ្នកទៅកាន់អ្នកលក់។</div>
+      </div>
+      <form id="chatForm" class="flex items-center gap-2 border-t border-slate-100 bg-white p-3"><input id="chatInput" class="field flex-1 text-[12px]" placeholder="សរសេរសាររបស់អ្នក..." autocomplete="off" required><button class="grid h-11 w-11 shrink-0 place-items-center rounded-xl brand-gradient text-white" id="sendMessageBtn" aria-label="ផ្ញើសារ"></button></form>
+    </section>
+  </div>
+
+  <!-- Make an offer -->
+  <div id="offerModal" class="modal-layer" aria-hidden="true">
+    <section class="modal-panel max-w-[440px] p-6">
+      <div class="mb-5 flex items-start justify-between"><div><p class="text-[10px] font-bold text-indigo-600">ការចរចាតម្លៃ</p><h2 class="mt-1 text-xl font-bold">ស្នើសុំតម្លៃរបស់អ្នក</h2><p id="offerProductName" class="mt-1 text-[11px] text-slate-400"></p></div><button data-close="offerModal" class="grid h-9 w-9 place-items-center rounded-full bg-slate-100 text-slate-500" aria-label="បិទ"></button></div>
+      <form id="offerForm" class="space-y-4"><label class="block"><span class="mb-1.5 block text-[11px] font-bold text-slate-700">តម្លៃដែលអ្នកចង់ទិញ (USD)</span><div class="relative"><span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">$</span><input id="offerPrice" type="number" min="0.01" step="0.01" class="field pl-8 text-[13px]" required placeholder="សូមបញ្ចូលតម្លៃ"></div></label><label class="block"><span class="mb-1.5 block text-[11px] font-bold text-slate-700">សារជូនអ្នកលក់</span><textarea id="offerNote" class="field min-h-[80px] resize-y text-[12px]" placeholder="សួស្តី ខ្ញុំចាប់អារម្មណ៍លើទំនិញនេះ..."></textarea></label><button class="brand-gradient w-full rounded-xl py-3 text-[12px] font-bold text-white shadow-lg shadow-indigo-100">ផ្ញើសំណើតម្លៃ</button></form>
+    </section>
+  </div>
+
+  <div id="toastArea" class="pointer-events-none fixed bottom-4 left-1/2 z-[120] flex w-[min(92vw,420px)] -translate-x-1/2 flex-col gap-2"></div>
+
+  <script>
+    const iconPaths = {
+      search:'<circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path>',
+      heart:'<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z"></path>',
+      bell:'<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path><path d="M10 21h4"></path>',
+      plus:'<path d="M12 5v14M5 12h14"></path>',
+      pin:'<path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"></path><circle cx="12" cy="10" r="2.5"></circle>',
+      clock:'<circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path>',
+      shield:'<path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z"></path><path d="m9 12 2 2 4-4"></path>',
+      check:'<path d="m5 12 4 4L19 6"></path>',
+      chevron:'<path d="m7 10 5 5 5-5"></path>',
+      x:'<path d="m18 6-12 12M6 6l12 12"></path>',
+      chat:'<path d="M21 11.5a8.5 8.5 0 0 1-9 8.5 9.7 9.7 0 0 1-4-.8L3 21l1.8-4.5A8.2 8.2 0 0 1 3 11.5 8.5 8.5 0 0 1 12 3a8.5 8.5 0 0 1 9 8.5Z"></path>',
+      tag:'<path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8Z"></path><circle cx="7.5" cy="7.5" r="1"></circle>',
+      share:'<path d="M12 16V3m-5 5 5-5 5 5"></path><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"></path>',
+      arrow:'<path d="M5 12h14m-7-7 7 7-7 7"></path>',
+      grid:'<rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect>',
+      phone:'<rect x="6" y="2" width="12" height="20" rx="2"></rect><path d="M11 18h2"></path>',
+      car:'<path d="m5 17-1 2v2h2v-2h12v2h2v-2l-1-2"></path><path d="m4 17 1.5-6h13L20 17"></path><path d="M7 11l1.5-4h7L17 11M7 17h.01M17 17h.01"></path>',
+      home:'<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-6v-7h-4v7H4a1 1 0 0 1-1-1Z"></path>',
+      shirt:'<path d="m16 4 5 3-3 4-2-1v10H8V10l-2 1-3-4 5-3 2 2h4z"></path>',
+      sofa:'<path d="M4 11V7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v4"></path><path d="M3 12a2 2 0 0 1 4 0v3h10v-3a2 2 0 0 1 4 0v5H3zM5 17v3m14-3v3"></path>',
+      user:'<path d="M20 21a8 8 0 0 0-16 0"></path><circle cx="12" cy="8" r="4"></circle>',
+      camera:'<path d="M14 5 12.5 3h-5L6 5H3v14h18V5z"></path><circle cx="12" cy="12" r="3.5"></circle>',
+      image:'<rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><path d="m21 15-5-5L5 21"></path>',
+      star:'<path d="m12 3 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9Z"></path>',
+      send:'<path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path>',
+      spark:'<path d="m12 3 1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8Z"></path><path d="m19 14 1.2 2.8L23 18l-2.8 1.2L19 22l-1.2-2.8L15 18l2.8-1.2Z"></path>',
+      bookmark:'<path d="M6 4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18l-6-4-6 4z"></path>',
+      filter:'<path d="M4 7h16M7 12h10m-7 5h4"></path>',
+      truck:'<path d="M3 6h11v12H3zM14 10h4l3 3v5h-7z"></path><circle cx="7.5" cy="19" r="1.5"></circle><circle cx="17.5" cy="19" r="1.5"></circle>',
+      eye:'<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle>',
+      wallet:'<path d="M4 6h15a2 2 0 0 1 2 2v11H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14"></path><path d="M21 11h-5a2 2 0 0 0 0 4h5"></path>',
+      menu:'<path d="M4 6h16M4 12h16M4 18h16"></path>'
+    };
+    function icon(name,size,extra){return '<svg aria-hidden="true" width="'+(size||18)+'" height="'+(size||18)+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="'+(extra||'')+'">'+(iconPaths[name]||iconPaths.spark)+'</svg>';}
+
+    const categories = {phones:'ទូរស័ព្ទ & អេឡិចត្រូនិក',vehicles:'រថយន្ត & ម៉ូតូ',property:'អចលនទ្រព្យ',fashion:'សម្លៀកបំពាក់',furniture:'គ្រឿងសង្ហារិម'};
+    const categoryImages = {
+      phones:'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?auto=format&fit=crop&w=1000&q=85',
+      vehicles:'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=1000&q=85',
+      property:'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1000&q=85',
+      fashion:'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&w=1000&q=85',
+      furniture:'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=1000&q=85'
+    };
+    const sampleProducts = [
+      {id:'p1',title:'iPhone 15 Pro Max 256GB',price:890,category:'phones',location:'ភ្នំពេញ · ទួលគោក',time:'១៥ នាទីមុន',condition:'ប្រើរួចស្អាត',seller:'សុភា',avatar:'https://i.pravatar.cc/100?img=47',verified:true,rating:'៤.៩',image:'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?auto=format&fit=crop&w=1000&q=85',description:'ទូរស័ព្ទ iPhone 15 Pro Max ពណ៌ Natural Titanium អង្គចងចាំ 256GB សភាពស្អាត ៩៨%។ មានប្រអប់ និងខ្សែសាក។ អាចមកពិនិត្យផ្ទាល់បាន។'},
+      {id:'p2',title:'Toyota Prius 2017 Full Option',price:15800,category:'vehicles',location:'ភ្នំពេញ · សែនសុខ',time:'៣៥ នាទីមុន',condition:'ប្រើរួចស្អាត',seller:'វិសាល',avatar:'https://i.pravatar.cc/100?img=13',verified:true,rating:'៥.០',image:'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=1000&q=85',description:'រថយន្ត Toyota Prius ឆ្នាំ ២០១៧ Full Option ម៉ាស៊ីន និងប្រអប់លេខល្អ អត់បុក អត់លិច។ មានឯកសារគ្រប់។ អាចចរចាបាននៅពេលមើលឡាន។'},
+      {id:'p3',title:'Gaming Laptop RTX 4060 / 16GB RAM',price:1150,category:'phones',location:'សៀមរាប · ក្រុង',time:'១ ម៉ោងមុន',condition:'ល្អដូចថ្មី',seller:'ដារ៉ា',avatar:'https://i.pravatar.cc/100?img=11',verified:true,rating:'៤.៨',image:'https://images.unsplash.com/photo-1593642632823-8f785ba67e45?auto=format&fit=crop&w=1000&q=85',description:'Laptop សម្រាប់ Gaming និង Design មាន RTX 4060, RAM 16GB, SSD 1TB។ ប្រើបានល្អ គ្មានបញ្ហា និងមានឆ្នាំងសាកដើម។'},
+      {id:'p4',title:'ខុនដូ ២ បន្ទប់គេង ជិតផ្សារទំនើប',price:78000,category:'property',location:'ភ្នំពេញ · បឹងកេងកង',time:'២ ម៉ោងមុន',condition:'ថ្មី ១០០%',seller:'ចាន់ថា',avatar:'https://i.pravatar.cc/100?img=44',verified:true,rating:'៤.៩',image:'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1000&q=85',description:'ខុនដូទំនើប ២ បន្ទប់គេង ២ បន្ទប់ទឹក មានបន្ទប់ទទួលភ្ញៀវ និងផ្ទះបាយ។ ទីតាំងល្អ មានសន្តិសុខ ២៤ ម៉ោង និងអាងហែលទឹក។'},
+      {id:'p5',title:'រ៉ូបស្ត្រី ម៉ូដថ្មី គុណភាពល្អ',price:25,category:'fashion',location:'ភ្នំពេញ · ចំការមន',time:'៣ ម៉ោងមុន',condition:'ថ្មី ១០០%',seller:'មាលា',avatar:'https://i.pravatar.cc/100?img=49',verified:false,rating:'៤.៧',image:'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&w=1000&q=85',description:'រ៉ូបស្ត្រីម៉ូដថ្មី សាច់ក្រណាត់ទន់ ស្អាត និងងាយស្រួលពាក់។ មានច្រើនទំហំ និងពណ៌។ អាចដឹកជញ្ជូនក្នុងរាជធានីភ្នំពេញ។'},
+      {id:'p6',title:'សាឡុងបន្ទប់ទទួលភ្ញៀវ 3 កៅអី',price:320,category:'furniture',location:'បាត់ដំបង · ក្រុង',time:'៤ ម៉ោងមុន',condition:'ប្រើរួចស្អាត',seller:'រតនា',avatar:'https://i.pravatar.cc/100?img=60',verified:true,rating:'៤.៩',image:'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=1000&q=85',description:'សាឡុង ៣ កៅអី ពណ៌ប្រផេះ សាច់ក្រណាត់ក្រាស់ មានផាសុកភាព។ រក្សាទុកបានល្អ ស្អាត មិនរហែក។ លក់ព្រោះប្តូរផ្ទះ។'},
+      {id:'p7',title:'កាមេរ៉ា Sony A7 III + Lens 50mm',price:1320,category:'phones',location:'ភ្នំពេញ · ទួលគោក',time:'៥ ម៉ោងមុន',condition:'ប្រើរួចស្អាត',seller:'បញ្ញា',avatar:'https://i.pravatar.cc/100?img=12',verified:true,rating:'៥.០',image:'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=1000&q=85',description:'កាមេរ៉ា Sony A7 III សម្រាប់ថតរូប និងវីដេអូ។ មាន Lens 50mm, Battery ២ និងកាបូប។ មុខងារទាំងអស់ដំណើរការល្អ។'},
+      {id:'p8',title:'ស្បែកជើងកីឡា Nike Air Max',price:68,category:'fashion',location:'សៀមរាប · ក្រុង',time:'៦ ម៉ោងមុន',condition:'ថ្មី ១០០%',seller:'ពេជ្រ',avatar:'https://i.pravatar.cc/100?img=33',verified:false,rating:'៤.៦',image:'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=1000&q=85',description:'ស្បែកជើងកីឡា Nike Air Max ម៉ូដទាន់សម័យ ពាក់ស្រួល។ មានទំហំចាប់ពី ៣៨ ដល់ ៤៤។ ទំនិញថ្មីមិនទាន់ប្រើ។'}
+    ];
+
+    let products = sampleProducts.slice();
+    let activeCategory = 'all';
+    let searchText = '';
+    let savedIds = [];
+    let mineOnly = false;
+    let savedOnly = false;
+    let currentProductId = null;
+    let postImageData = '';
+    let chatProduct = null;
+    let offerProduct = null;
+
+    try {
+      const storedSaved = JSON.parse(localStorage.getItem('ecomstore-saved-v1') || '[]');
+      if (Array.isArray(storedSaved)) savedIds = storedSaved;
+      const storedPosts = JSON.parse(localStorage.getItem('ecomstore-p2p-posts-v1') || '[]');
+      if (Array.isArray(storedPosts)) products = storedPosts.concat(sampleProducts);
+    } catch(e) {}
+
+    function esc(value){return String(value == null ? '' : value).replace(/[&<>"']/g,function(ch){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];});}
+    function money(value){return '$'+Number(value).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:2});}
+    function persistSaved(){try{localStorage.setItem('ecomstore-saved-v1',JSON.stringify(savedIds));}catch(e){}}
+    function persistPosts(){try{localStorage.setItem('ecomstore-p2p-posts-v1',JSON.stringify(products.filter(function(p){return p.userCreated;})));}catch(e){toast('រូបភាពមានទំហំធំពេកសម្រាប់រក្សាទុកក្នុងកម្មវិធីនេះ។','warning');}}
+    function getFiltered(){
+      let result = products.filter(function(p){
+        const catOK = activeCategory === 'all' || p.category === activeCategory;
+        const q = searchText.trim().toLowerCase();
+        const searchOK = !q || [p.title,p.location,p.description,p.seller,categories[p.category]].join(' ').toLowerCase().includes(q);
+        const savedOK = !savedOnly || savedIds.includes(p.id);
+        const mineOK = !mineOnly || p.userCreated;
+        return catOK && searchOK && savedOK && mineOK;
+      });
+      const sort = document.getElementById('sortSelect').value;
+      if(sort === 'low') result.sort(function(a,b){return Number(a.price)-Number(b.price);});
+      else if(sort === 'high') result.sort(function(a,b){return Number(b.price)-Number(a.price);});
+      else result.sort(function(a,b){return (b.createdAt||0)-(a.createdAt||0);});
+      return result;
+    }
+    function productCard(p,index){
+      const saved = savedIds.includes(p.id);
+      const badge = p.condition === 'ថ្មី ១០០%' ? 'ថ្មី ១០០%' : p.condition === 'ល្អដូចថ្មី' ? 'ដូចថ្មី' : 'ប្រើរួច';
+      return '<article class="product-card group overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-[0_4px_18px_rgba(30,41,59,.035)]" style="animation-delay:'+(Math.min(index,12)*55)+'ms">'+
+        '<div class="relative aspect-[1.2] overflow-hidden bg-slate-100">'+
+          '<button type="button" data-action="view" data-id="'+esc(p.id)+'" class="absolute inset-0 z-[1] h-full w-full" aria-label="មើល '+esc(p.title)+'"></button>'+
+          '<img src="'+esc(p.image)+'" alt="'+esc(p.title)+'" loading="lazy" class="product-image h-full w-full object-cover" onerror="this.src=\'https://images.unsplash.com/photo-1494438639946-1ebd1d20bf85?auto=format&fit=crop&w=900&q=80\'">'+
+          '<span class="absolute left-2.5 top-2.5 z-[2] rounded-lg bg-white/95 px-2.5 py-1 text-[10px] font-bold text-emerald-700 shadow-sm">'+badge+'</span>'+
+          '<button type="button" data-action="save" data-id="'+esc(p.id)+'" class="heart-btn '+(saved?'saved':'')+' absolute right-2.5 top-2.5 z-[3] grid h-8 w-8 place-items-center rounded-full bg-white/95 text-slate-500 shadow-sm hover:text-rose-500" aria-label="រក្សាទុក">'+icon('heart',16)+'</button>'+
+          (p.userCreated?'<span class="absolute bottom-2.5 left-2.5 z-[2] rounded-md bg-indigo-600/90 px-2 py-1 text-[9px] font-bold text-white">របស់ខ្ញុំ</span>':'')+
+        '</div>'+
+        '<div class="p-3 sm:p-3.5">'+
+          '<p class="mb-1.5 truncate text-[10px] font-semibold text-indigo-500">'+esc(categories[p.category]||'ទំនិញផ្សេងៗ')+'</p>'+
+          '<button type="button" data-action="view" data-id="'+esc(p.id)+'" class="block min-h-[39px] w-full text-left text-[12px] font-bold leading-5 text-slate-800 transition hover:text-indigo-600 sm:text-[13px]">'+esc(p.title)+'</button>'+
+          '<div class="mt-2 flex items-center justify-between gap-1"><p class="text-[15px] font-bold tracking-tight text-emerald-600 sm:text-[17px]">'+money(p.price)+'</p><span class="truncate rounded-md bg-slate-50 px-1.5 py-1 text-[9px] text-slate-400">'+esc(p.condition||'ប្រើរួច')+'</span></div>'+
+          '<div class="mt-3 flex items-center gap-1.5 border-t border-slate-100 pt-2.5 text-[10px] text-slate-400">'+icon('pin',12)+'<span class="truncate">'+esc(p.location)+'</span><span class="ml-auto shrink-0">· '+esc(p.time||'ទើបតែនេះ')+'</span></div>'+
+          '<div class="mt-3 flex items-center gap-2"><img src="'+esc(p.avatar||'https://i.pravatar.cc/100?img=15')+'" alt="" class="h-6 w-6 rounded-full object-cover"><span class="max-w-[90px] truncate text-[10px] font-semibold text-slate-600">'+esc(p.seller||'អ្នកលក់')+'</span>'+(p.verified?'<span class="grid h-4 w-4 place-items-center rounded-full bg-emerald-500 text-white" title="បានផ្ទៀងផ្ទាត់">'+icon('check',10)+'</span>':'')+'<button type="button" data-action="view" data-id="'+esc(p.id)+'" class="ml-auto inline-flex items-center gap-1 text-[10px] font-bold text-indigo-600 hover:text-indigo-800">មើល <span>'+icon('arrow',12)+'</span></button></div>'+
+        '</div></article>';
+    }
+    function renderProducts(){
+      const list = getFiltered();
+      const grid = document.getElementById('productGrid');
+      grid.innerHTML = list.map(productCard).join('');
+      grid.classList.remove('hidden');
+      document.getElementById('skeletonGrid').classList.add('hidden');
+      document.getElementById('emptyState').classList.toggle('hidden',list.length !== 0);
+      document.getElementById('showAllBtn').classList.toggle('hidden',list.length === products.length && activeCategory === 'all' && !searchText && !savedOnly && !mineOnly);
+      document.getElementById('resultCount').textContent = list.length+' មុខ';
+      document.getElementById('listingHeading').textContent = savedOnly ? 'ទំនិញដែលអ្នកបានរក្សាទុក' : mineOnly ? 'ការផ្សាយរបស់ខ្ញុំ' : activeCategory === 'all' ? 'ទំនិញដែលគួរឱ្យចាប់អារម្មណ៍' : (categories[activeCategory]||'ទំនិញ');
+      document.getElementById('listingSubheading').textContent = searchText ? 'លទ្ធផលស្វែងរកសម្រាប់ «'+searchText+'»' : 'រកឃើញទំនិញល្អៗពីអ្នកលក់នៅជិតអ្នក';
+    }
+    function setCategory(category){
+      activeCategory = category; savedOnly = false; mineOnly = false;
+      document.querySelectorAll('[data-category]').forEach(function(btn){btn.classList.toggle('active',btn.dataset.category===category);});
+      document.getElementById('searchCategory').value = category;
+      renderProducts();
+    }
+    function setSearch(value){
+      searchText = value || '';
+      document.getElementById('searchInput').value = searchText;
+      savedOnly = false; mineOnly = false;
+      renderProducts();
+    }
+    function toast(message,type){
+      const area = document.getElementById('toastArea');
+      const item = document.createElement('div');
+      const color = type === 'warning' ? 'bg-amber-50 border-amber-200 text-amber-800' : type === 'error' ? 'bg-rose-50 border-rose-200 text-rose-700' : 'bg-slate-900 border-slate-800 text-white';
+      item.className = 'toast pointer-events-auto flex items-center gap-3 rounded-2xl border px-4 py-3 text-[12px] font-semibold shadow-xl '+color;
+      item.innerHTML = '<span class="grid h-7 w-7 shrink-0 place-items-center rounded-lg '+(type==='warning'?'bg-amber-100':'bg-white/10')+'">'+icon(type==='warning'?'tag':'check',15)+'</span><span class="flex-1">'+esc(message)+'</span><button class="shrink-0 opacity-70 hover:opacity-100" aria-label="បិទ">'+icon('x',15)+'</button>';
+      item.querySelector('button').addEventListener('click',function(){item.remove();});
+      area.appendChild(item);
+      setTimeout(function(){item.remove();},4200);
+    }
+    function openModal(id){
+      closeDropdowns();
+      const el = document.getElementById(id);
+      el.classList.add('visible');el.setAttribute('aria-hidden','false');document.body.classList.add('no-scroll');
+    }
+    function closeModal(id){
+      const el = document.getElementById(id);
+      if(!el)return;
+      el.classList.remove('visible');el.setAttribute('aria-hidden','true');
+      if(!document.querySelector('.modal-layer.visible'))document.body.classList.remove('no-scroll');
+    }
+    function closeDropdowns(){
+      document.querySelectorAll('.dropdown').forEach(function(el){el.classList.remove('open');});
+    }
+    function toggleDropdown(id){
+      const el = document.getElementById(id);
+      const wasOpen = el.classList.contains('open');
+      closeDropdowns();
+      if(!wasOpen)el.classList.add('open');
+    }
+    function openPost(){document.getElementById('postForm').reset();postImageData='';document.getElementById('imagePreview').classList.add('hidden');document.getElementById('uploadImageIcon').classList.remove('hidden');document.getElementById('uploadTitle').textContent='ចុចដើម្បីជ្រើសរើសរូបភាព';openModal('postModal');}
+    function toggleSaved(id){
+      if(savedIds.includes(id)){savedIds=savedIds.filter(function(x){return x!==id;});toast('បានដកចេញពីបញ្ជីរក្សាទុក');}
+      else{savedIds.push(id);toast('បានរក្សាទុកទំនិញនេះរួចរាល់');}
+      persistSaved();renderProducts();
+      if(currentProductId===id && document.getElementById('productModal').classList.contains('visible'))openProduct(id);
+    }
+    function openProduct(id){
+      const p=products.find(function(x){return String(x.id)===String(id);});if(!p)return;
+      currentProductId=id;
+      const saved=savedIds.includes(p.id);
+      document.getElementById('productModalContent').innerHTML =
+        '<div class="grid md:grid-cols-[1.02fr_.98fr]">'+
+        '<div class="relative min-h-[260px] bg-slate-100 md:min-h-[510px]"><img src="'+esc(p.image)+'" alt="'+esc(p.title)+'" class="absolute inset-0 h-full w-full object-cover"><span class="absolute bottom-4 left-4 rounded-lg bg-white/95 px-3 py-1.5 text-[10px] font-bold text-emerald-700">'+esc(p.condition||'ប្រើរួចស្អាត')+'</span></div>'+
+        '<div class="p-5 sm:p-7"><p class="text-[10px] font-bold text-indigo-600">'+esc(categories[p.category]||'ទំនិញផ្សេងៗ')+'</p><h2 class="mt-2 pr-7 text-xl font-bold leading-8 text-slate-900">'+esc(p.title)+'</h2>'+
+        '<div class="mt-3 flex items-center gap-3 text-[10px] text-slate-400"><span class="inline-flex items-center gap-1">'+icon('pin',13)+esc(p.location)+'</span><span class="inline-flex items-center gap-1">'+icon('clock',13)+esc(p.time||'ទើបតែនេះ')+'</span></div>'+
+        '<p class="mt-5 text-[27px] font-bold text-emerald-600">'+money(p.price)+'</p><p class="mt-1 text-[10px] text-slate-400">តម្លៃអាចចរចាបានជាមួយអ្នកលក់</p>'+
+        '<div class="my-5 border-t border-slate-100"></div><p class="text-[12px] font-bold text-slate-800">ព័ត៌មានអំពីទំនិញ</p><p class="mt-2 whitespace-pre-line text-[11px] leading-7 text-slate-500">'+esc(p.description||'មិនទាន់មានការពិពណ៌នា។')+'</p>'+
+        '<div class="my-5 rounded-2xl border border-slate-100 bg-slate-50/80 p-3"><div class="flex items-center gap-3"><img src="'+esc(p.avatar||'https://i.pravatar.cc/100?img=15')+'" alt="" class="h-11 w-11 rounded-full object-cover"><div class="min-w-0 flex-1"><p class="flex items-center gap-1 text-[12px] font-bold text-slate-800">'+esc(p.seller||'អ្នកលក់')+(p.verified?'<span class="grid h-4 w-4 place-items-center rounded-full bg-emerald-500 text-white">'+icon('check',10)+'</span>':'')+'</p><p class="mt-0.5 text-[10px] text-slate-400">★ '+esc(p.rating||'៤.៨')+' · អ្នកលក់នៅ '+esc(p.location.split('·')[0].trim())+'</p></div></div></div>'+
+        '<div class="grid grid-cols-2 gap-2"><button data-product-action="chat" class="inline-flex items-center justify-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 py-3 text-[11px] font-bold text-indigo-700 transition hover:bg-indigo-100">'+icon('chat',15)+' ផ្ញើសារទៅអ្នកលក់</button><button data-product-action="offer" class="inline-flex items-center justify-center gap-2 rounded-xl brand-gradient py-3 text-[11px] font-bold text-white shadow-lg shadow-indigo-100 transition hover:brightness-110">'+icon('tag',15)+' ទិញឥឡូវនេះ / តថ្លៃ</button></div>'+
+        '<button data-product-action="save" class="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 py-2.5 text-[11px] font-bold '+(saved?'text-rose-500':'text-slate-500')+'">'+icon('heart',15)+' '+(saved?'បានរក្សាទុករួចហើយ':'រក្សាទុកទំនិញ')+'</button>'+
+        '</div></div>';
+      openModal('productModal');
+    }
+    function openChat(p){
+      chatProduct=p;
+      document.getElementById('chatAvatar').src=p.avatar||'https://i.pravatar.cc/100?img=15';
+      document.getElementById('chatSellerName').textContent=p.seller||'អ្នកលក់';
+      document.getElementById('chatMessages').innerHTML='<div class="max-w-[85%] rounded-2xl rounded-tl-sm bg-white p-3 text-[11px] leading-6 text-slate-600 shadow-sm">សួស្តី! ខ្ញុំចង់សួរអំពី «'+esc(p.title)+'» តើនៅមានទេ?</div>';
+      document.getElementById('chatInput').value='';
+      openModal('chatModal');
+    }
+
+    document.getElementById('yearNow').textContent=new Date().getFullYear();
+    document.getElementById('searchIcon').innerHTML=icon('search',18);
+    document.getElementById('searchButton').innerHTML=icon('search',18);
+    document.getElementById('searchChevron').innerHTML=icon('chevron',14);
+    document.getElementById('sortChevron').innerHTML=icon('chevron',13);
+    document.getElementById('postPlusIcon').innerHTML=icon('plus',17);
+    document.getElementById('mobilePostBtn').innerHTML=icon('plus',19);
+    document.getElementById('bellIcon').innerHTML=icon('bell',18);
+    document.getElementById('profileChevron').innerHTML=icon('chevron',13);
+    document.getElementById('noticeHeart').innerHTML=icon('heart',17);
+    document.getElementById('noticeCheck').innerHTML=icon('shield',17);
+    document.getElementById('noticeTag').innerHTML=icon('tag',17);
+    document.getElementById('menuSavedIcon').innerHTML=icon('bookmark',15);
+    document.getElementById('menuMineIcon').innerHTML=icon('user',15);
+    document.getElementById('menuAllIcon').innerHTML=icon('grid',15);
+    document.getElementById('heroShield').innerHTML=icon('shield',15);
+    document.getElementById('heroUsers').innerHTML=icon('user',15);
+    document.getElementById('heroSparkle').innerHTML=icon('spark',23);
+    document.getElementById('catAllIcon').innerHTML=icon('grid',15);
+    document.getElementById('catPhoneIcon').innerHTML=icon('phone',15);
+    document.getElementById('catCarIcon').innerHTML=icon('car',15);
+    document.getElementById('catHomeIcon').innerHTML=icon('home',15);
+    document.getElementById('catFashionIcon').innerHTML=icon('shirt',15);
+    document.getElementById('catFurnitureIcon').innerHTML=icon('sofa',15);
+    document.getElementById('emptyIcon').innerHTML=icon('search',24);
+    document.getElementById('showAllArrow').innerHTML=icon('arrow',14);
+    document.getElementById('sellSpark').innerHTML=icon('spark',14);
+    document.getElementById('bannerPlus').innerHTML=icon('plus',15);
+    document.getElementById('postModalSpark').innerHTML=icon('spark',14);
+    document.getElementById('uploadImageIcon').innerHTML=icon('image',22);
+    document.getElementById('submitPostIcon').innerHTML=icon('plus',16);
+    document.getElementById('sendMessageBtn').innerHTML=icon('send',17);
+    document.querySelectorAll('[data-close]').forEach(function(btn){btn.innerHTML=icon('x',18);});
+
+    document.getElementById('searchForm').addEventListener('submit',function(e){e.preventDefault();setCategory(document.getElementById('searchCategory').value);setSearch(document.getElementById('searchInput').value);document.getElementById('listings').scrollIntoView({behavior:'smooth'});});
+    document.getElementById('searchInput').addEventListener('input',function(e){searchText=e.target.value;savedOnly=false;mineOnly=false;renderProducts();});
+    document.getElementById('searchCategory').addEventListener('change',function(e){setCategory(e.target.value);});
+    document.getElementById('categoryStrip').addEventListener('click',function(e){const btn=e.target.closest('[data-category]');if(btn)setCategory(btn.dataset.category);});
+    document.querySelectorAll('[data-tag]').forEach(function(btn){btn.addEventListener('click',function(){setSearch(btn.dataset.tag);document.getElementById('listings').scrollIntoView({behavior:'smooth'});});});
+    document.getElementById('sortSelect').addEventListener('change',renderProducts);
+    document.getElementById('clearFilters').addEventListener('click',function(){setCategory('all');setSearch('');document.getElementById('searchCategory').value='all';});
+    document.getElementById('showAllBtn').addEventListener('click',function(){setCategory('all');setSearch('');savedOnly=false;mineOnly=false;renderProducts();});
+    document.getElementById('productGrid').addEventListener('click',function(e){
+      const btn=e.target.closest('[data-action]');if(!btn)return;
+      const id=btn.dataset.id;
+      if(btn.dataset.action==='view')openProduct(id);
+      if(btn.dataset.action==='save'){e.preventDefault();e.stopPropagation();toggleSaved(id);}
+    });
+    document.getElementById('productModalContent').addEventListener('click',function(e){
+      const btn=e.target.closest('[data-product-action]');if(!btn)return;
+      const p=products.find(function(x){return String(x.id)===String(currentProductId);});if(!p)return;
+      if(btn.dataset.productAction==='save')toggleSaved(p.id);
+      if(btn.dataset.productAction==='chat'){closeModal('productModal');openChat(p);}
+      if(btn.dataset.productAction==='offer'){offerProduct=p;document.getElementById('offerProductName').textContent=p.title+' · តម្លៃ '+money(p.price);document.getElementById('offerPrice').value=Number(p.price);closeModal('productModal');openModal('offerModal');}
+    });
+    [document.getElementById('postAdBtn'),document.getElementById('mobilePostBtn'),document.getElementById('bannerPostBtn'),document.getElementById('footerPostBtn')].forEach(function(btn){btn.addEventListener('click',openPost);});
+    document.getElementById('notificationBtn').addEventListener('click',function(e){e.stopPropagation();toggleDropdown('notificationMenu');});
+    document.getElementById('profileBtn').addEventListener('click',function(e){e.stopPropagation();toggleDropdown('profileMenu');});
+    document.addEventListener('click',function(e){if(!e.target.closest('#notificationMenu')&&!e.target.closest('#notificationBtn')&&!e.target.closest('#profileMenu')&&!e.target.closest('#profileBtn'))closeDropdowns();});
+    document.querySelectorAll('[data-profile-action]').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        closeDropdowns();activeCategory='all';document.querySelectorAll('[data-category]').forEach(function(b){b.classList.toggle('active',b.dataset.category==='all');});
+        searchText='';document.getElementById('searchInput').value='';document.getElementById('searchCategory').value='all';
+        savedOnly=btn.dataset.profileAction==='saved';mineOnly=btn.dataset.profileAction==='mine';
+        renderProducts();document.getElementById('listings').scrollIntoView({behavior:'smooth'});
+        if(savedOnly && savedIds.length===0)toast('អ្នកមិនទាន់បានរក្សាទុកទំនិញណាមួយទេ។','warning');
+      });
+    });
+    document.getElementById('postImage').addEventListener('change',function(e){
+      const file=e.target.files&&e.target.files[0];if(!file)return;
+      if(!file.type.startsWith('image/')){toast('សូមជ្រើសរើសឯកសាររូបភាព។','error');return;}
+      if(file.size>8*1024*1024){toast('រូបភាពត្រូវមានទំហំតិចជាង ៨MB។','warning');e.target.value='';return;}
+      const reader=new FileReader();
+      reader.onload=function(){postImageData=reader.result;document.getElementById('imagePreview').src=postImageData;document.getElementById('imagePreview').classList.remove('hidden');document.getElementById('uploadImageIcon').classList.add('hidden');document.getElementById('uploadTitle').textContent=file.name;};
+      reader.readAsDataURL(file);
+    });
+    document.getElementById('postForm').addEventListener('submit',function(e){
+      e.preventDefault();
+      const category=document.getElementById('postCategory').value;
+      const item={
+        id:'user-'+Date.now(),title:document.getElementById('postTitle').value.trim(),price:Number(document.getElementById('postPrice').value),
+        category:category,location:document.getElementById('postLocation').value,time:'ទើបតែនេះ',condition:document.getElementById('postCondition').value,
+        seller:'អ្នកប្រើប្រាស់ថ្មី',avatar:'https://i.pravatar.cc/100?img=12',verified:false,rating:'ថ្មី',image:postImageData||categoryImages[category]||categoryImages.phones,
+        description:document.getElementById('postDescription').value.trim()||'មិនទាន់មានការពិពណ៌នាបន្ថែមទេ។',userCreated:true,createdAt:Date.now()
+      };
+      if(!item.title||!Number.isFinite(item.price)||item.price<=0){toast('សូមពិនិត្យឈ្មោះ និងតម្លៃទំនិញ។','warning');return;}
+      products.unshift(item);persistPosts();activeCategory='all';savedOnly=false;mineOnly=false;searchText='';
+      document.getElementById('searchInput').value='';document.getElementById('searchCategory').value='all';
+      document.querySelectorAll('[data-category]').forEach(function(b){b.classList.toggle('active',b.dataset.category==='all');});
+      renderProducts();closeModal('postModal');document.getElementById('listings').scrollIntoView({behavior:'smooth'});
+      toast('ទំនិញរបស់អ្នកត្រូវបានបង្ហោះក្នុងបញ្ជីរួចរាល់!');postImageData='';
+    });
+    document.getElementById('chatForm').addEventListener('submit',function(e){
+      e.preventDefault();const value=document.getElementById('chatInput').value.trim();if(!value)return;
+      const messages=document.getElementById('chatMessages');
+      const bubble=document.createElement('div');bubble.className='ml-auto max-w-[85%] rounded-2xl rounded-tr-sm bg-indigo-600 p-3 text-[11px] leading-6 text-white shadow-sm';bubble.textContent=value;messages.appendChild(bubble);
+      document.getElementById('chatInput').value='';messages.scrollTop=messages.scrollHeight;
+      toast('សារសាកល្បងត្រូវបានបន្ថែមក្នុងការសន្ទនា។');
+    });
+    document.getElementById('offerForm').addEventListener('submit',function(e){
+      e.preventDefault();if(!offerProduct)return;
+      const offer=Number(document.getElementById('offerPrice').value);
+      if(!Number.isFinite(offer)||offer<=0){toast('សូមបញ្ចូលតម្លៃសមរម្យ។','warning');return;}
+      closeModal('offerModal');toast('សំណើតម្លៃ '+money(offer)+' ត្រូវបានរៀបចំរួចរាល់។');
+      offerProduct=null;
+    });
+    document.querySelectorAll('[data-close]').forEach(function(btn){btn.addEventListener('click',function(){closeModal(btn.dataset.close);});});
+    document.querySelectorAll('.modal-layer').forEach(function(layer){layer.addEventListener('mousedown',function(e){if(e.target===layer)closeModal(layer.id);});});
+    document.addEventListener('keydown',function(e){if(e.key==='Escape'){document.querySelectorAll('.modal-layer.visible').forEach(function(el){closeModal(el.id);});closeDropdowns();}});
+    renderProducts();
+    document.getElementById('productGrid').classList.add('hidden');
+    document.getElementById('emptyState').classList.add('hidden');
+    document.getElementById('skeletonGrid').classList.remove('hidden');
+    setTimeout(function(){renderProducts();},800);
+  </script>
+</body>
+</html>
