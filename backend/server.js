@@ -473,7 +473,7 @@ app.post('/api/vendors/:id/reviews', authenticate, async (req, res) => {
 
 app.get('/api/offers', authenticate, async (req, res) => {
   const [{ data: vendor }, admin] = await Promise.all([vendorFor(req.user.id), isAdmin(req.user.id)]);
-  let query = supabase.from('offers').select('*,products(id,title,price,product_images(id,file_id,sort_order)),vendors(store_name),profiles:buyer_id(display_name)')
+  let query = supabase.from('offers').select('*,products(id,title,price,product_images(id,file_id,sort_order)),vendors(store_name)')
     .order('created_at', { ascending: false }).limit(100);
   if (admin) {
     // Admin can review all offer records.
@@ -484,7 +484,13 @@ app.get('/api/offers', authenticate, async (req, res) => {
   }
   const { data, error } = await query;
   if (error) return fail(res, 500, 'Could not load offers');
-  res.json({ data: (data || []).map(row => ({ ...row, products: row.products ? publicProduct(row.products) : null })) });
+  const buyerIds = [...new Set((data || []).map(row => row.buyer_id))];
+  let buyerNames = {};
+  if (buyerIds.length) {
+    const { data: buyers } = await supabase.from('profiles').select('id,display_name').in('id', buyerIds);
+    buyerNames = Object.fromEntries((buyers || []).map(row => [row.id, row.display_name]));
+  }
+  res.json({ data: (data || []).map(row => ({ ...row, buyer_name: buyerNames[row.buyer_id] || 'អ្នកទិញ', products: row.products ? publicProduct(row.products) : null })) });
 });
 app.post('/api/products/:id/offers', authenticate, async (req, res) => {
   const offer_price = Number(req.body.offer_price);
@@ -555,7 +561,7 @@ app.post('/api/orders', authenticate, async (req, res) => {
 });
 app.get('/api/orders', authenticate, async (req, res) => {
   const { data, error } = await supabase.from('orders')
-    .select('*,order_items(id,quantity,unit_price,products(id,title),vendors(store_name))')
+    .select('*,order_items(id,quantity,unit_price,fulfillment_status,vendor_id,products(id,title),vendors(store_name))')
     .eq('customer_id', req.user.id).order('created_at', { ascending: false });
   if (error) return fail(res, 500, 'Could not load orders');
   res.json({ data: data || [] });
