@@ -245,9 +245,12 @@ async function getMaintenanceSettings() {
 }
 async function getSiteBranding(){
   if(!supabase)return {faviconUrl:''};
-  const {data,error}=await supabase.from('site_settings').select('value').eq('key','site_branding').maybeSingle();
+  const {data,error}=await supabase.from('site_settings').select('value,updated_at').eq('key','site_branding').maybeSingle();
   if(error){console.error('Could not read website branding:',error.message);return {faviconUrl:''}}
-  return {faviconUrl:clean(data?.value?.faviconUrl,2000)};
+  const value=data?.value||{};
+  const fileId=clean(value.faviconFileId,2048);
+  if(fileId)return {faviconUrl:'/api/site/favicon?v='+encodeURIComponent(clean(value.faviconVersion,80)||data?.updated_at||'1')};
+  return {faviconUrl:clean(value.faviconUrl,2000)};
 }
 app.get('/api/config', async (_req, res) => {
   const [maintenance,branding] = await Promise.all([getMaintenanceSettings(),getSiteBranding()]);
@@ -261,29 +264,50 @@ app.patch('/api/admin/settings', authenticate, requireAdmin, async (req, res) =>
   if (error) { console.error('Could not save maintenance settings:', error.message); return fail(res, 500, 'Could not save system status. Apply the site_settings database migration first.'); }
   res.json({ data: settings });
 });
+app.get('/api/site/favicon', async (_req,res)=>{
+  try{
+    if(!supabase)return fail(res,503,'Website favicon is unavailable.');
+    const {data,error}=await supabase.from('site_settings').select('value').eq('key','site_branding').maybeSingle();
+    if(error)throw error;
+    const value=data?.value||{};
+    const fileId=clean(value.faviconFileId,2048);
+    if(!fileId)return res.status(404).end();
+    return await streamTelegramFile(fileId,res,clean(value.faviconMimeType,80)||'image/png','inline','public, max-age=300, stale-while-revalidate=3600');
+  }catch(error){
+    console.error('Website favicon proxy failed:',error.message);
+    return fail(res,502,'Could not retrieve website favicon from Telegram.');
+  }
+});
 app.post('/api/admin/favicon', authenticate, requireAdmin, upload.single('file'), async (req,res)=>{
-  let uploadedPath='';
+  let newMessageId='';
   try{
     const file=req.file;
     if(!file||!['image/png','image/jpeg','image/webp'].includes(file.mimetype))return fail(res,400,'Choose a PNG, JPG or WEBP image.');
     if(file.size>2*1024*1024)return fail(res,400,'Favicon must be 2MB or smaller.');
-    const ext=file.mimetype==='image/png'?'png':file.mimetype==='image/webp'?'webp':'jpg';
-    uploadedPath='site/favicon-'+randomUUID()+'.'+ext;
-    const {error:uploadError}=await supabase.storage.from('profile-media').upload(uploadedPath,file.buffer,{contentType:file.mimetype,upsert:false,cacheControl:'3600'});
-    if(uploadError)throw uploadError;
-    const {data:publicData}=supabase.storage.from('profile-media').getPublicUrl(uploadedPath);
-    const faviconUrl=publicData.publicUrl;
+    assertTelegramStorageConfig();
+    const form=new FormData();
+    form.append('chat_id',telegramStorageChatId());
+    form.append('document',new Blob([file.buffer],{type:file.mimetype}),file.originalname||'website-favicon');
+    const message=await telegram('sendDocument',{method:'POST',body:form});
+    const fileId=message.document?.file_id;
+    if(!fileId||!message.message_id)throw new Error('Telegram did not return the favicon file_id/message_id.');
+    newMessageId=String(message.message_id);
     const {data:prior}=await supabase.from('site_settings').select('value').eq('key','site_branding').maybeSingle();
-    const {error:saveError}=await supabase.from('site_settings').upsert({key:'site_branding',value:{faviconUrl,faviconPath:uploadedPath},updated_at:new Date().toISOString()},{onConflict:'key'});
-    if(saveError){await supabase.storage.from('profile-media').remove([uploadedPath]);throw saveError}
+    const faviconVersion=randomUUID();
+    const faviconUrl='/api/site/favicon?v='+encodeURIComponent(faviconVersion);
+    const value={faviconUrl,faviconFileId:fileId,faviconMessageId:newMessageId,faviconMimeType:file.mimetype,faviconVersion};
+    const {error:saveError}=await supabase.from('site_settings').upsert({key:'site_branding',value,updated_at:new Date().toISOString()},{onConflict:'key'});
+    if(saveError)throw saveError;
+    const oldMessageId=clean(prior?.value?.faviconMessageId,40);
+    if(oldMessageId&&oldMessageId!==newMessageId)await deleteTelegramMessage(oldMessageId);
     const oldPath=clean(prior?.value?.faviconPath,500);
     if(oldPath&&oldPath.startsWith('site/'))await supabase.storage.from('profile-media').remove([oldPath]);
     res.set('Cache-Control','no-store');
-    return res.status(201).json({data:{faviconUrl}});
+    return res.status(201).json({data:{faviconUrl,storage:'telegram'}});
   }catch(error){
-    if(uploadedPath)await supabase.storage.from('profile-media').remove([uploadedPath]).catch(()=>{});
-    console.error('Website favicon upload failed:',error.message);
-    return fail(res,500,'Could not save website favicon. Check the profile-media Storage bucket and site_settings migration.');
+    if(newMessageId)await deleteTelegramMessage(newMessageId);
+    console.error('Website favicon Telegram upload failed:',error.message);
+    return fail(res,500,'Could not save website favicon to Telegram. Check TELEGRAM_BOT_TOKEN and TELEGRAM_CHANNEL_ID permissions.');
   }
 });
 app.use('/api', async (req, res, nextMiddleware) => {
