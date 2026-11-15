@@ -96,3 +96,23 @@ on conflict (id) do update set
 
 -- Storage writes are performed only through the server-side service-role API.
 -- Do not add public upload/read policies to seller-verification.
+
+
+-- Telegram-backed media metadata. URLs are stable backend proxy routes; Telegram
+-- file_path values are never persisted because Telegram download paths expire.
+alter table public.profiles
+  add column if not exists avatar_url text,
+  add column if not exists cover_url text,
+  add column if not exists avatar_file_id text,
+  add column if not exists avatar_message_id text,
+  add column if not exists cover_file_id text,
+  add column if not exists cover_message_id text;
+
+alter table public.product_images
+  add column if not exists image_url text;
+
+alter table public.vendors
+  add column if not exists document_url text,
+  add column if not exists document_file_id text,
+  add column if not exists document_message_id text,
+  add column if not exists document_mime_type text;
