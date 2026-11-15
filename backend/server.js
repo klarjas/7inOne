@@ -81,7 +81,7 @@ async function telegram(method, payload) {
   try { json = await response.json(); } catch { throw new Error('Telegram returned an invalid response.'); }
   if (!response.ok || !json.ok) {
     const description = clean(json?.description || `Telegram HTTP ${response.status}`, 300);
-    if (/not enough rights|administrator|chat not found|bot was blocked|have no rights/i.test(description)) {
+    if (/not enough rights|administrator|chat not found|bot was blocked|have no rights|not a member/i.test(description)) {
       throw new Error('Telegram bot cannot post to the storage channel. Add the bot as an administrator and allow it to post messages.');
     }
     throw new Error(`Telegram upload failed: ${description}`);
@@ -126,7 +126,7 @@ function publicProduct(product) {
     }))
   };
 }
-async function streamTelegramFile(fileId, res, mimeType = 'application/octet-stream', disposition = 'inline') {
+async function streamTelegramFile(fileId, res, mimeType = 'application/octet-stream', disposition = 'inline', cacheControl = 'public, max-age=86400, stale-while-revalidate=604800') {
   const file = await telegram('getFile', {
     method: 'POST', headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ file_id: fileId })
@@ -137,7 +137,7 @@ async function streamTelegramFile(fileId, res, mimeType = 'application/octet-str
   res.set('Content-Type', detectedType);
   res.set('Content-Disposition', disposition);
   res.set('X-Content-Type-Options', 'nosniff');
-  res.set('Cache-Control', 'public, max-age=86400, stale-while-revalidate=604800');
+  res.set('Cache-Control', cacheControl);
   return res.send(Buffer.from(await fileResponse.arrayBuffer()));
 }
 
@@ -691,7 +691,7 @@ app.get('/api/admin/vendors/:id/document', authenticate, requireAdmin, async (re
       .select('document_file_id,document_mime_type').eq('id', req.params.id).maybeSingle();
     if (error || !vendor?.document_file_id) return fail(res, 404, 'Seller verification document not found.');
     return await streamTelegramFile(vendor.document_file_id, res, vendor.document_mime_type || 'application/octet-stream',
-      vendor.document_mime_type === 'application/pdf' ? 'attachment' : 'inline');
+      'inline', 'private, no-store');
   } catch (error) {
     console.error('Seller document proxy failed:', error.message);
     return fail(res, 502, error.message || 'Could not retrieve seller verification document.');
