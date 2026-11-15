@@ -124,6 +124,15 @@
   <label class="mt-4 block"><span class="label">សារបង្ហាញទៅកាន់អ្នកប្រើប្រាស់ (អាចកែប្រែបាន)</span><textarea class="field min-h-[86px] resize-y" id="maintenanceMessageInput" maxlength="1000" placeholder="សរសេរសារជាភាសាខ្មែរ..."></textarea></label>
   <div class="mt-4 flex flex-wrap items-center justify-between gap-3"><p class="text-[10px] text-slate-400" id="maintenanceStatusHint">ស្ថានភាពបច្ចុប្បន្ន៖ កំពុងដំណើរការ</p><button class="brand-gradient rounded-xl px-5 py-2.5 text-[11px] font-bold text-white" id="saveMaintenanceSettings" type="button">រក្សាទុកស្ថានភាព</button></div>
 </div>
+<div class="mb-6 rounded-2xl border border-violet-100 bg-white p-5 soft-shadow sm:p-6">
+  <div class="mb-4"><p class="text-[10px] font-bold tracking-wide text-violet-600">WEBSITE BRANDING</p><h2 class="mt-1 text-lg font-bold">Logo Website / Favicon</h2><p class="mt-1 text-[10px] text-slate-400">ប្ដូររូបតូចដែលបង្ហាញលើ Browser Tab សម្រាប់គេហទំព័រទាំងមូល។</p></div>
+  <div class="flex flex-wrap items-center gap-4">
+    <div class="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50"><img id="faviconPreview" alt="Website favicon preview" class="h-12 w-12 object-contain" src="/favicon.ico"/></div>
+    <div class="min-w-0 flex-1"><label class="block"><span class="label">ជ្រើសរើសរូប Logo</span><input id="faviconFile" class="field" type="file" accept="image/png,image/jpeg,image/webp"/></label><p class="mt-1 text-[9px] text-slate-400">PNG, JPG ឬ WEBP · ទំហំអតិបរមា 2MB · គួរប្រើរូបការ៉េ 1:1</p></div>
+    <button class="brand-gradient rounded-xl px-5 py-3 text-[11px] font-bold text-white" id="saveFavicon" type="button">រក្សាទុក Logo</button>
+  </div>
+  <p class="mt-3 text-[10px] text-slate-400" id="faviconStatus">Logo បច្ចុប្បន្នរបស់ Website</p>
+</div>
 <div class="mb-6 rounded-2xl border border-slate-100 bg-white p-5 soft-shadow sm:p-6">
   <div class="flex flex-wrap items-center justify-between gap-3">
     <div><p class="text-[10px] font-bold tracking-wide text-sky-600">TELEGRAM BOT STATUS</p><h2 class="mt-1 text-lg font-bold">ស្ថានភាព Telegram Bot</h2><p class="mt-1 text-[10px] text-slate-400">ពិនិត្យ Bot, Private Channel, សិទ្ធិ និងការផ្ទុករូបភាព។ មិនបង្ហាញ Token ទេ។</p></div>
