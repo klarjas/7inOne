@@ -243,10 +243,16 @@ async function getMaintenanceSettings() {
   const value = data?.value || {};
   return { maintenanceMode: value.maintenanceMode === true, maintenanceMessage: clean(value.maintenanceMessage, 1000) || DEFAULT_MAINTENANCE_MESSAGE };
 }
+async function getSiteBranding(){
+  if(!supabase)return {faviconUrl:''};
+  const {data,error}=await supabase.from('site_settings').select('value').eq('key','site_branding').maybeSingle();
+  if(error){console.error('Could not read website branding:',error.message);return {faviconUrl:''}}
+  return {faviconUrl:clean(data?.value?.faviconUrl,2000)};
+}
 app.get('/api/config', async (_req, res) => {
-  const maintenance = await getMaintenanceSettings();
+  const [maintenance,branding] = await Promise.all([getMaintenanceSettings(),getSiteBranding()]);
   res.set('Cache-Control', 'no-store');
-  res.json({ supabaseUrl: supabaseUrl || process.env.NEXT_PUBLIC_SUPABASE_URL || null, supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || null, ...maintenance });
+  res.json({ supabaseUrl: supabaseUrl || process.env.NEXT_PUBLIC_SUPABASE_URL || null, supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || null, ...maintenance, ...branding });
 });
 app.patch('/api/admin/settings', authenticate, requireAdmin, async (req, res) => {
   if (typeof req.body.maintenanceMode !== 'boolean') return fail(res, 400, 'maintenanceMode must be a boolean.');
@@ -254,6 +260,31 @@ app.patch('/api/admin/settings', authenticate, requireAdmin, async (req, res) =>
   const { error } = await supabase.from('site_settings').upsert({ key: 'maintenance_mode', value: settings, updated_at: new Date().toISOString() }, { onConflict: 'key' });
   if (error) { console.error('Could not save maintenance settings:', error.message); return fail(res, 500, 'Could not save system status. Apply the site_settings database migration first.'); }
   res.json({ data: settings });
+});
+app.post('/api/admin/favicon', authenticate, requireAdmin, upload.single('file'), async (req,res)=>{
+  let uploadedPath='';
+  try{
+    const file=req.file;
+    if(!file||!['image/png','image/jpeg','image/webp'].includes(file.mimetype))return fail(res,400,'Choose a PNG, JPG or WEBP image.');
+    if(file.size>2*1024*1024)return fail(res,400,'Favicon must be 2MB or smaller.');
+    const ext=file.mimetype==='image/png'?'png':file.mimetype==='image/webp'?'webp':'jpg';
+    uploadedPath='site/favicon-'+randomUUID()+'.'+ext;
+    const {error:uploadError}=await supabase.storage.from('profile-media').upload(uploadedPath,file.buffer,{contentType:file.mimetype,upsert:false,cacheControl:'3600'});
+    if(uploadError)throw uploadError;
+    const {data:publicData}=supabase.storage.from('profile-media').getPublicUrl(uploadedPath);
+    const faviconUrl=publicData.publicUrl;
+    const {data:prior}=await supabase.from('site_settings').select('value').eq('key','site_branding').maybeSingle();
+    const {error:saveError}=await supabase.from('site_settings').upsert({key:'site_branding',value:{faviconUrl,faviconPath:uploadedPath},updated_at:new Date().toISOString()},{onConflict:'key'});
+    if(saveError){await supabase.storage.from('profile-media').remove([uploadedPath]);throw saveError}
+    const oldPath=clean(prior?.value?.faviconPath,500);
+    if(oldPath&&oldPath.startsWith('site/'))await supabase.storage.from('profile-media').remove([oldPath]);
+    res.set('Cache-Control','no-store');
+    return res.status(201).json({data:{faviconUrl}});
+  }catch(error){
+    if(uploadedPath)await supabase.storage.from('profile-media').remove([uploadedPath]).catch(()=>{});
+    console.error('Website favicon upload failed:',error.message);
+    return fail(res,500,'Could not save website favicon. Check the profile-media Storage bucket and site_settings migration.');
+  }
 });
 app.use('/api', async (req, res, nextMiddleware) => {
   if (!['POST','PUT','PATCH','DELETE'].includes(req.method) || req.path === '/admin/settings') return nextMiddleware();
