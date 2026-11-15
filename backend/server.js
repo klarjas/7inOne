@@ -166,7 +166,7 @@ app.get('/api/products', async (req, res) => {
   const limit = Math.min(50, Math.max(1, Number.parseInt(req.query.limit, 10) || 24));
   const q = clean(req.query.q, 100);
   const category = clean(req.query.category, 80);
-  let query = supabase.from('products').select('id,title,description,price,stock,category,location,condition,view_count,created_at,vendor_id,product_images(id,file_id,sort_order),vendors!inner(id,user_id,store_name,status)', { count: 'exact' })
+  let query = supabase.from('products').select('id,title,description,price,stock,category,location,condition,view_count,created_at,vendor_id,product_images(id,file_id,sort_order),vendors!inner(id,store_name,status)', { count: 'exact' })
     .eq('status', 'active').eq('vendors.status', 'approved').order('created_at', { ascending: false })
     .range((page - 1) * limit, page * limit - 1);
   if (q) query = query.ilike('title', `%${q.replace(/[%_]/g, '')}%`);
@@ -180,7 +180,7 @@ app.get('/api/products', async (req, res) => {
 app.get('/api/products/:id', async (req, res) => {
   if (!db(res)) return;
   let { data, error } = await supabase.from('products')
-    .select('*,product_images(id,file_id,sort_order),vendors!inner(id,user_id,store_name,status)')
+    .select('*,product_images(id,file_id,sort_order),vendors!inner(id,store_name,status)')
     .eq('id', req.params.id).eq('status', 'active').eq('vendors.status', 'approved').maybeSingle();
   if (error || !data) return fail(res, 404, 'Product not found');
   const nextViews = Number(data.view_count || 0) + 1;
@@ -199,7 +199,8 @@ app.get('/api/me', authenticate, async (req, res) => {
     vendorFor(req.user.id)
   ]);
   const normalized = profile ? { ...profile, avatar_url: publicMediaUrl(profile.avatar_path), cover_url: publicMediaUrl(profile.cover_path) } : null;
-  res.json({ data: { user: { id: req.user.id, email: req.user.email, phone: req.user.phone || null }, profile: normalized, vendor, isAdmin: profile?.role === 'admin' } });
+  const safeVendor = vendor ? Object.fromEntries(Object.entries(vendor).filter(([key]) => key !== 'document_path')) : null;
+  res.json({ data: { user: { id: req.user.id, email: req.user.email, phone: req.user.phone || null }, profile: normalized, vendor: safeVendor, isAdmin: profile?.role === 'admin' } });
 });
 app.patch('/api/me', authenticate, async (req, res) => {
   const patch = {};
@@ -620,7 +621,8 @@ app.get('/api/admin/vendors', authenticate, requireAdmin, async (_req, res) => {
       const signed = await supabase.storage.from('seller-verification').createSignedUrl(vendor.document_path, 600);
       document_url = signed.data?.signedUrl || null;
     }
-    return { ...vendor, document_url };
+    const { document_path, ...safeVendor } = vendor;
+    return { ...safeVendor, document_url };
   }));
   res.json({ data: enriched });
 });
