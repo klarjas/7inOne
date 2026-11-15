@@ -64,6 +64,19 @@ async function requireAdmin(req, res, nextMiddleware) {
   if (!await isAdmin(req.user.id)) return fail(res, 403, 'Admin only');
   return nextMiddleware();
 }
+
+async function telegramDiagnosticCall(method, body) {
+  try {
+    const result = await telegram(method, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(body || {})
+    });
+    return { ok: true, result };
+  } catch (error) {
+    return { ok: false, error: clean(error.message, 300) };
+  }
+}
 async function requireVendor(req, res, nextMiddleware) {
   const { data: vendor, error } = await vendorFor(req.user.id);
   if (error || !vendor) return fail(res, 403, 'Vendor account not found');
@@ -164,6 +177,60 @@ async function ratingsFor(vendorIds) {
 }
 
 app.get('/health', (_req, res) => res.json({ status: 'ok', service: 'EcomStore', database: Boolean(supabase) }));
+
+// Admin-only Telegram storage diagnostics. Never returns the bot token.
+app.get('/api/admin/telegram/diagnostics', authenticate, requireAdmin, async (_req, res) => {
+  res.set('Cache-Control', 'no-store');
+  const chatId = telegramStorageChatId();
+  if (!process.env.TELEGRAM_BOT_TOKEN || !chatId) {
+    return res.status(503).json({
+      configured: false,
+      bot: { ok: false, error: process.env.TELEGRAM_BOT_TOKEN ? null : 'TELEGRAM_BOT_TOKEN is missing.' },
+      chat: { ok: false, error: chatId ? null : 'TELEGRAM_CHANNEL_ID / TELEGRAM_STORAGE_CHAT_ID is missing.' },
+      membership: { ok: false, error: 'Cannot check membership until bot and chat are available.' }
+    });
+  }
+
+  const botCheck = await telegramDiagnosticCall('getMe');
+  const bot = botCheck.ok ? {
+    ok: true,
+    id: botCheck.result.id,
+    username: botCheck.result.username || null,
+    first_name: botCheck.result.first_name || null
+  } : botCheck;
+
+  const chatCheck = await telegramDiagnosticCall('getChat', { chat_id: chatId });
+  const chat = chatCheck.ok ? {
+    ok: true,
+    id: chatCheck.result.id,
+    title: chatCheck.result.title || null,
+    type: chatCheck.result.type || null
+  } : chatCheck;
+
+  let membership = { ok: false, error: 'Skipped because getMe failed.' };
+  if (botCheck.ok) {
+    const memberCheck = await telegramDiagnosticCall('getChatMember', {
+      chat_id: chatId,
+      user_id: botCheck.result.id
+    });
+    membership = memberCheck.ok ? {
+      ok: true,
+      status: memberCheck.result.status,
+      can_post_messages: memberCheck.result.can_post_messages ?? null
+    } : memberCheck;
+  }
+
+  res.json({
+    configured: true,
+    chat_id: chatId,
+    bot,
+    chat,
+    membership,
+    can_upload: Boolean(bot.ok && chat.ok && membership.ok &&
+      ['administrator', 'creator'].includes(membership.status) &&
+      (membership.status === 'creator' || membership.can_post_messages !== false))
+  });
+});
 // Only the Supabase anon/publishable key is exposed to the browser. Never return the service-role key.
 const DEFAULT_MAINTENANCE_MESSAGE = 'ប្រព័ន្ធកំពុងធ្វើការអភិវឌ្ឍន៍ និងបន្ថែមមុខងារថ្មីៗ សូមអធ្យាស្រ័យចំពោះការរំខាន!';
 async function getMaintenanceSettings() {
