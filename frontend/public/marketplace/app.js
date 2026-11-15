@@ -144,9 +144,13 @@ async function renderProfile(){
   $('profileAvatar').src=p.avatar_url||'https://i.pravatar.cc/160?img=12';
   $('profileHeadingName').textContent=profileName();
   $('profileHeadingMeta').textContent=session.user.email||session.user.phone||'សមាជិក EcomStore';
-  const accountRole=me.isAdmin?'អ្នកគ្រប់គ្រង':isVerifiedSeller()?'អ្នកលក់បានផ្ទៀងផ្ទាត់':me.vendor?.status==='pending'?'អ្នកលក់កំពុងរង់ចាំ':me.vendor?.status==='rejected'?'ពាក្យអ្នកលក់ត្រូវបានបដិសេធ':'សមាជិក / អ្នកទិញ';
-  const roleClass=me.isAdmin?'bg-violet-50 text-violet-700':isVerifiedSeller()?'bg-emerald-50 text-emerald-700':me.vendor?.status==='pending'?'bg-amber-50 text-amber-700':me.vendor?.status==='rejected'?'bg-rose-50 text-rose-700':'bg-indigo-50 text-indigo-700';
-  $('profileSellerBadge').innerHTML='<span class="account-role-chip '+roleClass+'">'+ic(me.isAdmin?'shield':isVerifiedSeller()?'checkcircle':'user',12)+' '+esc(accountRole)+'</span>'+(isVerifiedSeller()?verifiedBadge():'');
+  const roleBadges=[];
+  if(me.isAdmin) roleBadges.push('<span class="account-role-chip bg-violet-50 text-violet-700">'+ic('shield',12)+' អ្នកគ្រប់គ្រង</span>');
+  if(isVerifiedSeller()) roleBadges.push('<span class="account-role-chip bg-emerald-50 text-emerald-700">'+ic('checkcircle',12)+' អ្នកលក់បានផ្ទៀងផ្ទាត់</span>');
+  else if(me.vendor?.status==='pending') roleBadges.push('<span class="account-role-chip bg-amber-50 text-amber-700">'+ic('clock',12)+' អ្នកលក់កំពុងរង់ចាំ</span>');
+  else if(me.vendor?.status==='rejected') roleBadges.push('<span class="account-role-chip bg-rose-50 text-rose-700">'+ic('x',12)+' ពាក្យអ្នកលក់ត្រូវបានបដិសេធ</span>');
+  if(!me.isAdmin && !me.vendor) roleBadges.push('<span class="account-role-chip bg-indigo-50 text-indigo-700">'+ic('user',12)+' សមាជិក / អ្នកទិញ</span>');
+  $('profileSellerBadge').innerHTML=roleBadges.join('');
   const cover=$('view-profile').querySelector('.cover');
   cover.style.backgroundImage=p.cover_url? `linear-gradient(115deg,rgba(15,23,42,.42),rgba(79,70,229,.12)),url("${p.cover_url}")`:'';
   $('profileApplyTop').textContent=me.vendor?'មើលស្ថានភាពហាង':'បើកហាងលក់នៅ EcomStore';
