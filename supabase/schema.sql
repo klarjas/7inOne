@@ -203,7 +203,7 @@ alter table public.order_items add constraint order_items_fulfillment_status_che
 drop policy if exists "orders_vendor_select" on public.orders;
 create policy "orders_vendor_select" on public.orders for select
 using (exists (select 1 from public.order_items oi join public.vendors v on v.id = oi.vendor_id
-  where oi.order_id = id and v.user_id = auth.uid()));
+  where oi.order_id = orders.id and v.user_id = auth.uid()));
 
 
 -- Prevent users from elevating their own role through the public profiles table.
