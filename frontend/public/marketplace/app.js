@@ -132,7 +132,26 @@ $('productDetail').querySelectorAll('[data-image]').forEach(b=>b.addEventListene
 async function loadSaved(){const r=await api('/api/saved');savedIds=new Set((r.data||[]).map(x=>x.products?.id).filter(Boolean));return r.data||[]}
 async function loadOrders(){const r=await api('/api/orders');window.myOrders=r.data||[];return window.myOrders}
 async function loadOffers(){const r=await api('/api/offers');return r.data||[]}
-async function renderProfile(){if(!requireLogin())return;await refreshSession();const p=me.profile||{};$('profileName').value=p.display_name||'';$('profilePhone').value=p.phone||session.user.phone||'';$('profileLocation').value=p.province||'ភ្នំពេញ';$('profileBio').value=p.bio||'';$('profilePassword').value='';$('profileAvatar').src=p.avatar_url||'https://i.pravatar.cc/160?img=12';$('profileHeadingName').textContent=profileName();$('profileHeadingMeta').textContent=session.user.email||session.user.phone||'សមាជិក EcomStore';$('profileSellerBadge').innerHTML=me.isAdmin?'<span class="verified">Admin</span>':isVerifiedSeller()?verifiedBadge():me.vendor?.status==='pending'?'<span class="rounded-full bg-amber-50 px-2 py-1 text-[10px] font-bold text-amber-700">កំពុងរង់ចាំការផ្ទៀងផ្ទាត់</span>':'';const cover=$('view-profile').querySelector('.cover');if(p.cover_url)cover.style.backgroundImage=`linear-gradient(115deg,rgba(49,46,129,.38),rgba(79,70,229,.08)),url("${p.cover_url}")`; $('profileApplyTop').textContent=me.vendor?'មើលស្ថានភាពអ្នកលក់':'ចុះឈ្មោះក្លាយជាអ្នកលក់';await renderProfileTab()}
+async function renderProfile(){
+  if(!requireLogin())return;
+  await refreshSession();
+  const p=me.profile||{};
+  $('profileName').value=p.display_name||'';
+  $('profilePhone').value=p.phone||session.user.phone||'';
+  $('profileLocation').value=p.province||'ភ្នំពេញ';
+  $('profileBio').value=p.bio||'';
+  $('profilePassword').value='';
+  $('profileAvatar').src=p.avatar_url||'https://i.pravatar.cc/160?img=12';
+  $('profileHeadingName').textContent=profileName();
+  $('profileHeadingMeta').textContent=session.user.email||session.user.phone||'សមាជិក EcomStore';
+  const accountRole=me.isAdmin?'អ្នកគ្រប់គ្រង':isVerifiedSeller()?'អ្នកលក់បានផ្ទៀងផ្ទាត់':me.vendor?.status==='pending'?'អ្នកលក់កំពុងរង់ចាំ':me.vendor?.status==='rejected'?'ពាក្យអ្នកលក់ត្រូវបានបដិសេធ':'សមាជិក / អ្នកទិញ';
+  const roleClass=me.isAdmin?'bg-violet-50 text-violet-700':isVerifiedSeller()?'bg-emerald-50 text-emerald-700':me.vendor?.status==='pending'?'bg-amber-50 text-amber-700':me.vendor?.status==='rejected'?'bg-rose-50 text-rose-700':'bg-indigo-50 text-indigo-700';
+  $('profileSellerBadge').innerHTML='<span class="account-role-chip '+roleClass+'">'+ic(me.isAdmin?'shield':isVerifiedSeller()?'checkcircle':'user',12)+' '+esc(accountRole)+'</span>'+(isVerifiedSeller()?verifiedBadge():'');
+  const cover=$('view-profile').querySelector('.cover');
+  cover.style.backgroundImage=p.cover_url? `linear-gradient(115deg,rgba(15,23,42,.42),rgba(79,70,229,.12)),url("${p.cover_url}")`:'';
+  $('profileApplyTop').textContent=me.vendor?'មើលស្ថានភាពហាង':'បើកហាងលក់នៅ EcomStore';
+  await renderProfileTab();
+}
 async function renderProfileTab(){
   if(!session)return;
   try{
