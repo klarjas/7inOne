@@ -83,10 +83,15 @@ async function telegram(method, payload) {
   try { json = await response.json(); } catch { throw new Error('Telegram returned an invalid response.'); }
   if (!response.ok || !json.ok) {
     const description = clean(json?.description || `Telegram HTTP ${response.status}`, 300);
-    if (/not enough rights|administrator|chat not found|bot was blocked|have no rights|not a member/i.test(description)) {
-      throw new Error('Telegram bot cannot post to the storage channel. Add the bot as an administrator and allow it to post messages.');
-    }
-    throw new Error(`Telegram upload failed: ${description}`);
+    // Preserve Telegram's actual API error so channel, permission, and token
+    // problems can be diagnosed from the application response and Render logs.
+    console.error('Telegram API request failed:', {
+      method,
+      httpStatus: response.status,
+      errorCode: json?.error_code || null,
+      description
+    });
+    throw new Error(`Telegram API ${method} failed (${json?.error_code || response.status}): ${description}`);
   }
   return json.result;
 }
