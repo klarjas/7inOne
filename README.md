@@ -23,14 +23,15 @@ Full-stack marketplace for Cambodia and international customers. One Render Web 
 - Next.js 15 / React 19 / TypeScript / Tailwind CSS 4
 - Express 5 (ES modules)
 - Supabase Auth + PostgreSQL
-- Telegram Bot API for product image storage (server-side uploads and image proxy)
-- Supabase Storage: public `profile-media` bucket for avatars/covers; private `seller-verification` bucket for ID/business documents
+- Telegram Bot API private channel storage for profile avatars/covers, product images, and seller verification files
+- Backend Telegram media proxy resolves `getFile` dynamically; expiring Telegram file URLs are never stored
+- Supabase Storage buckets remain only for legacy media; new marketplace uploads use Telegram
 
 ## Supabase setup
 
 1. Open the Supabase SQL Editor for the EcomStore project.
 2. Run the complete `supabase/schema.sql` file from this repository.
-3. Run `supabase/p2p_marketplace_migration.sql` after the base schema. This adds profile media, private seller-document storage, saved items, real seller ratings, offers, listing locations/conditions, and listing view counts.
+3. Run `supabase/p2p_marketplace_migration.sql` after the base schema. This adds Telegram media metadata fields and proxy URLs, saved items, real seller ratings, offers, listing locations/conditions, and listing view counts.
 4. Create a customer account through the storefront.
 5. To make your own account the first administrator, replace the email below with the exact email used for that account and run this SQL in the SQL Editor:
 
@@ -62,10 +63,10 @@ Set these environment variables in Render. Never commit real secrets to GitHub.
 | `NEXT_PUBLIC_SUPABASE_URL` | Browser Supabase URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Browser publishable/anon key |
 | `TELEGRAM_BOT_TOKEN` | Backend only; keep secret |
-| `TELEGRAM_CHANNEL_ID` | Private image-storage channel ID |
+| `TELEGRAM_STORAGE_CHAT_ID` | Private Telegram storage channel ID (the bot must be an administrator with posting permission) |
 | `AUTO_APPROVE_PRODUCTS` | Keep `false` so admins review new products |
 
-Render supplies `PORT` automatically. `FRONTEND_ORIGIN` is optional because the app and API share the same origin.
+Set `TELEGRAM_BOT_TOKEN` and `TELEGRAM_STORAGE_CHAT_ID` in the backend hosting environment. The bot must be an administrator in the private channel with permission to post messages. Render supplies `PORT` automatically. `FRONTEND_ORIGIN` is optional because the app and API share the same origin.
 
 ## Payment notes
 
