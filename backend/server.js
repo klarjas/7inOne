@@ -221,7 +221,7 @@ app.get('/api/me', authenticate, async (req, res) => {
     supabase.from('profiles').select('*').eq('id', req.user.id).maybeSingle(),
     vendorFor(req.user.id)
   ]);
-  const normalized = profile ? { ...profile, avatar_url: publicMediaUrl(profile.avatar_path), cover_url: publicMediaUrl(profile.cover_path) } : null;
+  const normalized = profile ? { ...profile, avatar_url: profile.avatar_url || telegramMediaUrl(profile.avatar_file_id) || publicMediaUrl(profile.avatar_path), cover_url: profile.cover_url || telegramMediaUrl(profile.cover_file_id) || publicMediaUrl(profile.cover_path) } : null;
   const safeVendor = vendor ? Object.fromEntries(Object.entries(vendor).filter(([key]) => key !== 'document_path')) : null;
   res.json({ data: { user: { id: req.user.id, email: req.user.email, phone: req.user.phone || null }, profile: normalized, vendor: safeVendor, isAdmin: profile?.role === 'admin' } });
 });
@@ -235,7 +235,7 @@ app.patch('/api/me', authenticate, async (req, res) => {
   if (!Object.keys(patch).length) return fail(res, 400, 'No profile fields supplied');
   const { data, error } = await supabase.from('profiles').update(patch).eq('id', req.user.id).select().single();
   if (error) return fail(res, 400, 'Could not update profile');
-  res.json({ data: { ...data, avatar_url: publicMediaUrl(data.avatar_path), cover_url: publicMediaUrl(data.cover_path) } });
+  res.json({ data: { ...data, avatar_url: data.avatar_url || telegramMediaUrl(data.avatar_file_id) || publicMediaUrl(data.avatar_path), cover_url: data.cover_url || telegramMediaUrl(data.cover_file_id) || publicMediaUrl(data.cover_path) } });
 });
 app.post('/api/me/media', authenticate, upload.single('file'), async (req, res) => {
   try {
