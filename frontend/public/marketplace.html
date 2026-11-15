@@ -29,6 +29,7 @@
     button{cursor:pointer}
     .glass{background:rgba(255,255,255,.84);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
     .container-main{width:min(1320px,calc(100% - 40px));margin-inline:auto}
+    .hidden{display:none!important}
     .brand-gradient{background:linear-gradient(135deg,#4F46E5 0%,#6366F1 55%,#818CF8 100%)}
     .hero-glow{background:radial-gradient(circle at 82% 28%,rgba(199,210,254,.48),transparent 28%),radial-gradient(circle at 10% 100%,rgba(129,140,248,.20),transparent 34%),linear-gradient(120deg,#EEF2FF 0%,#F5F7FF 52%,#EDE9FE 100%)}
     .post-glow{box-shadow:0 8px 24px rgba(79,70,229,.25),0 0 0 0 rgba(99,102,241,.22);animation:softGlow 3s ease-in-out infinite}
@@ -62,12 +63,12 @@
     .toast{animation:toastIn .35s cubic-bezier(.16,1,.3,1) both}
     @keyframes toastIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
     .no-scroll{overflow:hidden}
-    @media(max-width:640px){.container-main{width:min(100% - 28px,1320px)}.modal-layer{padding:10px;align-items:flex-end}.modal-panel{border-radius:24px 24px 18px 18px;max-height:94vh}.hero-title{font-size:2rem;line-height:1.35}}
+    @media(max-width:640px){.container-main{width:min(calc(100% - 28px),1320px)}.modal-layer{padding:10px;align-items:flex-end}.modal-panel{border-radius:24px 24px 18px 18px;max-height:94vh}.hero-title{font-size:2rem;line-height:1.35}}
   </style>
 </head>
 <body class="font-khmer">
   <header class="glass sticky top-0 z-50 border-b border-white/70 shadow-[0_3px_18px_rgba(30,41,59,.045)]">
-    <div class="container-main flex min-h-[76px] items-center gap-4 py-3">
+    <div class="container-main flex min-h-[76px] flex-wrap items-center gap-4 py-3">
       <a href="#" class="flex shrink-0 items-center gap-2.5" aria-label="EcomStore ទំព័រដើម">
         <span class="brand-gradient grid h-11 w-11 place-items-center rounded-2xl text-white shadow-lg shadow-indigo-200">
           <svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5z"/><path d="m4.5 7.8 7.5 4.4 7.5-4.4M12 12.3V21"/></svg>
@@ -562,7 +563,18 @@
       if(!file.type.startsWith('image/')){toast('សូមជ្រើសរើសឯកសាររូបភាព។','error');return;}
       if(file.size>8*1024*1024){toast('រូបភាពត្រូវមានទំហំតិចជាង ៨MB។','warning');e.target.value='';return;}
       const reader=new FileReader();
-      reader.onload=function(){postImageData=reader.result;document.getElementById('imagePreview').src=postImageData;document.getElementById('imagePreview').classList.remove('hidden');document.getElementById('uploadImageIcon').classList.add('hidden');document.getElementById('uploadTitle').textContent=file.name;};
+      reader.onload=function(){
+        const source=new Image();
+        source.onload=function(){
+          const maxEdge=1400;const ratio=Math.min(1,maxEdge/Math.max(source.width,source.height));
+          const canvas=document.createElement('canvas');canvas.width=Math.round(source.width*ratio);canvas.height=Math.round(source.height*ratio);
+          const context=canvas.getContext('2d');context.drawImage(source,0,0,canvas.width,canvas.height);
+          postImageData=canvas.toDataURL('image/jpeg',.82);
+          document.getElementById('imagePreview').src=postImageData;document.getElementById('imagePreview').classList.remove('hidden');document.getElementById('uploadImageIcon').classList.add('hidden');document.getElementById('uploadTitle').textContent=file.name;
+        };
+        source.onerror=function(){toast('មិនអាចបើករូបភាពនេះបានទេ។','error');};
+        source.src=reader.result;
+      };
       reader.readAsDataURL(file);
     });
     document.getElementById('postForm').addEventListener('submit',function(e){
