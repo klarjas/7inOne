@@ -332,7 +332,7 @@ app.patch('/api/products/:id', authenticate, async (req, res) => {
   if (patch.title !== undefined && patch.title.length < 2) return fail(res, 400, 'Invalid title');
   if (patch.price !== undefined && (!Number.isFinite(patch.price) || patch.price < 0)) return fail(res, 400, 'Invalid price');
   if (patch.stock !== undefined && (!Number.isInteger(patch.stock) || patch.stock < 0)) return fail(res, 400, 'Invalid stock');
-  if (!Object.keys(patch).length) return fail(res, 400, 'No valid fields supplied');
+  if (!Object.keys(patch).length && req.body.status === undefined) return fail(res, 400, 'No valid fields supplied');
   if (req.body.status !== undefined) {
     const requestedStatus = clean(req.body.status, 20);
     if (requestedStatus === 'sold') { if (!admin && (!vendor || vendor.id !== existing.vendor_id)) return fail(res, 403, 'Not allowed'); patch.status = 'sold'; patch.sold_at = new Date().toISOString(); }
@@ -505,7 +505,7 @@ app.post('/api/products/:id/offers', authenticate, async (req, res) => {
   if (!Number.isFinite(offer_price) || offer_price <= 0) return fail(res, 400, 'Enter a valid offer price');
   const { data: product } = await supabase.from('products')
     .select('id,vendor_id,status,price,vendors!inner(status,user_id)')
-    .eq('id', req.params.id).eq('status', 'active').eq('vendors.status', 'approved').maybeSingle();
+    .eq('id', req.params.id).eq('status', 'active').eq('vendors.status', 'approved').gt('stock', 0).maybeSingle();
   if (!product) return fail(res, 404, 'Product not available');
   if (product.vendors.user_id === req.user.id) return fail(res, 400, 'You cannot make an offer on your own product');
   const { data, error } = await supabase.from('offers').insert({
