@@ -287,7 +287,7 @@ app.post('/api/admin/favicon', authenticate, requireAdmin, upload.single('file')
   }
 });
 app.use('/api', async (req, res, nextMiddleware) => {
-  if (!['POST','PUT','PATCH','DELETE'].includes(req.method) || req.path === '/admin/settings') return nextMiddleware();
+  if (!['POST','PUT','PATCH','DELETE'].includes(req.method) || ['/admin/settings','/admin/favicon'].includes(req.path)) return nextMiddleware();
   try {
     const settings = await getMaintenanceSettings();
     if (!settings.maintenanceMode) return nextMiddleware();
