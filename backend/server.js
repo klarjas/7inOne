@@ -24,7 +24,7 @@ app.use(cors({ origin: process.env.FRONTEND_ORIGIN ? process.env.FRONTEND_ORIGIN
 app.use(express.json({ limit: '1mb' }));
 app.use('/api', rateLimit({ windowMs: 60_000, limit: 120, standardHeaders: 'draft-8', legacyHeaders: false }));
 
-const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024, files: 5 } });
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024, files: 5 } });
 const fail = (res, status, message) => res.status(status).json({ error: message });
 const db = res => { if (!supabase) { fail(res, 503, 'Supabase is not configured'); return false; } return true; };
 const clean = (value, max = 500) => String(value ?? '').trim().slice(0, max);
@@ -69,32 +69,48 @@ async function requireVendor(req, res, nextMiddleware) {
   req.vendor = vendor;
   return nextMiddleware();
 }
+const telegramStorageChatId = () => process.env.TELEGRAM_STORAGE_CHAT_ID || process.env.TELEGRAM_CHANNEL_ID || '';
+function assertTelegramStorageConfig() {
+  if (!process.env.TELEGRAM_BOT_TOKEN) throw new Error('Missing TELEGRAM_BOT_TOKEN environment variable.');
+  if (!telegramStorageChatId()) throw new Error('Missing TELEGRAM_STORAGE_CHAT_ID environment variable.');
+}
 async function telegram(method, payload) {
-  const token = process.env.TELEGRAM_BOT_TOKEN;
-  if (!token) throw new Error('Telegram storage is not configured');
-  const response = await fetch(`https://api.telegram.org/bot${token}/${method}`, payload);
-  const json = await response.json();
-  if (!json.ok) throw new Error(json.description || 'Telegram request failed');
+  assertTelegramStorageConfig();
+  const response = await fetch(\`https://api.telegram.org/bot\${process.env.TELEGRAM_BOT_TOKEN}/\${method}\`, payload);
+  let json;
+  try { json = await response.json(); } catch { throw new Error('Telegram returned an invalid response.'); }
+  if (!response.ok || !json.ok) {
+    const description = clean(json?.description || \`Telegram HTTP \${response.status}\`, 300);
+    if (/not enough rights|administrator|chat not found|bot was blocked|have no rights/i.test(description)) {
+      throw new Error('Telegram bot cannot post to the storage channel. Add the bot as an administrator and allow it to post messages.');
+    }
+    throw new Error(\`Telegram upload failed: \${description}\`);
+  }
   return json.result;
 }
 async function uploadToTelegram(file) {
-  const channel = process.env.TELEGRAM_CHANNEL_ID;
-  if (!channel) throw new Error('Telegram image storage is not configured');
+  assertTelegramStorageConfig();
+  const useDocument = file.mimetype === 'application/pdf' || file.size > 9 * 1024 * 1024;
+  const method = useDocument ? 'sendDocument' : 'sendPhoto';
+  const field = useDocument ? 'document' : 'photo';
   const form = new FormData();
-  form.append('chat_id', channel);
-  form.append('photo', new Blob([file.buffer], { type: file.mimetype }), file.originalname || 'product.jpg');
-  const result = await telegram('sendPhoto', { method: 'POST', body: form });
-  return { messageId: String(result.message_id), fileId: result.photo?.at(-1)?.file_id || null };
+  form.append('chat_id', telegramStorageChatId());
+  form.append(field, new Blob([file.buffer], { type: file.mimetype }), file.originalname || (useDocument ? 'upload.bin' : 'image.jpg'));
+  const result = await telegram(method, { method: 'POST', body: form });
+  const media = useDocument ? result.document : result.photo?.at(-1);
+  if (!media?.file_id || !result.message_id) throw new Error('Telegram accepted the upload but did not return a file_id/message_id.');
+  return { messageId: String(result.message_id), fileId: media.file_id, mimeType: file.mimetype, method };
 }
 async function deleteTelegramMessage(messageId) {
-  if (!process.env.TELEGRAM_CHANNEL_ID) return;
+  if (!messageId || !process.env.TELEGRAM_BOT_TOKEN || !telegramStorageChatId()) return;
   try {
     await telegram('deleteMessage', {
       method: 'POST', headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ chat_id: process.env.TELEGRAM_CHANNEL_ID, message_id: Number(messageId) })
+      body: JSON.stringify({ chat_id: telegramStorageChatId(), message_id: Number(messageId) })
     });
   } catch (error) { console.warn('Telegram cleanup failed:', error.message); }
 }
+const telegramMediaUrl = fileId => fileId ? \`/api/media/telegram/\${encodeURIComponent(fileId)}\` : null;
 function publicMediaUrl(path) {
   if (!path || !supabase) return null;
   return supabase.storage.from('profile-media').getPublicUrl(path).data.publicUrl;
@@ -106,10 +122,25 @@ function publicProduct(product) {
     seller_review_count: product.seller_review_count ?? 0,
     product_images: (product.product_images || []).map(image => ({
       id: image.id, sort_order: image.sort_order,
-      image_url: image.file_id ? `/api/images/${encodeURIComponent(image.file_id)}` : null
+      image_url: image.image_url || telegramMediaUrl(image.file_id)
     }))
   };
 }
+async function streamTelegramFile(fileId, res, mimeType = 'application/octet-stream', disposition = 'inline') {
+  const file = await telegram('getFile', {
+    method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ file_id: fileId })
+  });
+  const fileResponse = await fetch(\`https://api.telegram.org/file/bot\${process.env.TELEGRAM_BOT_TOKEN}/\${file.file_path}\`);
+  if (!fileResponse.ok) throw new Error('Telegram file download failed.');
+  const detectedType = fileResponse.headers.get('content-type') || mimeType;
+  res.set('Content-Type', detectedType);
+  res.set('Content-Disposition', disposition);
+  res.set('X-Content-Type-Options', 'nosniff');
+  res.set('Cache-Control', 'public, max-age=86400, stale-while-revalidate=604800');
+  return res.send(Buffer.from(await fileResponse.arrayBuffer()));
+}
+
 async function ratingsFor(vendorIds) {
   const ids = [...new Set((vendorIds || []).filter(Boolean))];
   if (!ids.length) return {};
@@ -132,24 +163,16 @@ app.get('/api/config', (_req, res) => res.json({
   supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || null
 }));
 
-// Telegram image proxy keeps bot credentials and file paths on the server.
-app.get('/api/images/:fileId', async (req, res) => {
+// Permanent backend media URLs; Telegram file_path is resolved on every request because it expires.
+app.get('/api/media/telegram/:fileId', async (req, res) => {
   try {
-    if (!process.env.TELEGRAM_BOT_TOKEN) return fail(res, 503, 'Image storage is not configured');
+    if (!process.env.TELEGRAM_BOT_TOKEN) return fail(res, 503, 'Telegram media is unavailable: TELEGRAM_BOT_TOKEN is not configured.');
     const fileId = clean(req.params.fileId, 2048);
-    if (!fileId) return fail(res, 400, 'Invalid image ID');
-    const file = await telegram('getFile', {
-      method: 'POST', headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ file_id: fileId })
-    });
-    const imageResponse = await fetch(`https://api.telegram.org/file/bot${process.env.TELEGRAM_BOT_TOKEN}/${file.file_path}`);
-    if (!imageResponse.ok) return fail(res, 502, 'Could not retrieve image');
-    res.set('Content-Type', imageResponse.headers.get('content-type') || 'image/jpeg');
-    res.set('Cache-Control', 'public, max-age=86400, stale-while-revalidate=604800');
-    return res.send(Buffer.from(await imageResponse.arrayBuffer()));
+    if (!fileId) return fail(res, 400, 'Invalid Telegram file ID.');
+    return await streamTelegramFile(fileId, res);
   } catch (error) {
-    console.error('Image proxy error:', error.message);
-    return fail(res, 502, 'Image service unavailable');
+    console.error('Telegram media proxy error:', error.message);
+    return fail(res, 502, error.message || 'Could not retrieve Telegram media.');
   }
 });
 
@@ -166,7 +189,7 @@ app.get('/api/products', async (req, res) => {
   const limit = Math.min(50, Math.max(1, Number.parseInt(req.query.limit, 10) || 24));
   const q = clean(req.query.q, 100);
   const category = clean(req.query.category, 80);
-  let query = supabase.from('products').select('id,title,description,price,stock,category,location,condition,view_count,created_at,vendor_id,product_images(id,file_id,sort_order),vendors!inner(id,store_name,status)', { count: 'exact' })
+  let query = supabase.from('products').select('id,title,description,price,stock,category,location,condition,view_count,created_at,vendor_id,product_images(id,file_id,image_url,sort_order),vendors!inner(id,store_name,status)', { count: 'exact' })
     .eq('status', 'active').eq('vendors.status', 'approved').gt('stock', 0).order('created_at', { ascending: false })
     .range((page - 1) * limit, page * limit - 1);
   if (q) { const term = q.replace(/[%_,()]/g, '').trim(); if (term) query = query.or(`title.ilike.%${term}%,description.ilike.%${term}%,location.ilike.%${term}%`); }
@@ -180,7 +203,7 @@ app.get('/api/products', async (req, res) => {
 app.get('/api/products/:id', async (req, res) => {
   if (!db(res)) return;
   let { data, error } = await supabase.from('products')
-    .select('*,product_images(id,file_id,sort_order),vendors!inner(id,store_name,status)')
+    .select('*,product_images(id,file_id,image_url,sort_order),vendors!inner(id,store_name,status)')
     .eq('id', req.params.id).eq('status', 'active').eq('vendors.status', 'approved').gt('stock', 0).maybeSingle();
   if (error || !data) return fail(res, 404, 'Product not found');
   const nextViews = Number(data.view_count || 0) + 1;
@@ -215,53 +238,78 @@ app.patch('/api/me', authenticate, async (req, res) => {
   res.json({ data: { ...data, avatar_url: publicMediaUrl(data.avatar_path), cover_url: publicMediaUrl(data.cover_path) } });
 });
 app.post('/api/me/media', authenticate, upload.single('file'), async (req, res) => {
-  const type = clean(req.body.type, 20);
-  const file = req.file;
-  if (!['avatar','cover'].includes(type)) return fail(res, 400, 'Invalid profile image type');
-  if (!file || !['image/jpeg','image/png','image/webp'].includes(file.mimetype)) return fail(res, 400, 'Choose a JPG, PNG or WEBP image');
-  const extension = file.mimetype === 'image/png' ? 'png' : file.mimetype === 'image/webp' ? 'webp' : 'jpg';
-  const { data: priorProfile } = await supabase.from('profiles').select('avatar_path,cover_path').eq('id', req.user.id).maybeSingle();
-  const oldPath = type === 'avatar' ? priorProfile?.avatar_path : priorProfile?.cover_path;
-  const path = `${req.user.id}/${type}-${Date.now()}-${randomUUID()}.${extension}`;
-  const { error: storageError } = await supabase.storage.from('profile-media').upload(path, file.buffer, { contentType: file.mimetype, upsert: false });
-  if (storageError) return fail(res, 502, 'Could not upload profile image. Run the marketplace migration first.');
-  const patch = type === 'avatar' ? { avatar_path: path } : { cover_path: path };
-  const { data, error } = await supabase.from('profiles').update(patch).eq('id', req.user.id).select().single();
-  if (error) {
-    await supabase.storage.from('profile-media').remove([path]);
-    return fail(res, 500, 'Could not save profile image');
+  try {
+    const type = clean(req.body.type, 20);
+    const file = req.file;
+    if (!['avatar','cover'].includes(type)) return fail(res, 400, 'Invalid profile image type.');
+    if (!file || !['image/jpeg','image/png','image/webp'].includes(file.mimetype)) return fail(res, 400, 'Choose a JPG, PNG or WEBP image.');
+    const { data: prior } = await supabase.from('profiles')
+      .select('avatar_file_id,avatar_message_id,cover_file_id,cover_message_id,avatar_path,cover_path')
+      .eq('id', req.user.id).maybeSingle();
+    const uploaded = await uploadToTelegram(file);
+    const url = telegramMediaUrl(uploaded.fileId);
+    const patch = type === 'avatar'
+      ? { avatar_file_id: uploaded.fileId, avatar_message_id: uploaded.messageId, avatar_url: url, avatar_path: null }
+      : { cover_file_id: uploaded.fileId, cover_message_id: uploaded.messageId, cover_url: url, cover_path: null };
+    const { data, error } = await supabase.from('profiles').update(patch).eq('id', req.user.id).select().single();
+    if (error) {
+      await deleteTelegramMessage(uploaded.messageId);
+      console.error('Profile Telegram media DB update failed:', error.message);
+      return fail(res, 500, 'Image uploaded to Telegram but could not be saved to the profile database. Apply the Telegram media migration.');
+    }
+    const oldMessageId = type === 'avatar' ? prior?.avatar_message_id : prior?.cover_message_id;
+    if (oldMessageId && oldMessageId !== uploaded.messageId) await deleteTelegramMessage(oldMessageId);
+    const normalized = {
+      ...data,
+      avatar_url: data.avatar_url || telegramMediaUrl(data.avatar_file_id) || publicMediaUrl(data.avatar_path),
+      cover_url: data.cover_url || telegramMediaUrl(data.cover_file_id) || publicMediaUrl(data.cover_path)
+    };
+    return res.status(201).json({ data: normalized });
+  } catch (error) {
+    console.error('Profile media upload failed:', error.message);
+    return fail(res, 502, error.message || 'Could not upload profile image.');
   }
-  if (oldPath && oldPath !== path) await supabase.storage.from('profile-media').remove([oldPath]);
-  res.status(201).json({ data: { ...data, avatar_url: publicMediaUrl(data.avatar_path), cover_url: publicMediaUrl(data.cover_path) } });
 });
+
 app.post('/api/vendors/register', authenticate, upload.single('document'), async (req, res) => {
-  const store_name = clean(req.body.store_name, 80);
-  const description = clean(req.body.description, 1000);
-  const contact_phone = clean(req.body.contact_phone, 60);
-  const address = clean(req.body.address, 300);
-  const file = req.file;
-  if (store_name.length < 2 || contact_phone.length < 6 || address.length < 5) return fail(res, 400, 'Complete store name, contact and address');
-  if (!file || !['image/jpeg','image/png','image/webp','application/pdf'].includes(file.mimetype)) return fail(res, 400, 'Upload an ID card or business document');
-  const { data: existing, error: lookupError } = await vendorFor(req.user.id);
-  if (lookupError) return fail(res, 500, 'Could not check existing seller application');
-  if (existing && !['rejected'].includes(existing.status)) return fail(res, 409, 'Seller application already exists or is awaiting review');
-  const extension = file.mimetype === 'application/pdf' ? 'pdf' : file.mimetype === 'image/png' ? 'png' : file.mimetype === 'image/webp' ? 'webp' : 'jpg';
-  const path = `${req.user.id}/${Date.now()}-${randomUUID()}.${extension}`;
-  const { error: storageError } = await supabase.storage.from('seller-verification').upload(path, file.buffer, { contentType: file.mimetype, upsert: false });
-  if (storageError) return fail(res, 502, 'Could not securely upload document. Run the marketplace migration first.');
-  const values = { user_id: req.user.id, store_name, description, contact_phone, address, document_path: path, status: 'pending', reviewed_at: null, review_note: null };
-  const result = existing
-    ? await supabase.from('vendors').update(values).eq('id', existing.id).select().single()
-    : await supabase.from('vendors').insert(values).select().single();
-  if (result.error) {
-    await supabase.storage.from('seller-verification').remove([path]);
-    return fail(res, 400, 'Could not submit seller application');
+  let uploaded = null;
+  try {
+    const store_name = clean(req.body.store_name, 80);
+    const description = clean(req.body.description, 1000);
+    const contact_phone = clean(req.body.contact_phone, 60);
+    const address = clean(req.body.address, 300);
+    const file = req.file;
+    if (store_name.length < 2 || contact_phone.length < 6 || address.length < 5) return fail(res, 400, 'Complete store name, contact and address.');
+    if (!file || !['image/jpeg','image/png','image/webp','application/pdf'].includes(file.mimetype)) return fail(res, 400, 'Upload an ID card or business document.');
+    const { data: existing, error: lookupError } = await vendorFor(req.user.id);
+    if (lookupError) return fail(res, 500, 'Could not check existing seller application.');
+    if (existing && !['rejected'].includes(existing.status)) return fail(res, 409, 'Seller application already exists or is awaiting review.');
+    uploaded = await uploadToTelegram(file);
+    const values = {
+      user_id: req.user.id, store_name, description, contact_phone, address,
+      document_path: null, document_file_id: uploaded.fileId,
+      document_message_id: uploaded.messageId, document_mime_type: file.mimetype,
+      document_url: telegramMediaUrl(uploaded.fileId),
+      status: 'pending', reviewed_at: null, review_note: null
+    };
+    const result = existing
+      ? await supabase.from('vendors').update(values).eq('id', existing.id).select().single()
+      : await supabase.from('vendors').insert(values).select().single();
+    if (result.error) {
+      await deleteTelegramMessage(uploaded.messageId);
+      console.error('Seller document DB save failed:', result.error.message);
+      return fail(res, 500, 'Document uploaded to Telegram but seller application could not be saved. Apply the Telegram media migration.');
+    }
+    if (existing?.document_message_id && existing.document_message_id !== uploaded.messageId) {
+      await deleteTelegramMessage(existing.document_message_id);
+    }
+    const { document_file_id, document_message_id, ...safeVendor } = result.data;
+    return res.status(existing ? 200 : 201).json({ data: { ...safeVendor, document_url: telegramMediaUrl(document_file_id) } });
+  } catch (error) {
+    if (uploaded?.messageId) await deleteTelegramMessage(uploaded.messageId);
+    console.error('Seller document upload failed:', error.message);
+    return fail(res, 502, error.message || 'Could not upload seller verification document.');
   }
-  if (existing?.document_path && existing.document_path !== path) {
-    await supabase.storage.from('seller-verification').remove([existing.document_path]);
-  }
-  // A pending applicant remains a customer. Vendor privileges are granted only after Admin approval.
-  res.status(existing ? 200 : 201).json({ data: result.data });
 });
 
 // Vendor product management.
@@ -269,7 +317,7 @@ app.get('/api/vendor/products', authenticate, async (req, res) => {
   const { data: vendor } = await vendorFor(req.user.id);
   if (!vendor) return fail(res, 403, 'Vendor account not found');
   const { data, error } = await supabase.from('products')
-    .select('*,product_images(id,file_id,telegram_message_id,sort_order)')
+    .select('*,product_images(id,file_id,image_url,telegram_message_id,sort_order)')
     .eq('vendor_id', vendor.id).order('created_at', { ascending: false });
   if (error) return fail(res, 500, 'Could not load vendor products');
   res.json({ data: (data || []).map(publicProduct), vendor });
@@ -372,21 +420,30 @@ app.post('/api/products/:id/images', authenticate, upload.array('images', 5), as
   const { data: product } = await productQuery.maybeSingle();
   if (!product) return fail(res, 404, 'Product not found');
   const files = req.files || [];
-  if (!files.length || files.some(file => !file.mimetype.startsWith('image/'))) return fail(res, 400, 'Choose image files');
+  if (!files.length || files.some(file => !['image/jpeg','image/png','image/webp'].includes(file.mimetype))) {
+    return fail(res, 400, 'Choose JPG, PNG or WEBP product images.');
+  }
   const { count } = await supabase.from('product_images').select('*', { count: 'exact', head: true }).eq('product_id', product.id);
-  if ((count || 0) + files.length > 5) return fail(res, 400, 'Maximum 5 images per product');
+  if ((count || 0) + files.length > 5) return fail(res, 400, 'Maximum 5 images per product.');
   const uploaded = [];
   try {
     for (const file of files) uploaded.push(await uploadToTelegram(file));
-    const rows = uploaded.map((item, index) => ({ product_id: product.id, telegram_message_id: item.messageId, file_id: item.fileId, sort_order: (count || 0) + index }));
-    const { data, error } = await supabase.from('product_images').insert(rows).select();
-    if (error) throw error;
-    res.status(201).json({ data: (data || []).map(publicProduct) });
+    const rows = uploaded.map((item, index) => ({
+      product_id: product.id, telegram_message_id: item.messageId, file_id: item.fileId,
+      image_url: telegramMediaUrl(item.fileId), sort_order: (count || 0) + index
+    }));
+    const { data, error } = await supabase.from('product_images').insert(rows).select('id,product_id,file_id,telegram_message_id,image_url,sort_order');
+    if (error) throw new Error('Telegram uploads succeeded, but product image records could not be saved. Apply the Telegram media migration. ' + error.message);
+    return res.status(201).json({ data: (data || []).map(image => ({
+      ...image, image_url: image.image_url || telegramMediaUrl(image.file_id)
+    })) });
   } catch (error) {
     for (const item of uploaded) await deleteTelegramMessage(item.messageId);
-    return fail(res, 502, error.message || 'Image upload failed');
+    console.error('Product image upload failed:', error.message);
+    return fail(res, 502, error.message || 'Product image upload failed.');
   }
 });
+
 app.delete('/api/products/:id/images/:imageId', authenticate, async (req, res) => {
   const admin = await isAdmin(req.user.id);
   const { data: vendor } = await vendorFor(req.user.id);
@@ -410,7 +467,7 @@ app.delete('/api/products/:id/images/:imageId', authenticate, async (req, res) =
 // Marketplace user data: wishlist, seller trust, offers and seller performance.
 app.get('/api/saved', authenticate, async (req, res) => {
   const { data, error } = await supabase.from('saved_products')
-    .select('id,created_at,products!inner(id,title,description,price,stock,category,location,condition,view_count,vendor_id,product_images(id,file_id,sort_order),vendors!inner(id,store_name,status))')
+    .select('id,created_at,products!inner(id,title,description,price,stock,category,location,condition,view_count,vendor_id,product_images(id,file_id,image_url,sort_order),vendors!inner(id,store_name,status))')
     .eq('user_id', req.user.id).eq('products.status', 'active').eq('products.vendors.status', 'approved').gt('products.stock', 0)
     .order('created_at', { ascending: false });
   if (error) return fail(res, 500, 'Could not load saved products');
@@ -619,19 +676,28 @@ app.get('/api/admin/overview', authenticate, requireAdmin, async (_req, res) => 
   } });
 });
 app.get('/api/admin/vendors', authenticate, requireAdmin, async (_req, res) => {
-  const { data, error } = await supabase.from('vendors').select('*,profiles(display_name,phone,province)').order('created_at', { ascending: false });
+  const { data, error } = await supabase.from('vendors')
+    .select('*,profiles(display_name,phone,province)').order('created_at', { ascending: false });
   if (error) return fail(res, 500, 'Could not load vendors');
-  const enriched = await Promise.all((data || []).map(async vendor => {
-    let document_url = null;
-    if (vendor.document_path) {
-      const signed = await supabase.storage.from('seller-verification').createSignedUrl(vendor.document_path, 600);
-      document_url = signed.data?.signedUrl || null;
-    }
-    const { document_path, ...safeVendor } = vendor;
-    return { ...safeVendor, document_url };
-  }));
+  const enriched = (data || []).map(vendor => {
+    const { document_path, document_file_id, document_message_id, ...safeVendor } = vendor;
+    return { ...safeVendor, document_url: vendor.document_file_id ? \`/api/admin/vendors/\${encodeURIComponent(vendor.id)}/document\` : vendor.document_url || null };
+  });
   res.json({ data: enriched });
 });
+app.get('/api/admin/vendors/:id/document', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const { data: vendor, error } = await supabase.from('vendors')
+      .select('document_file_id,document_mime_type').eq('id', req.params.id).maybeSingle();
+    if (error || !vendor?.document_file_id) return fail(res, 404, 'Seller verification document not found.');
+    return await streamTelegramFile(vendor.document_file_id, res, vendor.document_mime_type || 'application/octet-stream',
+      vendor.document_mime_type === 'application/pdf' ? 'attachment' : 'inline');
+  } catch (error) {
+    console.error('Seller document proxy failed:', error.message);
+    return fail(res, 502, error.message || 'Could not retrieve seller verification document.');
+  }
+});
+
 app.patch('/api/admin/vendors/:id', authenticate, requireAdmin, async (req, res) => {
   const status = clean(req.body.status, 20);
   if (!['approved','rejected','blocked','pending'].includes(status)) return fail(res, 400, 'Invalid vendor status');
@@ -645,7 +711,7 @@ app.patch('/api/admin/vendors/:id', authenticate, requireAdmin, async (req, res)
   res.json({ data });
 });
 app.get('/api/admin/products', authenticate, requireAdmin, async (_req, res) => {
-  const { data, error } = await supabase.from('products').select('*,vendors(store_name,status),product_images(id,file_id,sort_order)').order('created_at', { ascending: false });
+  const { data, error } = await supabase.from('products').select('*,vendors(store_name,status),product_images(id,file_id,image_url,sort_order)').order('created_at', { ascending: false });
   if (error) return fail(res, 500, 'Could not load products');
   res.json({ data: (data || []).map(publicProduct) });
 });
