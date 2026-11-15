@@ -167,9 +167,9 @@ app.get('/api/products', async (req, res) => {
   const q = clean(req.query.q, 100);
   const category = clean(req.query.category, 80);
   let query = supabase.from('products').select('id,title,description,price,stock,category,location,condition,view_count,created_at,vendor_id,product_images(id,file_id,sort_order),vendors!inner(id,store_name,status)', { count: 'exact' })
-    .eq('status', 'active').eq('vendors.status', 'approved').order('created_at', { ascending: false })
+    .eq('status', 'active').eq('vendors.status', 'approved').gt('stock', 0).order('created_at', { ascending: false })
     .range((page - 1) * limit, page * limit - 1);
-  if (q) query = query.ilike('title', `%${q.replace(/[%_]/g, '')}%`);
+  if (q) { const term = q.replace(/[%_,()]/g, '').trim(); if (term) query = query.or(`title.ilike.%${term}%,description.ilike.%${term}%,location.ilike.%${term}%`); }
   if (category) query = query.eq('category', category);
   const { data, error, count } = await query;
   if (error) { console.error(error); return fail(res, 500, 'Could not load products'); }
@@ -181,7 +181,7 @@ app.get('/api/products/:id', async (req, res) => {
   if (!db(res)) return;
   let { data, error } = await supabase.from('products')
     .select('*,product_images(id,file_id,sort_order),vendors!inner(id,store_name,status)')
-    .eq('id', req.params.id).eq('status', 'active').eq('vendors.status', 'approved').maybeSingle();
+    .eq('id', req.params.id).eq('status', 'active').eq('vendors.status', 'approved').gt('stock', 0).maybeSingle();
   if (error || !data) return fail(res, 404, 'Product not found');
   const nextViews = Number(data.view_count || 0) + 1;
   await supabase.from('products').update({ view_count: nextViews }).eq('id', data.id);
@@ -405,7 +405,7 @@ app.delete('/api/products/:id/images/:imageId', authenticate, async (req, res) =
 app.get('/api/saved', authenticate, async (req, res) => {
   const { data, error } = await supabase.from('saved_products')
     .select('id,created_at,products!inner(id,title,description,price,stock,category,location,condition,view_count,vendor_id,product_images(id,file_id,sort_order),vendors!inner(id,store_name,status))')
-    .eq('user_id', req.user.id).eq('products.status', 'active').eq('products.vendors.status', 'approved')
+    .eq('user_id', req.user.id).eq('products.status', 'active').eq('products.vendors.status', 'approved').gt('products.stock', 0)
     .order('created_at', { ascending: false });
   if (error) return fail(res, 500, 'Could not load saved products');
   const trust = await ratingsFor((data || []).map(row => row.products?.vendor_id));
