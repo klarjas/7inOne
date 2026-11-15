@@ -55,11 +55,50 @@
 </section>
 <!-- PROFILE VIEW -->
 <section class="view" id="view-profile">
-<div class="shell py-7 sm:py-9"><div class="mb-5 flex flex-wrap items-center justify-between gap-3"><div><p class="text-[10px] font-bold text-indigo-600">គណនីផ្ទាល់ខ្លួន</p><h1 class="mt-1 text-2xl font-bold">គណនីរបស់ខ្ញុំ</h1><p class="mt-1 text-[11px] text-slate-400">គ្រប់គ្រងព័ត៌មានផ្ទាល់ខ្លួន និងសកម្មភាពរបស់អ្នក</p></div><button class="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[11px] font-bold text-slate-600" data-view="home">← ត្រឡប់ទៅផ្សារ</button></div>
-<div class="overflow-hidden rounded-[26px] border border-slate-100 bg-white soft-shadow"><div class="cover relative h-40 sm:h-52"><label class="absolute right-4 top-4 flex cursor-pointer items-center gap-2 rounded-xl bg-white/90 px-3 py-2 text-[10px] font-bold text-slate-700 shadow"><span id="coverCam"></span> កែរូប Cover<input accept="image/*" class="hidden" id="coverUpload" type="file"/></label></div><div class="px-5 pb-5 sm:px-8"><div class="-mt-12 flex flex-wrap items-end justify-between gap-4"><div class="flex items-end gap-4"><div class="relative"><img alt="រូប Profile" class="h-24 w-24 rounded-full border-4 border-white bg-white object-cover shadow-lg sm:h-28 sm:w-28" id="profileAvatar" src="https://i.pravatar.cc/160?img=12"/><label class="absolute bottom-1 right-1 grid h-8 w-8 cursor-pointer place-items-center rounded-full border-2 border-white bg-indigo-600 text-white shadow" id="avatarCam"><input accept="image/*" class="hidden" id="avatarUpload" type="file"/></label></div><div class="pb-2"><h2 class="text-lg font-bold" id="profileHeadingName">គណនីអ្នកប្រើប្រាស់</h2><p class="mt-1 text-[10px] text-slate-400" id="profileHeadingMeta">សមាជិក EcomStore</p><div class="mt-2" id="profileSellerBadge"></div></div></div><button class="mb-2 rounded-xl brand-gradient px-4 py-2.5 text-[10px] font-bold text-white shadow-lg shadow-indigo-100" id="profileApplyTop">ចុះឈ្មោះក្លាយជាអ្នកលក់</button></div></div>
-<div class="grid gap-6 border-t border-slate-100 p-5 sm:p-8 lg:grid-cols-[.9fr_1.1fr]"><div><div class="mb-4 flex items-center justify-between"><h3 class="font-bold">ព័ត៌មានផ្ទាល់ខ្លួន</h3><span class="rounded-full bg-slate-100 px-2.5 py-1 text-[9px] font-semibold text-slate-500">កែប្រែបាន</span></div><form class="space-y-3" id="profileForm"><label><span class="label">ឈ្មោះពេញ</span><input class="field" id="profileName" maxlength="60" required=""/></label><label><span class="label">លេខទូរស័ព្ទ</span><input class="field" id="profilePhone" placeholder="012 345 678"/></label><label><span class="label">ទីតាំង / ខេត្ត</span><select class="field" id="profileLocation"><option>ភ្នំពេញ</option><option>សៀមរាប</option><option>បាត់ដំបង</option><option>ព្រះសីហនុ</option><option>កំពង់ចាម</option><option>កំពត</option><option>តាកែវ</option><option>កណ្តាល</option><option>ផ្សេងៗ</option></select></label><label><span class="label">អំពីខ្ញុំ</span><textarea class="field min-h-[82px] resize-y" id="profileBio" maxlength="250" placeholder="ប្រាប់អ្នកដទៃអំពីខ្លួនអ្នក..."></textarea></label><div class="border-t border-slate-100 pt-3"><p class="mb-2 text-[11px] font-bold">ប្តូរពាក្យសម្ងាត់</p><input class="field" id="profilePassword" minlength="6" placeholder="បញ្ចូលពាក្យសម្ងាត់ថ្មី (បើចង់ប្តូរ)" type="password"/></div><button class="brand-gradient w-full rounded-xl py-3 text-[11px] font-bold text-white">រក្សាទុកការកែប្រែ</button></form></div>
-<div><div class="flex flex-wrap items-center justify-between gap-2"><h3 class="font-bold">សកម្មភាពរបស់ខ្ញុំ</h3><span class="text-[10px] text-slate-400" id="profileActivityCount"></span></div><div class="mt-3 flex overflow-x-auto border-b border-slate-100"><button class="tab active" data-profile-tab="saved">ទំនិញដែលបានរក្សាទុក</button><button class="tab" data-profile-tab="history">ប្រវត្តិការទិញ/តថ្លៃ</button><button class="tab" data-profile-tab="seller">ស្ថានភាពអ្នកលក់</button></div><div class="min-h-[270px] py-4" id="profileTabContent"></div></div>
-</div></div>
+<div class="shell account-shell py-7 sm:py-9">
+  <div class="account-page-heading mb-5 flex flex-wrap items-center justify-between gap-3">
+    <div><p class="text-[10px] font-bold tracking-[.16em] text-indigo-600">MY ACCOUNT</p><h1 class="mt-1 text-2xl font-bold">គណនីរបស់ខ្ញុំ</h1><p class="mt-1 text-[11px] text-slate-400">មជ្ឈមណ្ឌលគ្រប់គ្រងគណនី និងសកម្មភាពរបស់អ្នកនៅ EcomStore</p></div>
+    <button class="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[11px] font-bold text-slate-600 hover:border-indigo-200 hover:text-indigo-600" data-view="home">← ត្រឡប់ទៅផ្សារ</button>
+  </div>
+  <section class="account-hero overflow-hidden rounded-[28px] border border-slate-200 bg-white">
+    <div class="account-cover cover relative h-44 sm:h-56">
+      <div class="account-cover-shade absolute inset-0"></div>
+      <div class="absolute left-5 top-5 z-10 rounded-full border border-white/30 bg-slate-950/35 px-3 py-1.5 text-[9px] font-bold tracking-wide text-white backdrop-blur">ECOMSTORE MEMBER</div>
+      <label class="absolute right-4 top-4 z-10 flex cursor-pointer items-center gap-2 rounded-xl border border-white/50 bg-white/95 px-3 py-2 text-[10px] font-bold text-slate-700 shadow-lg"><span id="coverCam"></span> កែរូប Cover<input accept="image/*" class="hidden" id="coverUpload" type="file"/></label>
+    </div>
+    <div class="account-identity-wrap px-5 pb-5 sm:px-8">
+      <div class="account-identity flex flex-wrap items-end justify-between gap-4">
+        <div class="flex min-w-0 items-end gap-4">
+          <div class="account-avatar-wrap relative shrink-0"><img alt="រូប Profile" class="account-avatar h-24 w-24 rounded-[25px] border-4 border-white bg-white object-cover shadow-xl sm:h-32 sm:w-32" id="profileAvatar" src="https://i.pravatar.cc/160?img=12"/><label class="absolute bottom-1 right-1 grid h-8 w-8 cursor-pointer place-items-center rounded-xl border-2 border-white bg-indigo-600 text-white shadow" id="avatarCam"><input accept="image/*" class="hidden" id="avatarUpload" type="file"/></label></div>
+          <div class="min-w-0 pb-1"><p class="mb-1 text-[9px] font-bold uppercase tracking-[.14em] text-slate-400">ACCOUNT PROFILE</p><h2 class="truncate text-lg font-bold sm:text-xl" id="profileHeadingName">គណនីអ្នកប្រើប្រាស់</h2><p class="mt-1 truncate text-[10px] text-slate-500" id="profileHeadingMeta">សមាជិក EcomStore</p><div class="mt-2 flex flex-wrap gap-2" id="profileSellerBadge"></div></div>
+        </div>
+        <button class="mb-1 rounded-xl brand-gradient px-4 py-3 text-[10px] font-bold text-white shadow-lg shadow-indigo-100 hover:-translate-y-0.5" id="profileApplyTop">ចុះឈ្មោះក្លាយជាអ្នកលក់</button>
+      </div>
+      <div class="account-shortcuts mt-6 grid grid-cols-1 gap-2 sm:grid-cols-3">
+        <button class="account-shortcut" data-profile-tab="saved"><span class="account-shortcut-icon bg-rose-50 text-rose-600">♡</span><span><b>ទំនិញដែលបានរក្សាទុក</b><small>ផលិតផលដែលអ្នកចាប់អារម្មណ៍</small></span><span class="account-shortcut-arrow">→</span></button>
+        <button class="account-shortcut" data-profile-tab="history"><span class="account-shortcut-icon bg-indigo-50 text-indigo-600">↗</span><span><b>ការទិញ និងសំណើតថ្លៃ</b><small>តាមដានប្រតិបត្តិការរបស់អ្នក</small></span><span class="account-shortcut-arrow">→</span></button>
+        <button class="account-shortcut" data-profile-tab="seller"><span class="account-shortcut-icon bg-emerald-50 text-emerald-600">▣</span><span><b>ស្ថានភាពហាង</b><small>គ្រប់គ្រងការផ្ទៀងផ្ទាត់អ្នកលក់</small></span><span class="account-shortcut-arrow">→</span></button>
+      </div>
+    </div>
+  </section>
+  <div class="account-content-grid mt-5 grid gap-5 lg:grid-cols-[.82fr_1.18fr]">
+    <section class="account-panel rounded-[24px] border border-slate-200 bg-white p-5 sm:p-6">
+      <div class="mb-5 flex items-center justify-between gap-3"><div><p class="text-[9px] font-bold tracking-[.14em] text-indigo-600">PERSONAL INFORMATION</p><h3 class="mt-1 text-base font-bold">ព័ត៌មានផ្ទាល់ខ្លួន</h3><p class="mt-1 text-[10px] text-slate-400">ព័ត៌មាននេះជួយឱ្យអ្នកទិញ និងអ្នកលក់ទាក់ទងគ្នាបានងាយស្រួល</p></div><span class="rounded-full bg-slate-100 px-2.5 py-1 text-[9px] font-semibold text-slate-500">កែប្រែបាន</span></div>
+      <form class="space-y-3" id="profileForm">
+        <label><span class="label">ឈ្មោះពេញ</span><input class="field" id="profileName" maxlength="60" required=""/></label>
+        <label><span class="label">លេខទូរស័ព្ទ</span><input class="field" id="profilePhone" placeholder="012 345 678"/></label>
+        <label><span class="label">ទីតាំង / ខេត្ត</span><select class="field" id="profileLocation"><option>ភ្នំពេញ</option><option>សៀមរាប</option><option>បាត់ដំបង</option><option>ព្រះសីហនុ</option><option>កំពង់ចាម</option><option>កំពត</option><option>តាកែវ</option><option>កណ្តាល</option><option>ផ្សេងៗ</option></select></label>
+        <label><span class="label">អំពីខ្ញុំ</span><textarea class="field min-h-[90px] resize-y" id="profileBio" maxlength="250" placeholder="សរសេរព័ត៌មានខ្លីៗអំពីខ្លួនអ្នក..."></textarea></label>
+        <div class="border-t border-slate-100 pt-4"><p class="mb-2 text-[11px] font-bold">សុវត្ថិភាពគណនី</p><input class="field" id="profilePassword" minlength="6" placeholder="ពាក្យសម្ងាត់ថ្មី (មិនចាំបាច់)" type="password"/><p class="mt-1.5 text-[9px] text-slate-400">ទុកចន្លោះនេះទទេ ប្រសិនបើមិនចង់ប្តូរពាក្យសម្ងាត់។</p></div>
+        <button class="brand-gradient w-full rounded-xl py-3 text-[11px] font-bold text-white shadow-md shadow-indigo-100">រក្សាទុកការកែប្រែ</button>
+      </form>
+    </section>
+    <section class="account-panel min-w-0 rounded-[24px] border border-slate-200 bg-white p-5 sm:p-6">
+      <div class="flex flex-wrap items-end justify-between gap-2"><div><p class="text-[9px] font-bold tracking-[.14em] text-indigo-600">ACCOUNT ACTIVITY</p><h3 class="mt-1 text-base font-bold">សកម្មភាព និងការគ្រប់គ្រង</h3><p class="mt-1 text-[10px] text-slate-400">មើលព័ត៌មានសំខាន់ៗដែលពាក់ព័ន្ធនឹងគណនីរបស់អ្នក</p></div><span class="text-[10px] font-semibold text-slate-400" id="profileActivityCount"></span></div>
+      <div class="account-tabs mt-5 flex overflow-x-auto border-b border-slate-100"><button class="tab active" data-profile-tab="saved">បានរក្សាទុក</button><button class="tab" data-profile-tab="history">ប្រវត្តិទិញ/តថ្លៃ</button><button class="tab" data-profile-tab="seller">ហាងរបស់ខ្ញុំ</button></div>
+      <div class="min-h-[330px] py-4" id="profileTabContent"></div>
+    </section>
+  </div>
 </div>
 </section>
 <!-- SELLER DASHBOARD -->
