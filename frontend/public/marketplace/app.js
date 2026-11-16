@@ -472,7 +472,7 @@ async function restoreSupportChatArchive(archiveId,isAdminView){
   try{
     const path=isAdminView?'/api/admin/chats/'+encodeURIComponent(activeAdminChatId)+'/archives/'+encodeURIComponent(archiveId):'/api/chat/archives/'+encodeURIComponent(archiveId);
     const result=await api(path),messages=result.data?.messages||[];
-    if(isAdminView){restoredAdminChatArchives[archiveId]=messages;supportChatRenderMessages('adminChatMessages',[...Object.values(restoredAdminChatArchives).flat(),...(await api('/api/admin/chats/'+encodeURIComponent(activeAdminChatId))).data.messages||[]]);}
+    if(isAdminView){restoredAdminChatArchives[archiveId]=messages;const current=await api('/api/admin/chats/'+encodeURIComponent(activeAdminChatId));supportChatRenderMessages('adminChatMessages',[...Object.values(restoredAdminChatArchives).flat(),...(current.data?.messages||[])]);}
     else{restoredUserChatArchives[archiveId]=messages;const current=await api('/api/chat');supportChatRenderMessages('supportChatMessages',[...Object.values(restoredUserChatArchives).flat(),...(current.data?.messages||[])]);}
     toast('បានទាញប្រវត្តិឆាតចាស់មកបង្ហាញរួចរាល់។','success');
   }catch(error){toast(error.message,'error')}
