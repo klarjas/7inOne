@@ -249,7 +249,7 @@ export function registerSellerChat(app, { supabase, authenticate, requireVendor,
       const conversation = result.conversation;
       if (conversation.status !== 'open') return fail(res, 409, 'សន្ទនានេះត្រូវបានបិទ។');
       const rawLatitude = req.body?.latitude, rawLongitude = req.body?.longitude;
-      if (rawLatitude == null || rawLongitude == null || rawLatitude === '' || rawLongitude === '') return fail(res, 400, 'ទីតាំង GPS មិនត្រឹមត្រូវទេ។');
+      if (rawLatitude == null || rawLongitude == null || (typeof rawLatitude === 'string' && !rawLatitude.trim()) || (typeof rawLongitude === 'string' && !rawLongitude.trim())) return fail(res, 400, 'ទីតាំង GPS មិនត្រឹមត្រូវទេ។');
       const latitude = Number(rawLatitude), longitude = Number(rawLongitude);
       if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || Math.abs(latitude)>90 || Math.abs(longitude)>180) return fail(res, 400, 'ទីតាំង GPS មិនត្រឹមត្រូវទេ។');
       const body = JSON.stringify({ latitude, longitude, accuracy: Number.isFinite(Number(req.body?.accuracy)) ? Math.max(0, Math.min(100000, Number(req.body.accuracy))) : null });
