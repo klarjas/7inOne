@@ -114,21 +114,23 @@ async function telegram(method, payload) {
 let telegramBotUsernameCache = { value: null, expiresAt: 0 };
 async function getTelegramBotUsername() {
   const configured = clean(process.env.TELEGRAM_BOT_USERNAME, 80).replace(/^@/, '');
-  if (configured && /^[A-Za-z0-9_]{5,32}$/.test(configured)) return configured;
-  if (!process.env.TELEGRAM_BOT_TOKEN) return null;
-  if (telegramBotUsernameCache.expiresAt > Date.now()) return telegramBotUsernameCache.value;
+  const fallback = /^[A-Za-z0-9_]{5,32}$/.test(configured) ? configured : null;
+  if (!process.env.TELEGRAM_BOT_TOKEN) return fallback;
+  if (telegramBotUsernameCache.expiresAt > Date.now()) return telegramBotUsernameCache.value || fallback;
   try {
+    // Prefer the username actually returned for the configured token. An
+    // optional environment override is only a fallback if Telegram is unavailable.
     const bot = await telegram('getMe', { method: 'POST' });
     const username = clean(bot?.username, 80);
     telegramBotUsernameCache = {
-      value: /^[A-Za-z0-9_]{5,32}$/.test(username) ? username : null,
+      value: /^[A-Za-z0-9_]{5,32}$/.test(username) ? username : fallback,
       expiresAt: Date.now() + 5 * 60 * 1000
     };
     return telegramBotUsernameCache.value;
   } catch (error) {
     console.warn('Could not resolve Telegram bot username:', clean(error.message, 200));
-    telegramBotUsernameCache = { value: null, expiresAt: Date.now() + 60 * 1000 };
-    return null;
+    telegramBotUsernameCache = { value: fallback, expiresAt: Date.now() + 60 * 1000 };
+    return fallback;
   }
 }
 async function uploadToTelegram(file) {
