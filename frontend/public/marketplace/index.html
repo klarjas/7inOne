@@ -28,15 +28,21 @@ html.route-restoring .view{display:none!important}
 html.route-restoring[data-initial-view="home"] #view-home,
 html.route-restoring[data-initial-view="profile"] #view-profile,
 html.route-restoring[data-initial-view="seller"] #view-seller,
-html.route-restoring[data-initial-view="admin"] #view-admin,\nhtml.route-restoring[data-initial-view="product"] #view-product,\nhtml.route-restoring[data-initial-view="store"] #view-store{display:block!important;animation:none!important}
+html.route-restoring[data-initial-view="admin"] #view-admin,
+html.route-restoring[data-initial-view="product"] #view-product,
+html.route-restoring[data-initial-view="store"] #view-store{display:block!important;animation:none!important}
 html.route-restoring[data-initial-view="home"] #view-home>*,
 html.route-restoring[data-initial-view="profile"] #view-profile>*,
 html.route-restoring[data-initial-view="seller"] #view-seller>*,
-html.route-restoring[data-initial-view="admin"] #view-admin>*,\nhtml.route-restoring[data-initial-view="product"] #view-product>*,\nhtml.route-restoring[data-initial-view="store"] #view-store>*{visibility:hidden!important}
+html.route-restoring[data-initial-view="admin"] #view-admin>*,
+html.route-restoring[data-initial-view="product"] #view-product>*,
+html.route-restoring[data-initial-view="store"] #view-store>*{visibility:hidden!important}
 html.route-restoring[data-initial-view="home"] #view-home::before,
 html.route-restoring[data-initial-view="profile"] #view-profile::before,
 html.route-restoring[data-initial-view="seller"] #view-seller::before,
-html.route-restoring[data-initial-view="admin"] #view-admin::before,\nhtml.route-restoring[data-initial-view="product"] #view-product::before,\nhtml.route-restoring[data-initial-view="store"] #view-store::before{content:"";display:block;width:min(1320px,calc(100% - 36px));height:clamp(220px,38vh,360px);margin:24px auto;border:1px solid #e8ecf4;border-radius:26px;background:linear-gradient(110deg,#edf0f6 8%,#f8fafc 18%,#edf0f6 33%);background-size:220% 100%;animation:initialRouteShimmer 1.5s linear infinite}
+html.route-restoring[data-initial-view="admin"] #view-admin::before,
+html.route-restoring[data-initial-view="product"] #view-product::before,
+html.route-restoring[data-initial-view="store"] #view-store::before{content:"";display:block;width:min(1320px,calc(100% - 36px));height:clamp(220px,38vh,360px);margin:24px auto;border:1px solid #e8ecf4;border-radius:26px;background:linear-gradient(110deg,#edf0f6 8%,#f8fafc 18%,#edf0f6 33%);background-size:220% 100%;animation:initialRouteShimmer 1.5s linear infinite}
 @keyframes initialRouteShimmer{to{background-position-x:-220%}}
 </style>
 
