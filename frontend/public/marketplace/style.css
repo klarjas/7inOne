@@ -330,6 +330,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 
 /* Product inquiry cards stay inside the Alibaba-style conversation timeline. */
 .seller-chat-product-card{display:flex;align-items:center;gap:11px;max-width:min(100%,340px);overflow:hidden;border:1px solid #D8E9DF;border-radius:14px;background:#fff;padding:9px;color:#173B2D;white-space:normal}
+.seller-chat-product-link{cursor:pointer;transition:border-color .16s ease,box-shadow .16s ease,transform .16s ease}.seller-chat-product-link:hover,.seller-chat-product-link:focus-visible{border-color:#10B981;box-shadow:0 4px 14px rgba(16,185,129,.12);outline:none}.seller-chat-product-link:active{transform:scale(.99)}
 .seller-chat-product-card>img,.seller-chat-product-placeholder{display:grid;width:76px;height:76px;flex:0 0 76px;place-items:center;overflow:hidden;border-radius:10px;background:#ECFDF5;object-fit:cover;font-size:25px}
 .seller-chat-product-info{display:flex;min-width:0;flex:1;flex-direction:column;align-items:flex-start;gap:4px}
 .seller-chat-product-info small{color:#0B8A5A;font-size:8px;font-weight:800}
