@@ -3,11 +3,15 @@
 
 create table if not exists public.telegram_account_links (
   user_id uuid primary key references auth.users(id) on delete cascade,
+  account_email text,
   telegram_user_id bigint not null unique,
   username text,
   first_name text,
   linked_at timestamptz not null default now()
 );
+
+create unique index if not exists telegram_account_links_email_idx
+  on public.telegram_account_links(lower(account_email)) where account_email is not null;
 
 create table if not exists public.telegram_link_tokens (
   token_hash text primary key,
