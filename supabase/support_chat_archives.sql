@@ -98,4 +98,7 @@ create policy "Users and admins read support archives"
     )
   );
 
+revoke all on public.support_conversations, public.support_messages, public.support_chat_archives from public, anon;
+revoke insert, update, delete, truncate, references, trigger on public.support_conversations, public.support_messages, public.support_chat_archives from authenticated;
 grant select on public.support_conversations, public.support_messages, public.support_chat_archives to authenticated;
+grant all on public.support_conversations, public.support_messages, public.support_chat_archives to service_role;
