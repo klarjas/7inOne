@@ -237,9 +237,16 @@ function setFavoriteHeart(button,saved,stage='idle'){
 function setDetailFavoriteButton(button,saved){
   if(!button)return;
   button.disabled=false;
-  button.innerHTML=ic('heart',14,'inline')+' '+(saved?'បានរក្សាទុក':'រក្សាទុក');
-  button.classList.toggle('text-blue-600',saved);
-  button.classList.toggle('text-indigo-700',!saved);
+  if(button.classList.contains('product-save-action')){
+    button.innerHTML=ic('heart',18);
+    button.title=saved?'ដកចេញពីបញ្ជីដែលបានរក្សាទុក':'រក្សាទុកទំនិញ';
+    button.setAttribute('aria-label',button.title);
+    button.classList.toggle('is-saved',saved);
+  }else{
+    button.innerHTML=ic('heart',14,'inline')+' '+(saved?'បានរក្សាទុក':'រក្សាទុក');
+    button.classList.toggle('text-blue-600',saved);
+    button.classList.toggle('text-indigo-700',!saved);
+  }
   button.setAttribute('aria-pressed',String(saved));
 }
 function saveAction(productId,button=null){
@@ -329,7 +336,7 @@ function renderProductDetail(){
  <div class="product-badge-row"><span class="product-category-badge">${esc(CAT[p.category]||p.category||'ទំនិញ')}</span><span class="product-condition-badge">${esc(p.condition||'មិនបានបញ្ជាក់')}</span>${v.status==='approved'?'<span class="product-verified-badge">'+ic('checkcircle',13)+' អ្នកលក់បានផ្ទៀងផ្ទាត់</span>':''}</div>
  <h1 class="product-detail-title">${esc(p.title)}</h1><div class="product-detail-meta"><span>${ic('pin',13)} ${esc(p.location||'មិនបានបញ្ជាក់')}</span><span>${ic('clock',13)} ${fmtDate(p.created_at)}</span><span>${ic('eye',13)} ${Number(p.view_count||0).toLocaleString()} views</span></div>
  <div class="product-price-card"><small>តម្លៃលក់</small><strong>${money(p.price)}</strong><span>អាចទាក់ទងអ្នកលក់ដើម្បីសាកសួរព័ត៌មានបន្ថែម</span></div>
- <div class="product-action-grid"><button type="button" class="product-buy-primary brand-gradient" data-product-action="buy">${ic('bag',17)} ទិញឥឡូវនេះ</button><button type="button" class="product-action-secondary" data-product-action="offer">${ic('tag',16)} តថ្លៃ</button><button type="button" class="product-action-secondary" data-product-action="chat">${ic('chat',16)} ឆាតជាមួយអ្នកលក់</button><button type="button" class="product-save-action" data-product-action="save" aria-pressed="${savedIds.has(p.id)?'true':'false'}">${ic('heart',18)}<span>${savedIds.has(p.id)?'បានរក្សាទុក':'រក្សាទុក'}</span></button></div>
+ <div class="product-action-grid"><button type="button" class="product-buy-primary brand-gradient" data-product-action="buy">${ic('bag',17)} ទិញឥឡូវនេះ</button><button type="button" class="product-action-secondary" data-product-action="offer">${ic('tag',16)} តថ្លៃ</button><button type="button" class="product-action-secondary" data-product-action="chat">${ic('chat',16)} ឆាតជាមួយអ្នកលក់</button><button type="button" class="product-save-action" data-product-action="save" aria-label="${savedIds.has(p.id)?'ដកចេញពីបញ្ជីដែលបានរក្សាទុក':'រក្សាទុកទំនិញ'}" title="${savedIds.has(p.id)?'ដកចេញពីបញ្ជីដែលបានរក្សាទុក':'រក្សាទុកទំនិញ'}" aria-pressed="${savedIds.has(p.id)?'true':'false'}">${ic('heart',18)}</button></div>
  <section class="product-seller-card"><div class="product-seller-heading"><div class="product-seller-avatar">${avatarMarkup(v.store_name,v.profile?.avatar_url)}</div><div class="product-seller-identity"><b>${esc(v.store_name||'ហាងអ្នកលក់')} ${v.status==='approved'?verifiedBadge():''}</b><span>${renderStars(v.rating)} <strong>${v.rating??'—'}</strong> · ${Number(v.review_count||0)} ការវាយតម្លៃ</span></div></div><div class="product-seller-metrics"><div><b>${Number(v.active_listings||0)}</b><small>ទំនិញកំពុងលក់</small></div><div><b>${Number(v.review_count||0)}</b><small>ការវាយតម្លៃ</small></div><div><b>${Number(v.total_views||0).toLocaleString()}</b><small>ចំនួនមើលហាង</small></div></div><button type="button" class="product-store-button" data-product-action="store">${ic('store',15)} ចូលមើលហាង</button></section>
  <section class="product-description-card"><h2>ព័ត៌មានអំពីទំនិញ</h2><p>${esc(p.description||'មិនទាន់មានការពិពណ៌នាទេ។')}</p></section><div class="product-safety-note"><b>គន្លឹះសុវត្ថិភាព</b><p>ពិនិត្យទំនិញ និងព័ត៌មានអ្នកលក់ឱ្យបានច្បាស់ មុនពេលទូទាត់។ ជៀសវាងផ្ញើប្រាក់ទៅគណនីដែលមិនអាចផ្ទៀងផ្ទាត់បាន។</p></div>
  <section class="product-reviews"><div class="product-section-heading"><h2>ការវាយតម្លៃអ្នកទិញ</h2><span>${Number(v.review_count||0)} Reviews</span></div><div class="product-review-list">${(v.reviews||[]).slice(0,4).map(r=>'<article class="product-review"><div><b>'+esc(r.buyer_name)+'</b><span>'+('★'.repeat(r.rating))+('☆'.repeat(5-r.rating))+'</span></div><p>'+esc(r.comment||'')+'</p><small>'+fmtDate(r.created_at)+'</small></article>').join('')||'<p class="product-empty-note">មិនទាន់មានការវាយតម្លៃទេ។</p>'}</div>
