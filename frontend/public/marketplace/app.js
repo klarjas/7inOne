@@ -6,6 +6,7 @@ Object.assign(iconPaths,{refresh:'<path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-
 const $=id=>document.getElementById(id);
 const ic=(name,size=17,extra='')=>`<svg aria-hidden="true" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="${extra}">${iconPaths[name]||iconPaths.spark}</svg>`;
 document.querySelectorAll('[data-seller-icon]').forEach(node=>{node.innerHTML=ic(node.dataset.sellerIcon,16)});
+if($('addProductIcon'))$('addProductIcon').innerHTML=ic('plus',15);
 const CAT={phones:'ទូរស័ព្ទ & អេឡិចត្រូនិក',vehicles:'រថយន្ត & ម៉ូតូ',property:'អចលនទ្រព្យ',fashion:'សម្លៀកបំពាក់',furniture:'គ្រឿងសង្ហារិម'};
 const CATICON={all:'grid',phones:'phone',vehicles:'car',property:'home',fashion:'shirt',furniture:'sofa'};
 let currentStoreId=null,currentStoreData=null,currentStoreProducts=[],currentStoreCategory='all',currentStoreSearch='';
