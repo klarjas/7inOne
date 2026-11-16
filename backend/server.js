@@ -481,7 +481,7 @@ async function cleanupExpiredProducts(){
   if(productCleanupPromise)return productCleanupPromise;
   productCleanupPromise=(async()=>{
     const cutoff=new Date(Date.now()-PRODUCT_AUTO_DELETE_AGE_MS).toISOString();
-    const {data:stale,error}=await supabase.from('products').select('id,status,product_images(id,telegram_message_id)').lt('renewed_at',cutoff).neq('status','sold').limit(200);
+    const {data:stale,error}=await supabase.from('products').select('id,status,product_images(id,telegram_message_id)').lt('renewed_at',cutoff).limit(200);
     if(error){console.error('Product lifecycle cleanup failed:',error.message);return {deleted:0,archived:0,error:error.message}}
     let deleted=0,archived=0;
     for(const product of stale||[]){
@@ -1469,12 +1469,12 @@ app.post('/api/products', authenticate, async (req, res) => {
 app.patch('/api/products/:id', authenticate, async (req, res) => {
   const { data: vendor } = await vendorFor(req.user.id);
   const admin = await isAdmin(req.user.id);
-  const { data: existing } = await supabase.from('products').select('id,vendor_id,status,renewed_at').eq('id', req.params.id).maybeSingle();
+  const { data: existing } = await supabase.from('products').select('id,vendor_id,status,renewed_at,updated_at,created_at').eq('id', req.params.id).maybeSingle();
   if (!existing) return fail(res, 404, 'Product not found');
   if (!admin && (!vendor || vendor.status !== 'approved' || vendor.id !== existing.vendor_id)) return fail(res, 403, 'Approved store ownership required');
   const patch = {};
   const isRenewal=req.body.renew===true;
-  if(isRenewal){if(existing.status==='sold')return fail(res,400,'Sold products cannot be renewed.');patch.renewed_at=new Date().toISOString();patch.status='active';}
+  if(isRenewal){const renewedAt=Date.parse(existing.renewed_at||existing.updated_at||existing.created_at||'');const age=Number.isFinite(renewedAt)?Date.now()-renewedAt:0;if(existing.status!=='active'||age>PRODUCT_AUTO_DELETE_AGE_MS)return fail(res,410,'This product is no longer eligible for renewal.');patch.renewed_at=new Date().toISOString();patch.status='active';}
   for (const key of ['title','description','category','location','condition']) if (req.body[key] !== undefined) patch[key] = clean(req.body[key], key === 'description' ? 5000 : key === 'title' ? 160 : 100);
   if (req.body.price !== undefined) patch.price = Number(req.body.price);
   if (req.body.stock !== undefined) patch.stock = Number(req.body.stock);
