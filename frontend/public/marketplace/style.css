@@ -570,3 +570,5 @@ body{background:var(--market-bg);color:var(--market-ink)}.shell{width:min(1440px
 .product-gallery-main{position:relative}
 .product-gallery-main .product-main-image.is-image-failed{opacity:0;pointer-events:none}
 .product-main-image-fallback{position:absolute;inset:0;display:grid;place-items:center;color:#94a3b8;background:#f1f5f9;pointer-events:none}
+
+.product-main-image-fallback{border:0;padding:0;cursor:zoom-in}
