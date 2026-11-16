@@ -7,6 +7,7 @@ import multer from 'multer';
 import next from 'next';
 import { fileURLToPath } from 'node:url';
 import { createClient } from '@supabase/supabase-js';
+import { registerSupportChat } from './support-chat.js';
 import { randomUUID, randomBytes, randomInt, createHash, createHmac, timingSafeEqual } from 'node:crypto';
 
 const app = express();
@@ -162,6 +163,8 @@ async function deleteTelegramMessage(messageId) {
     });
   } catch (error) { console.warn('Telegram cleanup failed:', error.message); }
 }
+
+registerSupportChat(app, { supabase, authenticate, requireAdmin, telegram, telegramStorageChatId, deleteTelegramMessage, clean, fail });
 const telegramMediaUrl = fileId => fileId ? `/api/media/telegram/${encodeURIComponent(fileId)}` : null;
 function publicMediaUrl(path) {
   if (!path || !supabase) return null;
