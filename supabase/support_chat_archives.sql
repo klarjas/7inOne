@@ -30,6 +30,10 @@ create table if not exists public.support_messages (
 
 create index if not exists support_messages_conversation_created_idx
   on public.support_messages(conversation_id, created_at desc);
+create index if not exists support_messages_created_idx
+  on public.support_messages(created_at);
+create index if not exists support_messages_sender_idx
+  on public.support_messages(sender_id);
 
 create table if not exists public.support_chat_archives (
   id uuid primary key default gen_random_uuid(),
