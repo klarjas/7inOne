@@ -44,3 +44,17 @@ revoke all on public.telegram_password_otps from anon, authenticated;
 grant all on public.telegram_account_links to service_role;
 grant all on public.telegram_link_tokens to service_role;
 grant all on public.telegram_password_otps to service_role;
+
+
+-- Short-lived, single-use challenges for Telegram sign-in.
+create table if not exists public.telegram_login_tokens (
+  token_hash text primary key,
+  expires_at timestamptz not null,
+  consumed_at timestamptz,
+  created_at timestamptz not null default now()
+);
+create index if not exists telegram_login_tokens_expiry_idx
+  on public.telegram_login_tokens(expires_at);
+alter table public.telegram_login_tokens enable row level security;
+revoke all on public.telegram_login_tokens from anon, authenticated;
+grant all on public.telegram_login_tokens to service_role;
