@@ -442,3 +442,25 @@ button,.product-card,.hero-copy-card,.hero-image-tile{scroll-behavior:auto}
  #sellerChatForm{padding:8px 9px calc(8px + env(safe-area-inset-bottom))}
  .seller-chat-product-card>img,.seller-chat-product-placeholder{width:72px;height:72px;flex-basis:72px}
 }
+
+
+/* Telegram-style voice recorder, composer and voice bubbles */
+.seller-chat-composer{align-items:center!important;gap:9px!important;padding:10px 12px!important}
+.seller-chat-composer .field{min-height:42px!important;max-height:110px!important;resize:none!important;border:1px solid #E5E7EB!important;border-radius:22px!important;background:#F8FAFC!important;padding:11px 15px!important;line-height:1.4}
+.seller-chat-record,.seller-chat-send{width:44px;height:44px;border:0;flex:0 0 44px;transition:transform .15s,background .15s}
+.seller-chat-record{touch-action:none;user-select:none;-webkit-user-select:none}
+.seller-chat-record.is-recording{background:#EF4444!important;animation:chat-record-pulse 1.2s infinite}
+.seller-chat-record.is-locked{background:#0F766E!important}
+.seller-chat-send{font-size:0}
+.seller-chat-send:after{content:"➤";font-size:20px;line-height:1}
+#sellerChatRecordingStatus{background:#FFF1F2;color:#BE123C;border-top:1px solid #FFE4E6;text-align:center}
+.seller-chat-voice{display:flex;min-width:210px;max-width:290px;align-items:center;gap:10px;padding:3px 1px}
+.seller-chat-voice-play{display:grid;width:38px;height:38px;flex:0 0 38px;place-items:center;border:0;border-radius:50%;background:#10B981;color:white;font-size:14px}
+.seller-chat-bubble.own .seller-chat-voice-play{background:#fff;color:#059669}
+.seller-chat-voice-track{display:flex;min-width:0;flex:1;flex-direction:column;gap:5px}
+.seller-chat-voice-wave{display:flex;height:26px;align-items:center;gap:2px;overflow:hidden}
+.seller-chat-voice-wave i{display:block;width:3px;min-width:2px;height:var(--bar);border-radius:3px;background:#10B981;opacity:.8}
+.seller-chat-bubble.own .seller-chat-voice-wave i{background:#D1FAE5}
+.seller-chat-voice-duration{font-size:9px;line-height:1;color:inherit;opacity:.7;font-variant-numeric:tabular-nums}
+.seller-chat-bubble:has(.seller-chat-voice){padding:9px 11px;min-width:235px}
+@keyframes chat-record-pulse{50%{box-shadow:0 0 0 7px rgba(239,68,68,.13)}}

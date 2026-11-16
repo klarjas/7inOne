@@ -1,6 +1,6 @@
 // 7inOne production frontend: Supabase Auth + authenticated server API.
 const iconPaths={
- bag:'<path d="M5 8h14l1 13H4L5 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>',search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>',plus:'<path d="M12 5v14M5 12h14"/>',bell:'<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/>',chev:'<path d="m7 10 5 5 5-5"/>',x:'<path d="m18 6-12 12M6 6l12 12"/>',heart:'<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z"/>',pin:'<path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',shield:'<path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z"/><path d="m9 12 2 2 4-4"/>',check:'<path d="m5 12 4 4L19 6"/>',chat:'<path d="M21 11.5a8.5 8.5 0 0 1-9 8.5 9.7 9.7 0 0 1-4-.8L3 21l1.8-4.5A8.2 8.2 0 0 1 3 11.5 8.5 8.5 0 0 1 12 3a8.5 8.5 0 0 1 9 8.5Z"/>',tag:'<path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8Z"/><circle cx="7.5" cy="7.5" r="1"/>',arrow:'<path d="M5 12h14m-7-7 7 7-7 7"/>',grid:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',phone:'<rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/>',car:'<path d="m5 17-1 2v2h2v-2h12v2h2v-2l-1-2"/><path d="m4 17 1.5-6h13L20 17M7 11l1.5-4h7L17 11M7 17h.01M17 17h.01"/>',home:'<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-6v-7h-4v7H4a1 1 0 0 1-1-1Z"/>',shirt:'<path d="m16 4 5 3-3 4-2-1v10H8V10l-2 1-3-4 5-3 2 2h4z"/>',sofa:'<path d="M4 11V7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v4M3 12a2 2 0 0 1 4 0v3h10v-3a2 2 0 0 1 4 0v5H3zM5 17v3m14-3v3"/>',user:'<path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="8" r="4"/>',camera:'<path d="M14 5 12.5 3h-5L6 5H3v14h18V5z"/><circle cx="12" cy="12" r="3.5"/>',image:'<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/>',eye:'<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>',star:'<path d="m12 3 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9Z"/>',send:'<path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>',store:'<path d="M3 10h18l-1 11H4L3 10Z"/><path d="m3 10 2-7h14l2 7M8 10v3m8-3v3"/>',wallet:'<path d="M4 6h15a2 2 0 0 1 2 2v11H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14"/><path d="M21 11h-5a2 2 0 0 0 0 4h5"/>',file:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h8"/>',trash:'<path d="M3 6h18M8 6V4h8v2m3 0-1 15H6L5 6m4 4v7m6-7v7"/>',edit:'<path d="m16 4 4 4M4 20l4-.8L19 8a2.8 2.8 0 0 0-4-4L4 15z"/>',checkcircle:'<circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16 9"/>',logout:'<path d="M10 17l5-5-5-5m5 5H3"/><path d="M12 3h7a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-7"/>',spark:'<path d="m12 3 1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8Z"/><path d="m19 14 1.2 2.8L23 18l-2.8 1.2L19 22l-1.2-2.8L15 18l2.8-1.2Z"/>',bookmark:'<path d="M6 4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18l-6-4-6 4z"/>',users:'<path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M20 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',chart:'<path d="M3 3v18h18M8 15l4-4 3 3 6-7"/>',briefcase:'<rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7V4h8v3M3 12h18m-11 0v2h4v-2"/>'
+ bag:'<path d="M5 8h14l1 13H4L5 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>',search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>',plus:'<path d="M12 5v14M5 12h14"/>',bell:'<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/>',chev:'<path d="m7 10 5 5 5-5"/>',x:'<path d="m18 6-12 12M6 6l12 12"/>',heart:'<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z"/>',pin:'<path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',shield:'<path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z"/><path d="m9 12 2 2 4-4"/>',check:'<path d="m5 12 4 4L19 6"/>',chat:'<path d="M21 11.5a8.5 8.5 0 0 1-9 8.5 9.7 9.7 0 0 1-4-.8L3 21l1.8-4.5A8.2 8.2 0 0 1 3 11.5 8.5 8.5 0 0 1 12 3a8.5 8.5 0 0 1 9 8.5Z"/>',tag:'<path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8Z"/><circle cx="7.5" cy="7.5" r="1"/>',arrow:'<path d="M5 12h14m-7-7 7 7-7 7"/>',grid:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',phone:'<rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/>',car:'<path d="m5 17-1 2v2h2v-2h12v2h2v-2l-1-2"/><path d="m4 17 1.5-6h13L20 17M7 11l1.5-4h7L17 11M7 17h.01M17 17h.01"/>',home:'<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-6v-7h-4v7H4a1 1 0 0 1-1-1Z"/>',shirt:'<path d="m16 4 5 3-3 4-2-1v10H8V10l-2 1-3-4 5-3 2 2h4z"/>',sofa:'<path d="M4 11V7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v4M3 12a2 2 0 0 1 4 0v3h10v-3a2 2 0 0 1 4 0v5H3zM5 17v3m14-3v3"/>',user:'<path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="8" r="4"/>',mic:'<rect x="9" y="2" width="6" height="13" rx="3"/><path d="M5 10a7 7 0 0 0 14 0m-7 7v5m-4 0h8"/>',camera:'<path d="M14 5 12.5 3h-5L6 5H3v14h18V5z"/><circle cx="12" cy="12" r="3.5"/>',image:'<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/>',eye:'<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>',star:'<path d="m12 3 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9Z"/>',send:'<path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>',store:'<path d="M3 10h18l-1 11H4L3 10Z"/><path d="m3 10 2-7h14l2 7M8 10v3m8-3v3"/>',wallet:'<path d="M4 6h15a2 2 0 0 1 2 2v11H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14"/><path d="M21 11h-5a2 2 0 0 0 0 4h5"/>',file:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h8"/>',trash:'<path d="M3 6h18M8 6V4h8v2m3 0-1 15H6L5 6m4 4v7m6-7v7"/>',edit:'<path d="m16 4 4 4M4 20l4-.8L19 8a2.8 2.8 0 0 0-4-4L4 15z"/>',checkcircle:'<circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16 9"/>',logout:'<path d="M10 17l5-5-5-5m5 5H3"/><path d="M12 3h7a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-7"/>',spark:'<path d="m12 3 1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8Z"/><path d="m19 14 1.2 2.8L23 18l-2.8 1.2L19 22l-1.2-2.8L15 18l2.8-1.2Z"/>',bookmark:'<path d="M6 4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18l-6-4-6 4z"/>',users:'<path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M20 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',chart:'<path d="M3 3v18h18M8 15l4-4 3 3 6-7"/>',briefcase:'<rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7V4h8v3M3 12h18m-11 0v2h4v-2"/>'
 };
 const $=id=>document.getElementById(id);
 const ic=(name,size=17,extra='')=>`<svg aria-hidden="true" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="${extra}">${iconPaths[name]||iconPaths.spark}</svg>`;
@@ -8,7 +8,7 @@ const CAT={phones:'ទូរស័ព្ទ & អេឡិចត្រូនិ�
 const CATICON={all:'grid',phones:'phone',vehicles:'car',property:'home',fashion:'shirt',furniture:'sofa'};
 let currentStoreId=null,currentStoreData=null,currentStoreProducts=[],currentStoreCategory='all',currentStoreSearch='';
 let siteBranding={siteTitle:'7inOne',siteSubtitle:'ផ្សារទិញលក់កម្ពុជា',heroBadge:'ផ្សារអនឡាញសម្រាប់អ្នកទាំងអស់គ្នា',heroTitle:'ទិញលក់ងាយៗ នៅជិតអ្នក',heroSubtitle:'ស្វែងរកទំនិញដែលអ្នកស្រឡាញ់ ឬដាក់លក់របស់ដែលអ្នកមិនប្រើ។ ភ្ជាប់អ្នកទិញ និងអ្នកលក់នៅទូទាំងប្រទេសកម្ពុជា។',siteLogoUrl:'',heroImages:[]},brandingLogoPreviewUrl=null,brandingHeroPreviewUrls=[],siteBrandingRefreshTimer=null;
-let supabaseClient=null,session=null,sessionRefreshPromise=null,me=null,routeAccessReady=false,supportChatPollTimer=null,adminChatPollTimer=null,activeAdminChatId=null,restoredUserChatArchives={},restoredAdminChatArchives={},pendingPhone=null,products=[],savedIds=new Set(),favoritePending=new Set(),activeCategory='all',searchTerm='',currentProduct=null,currentVendor=null,profileTab='saved',authMode='login',currentOfferProduct=null,selectedProductImages=[],sellerDocPreviewUrl=null,telegramBotUsername='',telegramLoginWidgetMounted=false,telegramProfileWidgetMounted=false,productRealtimeChannel=null,productRealtimeRefreshTimer=null,productRealtimeFallbackTimer=null,productRealtimePendingRefresh=false,sellerChatChannel=null,sellerChatPollTimer=null,sellerInboxPollTimer=null,sellerChatConversationId=null,sellerChatInboxPollTimer=null,sellerChatMode='buyer',sellerChatInbox=[],sellerChatMuted=false,sellerChatRecorder=null,sellerChatDiscardRecording=false,sellerChatRecordChunks=[],sellerChatRecordStartedAt=0,sellerChatRecordTimer=null,sellerChatLastMessageId=null,sellerChatInboxUnreadSnapshot={},sellerChatInboxInitialized=false,sellerChatInboxUserId=null,sellerChatAudioUrls=new Set();
+let supabaseClient=null,session=null,sessionRefreshPromise=null,me=null,routeAccessReady=false,supportChatPollTimer=null,adminChatPollTimer=null,activeAdminChatId=null,restoredUserChatArchives={},restoredAdminChatArchives={},pendingPhone=null,products=[],savedIds=new Set(),favoritePending=new Set(),activeCategory='all',searchTerm='',currentProduct=null,currentVendor=null,profileTab='saved',authMode='login',currentOfferProduct=null,selectedProductImages=[],sellerDocPreviewUrl=null,telegramBotUsername='',telegramLoginWidgetMounted=false,telegramProfileWidgetMounted=false,productRealtimeChannel=null,productRealtimeRefreshTimer=null,productRealtimeFallbackTimer=null,productRealtimePendingRefresh=false,sellerChatChannel=null,sellerChatPollTimer=null,sellerInboxPollTimer=null,sellerChatConversationId=null,sellerChatInboxPollTimer=null,sellerChatMode='buyer',sellerChatInbox=[],sellerChatMuted=false,sellerChatRecorder=null,sellerChatDiscardRecording=false,sellerChatRecordChunks=[],sellerChatRecordStartedAt=0,sellerChatRecordTimer=null,sellerChatLastMessageId=null,sellerChatInboxUnreadSnapshot={},sellerChatInboxInitialized=false,sellerChatInboxUserId=null,sellerChatAudioUrls=new Set(),sellerChatPointerDown=false,sellerChatPointerStartY=0,sellerChatRecordingLocked=false,sellerChatIgnoreNextClick=false;
 const DEFAULT_MAINTENANCE_MESSAGE='ប្រព័ន្ធកំពុងធ្វើការអភិវឌ្ឍន៍ និងបន្ថែមមុខងារថ្មីៗ សូមអធ្យាស្រ័យចំពោះការរំខាន!';let maintenanceMode=false,maintenanceMessage=DEFAULT_MAINTENANCE_MESSAGE,faviconUrl='';
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money=v=>'$'+Number(v||0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:2});
@@ -677,17 +677,26 @@ function renderSellerChatMessages(messages){
   const target=$('sellerChatMessages');if(!target)return;
   const wasNearBottom=target.scrollHeight-target.scrollTop-target.clientHeight<90;
   target.innerHTML=(messages||[]).map(message=>{
-    const own=message.sender_role===sellerChatMode,number=message.sender_role==='buyer'?'1':'2',role=message.sender_role==='buyer'?'អ្នកទិញ':'អ្នកលក់';
+    const own=message.sender_role===sellerChatMode;
     let content='';
     if(message.message_type==='product'){
       const product=message.product||null;
       const image=product?.image_url?'<img src="'+esc(product.image_url)+'" alt="" loading="lazy">':'<span class="seller-chat-product-placeholder">📦</span>';
       content='<article class="seller-chat-product-card '+(product?.id?'seller-chat-product-link':'')+'"'+(product?.id?' role="button" tabindex="0" data-chat-product-id="'+esc(product.id)+'" aria-label="មើលផលិតផល '+esc(product.title||'')+'"':'')+'>'+image+'<div class="seller-chat-product-info"><small>ផលិតផលដែលបានសួរ</small><b>'+esc(product?.title||message.body||'ផលិតផល')+'</b>'+(product?'<strong>'+money(product.price)+'</strong>':'<span class="seller-chat-product-unavailable">ផលិតផលនេះមិនមានលក់ទៀតទេ</span>')+'</div></article>';
     }else if(message.message_type==='voice'&&message.telegram_file_id){
-      content='<div class="seller-chat-voice"><span>🎙 សារសំឡេង · '+Number(message.duration_seconds||0)+' វិនាទី</span><audio controls preload="none" src="/api/media/telegram/'+encodeURIComponent(message.telegram_file_id)+'?mime='+encodeURIComponent(message.mime_type||'audio/webm')+'"></audio></div>';
+      const seconds=Math.max(1,Number(message.duration_seconds||0));
+      const heights=[7,12,17,10,20,14,8,18,11,22,13,8,16,21,10,15,7,19,12,23,9,16,11,20,8,14,18,10];
+      content='<div class="seller-chat-voice"><button type="button" class="seller-chat-voice-play" data-voice-toggle aria-label="ចាក់សារសំឡេង">▶</button><div class="seller-chat-voice-track"><div class="seller-chat-voice-wave" aria-hidden="true">'+heights.map(h=>'<i style="--bar:'+h+'px"></i>').join('')+'</div><span class="seller-chat-voice-duration">'+Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0')+'</span></div><audio data-voice-audio preload="none" src="/api/media/telegram/'+encodeURIComponent(message.telegram_file_id)+'?mime='+encodeURIComponent(message.mime_type||'audio/webm')+'"></audio></div>';
     }else content='<p>'+esc(message.body).replace(/\n/g,'<br>')+'</p>';
-    return '<div class="flex '+(own?'justify-end':'justify-start')+'"><div class="seller-chat-bubble '+(own?'own':'other')+'"><div class="mb-1 text-[8px] font-bold opacity-75">'+number+' · '+role+'</div>'+content+'<small>'+esc(supportChatTime(message.created_at))+'</small></div></div>';
+    return '<div class="flex '+(own?'justify-end':'justify-start')+'"><div class="seller-chat-bubble '+(own?'own':'other')+'">'+content+'<small>'+esc(supportChatTime(message.created_at))+'</small></div></div>';
   }).join('')||'<p class="py-8 text-center text-xs text-slate-400">មិនទាន់មានសារទេ។ សូមចាប់ផ្ដើមសន្ទនា។</p>';
+  target.querySelectorAll('[data-voice-audio]').forEach(audio=>{
+    const button=audio.parentElement.querySelector('[data-voice-toggle]');
+    audio.addEventListener('play',()=>{button.textContent='Ⅱ';button.setAttribute('aria-label','ផ្អាកសារសំឡេង')});
+    audio.addEventListener('pause',()=>{button.textContent='▶';button.setAttribute('aria-label','ចាក់សារសំឡេង')});
+    audio.addEventListener('ended',()=>{button.textContent='▶';audio.currentTime=0});
+    button.addEventListener('click',()=>{if(audio.paused){target.querySelectorAll('[data-voice-audio]').forEach(other=>{if(other!==audio)other.pause()});void audio.play().catch(()=>toast('មិនអាចចាក់សារសំឡេងបានទេ។','error'))}else audio.pause()});
+  });
   if(wasNearBottom)target.scrollTop=target.scrollHeight;
 }
 function renderSellerChatInbox(){
@@ -695,7 +704,8 @@ function renderSellerChatInbox(){
   const total=sellerChatInbox.reduce((sum,row)=>sum+Number(row.unread_count||0),0),badge=$('sellerChatUnreadBadge');
   badge.textContent=total>99?'99+':String(total);badge.classList.toggle('hidden',!total);
   target.innerHTML=sellerChatInbox.map(chat=>{
-    const image='<span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-emerald-50 text-lg text-emerald-700">🏪</span>';
+    const avatarUrl=chat.other_role==='seller'?chat.vendor?.profile?.avatar_url:chat.buyer?.avatar_url;
+    const image=avatarUrl?'<img src="'+esc(avatarUrl)+'" alt="" class="h-11 w-11 shrink-0 rounded-full object-cover">':'<span class="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-slate-100 text-slate-400">'+ic('user',20)+'</span>';
     return '<button type="button" data-unified-chat="'+esc(chat.id)+'" class="seller-chat-inbox-item '+(Number(chat.unread_count)>0?'unread ':'')+(sellerChatConversationId===chat.id?'active':'')+'">'+image+'<span class="flex min-w-0 flex-1 flex-col text-left"><b class="truncate text-[10px]">'+esc(chat.other_name||'អ្នកប្រើប្រាស់')+'</b><span class="mt-1 truncate text-[9px] text-slate-500">'+esc(chat.product?.title?'ផលិតផលចុងក្រោយ៖ '+chat.product.title:'សន្ទនាតាមហាង')+'</span><small class="mt-1 truncate text-[8px] text-slate-400">'+esc(chat.last_message_preview||'ចុចដើម្បីបើកសន្ទនា')+'</small></span>'+(Number(chat.unread_count)>0?'<span class="rounded-full bg-emerald-600 px-2 py-1 text-[9px] font-bold text-white">'+Number(chat.unread_count)+'</span>':'')+'</button>';
   }).join('')||'<p class="rounded-xl border border-dashed p-5 text-center text-[10px] text-slate-400">មិនទាន់មានសន្ទនាទេ។ ចូលទៅកាន់ផលិតផល ហើយចុចឆាតជាមួយអ្នកលក់។</p>';
 }
@@ -717,7 +727,11 @@ async function loadSellerChatConversation(scrollToBottom=false){
   sellerChatMode=conversation.current_role==='seller'?'seller':'buyer';
   $('sellerChatTitle').textContent=sellerChatMode==='seller'?(conversation.buyer?.display_name||'អ្នកទិញ'):(conversation.vendor?.store_name||'អ្នកលក់');
   $('sellerChatSubtitle').textContent='សន្ទនាតាមហាង · ផលិតផលត្រូវបានភ្ជាប់ក្នុងសារ';
-  const image=$('sellerChatProductImage');image.innerHTML='<span class="grid h-full w-full place-items-center text-lg text-emerald-700">🏪</span>';
+  const image=$('sellerChatProductImage');
+  const otherAvatar=sellerChatMode==='seller'?conversation.buyer?.avatar_url:conversation.vendor?.profile?.avatar_url;
+  const otherName=sellerChatMode==='seller'?(conversation.buyer?.display_name||'អ្នកទិញ'):(conversation.vendor?.store_name||'អ្នកលក់');
+  image.innerHTML=otherAvatar?'<img src="'+esc(otherAvatar)+'" alt="" class="h-full w-full rounded-full object-cover">':'<span class="grid h-full w-full place-items-center rounded-full bg-slate-100 text-slate-400">'+ic('user',20)+'</span>';
+  image.classList.remove('rounded-lg');image.classList.add('rounded-full');image.setAttribute('aria-label',otherName);
   const newest=messages.at(-1);
   if(newest)sellerChatLastMessageId=newest.id;
   renderSellerChatMessages(messages);if(scrollToBottom)$('sellerChatMessages').scrollTop=$('sellerChatMessages').scrollHeight;
@@ -753,18 +767,25 @@ async function startBuyerSellerChat(productId){
 }
 async function startSellerVoiceRecording(){
   if(!sellerChatConversationId||!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder){toast('Browser នេះមិនគាំទ្រការថតសំឡេងទេ។','error');return}
+  if(sellerChatRecorder?.state==='recording')return;
   try{
     const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+    // The user may release while the browser permission prompt is still open.
+    // Do not start/upload a recording unless the original press is still held.
+    if(!sellerChatPointerDown){stream.getTracks().forEach(track=>track.stop());return}
     const mime=['audio/webm;codecs=opus','audio/ogg;codecs=opus','audio/mp4'].find(type=>MediaRecorder.isTypeSupported?.(type));
-    sellerChatRecorder=new MediaRecorder(stream,mime?{mimeType:mime}:undefined);sellerChatRecordChunks=[];sellerChatRecordStartedAt=Date.now();
+    sellerChatRecorder=new MediaRecorder(stream,mime?{mimeType:mime}:undefined);sellerChatRecordChunks=[];sellerChatRecordStartedAt=Date.now();sellerChatRecordingLocked=false;
     sellerChatRecorder.ondataavailable=event=>{if(event.data?.size)sellerChatRecordChunks.push(event.data)};
     sellerChatRecorder.onstop=async()=>{
       clearTimeout(sellerChatRecordTimer);sellerChatRecordTimer=null;
-      stream.getTracks().forEach(track=>track.stop());$('sellerChatRecordingStatus').classList.add('hidden');$('sellerChatRecord').textContent='🎙';
-      if(sellerChatDiscardRecording){sellerChatDiscardRecording=false;sellerChatRecorder=null;sellerChatRecordChunks=[];return}
+      stream.getTracks().forEach(track=>track.stop());
+      $('sellerChatRecordingStatus').classList.add('hidden');$('sellerChatCancelRecording').classList.add('hidden');
+      $('sellerChatRecord').innerHTML=ic('mic',19);$('sellerChatRecord').classList.remove('is-recording','is-locked');$('sellerChatRecord').title='សង្កត់ដើម្បីថតសំឡេង';
+      sellerChatRecordingLocked=false;sellerChatPointerDown=false;
+      if(sellerChatDiscardRecording){sellerChatDiscardRecording=false;sellerChatRecorder=null;sellerChatRecordChunks=[];syncSellerChatComposer();return}
       const duration=Math.max(1,Math.min(180,Math.round((Date.now()-sellerChatRecordStartedAt)/1000)));
       const blob=new Blob(sellerChatRecordChunks,{type:sellerChatRecorder.mimeType||'audio/webm'});
-      sellerChatRecorder=null;sellerChatRecordChunks=[];
+      sellerChatRecorder=null;sellerChatRecordChunks=[];syncSellerChatComposer();
       if(!blob.size)return;
       if(blob.size>12*1024*1024){toast('សំឡេងធំពេក។ សូមថតខ្លីជាងនេះ។','warning');return}
       const form=new FormData();form.append('voice',blob,'voice.'+(blob.type.includes('ogg')?'ogg':blob.type.includes('mp4')?'m4a':'webm'));form.append('duration_seconds',String(duration));
@@ -772,10 +793,26 @@ async function startSellerVoiceRecording(){
       try{await api('/api/seller-chat/conversations/'+encodeURIComponent(sellerChatConversationId)+'/voice',{method:'POST',body:form});await loadSellerChatConversation(true);await loadUnifiedSellerChatInbox()}
       catch(error){toast(error.message,'error')}finally{button.disabled=false}
     };
-    sellerChatRecorder.start(250);$('sellerChatRecordingStatus').classList.remove('hidden');$('sellerChatRecord').textContent='■';
+    sellerChatRecorder.start(250);
+    $('sellerChatRecordingStatus').classList.remove('hidden');$('sellerChatRecordingStatus').textContent='កំពុងថត… អូសឡើងលើដើម្បីចាក់សោ';
+    $('sellerChatRecord').innerHTML=ic('mic',19);$('sellerChatRecord').classList.add('is-recording');
+    $('sellerChatCancelRecording').classList.remove('hidden');
+    if(!sellerChatPointerDown)sellerChatRecorder.stop();
     clearTimeout(sellerChatRecordTimer);sellerChatRecordTimer=setTimeout(()=>{if(sellerChatRecorder?.state==='recording')sellerChatRecorder.stop()},180000);
-  }catch(error){toast(error.name==='NotAllowedError'?'សូមអនុញ្ញាតឱ្យប្រើ Microphone ជាមុនសិន។':error.message,'error')}
+  }catch(error){sellerChatPointerDown=false;toast(error.name==='NotAllowedError'?'សូមអនុញ្ញាតឱ្យប្រើ Microphone ជាមុនសិន។':error.message,'error')}
 }
+function syncSellerChatComposer(){
+  const input=$('sellerChatInput'),send=$('sellerChatSend'),record=$('sellerChatRecord');
+  if(!input||!send||!record)return;
+  const recording=sellerChatRecorder?.state==='recording';
+  send.classList.toggle('hidden',!input.value.trim()||recording);
+  record.classList.toggle('hidden',Boolean(input.value.trim())&&!recording);
+}
+function stopSellerVoiceRecording(discard=false){
+  if(!sellerChatRecorder||sellerChatRecorder.state!=='recording')return;
+  sellerChatDiscardRecording=discard;sellerChatRecorder.stop();
+}
+
 function startMarketplaceRealtime(){
   if(!supabaseClient||productRealtimeChannel)return;
   const queueRefresh=()=>{if(document.hidden){productRealtimePendingRefresh=true;return}clearTimeout(productRealtimeRefreshTimer);productRealtimeRefreshTimer=setTimeout(()=>{if(!document.hidden&&$('view-home')?.classList.contains('active'))void loadProducts()},250)};
@@ -896,7 +933,7 @@ async function boot(){
 $('sellerChatMessages').addEventListener('click',event=>{const card=event.target.closest('[data-chat-product-id]');if(card)openChatProduct(card.dataset.chatProductId)});
 $('sellerChatMessages').addEventListener('keydown',event=>{if(event.key!=='Enter'&&event.key!==' ')return;const card=event.target.closest('[data-chat-product-id]');if(card){event.preventDefault();openChatProduct(card.dataset.chatProductId)}});
 $('sellerChatClose').addEventListener('click',()=>{if(sellerChatRecorder?.state==='recording'){sellerChatDiscardRecording=true;sellerChatRecorder.stop()}closeModal('sellerChatModal');sellerChatConversationId=null;if(sellerChatChannel&&supabaseClient){void supabaseClient.removeChannel(sellerChatChannel);sellerChatChannel=null}});
-$('sellerChatForm').addEventListener('submit',async event=>{event.preventDefault();const input=$('sellerChatInput'),body=input.value.trim();if(!body||!sellerChatConversationId)return;const button=$('sellerChatForm').querySelector('button[type="submit"]');button.disabled=true;try{await api('/api/seller-chat/conversations/'+encodeURIComponent(sellerChatConversationId)+'/messages',{method:'POST',body:JSON.stringify({body})});input.value='';await loadSellerChatConversation(true);await loadUnifiedSellerChatInbox()}catch(error){toast(error.message,'error')}finally{button.disabled=false}});
+$('sellerChatForm').addEventListener('submit',async event=>{event.preventDefault();const input=$('sellerChatInput'),body=input.value.trim();if(!body||!sellerChatConversationId)return;const button=$('sellerChatSend');button.disabled=true;try{await api('/api/seller-chat/conversations/'+encodeURIComponent(sellerChatConversationId)+'/messages',{method:'POST',body:JSON.stringify({body})});input.value='';syncSellerChatComposer();await loadSellerChatConversation(true);await loadUnifiedSellerChatInbox()}catch(error){toast(error.message,'error')}finally{button.disabled=false}});
 $('sellerDashboardContent').addEventListener('click',event=>{const button=event.target.closest('[data-seller-chat]');if(button)void openSellerChat(button.dataset.sellerChat,'seller')});
 
 $('supportChatLauncher').addEventListener('click',()=>void openSellerChatInbox());
@@ -904,7 +941,38 @@ $('sellerChatInboxRefresh').addEventListener('click',()=>void loadUnifiedSellerC
 $('sellerChatInboxList').addEventListener('click',event=>{const button=event.target.closest('[data-unified-chat]');if(button)void openSellerChat(button.dataset.unifiedChat)});
 $('sellerChatBack').addEventListener('click',()=>{$('sellerChatInboxPane').classList.remove('mobile-hidden');$('sellerChatThread').classList.remove('mobile-active');sellerChatConversationId=null;$('sellerChatTitle').textContent='ជ្រើសរើសសន្ទនា';$('sellerChatSubtitle').textContent='សន្ទនាអំពីផលិតផល';$('sellerChatMessages').innerHTML='<p class="py-8 text-center text-xs text-slate-400">ជ្រើសរើសសន្ទនាមួយ ដើម្បីចាប់ផ្ដើម។</p>';$('sellerChatForm').classList.add('opacity-50');$('sellerChatInput').disabled=true;$('sellerChatRecord').disabled=true});
 $('sellerChatMute').addEventListener('click',async()=>{const button=$('sellerChatMute');button.disabled=true;try{const result=await api('/api/seller-chat/preferences',{method:'PUT',body:JSON.stringify({muted:!sellerChatMuted})});sellerChatMuted=result.data.muted;await loadSellerChatPreferences()}catch(error){toast(error.message,'error')}finally{button.disabled=false}});
-$('sellerChatRecord').addEventListener('click',()=>{if(sellerChatRecorder?.state==='recording')sellerChatRecorder.stop();else void startSellerVoiceRecording()});
+const voiceButton=$('sellerChatRecord');
+voiceButton.addEventListener('pointerdown',event=>{
+  if(voiceButton.disabled||event.button!==0||sellerChatRecorder?.state==='recording')return;
+  event.preventDefault();sellerChatPointerDown=true;sellerChatPointerStartY=event.clientY;sellerChatIgnoreNextClick=true;
+  try{voiceButton.setPointerCapture(event.pointerId)}catch{}
+  void startSellerVoiceRecording();
+});
+voiceButton.addEventListener('pointermove',event=>{
+  if(!sellerChatPointerDown||sellerChatRecorder?.state!=='recording')return;
+  if(sellerChatPointerStartY-event.clientY>72){
+    sellerChatRecordingLocked=true;sellerChatPointerDown=false;voiceButton.classList.add('is-locked');
+    voiceButton.innerHTML=ic('send',19);voiceButton.title='ចុចដើម្បីផ្ញើសារសំឡេង';
+    $('sellerChatRecordingStatus').textContent='🔒 បានចាក់សោ · ចុចប៊ូតុងផ្ញើដើម្បីបញ្ចប់ និងផ្ញើ';
+  }
+});
+const releaseVoicePointer=event=>{
+  if(sellerChatPointerDown){
+    sellerChatPointerDown=false;
+    if(sellerChatRecorder?.state==='recording'&&!sellerChatRecordingLocked)stopSellerVoiceRecording(false);
+  }
+  sellerChatIgnoreNextClick=true;
+  setTimeout(()=>{sellerChatIgnoreNextClick=false},350);
+};
+voiceButton.addEventListener('pointerup',releaseVoicePointer);
+voiceButton.addEventListener('pointercancel',()=>{if(sellerChatPointerDown){sellerChatPointerDown=false;stopSellerVoiceRecording(true)}sellerChatIgnoreNextClick=true;setTimeout(()=>{sellerChatIgnoreNextClick=false},350)});
+voiceButton.addEventListener('click',()=>{
+  if(sellerChatIgnoreNextClick){sellerChatIgnoreNextClick=false;return}
+  if(sellerChatRecordingLocked)stopSellerVoiceRecording(false);
+});
+$('sellerChatCancelRecording').addEventListener('click',()=>stopSellerVoiceRecording(true));
+$('sellerChatInput').addEventListener('input',syncSellerChatComposer);
+syncSellerChatComposer();
 $('supportChatClose').addEventListener('click',()=>$('supportChatPanel').classList.add('hidden'));
 $('supportChatForm').addEventListener('submit',async event=>{
   event.preventDefault();const input=$('supportChatInput'),body=input.value.trim();if(!body)return;
