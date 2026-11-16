@@ -555,6 +555,12 @@ async function findAuthUserByEmail(email) {
   return null;
 }
 
+function telegramInternalEmail(telegramId) {
+  const digest = createHmac('sha256', process.env.SUPABASE_SERVICE_ROLE_KEY)
+    .update(String(telegramId)).digest('hex').slice(0, 40);
+  return `telegram.${digest}@auth.7inone.invalid`;
+}
+
 async function createSupabaseSessionForEmail(email) {
   const { data:magic, error:magicError } = await supabase.auth.admin.generateLink({
     type: 'magiclink',
@@ -925,16 +931,38 @@ app.post('/api/auth/telegram', telegramWidgetLoginLimiter, async (req, res) => {
       authUser = authResult.user;
       email = clean(authUser.email || legacyLink?.account_email, 254).toLowerCase();
       if (!email) {
-        const accountError = new Error('គណនីចាស់នេះមិនមាន Email សម្រាប់បង្កើត Supabase Session ទេ។ សូមបន្ថែម Email ទៅគណនីជាមុន។');
-        accountError.status = 409;
-        throw accountError;
+        // Existing phone-only accounts keep their phone and password. Add an
+        // opaque, confirmed internal email solely for server-issued magic-link sessions.
+        const internalEmail = telegramInternalEmail(identity.id);
+        const emailOwner = await findAuthUserByEmail(internalEmail);
+        if (emailOwner && emailOwner.id !== userId) {
+          const conflict = new Error('Telegram Account មានការប៉ះទង្គិច។ សូមទាក់ទង Admin។');
+          conflict.status = 409;
+          throw conflict;
+        }
+        const { data:updatedAuth, error:updateAuthError } = await supabase.auth.admin.updateUserById(userId, {
+          email: internalEmail,
+          email_confirm: true,
+          user_metadata: {
+            ...(authUser.user_metadata || {}),
+            auth_provider: 'telegram',
+            telegram_id: identity.id,
+            telegram_username: identity.username,
+            display_name: existingProfile?.display_name || identity.displayName,
+            avatar_url: existingProfile?.avatar_url || identity.photoUrl || null
+          }
+        });
+        if (updateAuthError || !updatedAuth?.user) {
+          console.error('Could not add internal Telegram email to phone-only account:', updateAuthError?.message);
+          throw updateAuthError || new Error('Could not prepare Supabase session for phone-only account.');
+        }
+        authUser = updatedAuth.user;
+        email = clean(authUser.email, 254).toLowerCase();
       }
     } else {
       // Use a keyed opaque address instead of embedding a predictable Telegram ID.
       // This address is internal to Supabase Auth and is never shown to the user.
-      const accountDigest = createHmac('sha256', process.env.SUPABASE_SERVICE_ROLE_KEY)
-        .update(identity.id).digest('hex').slice(0, 40);
-      email = `telegram.${accountDigest}@auth.7inone.invalid`;
+      email = telegramInternalEmail(identity.id);
       const { data:created, error:createError } = await supabase.auth.admin.createUser({
         email,
         password: randomBytes(48).toString('base64url'),
