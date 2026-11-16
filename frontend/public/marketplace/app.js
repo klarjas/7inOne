@@ -821,7 +821,7 @@ async function restoreSupportChatArchive(archiveId,isAdminView){
 
 async function boot(){
   let requestedView=document.documentElement.dataset.initialView||'home';
-  if(!['home','profile','seller','admin'].includes(requestedView))requestedView='home';
+  if(!['home','profile','seller','admin','product','store'].includes(requestedView))requestedView='home';
   // Optimistically activate the requested route before any network/auth work.
   void showView(requestedView,{optimistic:true,deferLoad:true,preserveScroll:true});
   try{
@@ -921,7 +921,7 @@ if(!adminChatPollTimer)adminChatPollTimer=setInterval(()=>{if(isAdmin()&&$('view
 
 function syncRouteFromHistory(){
   const route=String(window.location.hash||'').replace(/^#/,'');
-  const name=['home','profile','seller','admin'].includes(route)?route:'home';
+  const name=['home','profile','seller','admin','product','store'].includes(route)?route:'home';
   const active=document.querySelector('.view.active')?.id?.replace('view-','');
   if(active===name)return;
   if(!routeAccessReady){void showView(name,{optimistic:true,deferLoad:true,preserveScroll:true});return}
