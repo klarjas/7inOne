@@ -120,7 +120,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 
 
 /* 7inOne Website Support Chat */
-.support-chat-panel{height:min(590px,calc(100dvh - 125px));display:flex;flex-direction:column}
+.support-chat-panel{height:min(590px,calc(100dvh - 125px));flex-direction:column}.support-chat-panel:not(.hidden){display:flex}.support-chat-panel.hidden{display:none}
 .support-chat-messages{height:310px;min-height:180px;overflow-y:auto;overscroll-behavior:contain}
 #adminChatMessages{height:320px;min-height:220px}
 .support-chat-bubble{max-width:88%;border-radius:15px;padding:9px 11px;font-size:11px;line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere}
