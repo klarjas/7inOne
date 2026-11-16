@@ -8,7 +8,7 @@ const ic=(name,size=17,extra='')=>`<svg aria-hidden="true" width="${size}" heigh
 const CAT={phones:'ទូរស័ព្ទ & អេឡិចត្រូនិក',vehicles:'រថយន្ត & ម៉ូតូ',property:'អចលនទ្រព្យ',fashion:'សម្លៀកបំពាក់',furniture:'គ្រឿងសង្ហារិម'};
 const CATICON={all:'grid',phones:'phone',vehicles:'car',property:'home',fashion:'shirt',furniture:'sofa'};
 let currentStoreId=null,currentStoreData=null,currentStoreProducts=[],currentStoreCategory='all',currentStoreSearch='';
-let productGalleryIndex=0,productLightboxOpen=false,scrollSaveTimer=null,routeSyncGuardKey='',routeSyncGuardTimer=null;
+let productGalleryIndex=0,productLightboxOpen=false,scrollSaveTimer=null,routeSyncGuardKey='',routeSyncGuardTimer=null,routeSyncNavigationId=0;
 let siteBranding={siteTitle:'7inOne',siteSubtitle:'ផ្សារទិញលក់កម្ពុជា',heroBadge:'ផ្សារអនឡាញសម្រាប់អ្នកទាំងអស់គ្នា',heroTitle:'ទិញលក់ងាយៗ នៅជិតអ្នក',heroSubtitle:'ស្វែងរកទំនិញដែលអ្នកស្រឡាញ់ ឬដាក់លក់របស់ដែលអ្នកមិនប្រើ។ ភ្ជាប់អ្នកទិញ និងអ្នកលក់នៅទូទាំងប្រទេសកម្ពុជា។',siteLogoUrl:'',heroImages:[]},brandingLogoPreviewUrl=null,brandingHeroPreviewUrls=[],siteBrandingRefreshTimer=null;
 let supabaseClient=null,session=null,sessionRefreshPromise=null,me=null,routeAccessReady=false,supportChatPollTimer=null,adminChatPollTimer=null,activeAdminChatId=null,restoredUserChatArchives={},restoredAdminChatArchives={},pendingPhone=null,products=[],savedIds=new Set(),favoritePending=new Set(),activeCategory='all',searchTerm='',currentProduct=null,currentVendor=null,profileTab='saved',authMode='login',currentOfferProduct=null,selectedProductImages=[],sellerDocPreviewUrl=null,telegramBotUsername='',telegramLoginWidgetMounted=false,telegramProfileWidgetMounted=false,productRealtimeChannel=null,productRealtimeRefreshTimer=null,productRealtimeFallbackTimer=null,productRealtimePendingRefresh=false,sellerChatChannel=null,sellerChatPollTimer=null,sellerInboxPollTimer=null,sellerChatConversationId=null,sellerChatInboxPollTimer=null,sellerChatMode='buyer',sellerChatInbox=[],sellerChatMuted=false,sellerChatRecorder=null,sellerChatDiscardRecording=false,sellerChatRecordChunks=[],sellerChatRecordStartedAt=0,sellerChatRecordTimer=null,sellerChatLastMessageId=null,sellerChatInboxUnreadSnapshot={},sellerChatInboxInitialized=false,sellerChatInboxUserId=null,sellerChatAudioUrls=new Set(),sellerChatLoadedMessages=[],sellerChatPendingVoices=[],sellerChatPendingMedia=[],sellerChatPointerDown=false,sellerChatPointerStartY=0,sellerChatRecordingLocked=false,sellerChatIgnoreNextClick=false;
 const DEFAULT_MAINTENANCE_MESSAGE='ប្រព័ន្ធកំពុងធ្វើការអភិវឌ្ឍន៍ និងបន្ថែមមុខងារថ្មីៗ សូមអធ្យាស្រ័យចំពោះការរំខាន!';let maintenanceMode=false,maintenanceMessage=DEFAULT_MAINTENANCE_MESSAGE,faviconUrl='';
@@ -311,20 +311,30 @@ function saveAction(productId,button=null){
   });
 }
 function renderStars(value,size=15){return `<span class="inline-flex items-center gap-0.5 text-amber-500">${[1,2,3,4,5].map(n=>`<span class="${n<=Math.round(Number(value||0))?'':'text-slate-200'}">★</span>`).join('')}</span>`}
+function isRouteSyncRequestCurrent(options={}){return options.routeSyncNavigationId==null||options.routeSyncNavigationId===routeSyncNavigationId}
 async function openProduct(id,options={}){
  if(!id){toast('មិនមានលេខសម្គាល់ទំនិញទេ។','warning');return false}
  const productId=String(id);
+ const isCurrent=()=>isRouteSyncRequestCurrent(options);
  try{
   if(session){try{await loadOrders()}catch(error){console.warn('Could not refresh review eligibility:',error)}}
+  if(!isCurrent())return false;
   try{sessionStorage.setItem('ecomstore.currentProductId',productId);sessionStorage.setItem('ecomstore.activeView','product')}catch{}
   $('productDetail').setAttribute('aria-busy','true');
   $('productDetail').innerHTML='<div class="product-detail-skeleton"><div class="skeleton product-detail-skeleton-image"></div><div class="product-detail-skeleton-copy"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div></div>';
-  const result=await api('/api/products/'+encodeURIComponent(productId));currentProduct=result.data;
-  if(!currentProduct)throw new Error('មិនមានព័ត៌មានទំនិញនេះទេ។');
-  const trust=await api('/api/vendors/'+encodeURIComponent(currentProduct.vendor_id)+'/ratings');currentVendor=trust.data;productGalleryIndex=0;
+  const result=await api('/api/products/'+encodeURIComponent(productId));
+  if(!isCurrent())return false;
+  const product=result.data;if(!product)throw new Error('មិនមានព័ត៌មានទំនិញនេះទេ។');
+  const trust=await api('/api/vendors/'+encodeURIComponent(product.vendor_id)+'/ratings');
+  if(!isCurrent())return false;
+  currentProduct=product;currentVendor=trust.data;productGalleryIndex=0;
   await showView('product',{preserveScroll:Boolean(options.preserveScroll)});
+  if(!isCurrent())return false;
   $('productDetail').removeAttribute('aria-busy');$('productDetail').classList.remove('detail-loaded');requestAnimationFrame(()=> $('productDetail')?.classList.add('detail-loaded'));return true;
- }catch(error){const target=$('productDetail');if(target){target.removeAttribute('aria-busy');target.innerHTML='<div class="route-load-error"><span>'+ic('alert',24)+'</span><b>មិនអាចទាញយកទំនិញនេះបានទេ</b><p>'+esc(error.message||'សូមព្យាយាមម្ដងទៀត។')+'</p><button type="button" class="brand-gradient" onclick="location.reload()">ព្យាយាមម្ដងទៀត</button></div>'}toast(error.message,'error');return false}
+ }catch(error){
+  if(!isCurrent())return false;
+  const target=$('productDetail');if(target){target.removeAttribute('aria-busy');target.innerHTML='<div class="route-load-error"><span>'+ic('alert',24)+'</span><b>មិនអាចទាញយកទំនិញនេះបានទេ</b><p>'+esc(error.message||'សូមព្យាយាមម្ដងទៀត។')+'</p><button type="button" class="brand-gradient" onclick="location.reload()">ព្យាយាមម្ដងទៀត</button></div>'}toast(error.message,'error');return false
+ } 
 }
 function renderProductDetail(){
  const p=currentProduct,v=currentVendor;if(!p||!v)return;
@@ -360,15 +370,18 @@ function closeProductLightbox(){productLightboxOpen=false;$('productLightbox').c
 
 async function openStorefront(vendorId,options={}){
  if(!vendorId){toast('មិនមានព័ត៌មានហាងនេះទេ។','warning');return false}
- currentStoreId=String(vendorId);currentStoreCategory='all';currentStoreSearch='';
+ const storeId=String(vendorId),isCurrent=()=>isRouteSyncRequestCurrent(options);
+ currentStoreCategory='all';currentStoreSearch='';
  const storeTarget=$('storefrontContent');if(storeTarget){storeTarget.setAttribute('aria-busy','true');storeTarget.innerHTML='<div class="storefront-skeleton"><div class="skeleton storefront-skeleton-profile"></div><div class="storefront-skeleton-grid">'+Array.from({length:10},()=>'<div class="storefront-skeleton-card"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>').join('')+'</div></div>'}
  try{
-  try{sessionStorage.setItem('ecomstore.currentStoreId',currentStoreId);sessionStorage.setItem('ecomstore.activeView','store')}catch{}
-  const [result,catalogue]=await Promise.all([api('/api/vendors/'+encodeURIComponent(currentStoreId)+'/ratings'),api('/api/products?page=1&limit=50')]);
-  currentStoreData=result.data||null;currentStoreProducts=(catalogue.data||[]).filter(p=>String(p.vendor_id)===currentStoreId);
-  if(!currentStoreData)throw new Error('មិនមានព័ត៌មានហាងទេ។');
-  await showView('store',{preserveScroll:Boolean(options.preserveScroll)});return true;
- }catch(error){const target=$('storefrontContent');if(target){target.removeAttribute('aria-busy');target.innerHTML='<div class="route-load-error"><span>'+ic('alert',24)+'</span><b>មិនអាចបើកហាងនេះបានទេ</b><p>'+esc(error.message||'សូមព្យាយាមម្ដងទៀត។')+'</p><button type="button" class="brand-gradient" onclick="location.reload()">ព្យាយាមម្ដងទៀត</button></div>'}toast(error.message,'error');return false}
+  try{sessionStorage.setItem('ecomstore.currentStoreId',storeId);sessionStorage.setItem('ecomstore.activeView','store')}catch{}
+  const [result,catalogue]=await Promise.all([api('/api/vendors/'+encodeURIComponent(storeId)+'/ratings'),api('/api/products?page=1&limit=50')]);
+  if(!isCurrent())return false;
+  const storeData=result.data||null;if(!storeData)throw new Error('មិនមានព័ត៌មានហាងទេ។');
+  currentStoreId=storeId;currentStoreData=storeData;currentStoreProducts=(catalogue.data||[]).filter(p=>String(p.vendor_id)===storeId);
+  await showView('store',{preserveScroll:Boolean(options.preserveScroll)});
+  return isCurrent();
+ }catch(error){if(!isCurrent())return false;const target=$('storefrontContent');if(target){target.removeAttribute('aria-busy');target.innerHTML='<div class="route-load-error"><span>'+ic('alert',24)+'</span><b>មិនអាចបើកហាងនេះបានទេ</b><p>'+esc(error.message||'សូមព្យាយាមម្ដងទៀត។')+'</p><button type="button" class="brand-gradient" onclick="location.reload()">ព្យាយាមម្ដងទៀត</button></div>'}toast(error.message,'error');return false}
 }
 function renderStorefront(){
   const data=currentStoreData;if(!data)return;
@@ -1190,6 +1203,7 @@ function syncRouteFromHistory(){
  const eventKey=String(window.location.hash||'')+'|'+JSON.stringify(window.history.state||{});
  if(routeSyncGuardKey===eventKey)return;
  routeSyncGuardKey=eventKey;
+ const navigationId=++routeSyncNavigationId;
  if(routeSyncGuardTimer)window.clearTimeout(routeSyncGuardTimer);
  routeSyncGuardTimer=window.setTimeout(()=>{if(routeSyncGuardKey===eventKey)routeSyncGuardKey=''},0);
  const raw=String(window.location.hash||'').replace(/^#/,'');const parts=raw.split('/'),name=parts[0]||'home';
@@ -1197,8 +1211,8 @@ function syncRouteFromHistory(){
  const storeId=name==='store'?(decodeURIComponent(parts.slice(1).join('/'))||(()=>{try{return sessionStorage.getItem('ecomstore.currentStoreId')||''}catch{return ''}})()):'';
  const route=['home','profile','seller','admin','product','store'].includes(name)?name:'home',active=document.querySelector('.view.active')?.id?.replace('view-','');
  if(!routeAccessReady){void showView(route,{optimistic:true,deferLoad:true,preserveScroll:true});return}
- if(route==='product'&&productId&&(active!=='product'||String(currentProduct?.id)!==String(productId))){void openProduct(productId,{preserveScroll:true});return}
- if(route==='store'&&storeId&&(active!=='store'||String(currentStoreId)!==String(storeId))){void openStorefront(storeId,{preserveScroll:true});return}
+ if(route==='product'&&productId&&(active!=='product'||String(currentProduct?.id)!==String(productId))){void openProduct(productId,{preserveScroll:true,routeSyncNavigationId:navigationId});return}
+ if(route==='store'&&storeId&&(active!=='store'||String(currentStoreId)!==String(storeId))){void openStorefront(storeId,{preserveScroll:true,routeSyncNavigationId:navigationId});return}
  if(active===route)return;void showView(route,{fromHistory:true,preserveScroll:true});
 }
 window.addEventListener('hashchange',syncRouteFromHistory);
@@ -1221,7 +1235,7 @@ document.addEventListener('error',event=>{
   const image=event.target;
   if(!(image instanceof HTMLImageElement))return;
   const wrapper=image.closest('.img-scan-wrap');
-  if(wrapper){wrapper.classList.add('is-failed');if(image.hasAttribute('data-vendor-avatar-image'))wrapper.innerHTML=avatarFallbackMarkup(wrapper.dataset.vendorAvatar||'អ្នកលក់');else if(image.closest('.hero-image-tile'))image.classList.add('hidden');else{image.remove();if(!wrapper.querySelector('svg'))wrapper.insertAdjacentHTML('beforeend',ic('image',24))}}
+  if(wrapper){wrapper.classList.add('is-failed');if(image.hasAttribute('data-vendor-avatar-image'))wrapper.innerHTML=avatarFallbackMarkup(wrapper.dataset.vendorAvatar||'អ្នកលក់');else if(image.id==='productMainImage'){image.classList.add('is-image-failed');if(!wrapper.querySelector('.product-main-image-fallback'))wrapper.insertAdjacentHTML('beforeend','<span class="product-main-image-fallback">'+ic('image',40)+'</span>')}else if(image.closest('.hero-image-tile'))image.classList.add('hidden');else{image.remove();if(!wrapper.querySelector('svg'))wrapper.insertAdjacentHTML('beforeend',ic('image',24))}}
 },true);
 
 // Deliberately no magnetic or 3D tilt effects in the minimalist marketplace UI.
