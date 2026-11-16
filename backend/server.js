@@ -31,6 +31,18 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 
 const fail = (res, status, message) => res.status(status).json({ error: message });
 const db = res => { if (!supabase) { fail(res, 503, 'Supabase is not configured'); return false; } return true; };
 const clean = (value, max = 500) => String(value ?? '').trim().slice(0, max);
+const IMAGE_MIME_TYPES = new Set(['image/jpeg','image/png','image/webp']);
+function imageUploadError(file, maxBytes = 8 * 1024 * 1024) {
+  if (!file || !IMAGE_MIME_TYPES.has(file.mimetype)) return 'Only JPG, PNG or WEBP image uploads are allowed.';
+  if (!Buffer.isBuffer(file.buffer) || !file.buffer.length) return 'The uploaded image is empty.';
+  if (file.size > maxBytes) return `Image must be ${Math.floor(maxBytes / (1024 * 1024))}MB or smaller.`;
+  const buffer = file.buffer;
+  const jpeg = buffer.length >= 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff;
+  const png = buffer.length >= 8 && buffer.subarray(0, 8).equals(Buffer.from([0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a]));
+  const webp = buffer.length >= 12 && buffer.toString('ascii',0,4) === 'RIFF' && buffer.toString('ascii',8,12) === 'WEBP';
+  if (!(jpeg || png || webp)) return 'The file contents do not match a JPG, PNG or WEBP image.';
+  return null;
+}
 
 async function authenticate(req, res, nextMiddleware) {
   try {
@@ -142,17 +154,16 @@ async function getTelegramBotUsername() {
   }
 }
 async function uploadToTelegram(file) {
+  const invalid = imageUploadError(file);
+  if (invalid) throw new Error(invalid);
   assertTelegramStorageConfig();
-  const useDocument = file.mimetype === 'application/pdf' || file.size > 9 * 1024 * 1024;
-  const method = useDocument ? 'sendDocument' : 'sendPhoto';
-  const field = useDocument ? 'document' : 'photo';
   const form = new FormData();
   form.append('chat_id', telegramStorageChatId());
-  form.append(field, new Blob([file.buffer], { type: file.mimetype }), file.originalname || (useDocument ? 'upload.bin' : 'image.jpg'));
-  const result = await telegram(method, { method: 'POST', body: form });
-  const media = useDocument ? result.document : result.photo?.at(-1);
-  if (!media?.file_id || !result.message_id) throw new Error('Telegram accepted the upload but did not return a file_id/message_id.');
-  return { messageId: String(result.message_id), fileId: media.file_id, mimeType: file.mimetype, method };
+  form.append('photo', new Blob([file.buffer], { type: file.mimetype }), file.originalname || 'image.jpg');
+  const result = await telegram('sendPhoto', { method: 'POST', body: form });
+  const media = result.photo?.at(-1);
+  if (!media?.file_id || !result.message_id) throw new Error('Telegram accepted the image but did not return a file_id/message_id.');
+  return { messageId: String(result.message_id), fileId: media.file_id, mimeType: file.mimetype, method: 'sendPhoto' };
 }
 async function deleteTelegramMessage(messageId) {
   if (!messageId || !process.env.TELEGRAM_BOT_TOKEN || !telegramStorageChatId()) return;
@@ -322,14 +333,36 @@ async function getMaintenanceSettings() {
   const value = data?.value || {};
   return { maintenanceMode: value.maintenanceMode === true, maintenanceMessage: clean(value.maintenanceMessage, 1000) || DEFAULT_MAINTENANCE_MESSAGE };
 }
+const DEFAULT_SITE_BRANDING = {
+  siteTitle: '7inOne',
+  siteSubtitle: 'ផ្សារទិញលក់កម្ពុជា',
+  heroBadge: 'ផ្សារអនឡាញសម្រាប់អ្នកទាំងអស់គ្នា',
+  heroTitle: 'ទិញលក់ងាយៗ នៅជិតអ្នក',
+  heroSubtitle: 'ស្វែងរកទំនិញដែលអ្នកស្រឡាញ់ ឬដាក់លក់របស់ដែលអ្នកមិនប្រើ។ ភ្ជាប់អ្នកទិញ និងអ្នកលក់នៅទូទាំងប្រទេសកម្ពុជា។'
+};
 async function getSiteBranding(){
-  if(!supabase)return {faviconUrl:''};
+  const defaults = { ...DEFAULT_SITE_BRANDING, siteLogoUrl: '', faviconUrl: '', heroImages: [] };
+  if(!supabase)return defaults;
   const {data,error}=await supabase.from('site_settings').select('value,updated_at').eq('key','site_branding').maybeSingle();
-  if(error){console.error('Could not read website branding:',error.message);return {faviconUrl:''}}
+  if(error){console.error('Could not read website branding:',error.message);return defaults}
   const value=data?.value||{};
-  const fileId=clean(value.faviconFileId,2048);
-  if(fileId)return {faviconUrl:'/api/site/favicon?v='+encodeURIComponent(clean(value.faviconVersion,80)||data?.updated_at||'1')};
-  return {faviconUrl:clean(value.faviconUrl,2000)};
+  const logoFileId=clean(value.siteLogoFileId||value.faviconFileId,2048);
+  const version=clean(value.faviconVersion||value.siteLogoVersion,80)||data?.updated_at||'1';
+  const uploadedLogoUrl=logoFileId?'/api/site/favicon?v='+encodeURIComponent(version):'';
+  const siteLogoUrl=uploadedLogoUrl||clean(value.siteLogoUrl||value.faviconUrl,2000);
+  const heroImages=(Array.isArray(value.heroImages)?value.heroImages:[]).slice(0,3).map(image=>{
+    const fileId=clean(image?.fileId||image?.file_id,2048);
+    return {url:fileId?telegramMediaUrl(fileId):clean(image?.url||image?.imageUrl,2000),fileId};
+  }).filter(image=>image.url);
+  return {
+    siteLogoUrl, faviconUrl:siteLogoUrl,
+    siteTitle:clean(value.siteTitle,80)||DEFAULT_SITE_BRANDING.siteTitle,
+    siteSubtitle:clean(value.siteSubtitle,120)||DEFAULT_SITE_BRANDING.siteSubtitle,
+    heroBadge:clean(value.heroBadge,100)||DEFAULT_SITE_BRANDING.heroBadge,
+    heroTitle:clean(value.heroTitle,160)||DEFAULT_SITE_BRANDING.heroTitle,
+    heroSubtitle:clean(value.heroSubtitle,600)||DEFAULT_SITE_BRANDING.heroSubtitle,
+    heroImages
+  };
 }
 app.get('/api/config', async (_req, res) => {
   const [maintenance,branding,telegramBotUsername] = await Promise.all([
@@ -357,44 +390,91 @@ app.get('/api/site/favicon', async (_req,res)=>{
     const {data,error}=await supabase.from('site_settings').select('value').eq('key','site_branding').maybeSingle();
     if(error)throw error;
     const value=data?.value||{};
-    const fileId=clean(value.faviconFileId,2048);
+    const fileId=clean(value.siteLogoFileId||value.faviconFileId,2048);
     if(!fileId)return res.status(404).end();
-    return await streamTelegramFile(fileId,res,clean(value.faviconMimeType,80)||'image/png','inline','public, max-age=300, stale-while-revalidate=3600');
+    return await streamTelegramFile(fileId,res,clean(value.siteLogoMimeType||value.faviconMimeType,80)||'image/png','inline','public, max-age=300, stale-while-revalidate=3600');
   }catch(error){
     console.error('Website favicon proxy failed:',error.message);
     return fail(res,502,'Could not retrieve website favicon from Telegram.');
   }
 });
 app.post('/api/admin/favicon', authenticate, requireAdmin, upload.single('file'), async (req,res)=>{
-  let newMessageId='';
+  let uploaded=null;
   try{
-    const file=req.file;
-    if(!file||!['image/png','image/jpeg','image/webp'].includes(file.mimetype))return fail(res,400,'Choose a PNG, JPG or WEBP image.');
-    if(file.size>2*1024*1024)return fail(res,400,'Favicon must be 2MB or smaller.');
-    assertTelegramStorageConfig();
-    const form=new FormData();
-    form.append('chat_id',telegramStorageChatId());
-    form.append('document',new Blob([file.buffer],{type:file.mimetype}),file.originalname||'website-favicon');
-    const message=await telegram('sendDocument',{method:'POST',body:form});
-    const fileId=message.document?.file_id;
-    if(!fileId||!message.message_id)throw new Error('Telegram did not return the favicon file_id/message_id.');
-    newMessageId=String(message.message_id);
+    const file=req.file, invalid=imageUploadError(file,2*1024*1024);
+    if(invalid)return fail(res,400,invalid);
+    uploaded=await uploadToTelegram(file);
     const {data:prior}=await supabase.from('site_settings').select('value').eq('key','site_branding').maybeSingle();
-    const faviconVersion=randomUUID();
-    const faviconUrl='/api/site/favicon?v='+encodeURIComponent(faviconVersion);
-    const value={faviconUrl,faviconFileId:fileId,faviconMessageId:newMessageId,faviconMimeType:file.mimetype,faviconVersion};
+    const version=randomUUID(), faviconUrl='/api/site/favicon?v='+encodeURIComponent(version);
+    const old=prior?.value||{};
+    const value={...old,siteLogoUrl:faviconUrl,siteLogoFileId:uploaded.fileId,siteLogoMessageId:uploaded.messageId,siteLogoMimeType:file.mimetype,siteLogoVersion:version,faviconUrl,faviconFileId:uploaded.fileId,faviconMessageId:uploaded.messageId,faviconMimeType:file.mimetype,faviconVersion:version};
     const {error:saveError}=await supabase.from('site_settings').upsert({key:'site_branding',value,updated_at:new Date().toISOString()},{onConflict:'key'});
     if(saveError)throw saveError;
-    const oldMessageId=clean(prior?.value?.faviconMessageId,40);
-    if(oldMessageId&&oldMessageId!==newMessageId)await deleteTelegramMessage(oldMessageId);
-    const oldPath=clean(prior?.value?.faviconPath,500);
+    const oldMessageId=clean(old.siteLogoMessageId||old.faviconMessageId,40);
+    if(oldMessageId&&oldMessageId!==uploaded.messageId)await deleteTelegramMessage(oldMessageId);
+    const oldPath=clean(old.faviconPath,500);
     if(oldPath&&oldPath.startsWith('site/'))await supabase.storage.from('profile-media').remove([oldPath]);
     res.set('Cache-Control','no-store');
-    return res.status(201).json({data:{faviconUrl,storage:'telegram'}});
+    return res.status(201).json({data:{...(await getSiteBranding()),storage:'telegram'}});
   }catch(error){
-    if(newMessageId)await deleteTelegramMessage(newMessageId);
-    console.error('Website favicon Telegram upload failed:',error.message);
-    return fail(res,500,'Could not save website favicon to Telegram. Check TELEGRAM_BOT_TOKEN and TELEGRAM_CHANNEL_ID permissions.');
+    if(uploaded?.messageId)await deleteTelegramMessage(uploaded.messageId);
+    console.error('Website logo upload failed:',error.message);
+    return fail(res,500,'Could not save website logo. Check the configured Telegram image storage and Supabase service role.');
+  }
+});
+app.patch('/api/admin/branding', authenticate, requireAdmin, upload.fields([{name:'logo',maxCount:1},{name:'heroImages',maxCount:3}]), async (req,res)=>{
+  const files=req.files||{}, logo=files.logo?.[0]||null, bannerFiles=files.heroImages||[];
+  const logoError=logo?imageUploadError(logo,2*1024*1024):null;
+  if(logoError)return fail(res,400,'Logo: '+logoError);
+  const bannerError=bannerFiles.map(file=>imageUploadError(file,8*1024*1024)).find(Boolean);
+  if(bannerError)return fail(res,400,'Banner: '+bannerError);
+  const clearHeroImages=String(req.body.clearHeroImages||'')==='true';
+  let newlyUploaded=[];
+  try{
+    const {data:priorRow,error:readError}=await supabase.from('site_settings').select('value').eq('key','site_branding').maybeSingle();
+    if(readError)throw readError;
+    const prior=priorRow?.value||{};
+    if(logo){const image=await uploadToTelegram(logo);newlyUploaded.push(image); }
+    const newLogo=newlyUploaded[0]||null;
+    const newHero=[];
+    for(const file of bannerFiles){const image=await uploadToTelegram(file);newlyUploaded.push(image);newHero.push({fileId:image.fileId,messageId:image.messageId,mimeType:image.mimeType,url:telegramMediaUrl(image.fileId)});}
+    const version=newLogo?randomUUID():clean(prior.siteLogoVersion||prior.faviconVersion,80)||randomUUID();
+    const logoUrl=newLogo?'/api/site/favicon?v='+encodeURIComponent(version):clean(prior.siteLogoUrl||prior.faviconUrl,2000);
+    const heroImages=newHero.length?newHero:(clearHeroImages?[]:(Array.isArray(prior.heroImages)?prior.heroImages.slice(0,3):[]));
+    const value={
+      ...prior,
+      siteLogoUrl:logoUrl,siteLogoFileId:newLogo?.fileId||prior.siteLogoFileId||prior.faviconFileId||null,
+      siteLogoMessageId:newLogo?.messageId||prior.siteLogoMessageId||prior.faviconMessageId||null,
+      siteLogoMimeType:newLogo?.mimeType||prior.siteLogoMimeType||prior.faviconMimeType||null,
+      siteLogoVersion:version,
+      faviconUrl:logoUrl,faviconFileId:newLogo?.fileId||prior.siteLogoFileId||prior.faviconFileId||null,
+      faviconMessageId:newLogo?.messageId||prior.siteLogoMessageId||prior.faviconMessageId||null,
+      faviconMimeType:newLogo?.mimeType||prior.siteLogoMimeType||prior.faviconMimeType||null,
+      faviconVersion:version,
+      siteTitle:clean(req.body.siteTitle,80)||DEFAULT_SITE_BRANDING.siteTitle,
+      siteSubtitle:clean(req.body.siteSubtitle,120)||DEFAULT_SITE_BRANDING.siteSubtitle,
+      heroBadge:clean(req.body.heroBadge,100)||DEFAULT_SITE_BRANDING.heroBadge,
+      heroTitle:clean(req.body.heroTitle,160)||DEFAULT_SITE_BRANDING.heroTitle,
+      heroSubtitle:clean(req.body.heroSubtitle,600)||DEFAULT_SITE_BRANDING.heroSubtitle,
+      heroImages
+    };
+    const {error:saveError}=await supabase.from('site_settings').upsert({key:'site_branding',value,updated_at:new Date().toISOString()},{onConflict:'key'});
+    if(saveError)throw saveError;
+    const oldLogoMessage=clean(prior.siteLogoMessageId||prior.faviconMessageId,40);
+    if(newLogo&&oldLogoMessage&&oldLogoMessage!==newLogo.messageId)await deleteTelegramMessage(oldLogoMessage);
+    if(newLogo){const oldPath=clean(prior.faviconPath,500);if(oldPath&&oldPath.startsWith('site/'))await supabase.storage.from('profile-media').remove([oldPath]);}
+    if(newHero.length||clearHeroImages){
+      for(const oldImage of (Array.isArray(prior.heroImages)?prior.heroImages:[])){
+        const oldMessage=clean(oldImage?.messageId,40);
+        if(oldMessage)await deleteTelegramMessage(oldMessage);
+      }
+    }
+    res.set('Cache-Control','no-store');
+    return res.status(200).json({data:await getSiteBranding()});
+  }catch(error){
+    for(const image of newlyUploaded)await deleteTelegramMessage(image.messageId);
+    console.error('Site branding save failed:',error.message);
+    return fail(res,500,'Could not save Brand & Banner settings. Check Telegram storage and Supabase settings.');
   }
 });
 app.use('/api', async (req, res, nextMiddleware) => {
@@ -1263,7 +1343,7 @@ app.post('/api/me/media', authenticate, upload.single('file'), async (req, res) 
     const type = clean(req.body.type, 20);
     const file = req.file;
     if (!['avatar','cover'].includes(type)) return fail(res, 400, 'Invalid profile image type.');
-    if (!file || !['image/jpeg','image/png','image/webp'].includes(file.mimetype)) return fail(res, 400, 'Choose a JPG, PNG or WEBP image.');
+    const invalidImage = imageUploadError(file); if (invalidImage) return fail(res, 400, invalidImage);
     const { data: prior } = await supabase.from('profiles')
       .select('avatar_file_id,avatar_message_id,cover_file_id,cover_message_id,avatar_path,cover_path')
       .eq('id', req.user.id).maybeSingle();
@@ -1301,7 +1381,7 @@ app.post('/api/vendors/register', authenticate, upload.single('document'), async
     const address = clean(req.body.address, 300);
     const file = req.file;
     if (store_name.length < 2 || contact_phone.length < 6 || address.length < 5) return fail(res, 400, 'Complete store name, contact and address.');
-    if (!file || !['image/jpeg','image/png','image/webp','application/pdf'].includes(file.mimetype)) return fail(res, 400, 'Upload an ID card or business document.');
+    const invalidImage = imageUploadError(file); if (invalidImage) return fail(res, 400, 'Upload an ID card or business certificate as a JPG, PNG or WEBP image. '+invalidImage);
     const { data: existing, error: lookupError } = await vendorFor(req.user.id);
     if (lookupError) return fail(res, 500, 'Could not check existing seller application.');
     if (existing && !['rejected'].includes(existing.status)) return fail(res, 409, 'Seller application already exists or is awaiting review.');
@@ -1441,8 +1521,8 @@ app.post('/api/products/:id/images', authenticate, upload.array('images', 5), as
   const { data: product } = await productQuery.maybeSingle();
   if (!product) return fail(res, 404, 'Product not found');
   const files = req.files || [];
-  if (!files.length || files.some(file => !['image/jpeg','image/png','image/webp'].includes(file.mimetype))) {
-    return fail(res, 400, 'Choose JPG, PNG or WEBP product images.');
+  if (!files.length || files.some(file => imageUploadError(file))) {
+    return fail(res, 400, 'Choose valid JPG, PNG or WEBP product images only (maximum 8MB per image).');
   }
   const { count } = await supabase.from('product_images').select('*', { count: 'exact', head: true }).eq('product_id', product.id);
   if ((count || 0) + files.length > 5) return fail(res, 400, 'Maximum 5 images per product.');
