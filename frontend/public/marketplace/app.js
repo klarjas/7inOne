@@ -629,6 +629,7 @@ async function renderSeller(){
    const removedIds=new Set(stale.filter((p,i)=>removed[i].status==='fulfilled').map(p=>p.id));
    sellerProductCache=sellerProductCache.filter(p=>!removedIds.has(p.id));
   }
+  $('kpiListings').textContent=String(sellerProductCache.filter(p=>p.status==='active'&&!sellerProductLifecycle(p).expired).length);
   $('sellerProductsCount').textContent=String(sellerProductCache.length);
   const received=(offers||[]).filter(o=>o.vendor_id===me.vendor.id),sellerOrders=ordersRes.data||[];
   $('sellerOffersCount').textContent=String(received.length);$('sellerOrdersCount').textContent=String(sellerOrders.length);
