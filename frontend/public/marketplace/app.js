@@ -57,7 +57,7 @@ function avatarFallbackMarkup(name=''){
 function avatarMarkup(name,url){
   const label=esc(name||'អ្នកលក់');
   if(!url)return '<div class="h-11 w-11 shrink-0 overflow-hidden rounded-full bg-emerald-50">'+avatarFallbackMarkup(name)+'</div>';
-  return '<div class="h-11 w-11 shrink-0 overflow-hidden rounded-full bg-emerald-50"><img src="'+esc(url)+'" alt="'+label+'" class="h-full w-full object-cover" onerror="this.parentElement.innerHTML=\''+avatarFallbackMarkup(name).replace(/'/g,"\\'")+'\'"></div>';
+  return '<div class="h-11 w-11 shrink-0 overflow-hidden rounded-full bg-emerald-50" data-vendor-avatar="'+label+'"><img src="'+esc(url)+'" alt="'+label+'" class="vendor-avatar-image h-full w-full object-cover" data-vendor-avatar-image></div>';
 }
 function setAvatar(target,url,name=''){
   if(!target)return;
@@ -744,4 +744,51 @@ function syncRouteFromHistory(){
 window.addEventListener('hashchange',syncRouteFromHistory);
 window.addEventListener('popstate',syncRouteFromHistory);
 
+// Delegated image-error fallback also covers vendor cards rendered after page load.
+document.addEventListener('error',event=>{
+  const image=event.target.closest?.('[data-vendor-avatar-image]');
+  if(!image)return;
+  const parent=image.parentElement;
+  if(parent)parent.innerHTML=avatarFallbackMarkup(parent.dataset.vendorAvatar||'អ្នកលក់');
+},true);
+
+// One animation frame per pointer movement keeps spotlight and tilt smooth.
+let pointerFxFrame=0,pointerFxState=null,lastSpotlightCard=null;
+document.addEventListener('pointermove',event=>{
+  if(event.pointerType!=='mouse')return;
+  const card=event.target.closest('.product-card,.hero-copy-card,.hero-image-tile');
+  pointerFxState={card:card,x:event.clientX,y:event.clientY};
+  if(pointerFxFrame)return;
+  pointerFxFrame=requestAnimationFrame(()=>{
+    pointerFxFrame=0;const state=pointerFxState;if(!state||!state.card)return;
+    const rect=state.card.getBoundingClientRect();
+    const x=Math.max(0,Math.min(rect.width,state.x-rect.left));
+    const y=Math.max(0,Math.min(rect.height,state.y-rect.top));
+    state.card.style.setProperty('--mouse-x',x+'px');
+    state.card.style.setProperty('--mouse-y',y+'px');
+    state.card.style.setProperty('--spotlight-opacity','1');
+    if(state.card.classList.contains('product-card')){
+      const nx=(x/Math.max(1,rect.width)-.5)*2,ny=(y/Math.max(1,rect.height)-.5)*2;
+      state.card.style.transform='perspective(900px) rotateX('+(-ny*3.2)+'deg) rotateY('+(nx*3.2)+'deg) translateY(-3px)';
+    }
+    if(lastSpotlightCard&&lastSpotlightCard!==state.card){lastSpotlightCard.style.setProperty('--spotlight-opacity','0');lastSpotlightCard.style.transform=''}
+    lastSpotlightCard=state.card;
+  });
+},{passive:true});
+document.addEventListener('pointerout',event=>{
+  if(event.pointerType!=='mouse')return;
+  const card=event.target.closest?.('.product-card,.hero-copy-card,.hero-image-tile');
+  if(!card||card.contains(event.relatedTarget))return;
+  card.style.setProperty('--spotlight-opacity','0');card.style.transform='';
+  if(lastSpotlightCard===card)lastSpotlightCard=null;
+},{passive:true});
+document.querySelectorAll('.hero-primary-action,#postAdBtn,#mobilePostBtn,#bannerPostBtn,#searchBtn,#saveBrandingBtn').forEach(button=>{
+  button.addEventListener('pointermove',event=>{
+    if(event.pointerType!=='mouse')return;const rect=button.getBoundingClientRect();
+    const dx=(event.clientX-(rect.left+rect.width/2))/Math.max(1,rect.width/2);
+    const dy=(event.clientY-(rect.top+rect.height/2))/Math.max(1,rect.height/2);
+    button.style.translate=(dx*4)+'px '+(dy*4)+'px';
+  },{passive:true});
+  button.addEventListener('pointerleave',()=>{button.style.translate='0 0'});
+});
 void boot();
