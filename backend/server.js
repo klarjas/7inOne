@@ -7,7 +7,7 @@ import multer from 'multer';
 import next from 'next';
 import { fileURLToPath } from 'node:url';
 import { createClient } from '@supabase/supabase-js';
-import { randomUUID } from 'node:crypto';
+import { randomUUID, randomBytes, randomInt, createHash } from 'node:crypto';
 
 const app = express();
 const port = Number(process.env.PORT || 10000);
@@ -85,12 +85,15 @@ async function requireVendor(req, res, nextMiddleware) {
   return nextMiddleware();
 }
 const telegramStorageChatId = () => process.env.TELEGRAM_STORAGE_CHAT_ID || process.env.TELEGRAM_CHANNEL_ID || '';
-function assertTelegramStorageConfig() {
+function assertTelegramBotConfig() {
   if (!process.env.TELEGRAM_BOT_TOKEN) throw new Error('Missing TELEGRAM_BOT_TOKEN environment variable.');
+}
+function assertTelegramStorageConfig() {
+  assertTelegramBotConfig();
   if (!telegramStorageChatId()) throw new Error('Missing TELEGRAM_STORAGE_CHAT_ID environment variable.');
 }
 async function telegram(method, payload) {
-  assertTelegramStorageConfig();
+  assertTelegramBotConfig();
   const response = await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/${method}`, payload);
   let json;
   try { json = await response.json(); } catch { throw new Error('Telegram returned an invalid response.'); }
@@ -311,7 +314,7 @@ app.post('/api/admin/favicon', authenticate, requireAdmin, upload.single('file')
   }
 });
 app.use('/api', async (req, res, nextMiddleware) => {
-  if (!['POST','PUT','PATCH','DELETE'].includes(req.method) || ['/admin/settings','/admin/favicon'].includes(req.path)) return nextMiddleware();
+  if (!['POST','PUT','PATCH','DELETE'].includes(req.method) || ['/admin/settings','/admin/favicon','/telegram/webhook'].includes(req.path)) return nextMiddleware();
   try {
     const settings = await getMaintenanceSettings();
     if (!settings.maintenanceMode) return nextMiddleware();
@@ -377,6 +380,195 @@ app.get('/api/products/:id', async (req, res) => {
   data.seller_rating = trust[data.vendor_id]?.average ?? null;
   data.seller_review_count = trust[data.vendor_id]?.count ?? 0;
   res.json({ data: publicProduct(data) });
+});
+
+
+const sha256 = value => createHash('sha256').update(String(value)).digest('hex');
+const telegramLinkTable = 'telegram_account_links';
+const telegramLinkTokenTable = 'telegram_link_tokens';
+const telegramOtpTable = 'telegram_password_otps';
+function telegramWebhookSecret(req) {
+  const supplied = req.get('x-telegram-bot-api-secret-token') || '';
+  const expected = process.env.TELEGRAM_WEBHOOK_SECRET || '';
+  return Boolean(expected && supplied && supplied.length === expected.length &&
+    Buffer.from(supplied).equals(Buffer.from(expected)));
+}
+async function sendTelegramMessage(chatId, text) {
+  return telegram('sendMessage', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ chat_id: chatId, text, disable_web_page_preview: true })
+  });
+}
+async function ensureTelegramWebhook(req) {
+  const secret = process.env.TELEGRAM_WEBHOOK_SECRET || '';
+  if (secret.length < 32 || secret.length > 256) {
+    throw new Error('Set TELEGRAM_WEBHOOK_SECRET in Render to a random value of 32–256 characters.');
+  }
+  const baseUrl = clean(process.env.PUBLIC_APP_URL || `${req.protocol}://${req.get('host')}`, 500).replace(/\/$/, '');
+  if (!/^https:\/\//i.test(baseUrl)) throw new Error('Telegram webhook requires an HTTPS PUBLIC_APP_URL.');
+  await telegram('setWebhook', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      url: baseUrl + '/api/telegram/webhook',
+      secret_token: secret,
+      allowed_updates: ['message'],
+      drop_pending_updates: false
+    })
+  });
+}
+const telegramOtpLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  limit: 5,
+  standardHeaders: 'draft-8',
+  legacyHeaders: false,
+  message: { error: 'សូមរង់ចាំមុនពេលស្នើលេខកូដម្ដងទៀត។' }
+});
+
+// Start a one-time Telegram deep-link flow for the signed-in account.
+app.post('/api/me/telegram/connect', authenticate, async (req, res) => {
+  try {
+    if (!process.env.TELEGRAM_BOT_TOKEN) return fail(res, 503, 'Telegram Bot មិនទាន់កំណត់នៅ Render ទេ។');
+    await ensureTelegramWebhook(req);
+    const bot = await telegram('getMe', { method: 'POST' });
+    if (!bot?.username) throw new Error('Telegram Bot មិនមាន username ទេ។');
+    const token = randomBytes(32).toString('base64url');
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+    const { error } = await supabase.from(telegramLinkTokenTable).insert({
+      token_hash: sha256(token), user_id: req.user.id, expires_at: expiresAt
+    });
+    if (error) {
+      console.error('Telegram link token insert failed:', error.message);
+      return fail(res, 500, 'មិនអាចបង្កើតតំណភ្ជាប់ Telegram បានទេ។ សូមដំណើរការ SQL Migration ជាមុន។');
+    }
+    res.set('Cache-Control', 'no-store');
+    return res.json({ data: { url: `https://t.me/${bot.username}?start=connect_${token}`, expiresAt } });
+  } catch (error) {
+    console.error('Telegram connect initiation failed:', error.message);
+    return fail(res, 503, error.message || 'មិនអាចភ្ជាប់ Telegram បានទេ។');
+  }
+});
+
+app.get('/api/me/telegram', authenticate, async (req, res) => {
+  const { data, error } = await supabase.from(telegramLinkTable)
+    .select('telegram_user_id,username,first_name,linked_at').eq('user_id', req.user.id).maybeSingle();
+  if (error) {
+    console.error('Telegram link status lookup failed:', error.message);
+    return fail(res, 500, 'មិនអាចអានស្ថានភាព Telegram បានទេ។ ដំណើរការ SQL Migration ជាមុន។');
+  }
+  res.set('Cache-Control', 'no-store');
+  return res.json({ data: data ? {
+    connected: true,
+    username: data.username || null,
+    first_name: data.first_name || null,
+    linked_at: data.linked_at
+  } : { connected: false } });
+});
+
+// Telegram sends updates here. Only a private chat can complete a pending link.
+app.post('/api/telegram/webhook', async (req, res) => {
+  if (!telegramWebhookSecret(req)) return fail(res, 401, 'Unauthorized webhook');
+  res.sendStatus(200);
+  try {
+    const message = req.body?.message;
+    const chat = message?.chat;
+    const textValue = clean(message?.text, 500);
+    if (!message || chat?.type !== 'private' || !textValue.startsWith('/start')) return;
+    const payload = textValue.split(/\s+/, 2)[1] || '';
+    if (!payload.startsWith('connect_')) {
+      await sendTelegramMessage(chat.id, 'សូមត្រឡប់ទៅ 7inOne ហើយចុច Connect Telegram ដើម្បីភ្ជាប់គណនីរបស់អ្នក។');
+      return;
+    }
+    const rawToken = payload.slice(8);
+    if (!/^[A-Za-z0-9_-]{32,80}$/.test(rawToken)) {
+      await sendTelegramMessage(chat.id, 'តំណភ្ជាប់មិនត្រឹមត្រូវ ឬផុតកំណត់។ សូមបង្កើតតំណថ្មីពី 7inOne។');
+      return;
+    }
+    const tokenHash = sha256(rawToken);
+    const { data: linkToken, error: tokenError } = await supabase.from(telegramLinkTokenTable)
+      .select('user_id,expires_at,consumed_at').eq('token_hash', tokenHash).maybeSingle();
+    if (tokenError || !linkToken || linkToken.consumed_at || new Date(linkToken.expires_at).getTime() < Date.now()) {
+      await sendTelegramMessage(chat.id, 'តំណភ្ជាប់នេះបានប្រើរួច ឬផុតកំណត់។ សូមបង្កើតតំណថ្មីពី 7inOne។');
+      return;
+    }
+    const { data: prior, error: priorError } = await supabase.from(telegramLinkTable)
+      .select('user_id').eq('telegram_user_id', chat.id).maybeSingle();
+    if (priorError) throw priorError;
+    if (prior && prior.user_id !== linkToken.user_id) {
+      await sendTelegramMessage(chat.id, 'Telegram នេះបានភ្ជាប់ជាមួយគណនី 7inOne ផ្សេងរួចហើយ។');
+      return;
+    }
+    const { error: saveError } = await supabase.from(telegramLinkTable).upsert({
+      user_id: linkToken.user_id,
+      telegram_user_id: chat.id,
+      username: clean(message.from?.username, 80) || null,
+      first_name: clean(message.from?.first_name, 120) || null,
+      linked_at: new Date().toISOString()
+    }, { onConflict: 'user_id' });
+    if (saveError) {
+      console.error('Telegram account link save failed:', saveError.message);
+      await sendTelegramMessage(chat.id, 'មិនអាចភ្ជាប់គណនីបានទេ។ Telegram នេះអាចបានភ្ជាប់ជាមួយគណនីផ្សេងរួចហើយ។');
+      return;
+    }
+    await supabase.from(telegramLinkTokenTable).update({ consumed_at: new Date().toISOString() })
+      .eq('token_hash', tokenHash).is('consumed_at', null);
+    await sendTelegramMessage(chat.id, 'បានភ្ជាប់ Telegram ជាមួយគណនី 7inOne រួចរាល់។ អ្នកអាចប្រើ Telegram នេះសម្រាប់ផ្ទៀងផ្ទាត់ការប្ដូរ Password និងទទួលសារសុវត្ថិភាព។');
+  } catch (error) {
+    console.error('Telegram webhook processing failed:', error.message);
+  }
+});
+
+app.post('/api/me/telegram/password-otp', authenticate, telegramOtpLimiter, async (req, res) => {
+  try {
+    const { data: link, error: linkError } = await supabase.from(telegramLinkTable)
+      .select('telegram_user_id').eq('user_id', req.user.id).maybeSingle();
+    if (linkError) throw linkError;
+    if (!link) return fail(res, 400, 'សូម Connect Telegram ជាមុនសិន។');
+    const code = String(randomInt(100000, 1000000));
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
+    const { error: saveError } = await supabase.from(telegramOtpTable).upsert({
+      user_id: req.user.id, otp_hash: sha256(code), expires_at: expiresAt,
+      attempts: 0, created_at: new Date().toISOString()
+    }, { onConflict: 'user_id' });
+    if (saveError) throw saveError;
+    await sendTelegramMessage(link.telegram_user_id,
+      `7inOne Security\nលេខកូដផ្ទៀងផ្ទាត់ Password របស់អ្នក៖ ${code}\nកូដនេះមានសុពលភាព ៥ នាទី។ កុំចែករំលែកកូដនេះជាមួយអ្នកណា។`);
+    return res.json({ data: { sent: true, expiresAt } });
+  } catch (error) {
+    console.error('Telegram password OTP request failed:', error.message);
+    return fail(res, 500, 'មិនអាចផ្ញើ OTP បានទេ។ សូមពិនិត្យ Telegram Bot និង Database Migration។');
+  }
+});
+
+app.post('/api/me/telegram/change-password', authenticate, telegramOtpLimiter, async (req, res) => {
+  try {
+    const code = clean(req.body.code, 6);
+    const password = String(req.body.password || '');
+    if (!/^\d{6}$/.test(code)) return fail(res, 400, 'សូមបញ្ចូល OTP ៦ ខ្ទង់។');
+    if (password.length < 8 || password.length > 72) return fail(res, 400, 'Password ថ្មីត្រូវមាន ៨–៧២ តួអក្សរ។');
+    const { data: otp, error: otpError } = await supabase.from(telegramOtpTable)
+      .select('otp_hash,expires_at,attempts').eq('user_id', req.user.id).maybeSingle();
+    if (otpError) throw otpError;
+    if (!otp || new Date(otp.expires_at).getTime() < Date.now() || Number(otp.attempts) >= 5) {
+      return fail(res, 400, 'OTP ផុតកំណត់ ឬមិនត្រឹមត្រូវ។ សូមស្នើកូដថ្មី។');
+    }
+    if (sha256(code) !== otp.otp_hash) {
+      await supabase.from(telegramOtpTable).update({ attempts: Number(otp.attempts || 0) + 1 }).eq('user_id', req.user.id);
+      return fail(res, 400, 'OTP មិនត្រឹមត្រូវ។');
+    }
+    const { error: updateError } = await supabase.auth.admin.updateUserById(req.user.id, { password });
+    if (updateError) throw updateError;
+    await supabase.from(telegramOtpTable).delete().eq('user_id', req.user.id);
+    const { data: link } = await supabase.from(telegramLinkTable)
+      .select('telegram_user_id').eq('user_id', req.user.id).maybeSingle();
+    if (link) await sendTelegramMessage(link.telegram_user_id,
+      '7inOne Security៖ Password របស់អ្នកត្រូវបានប្ដូរជោគជ័យ។ ប្រសិនបើមិនមែនជាអ្នកធ្វើសកម្មភាពនេះ សូមទាក់ទងក្រុមការងារ 7inOne ភ្លាមៗ។');
+    return res.json({ data: { changed: true } });
+  } catch (error) {
+    console.error('Telegram password change failed:', error.message);
+    return fail(res, 500, 'មិនអាចប្ដូរ Password បានទេ។ សូមព្យាយាមម្ដងទៀត។');
+  }
 });
 
 // Profile and vendor onboarding.
