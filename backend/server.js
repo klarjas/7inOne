@@ -550,6 +550,51 @@ const recoveryOtpLimiter = rateLimit({
   legacyHeaders: false,
   message: { error: 'សូមរង់ចាំមុនពេលស្នើលេខកូដម្ដងទៀត។' }
 });
+
+const adminBootstrapLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 3,
+  standardHeaders: 'draft-8',
+  legacyHeaders: false,
+  message: { error: 'សូមរង់ចាំមុនពេលសាកល្បងម្ដងទៀត។' }
+});
+app.post('/api/auth/telegram/admin-bootstrap', adminBootstrapLimiter, async (req, res) => {
+  const email = clean(req.body.email, 254).toLowerCase();
+  const suppliedKey = String(req.body.bootstrapKey || '');
+  const expectedKey = process.env.ADMIN_TELEGRAM_BOOTSTRAP_KEY || '';
+  const keyMatches = Boolean(expectedKey && suppliedKey && suppliedKey.length === expectedKey.length &&
+    timingSafeEqual(Buffer.from(suppliedKey), Buffer.from(expectedKey)));
+  if (!keyMatches) return fail(res, 401, 'Recovery Key មិនត្រឹមត្រូវ។');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return fail(res, 400, 'សូមបញ្ចូល Email Admin ត្រឹមត្រូវ។');
+  try {
+    await ensureTelegramWebhook(req);
+    let targetUser = null;
+    for (let page = 1; page <= 10 && !targetUser; page += 1) {
+      const { data, error } = await supabase.auth.admin.listUsers({ page, perPage: 1000 });
+      if (error) throw error;
+      targetUser = (data.users || []).find(user => String(user.email || '').toLowerCase() === email) || null;
+      if (!data.users || data.users.length < 1000) break;
+    }
+    if (!targetUser || !await isAdmin(targetUser.id)) {
+      return fail(res, 404, 'មិនអាចផ្ទៀងផ្ទាត់គណនី Admin នេះបានទេ។');
+    }
+    const bot = await telegram('getMe', { method: 'POST' });
+    if (!bot?.username) throw new Error('Telegram Bot មិនមាន username ទេ។');
+    const token = randomBytes(32).toString('base64url');
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+    const { error: tokenError } = await supabase.from(telegramLinkTokenTable).insert({
+      token_hash: sha256(token), user_id: targetUser.id, account_email: email, expires_at: expiresAt
+    });
+    if (tokenError) throw tokenError;
+    return res.set('Cache-Control', 'no-store').json({
+      data: { url: `https://t.me/${bot.username}?start=connect_${token}`, expiresAt }
+    });
+  } catch (error) {
+    console.error('Admin Telegram bootstrap failed:', error.message);
+    return fail(res, 500, 'មិនអាចបង្កើតតំណភ្ជាប់ Telegram សម្រាប់ Admin បានទេ។');
+  }
+});
+
 app.post('/api/auth/telegram/recovery/request', recoveryOtpLimiter, async (req, res) => {
   const email = clean(req.body.email, 254).toLowerCase();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return fail(res, 400, 'សូមបញ្ចូល Email ត្រឹមត្រូវ។');
