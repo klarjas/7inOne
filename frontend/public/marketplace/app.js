@@ -770,6 +770,9 @@ async function startSellerVoiceRecording(){
   if(sellerChatRecorder?.state==='recording')return;
   try{
     const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+    // The user may release while the browser permission prompt is still open.
+    // Do not start/upload a recording unless the original press is still held.
+    if(!sellerChatPointerDown){stream.getTracks().forEach(track=>track.stop());return}
     const mime=['audio/webm;codecs=opus','audio/ogg;codecs=opus','audio/mp4'].find(type=>MediaRecorder.isTypeSupported?.(type));
     sellerChatRecorder=new MediaRecorder(stream,mime?{mimeType:mime}:undefined);sellerChatRecordChunks=[];sellerChatRecordStartedAt=Date.now();sellerChatRecordingLocked=false;
     sellerChatRecorder.ondataavailable=event=>{if(event.data?.size)sellerChatRecordChunks.push(event.data)};
