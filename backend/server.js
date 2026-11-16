@@ -622,19 +622,84 @@ app.post('/api/me/telegram/connect', authenticate, async (req, res) => {
 });
 
 app.get('/api/me/telegram', authenticate, async (req, res) => {
-  const { data, error } = await supabase.from(telegramLinkTable)
-    .select('telegram_user_id,username,first_name,linked_at').eq('user_id', req.user.id).maybeSingle();
-  if (error) {
-    console.error('Telegram link status lookup failed:', error.message);
-    return fail(res, 500, 'មិនអាចអានស្ថានភាព Telegram បានទេ។ ដំណើរការ SQL Migration ជាមុន។');
+  const [{ data: botLink, error: botError }, { data: profile, error: profileError }] = await Promise.all([
+    supabase.from(telegramLinkTable)
+      .select('telegram_user_id,username,first_name,linked_at').eq('user_id', req.user.id).maybeSingle(),
+    supabase.from('profiles')
+      .select('telegram_id,telegram_username').eq('id', req.user.id).maybeSingle()
+  ]);
+  if (botError || profileError) {
+    console.error('Telegram link status lookup failed:', botError?.message || profileError?.message);
+    return fail(res, 500, 'មិនអាចអានស្ថានភាព Telegram បានទេ។ សូមពិនិត្យ SQL Migration។');
   }
   res.set('Cache-Control', 'no-store');
-  return res.json({ data: data ? {
-    connected: true,
-    username: data.username || null,
-    first_name: data.first_name || null,
-    linked_at: data.linked_at
-  } : { connected: false } });
+  return res.json({ data: {
+    connected: Boolean(botLink), // Bot chat connection used for OTP / notifications.
+    username: botLink?.username || profile?.telegram_username || null,
+    first_name: botLink?.first_name || null,
+    linked_at: botLink?.linked_at || null,
+    login_linked: Boolean(profile?.telegram_id),
+    telegram_id: profile?.telegram_id ? String(profile.telegram_id) : null,
+    telegram_username: profile?.telegram_username || null
+  } });
+});
+
+const telegramWidgetLinkLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 8,
+  standardHeaders: 'draft-8',
+  legacyHeaders: false,
+  message: { error: 'សូមរង់ចាំមុនពេលភ្ជាប់ Telegram ម្ដងទៀត។' }
+});
+app.post('/api/me/telegram', authenticate, telegramWidgetLinkLimiter, async (req, res) => {
+  let identity;
+  try { identity = verifyTelegramWidgetPayload(req.body); }
+  catch (error) { return fail(res, 401, 'ទិន្នន័យ Telegram មិនត្រឹមត្រូវ ឬផុតកំណត់។ សូមចុចភ្ជាប់ម្ដងទៀត។'); }
+
+  try {
+    await claimTelegramWidgetPayload(identity);
+    const [
+      { data: currentProfile, error: currentError },
+      { data: linkedProfile, error: linkedProfileError },
+      { data: botLink, error: botLinkError }
+    ] = await Promise.all([
+      supabase.from('profiles').select('id,telegram_id,telegram_username,display_name,avatar_url')
+        .eq('id', req.user.id).maybeSingle(),
+      supabase.from('profiles').select('id').eq('telegram_id', identity.id).maybeSingle(),
+      supabase.from(telegramLinkTable).select('user_id').eq('telegram_user_id', identity.id).maybeSingle()
+    ]);
+    if (currentError || linkedProfileError || botLinkError) {
+      console.error('Telegram profile link lookup failed:', currentError?.message || linkedProfileError?.message || botLinkError?.message);
+      return fail(res, 503, 'សូម Run supabase/telegram_login_widget.sql និង Telegram Account Security SQL ជាមុន។');
+    }
+    if (linkedProfile && linkedProfile.id !== req.user.id) {
+      return fail(res, 409, 'Telegram នេះបានភ្ជាប់ជាមួយគណនី 7inOne ផ្សេងរួចហើយ។');
+    }
+    if (botLink && botLink.user_id !== req.user.id) {
+      return fail(res, 409, 'Telegram នេះត្រូវបានប្រើជាមួយគណនី 7inOne ផ្សេងរួចហើយ។');
+    }
+    if (currentProfile?.telegram_id && String(currentProfile.telegram_id) !== identity.id) {
+      return fail(res, 409, 'គណនី 7inOne នេះបានភ្ជាប់ Telegram ផ្សេងរួចហើយ។ សូមទាក់ទង Admin ដើម្បីប្ដូរ។');
+    }
+    const patch = {
+      telegram_id: identity.id,
+      telegram_username: identity.username || currentProfile?.telegram_username || null
+    };
+    if (!currentProfile?.display_name) patch.display_name = identity.displayName;
+    if (!currentProfile?.avatar_url && identity.photoUrl) patch.avatar_url = identity.photoUrl;
+    const { error: saveError } = await supabase.from('profiles')
+      .update(patch).eq('id', req.user.id);
+    if (saveError) {
+      console.error('Telegram profile link save failed:', saveError.message);
+      return fail(res, 500, 'មិនអាចរក្សាទុក Telegram ID បានទេ។ សូមពិនិត្យ Database Migration។');
+    }
+    res.set('Cache-Control', 'no-store');
+    return res.json({ data: { linked: true, telegram_id: identity.id, telegram_username: identity.username } });
+  } catch (error) {
+    console.error('Telegram profile linking failed:', clean(error.message, 250));
+    return fail(res, error.status || 500, error.status === 409 ? error.message :
+      error.status === 503 ? error.message : 'មិនអាចភ្ជាប់ Telegram ទៅគណនីនេះបានទេ។');
+  }
 });
 
 // Telegram sends updates here. Only a private chat can complete a pending link.
@@ -757,6 +822,136 @@ app.post('/api/auth/telegram/login/start', telegramLoginLimiter, async (req, res
   } catch (error) {
     console.error('Telegram login initiation failed:', error.message);
     return fail(res, 503, 'មិនអាចចាប់ផ្ដើម Login តាម Telegram បានទេ។ សូមព្យាយាមម្ដងទៀត។');
+  }
+});
+
+const telegramWidgetLoginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  standardHeaders: 'draft-8',
+  legacyHeaders: false,
+  message: { error: 'សូមរង់ចាំមុនពេលសាកល្បង Login តាម Telegram ម្ដងទៀត។' }
+});
+
+// Telegram Login Widget: validate Telegram's signed payload, resolve the existing
+// account (including legacy bot links), or create a customer account and issue a Supabase session.
+app.post('/api/auth/telegram', telegramWidgetLoginLimiter, async (req, res) => {
+  if (!db(res)) return;
+  let identity;
+  try { identity = verifyTelegramWidgetPayload(req.body); }
+  catch (error) { return fail(res, 401, 'ការផ្ទៀងផ្ទាត់ Telegram មិនត្រឹមត្រូវ ឬផុតកំណត់។ សូមសាកល្បងម្ដងទៀត។'); }
+
+  try {
+    await claimTelegramWidgetPayload(identity);
+    const [
+      { data: profileByTelegram, error: profileError },
+      { data: legacyLink, error: legacyError }
+    ] = await Promise.all([
+      supabase.from('profiles')
+        .select('id,telegram_id,telegram_username,display_name,avatar_url')
+        .eq('telegram_id', identity.id).maybeSingle(),
+      supabase.from(telegramLinkTable)
+        .select('user_id,account_email').eq('telegram_user_id', identity.id).maybeSingle()
+    ]);
+    if (profileError || legacyError) {
+      console.error('Telegram account lookup failed:', profileError?.message || legacyError?.message);
+      return fail(res, 503, 'សូម Run supabase/telegram_login_widget.sql និង Telegram Account Security SQL ជាមុន។');
+    }
+    if (profileByTelegram && legacyLink && profileByTelegram.id !== legacyLink.user_id) {
+      return fail(res, 409, 'Telegram ID នេះមានការភ្ជាប់គណនីមិនស៊ីគ្នា។ សូមទាក់ទង Admin។');
+    }
+
+    let userId = profileByTelegram?.id || legacyLink?.user_id || null;
+    let existingProfile = profileByTelegram || null;
+    let authUser = null;
+    let isNewUser = false;
+    let email = '';
+
+    if (userId) {
+      if (!existingProfile) {
+        const { data: profileById, error: profileByIdError } = await supabase.from('profiles')
+          .select('id,telegram_id,telegram_username,display_name,avatar_url')
+          .eq('id', userId).maybeSingle();
+        if (profileByIdError) throw profileByIdError;
+        existingProfile = profileById;
+      }
+      const { data: authResult, error: authError } = await supabase.auth.admin.getUserById(userId);
+      if (authError || !authResult?.user) throw authError || new Error('Existing Supabase account was not found.');
+      authUser = authResult.user;
+      email = clean(authUser.email || legacyLink?.account_email, 254).toLowerCase();
+      if (!email) {
+        const accountError = new Error('គណនីចាស់នេះមិនមាន Email សម្រាប់បង្កើត Supabase Session ទេ។ សូមបន្ថែម Email ទៅគណនីជាមុន។');
+        accountError.status = 409;
+        throw accountError;
+      }
+    } else {
+      email = `telegram.${identity.id}@auth.7inone.invalid`;
+      const { data:created, error:createError } = await supabase.auth.admin.createUser({
+        email,
+        password: randomBytes(48).toString('base64url'),
+        email_confirm: true,
+        user_metadata: {
+          auth_provider: 'telegram',
+          telegram_id: identity.id,
+          telegram_username: identity.username,
+          display_name: identity.displayName,
+          avatar_url: identity.photoUrl
+        }
+      });
+      if (createError) {
+        const { data:existing, error:existingError } = await supabase.auth.admin.getUserByEmail(email);
+        if (existingError || !existing?.user) throw createError;
+        authUser = existing.user;
+      } else {
+        authUser = created.user;
+        isNewUser = true;
+      }
+      userId = authUser.id;
+    }
+
+    if (!authUser?.email) {
+      const accountError = new Error('គណនីនេះមិនមាន Email ដែលអាចប្រើសម្រាប់ Supabase Magic Link បានទេ។');
+      accountError.status = 409;
+      throw accountError;
+    }
+    const profilePayload = {
+      id: userId,
+      display_name: existingProfile?.display_name || identity.displayName,
+      avatar_url: existingProfile?.avatar_url || identity.photoUrl || null,
+      telegram_id: identity.id,
+      telegram_username: identity.username || existingProfile?.telegram_username || null
+    };
+    if (!existingProfile) profilePayload.role = 'customer';
+    const { error:profileSaveError } = await supabase.from('profiles')
+      .upsert(profilePayload, { onConflict: 'id' });
+    if (profileSaveError) {
+      console.error('Telegram profile initialization failed:', profileSaveError.message);
+      throw new Error('មិនអាចរក្សាទុក Telegram Profile បានទេ។ សូមពិនិត្យ Migration និង Profiles Table។');
+    }
+
+    const supabaseSession = await createSupabaseSessionForEmail(authUser.email);
+    res.set('Cache-Control', 'no-store');
+    return res.json({
+      data: {
+        session: {
+          access_token: supabaseSession.access_token,
+          refresh_token: supabaseSession.refresh_token,
+          expires_in: supabaseSession.expires_in,
+          token_type: supabaseSession.token_type
+        },
+        isNewUser,
+        telegram: {
+          id: identity.id,
+          username: identity.username,
+          display_name: identity.displayName
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Telegram Widget sign-in failed:', clean(error.message, 250));
+    return fail(res, error.status || 500,
+      error.status === 409 || error.status === 503 ? error.message :
+      'មិនអាចបញ្ចប់ Login តាម Telegram បានទេ។ សូមពិនិត្យ Bot, Supabase និង SQL Migration។');
   }
 });
 
