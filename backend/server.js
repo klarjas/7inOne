@@ -1664,7 +1664,7 @@ app.post('/api/products/:id/offers', authenticate, async (req, res) => {
   if (!Number.isFinite(offer_price) || offer_price <= 0) return fail(res, 400, 'Enter a valid offer price');
   const { data: product } = await supabase.from('products')
     .select('id,vendor_id,status,price,vendors!inner(status,user_id)')
-    .eq('id', req.params.id).eq('status', 'active').eq('vendors.status', 'approved').gt('stock', 0).maybeSingle();
+    .eq('id', req.params.id).eq('status', 'active').eq('vendors.status', 'approved').gt('stock', 0).gte('renewed_at',new Date(Date.now()-PRODUCT_PUBLIC_MAX_AGE_MS).toISOString()).maybeSingle();
   if (!product) return fail(res, 404, 'Product not available');
   if (product.vendors.user_id === req.user.id) return fail(res, 400, 'You cannot make an offer on your own product');
   const { data, error } = await supabase.from('offers').insert({
