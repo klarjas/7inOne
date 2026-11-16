@@ -238,15 +238,28 @@ ordersPanel.innerHTML=`<h3 class="mb-3 font-bold">ការបញ្ជាទិ
 
 }catch(e){toast('មិនអាចផ្ទុក Dashboard៖ '+e.message,'error')}}
 function productStatus(s){return ({active:'កំពុងលក់',pending:'រង់ចាំ Admin',rejected:'បានបដិសេធ',sold:'លក់រួច',archived:'បានបិទ'})[s]||s}
-function diagnosticStatus(ok){return ok?'<span class="font-bold text-emerald-700">ដំណើរការ</span>':'<span class="font-bold text-rose-600">មានបញ្ហា</span>'}
+function diagnosticStatus(ok){return ok?'<span class="font-bold text-emerald-700">ជោគជ័យ</span>':'<span class="font-bold text-rose-600">មានបញ្ហា</span>'}
 function renderTelegramDiagnostics(data){
   const row=(label,item,detail='')=>'<div class="flex flex-col gap-1 border-b border-slate-100 py-2 last:border-0 sm:flex-row sm:items-start sm:justify-between"><span class="font-semibold text-slate-700">'+label+'</span><span class="text-left sm:text-right">'+diagnosticStatus(Boolean(item?.ok))+(detail?'<span class="mt-1 block break-words text-[10px] text-slate-500">'+esc(detail)+'</span>':'')+(item?.error?'<span class="mt-1 block break-words text-[10px] text-rose-600">'+esc(item.error)+'</span>':'')+'</span></div>';
   const botDetail=data.bot?.ok?((data.bot.first_name||'Bot')+' · @'+(data.bot.username||'—')+' · ID '+data.bot.id):'';
   const chatDetail=data.chat?.ok?((data.chat.title||'Channel')+' · '+(data.chat.type||'')+' · ID '+data.chat.id):'';
-  const memberDetail=data.membership?.ok?('សិទ្ធិ៖ '+data.membership.status+(data.membership.can_post_messages===null?'':' · អាចផ្ញើសារ៖ '+(data.membership.can_post_messages?'បាទ/ចាស':'ទេ'))):'';
-  const startRow='<div class="flex flex-col gap-1 border-b border-slate-100 py-2 sm:flex-row sm:items-start sm:justify-between"><span class="font-semibold text-slate-700">ការឆ្លើយតបពាក្យ /start</span><span class="text-left sm:text-right"><span class="font-bold text-slate-500">មិនទាន់មានមុខងារ</span><span class="mt-1 block text-[10px] text-slate-500">Bot នេះប្រើសម្រាប់ផ្ទុករូបភាពទៅ Channel ប៉ុណ្ណោះ។ វាមិនទាន់មាន Handler ឆ្លើយតប /start ទេ។</span></span></div>';
-  const upload='<div class="mt-3 rounded-lg '+(data.can_upload?'bg-emerald-50 text-emerald-800':'bg-rose-50 text-rose-700')+' p-3 text-[11px] font-bold">'+(data.can_upload?'អាច Upload រូបភាពទៅ Telegram បាន':'មិនទាន់អាច Upload រូបភាពទៅ Telegram បាន')+'</div>';
-  $('telegramDiagnosticsResult').innerHTML='<div class="mb-2 flex items-center justify-between"><b class="text-slate-800">លទ្ធផលត្រួតពិនិត្យ</b><span class="text-[9px] text-slate-400">'+(data.configured?'បានកំណត់រួច':'មិនទាន់កំណត់')+'</span></div>'+(data.chat_id?'<p class="mb-2 break-all text-[10px] text-slate-500">Channel ID: '+esc(data.chat_id)+'</p>':'')+row('ការតភ្ជាប់ Bot',data.bot,botDetail)+row('ការតភ្ជាប់ Private Channel',data.chat,chatDetail)+row('សិទ្ធិ Admin របស់ Bot',data.membership,memberDetail)+startRow+upload;
+  const memberDetail=data.membership?.ok?('សិទ្ធិ៖ '+data.membership.status+(data.membership.can_post_messages===null?'':' · អាច Post៖ '+(data.membership.can_post_messages?'បាទ/ចាស':'ទេ'))):'';
+  const webhookOk=Boolean(data.webhook?.ok&&data.webhook.url_matches&&!data.webhook.last_error_message);
+  const webhookDetail=data.webhook?.ok?('URL៖ '+(data.webhook.configured_url||'មិនទាន់កំណត់')+' · Pending៖ '+Number(data.webhook.pending_update_count||0)+(data.webhook.last_error_message?' · Telegram Error៖ '+data.webhook.last_error_message:'')):'';
+  const tableDetail=(key)=>data.tables?.[key]||{ok:false,error:'មិនអាចពិនិត្យ Database បាន។'};
+  const upload='<div class="mt-3 rounded-lg '+(data.can_upload?'bg-emerald-50 text-emerald-800':'bg-rose-50 text-rose-700')+' p-3 text-[11px] font-bold">'+(data.can_upload?'អាច Upload ទៅ Channel បាន':'មិនទាន់អាច Upload ទៅ Channel បាន')+'</div>';
+  const login='<div class="mt-3 rounded-lg '+(data.login_ready?'bg-emerald-50 text-emerald-800':'bg-amber-50 text-amber-800')+' p-3 text-[11px] font-bold">'+(data.login_ready?'Telegram Login៖ ត្រៀមរួចរាល់':'Telegram Login៖ មិនទាន់ត្រៀមរួច — សូមដោះស្រាយចំណុចដែលមានបញ្ហាខាងលើ')+'</div>';
+  $('telegramDiagnosticsResult').innerHTML='<div class="mb-2 flex items-center justify-between"><b class="text-slate-800">លទ្ធផលត្រួតពិនិត្យ Telegram</b><span class="text-[9px] text-slate-400">'+(data.configured?'Bot/Channel បានកំណត់':'ខ្វះ Configuration')+'</span></div>'+
+    row('Telegram Bot API (getMe)',data.bot,botDetail)+
+    row('Telegram Channel (getChat)',data.chat,chatDetail)+
+    row('Bot Admin / Post Permission',data.membership,memberDetail)+
+    row('Webhook URL / getWebhookInfo',{ok:webhookOk,error:data.webhook?.error||(data.webhook?.ok&&!data.webhook.url_matches?'Webhook URL មិនត្រូវនឹង PUBLIC_APP_URL។':null)},webhookDetail)+
+    row('TELEGRAM_WEBHOOK_SECRET',data.webhook_secret)+
+    row('PUBLIC_APP_URL (HTTPS)',data.public_app_url,data.public_app_url?.value||'')+
+    row('Supabase Service Role Connection',data.database)+
+    row('Database: telegram_account_links',tableDetail('telegram_account_links'))+
+    row('Database: telegram_login_tokens',tableDetail('telegram_login_tokens'))+
+    (data.chat_id?'<p class="mt-2 break-all text-[10px] text-slate-500">Channel ID៖ '+esc(data.chat_id)+'</p>':'')+upload+login;
 }
 async function runTelegramDiagnostics(){
   if(!isAdmin()){toast('មុខងារនេះសម្រាប់ Admin ប៉ុណ្ណោះ។','error');return}
