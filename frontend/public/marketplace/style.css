@@ -561,7 +561,7 @@ body{background:var(--market-bg);color:var(--market-ink)}.shell{width:min(1440px
 @media(max-width:639px){.storefront-skeleton-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.storefront-skeleton-profile{height:110px}.product-short-summary{margin-top:12px}.product-mobile-actions{bottom:74px}}
 @media(prefers-reduced-motion:reduce){.shimmer-scan::after,.skeleton{animation:none!important}.img-scan-wrap>img{transition:none!important}.product-card,.product-card-media .product-img,.product-buy-primary,.product-action-secondary,.product-save-action{transition:none!important}}
 
-.img-scan-wrap{display:block;min-width:0}
+.img-scan-wrap{min-width:0}.img-scan-wrap.h-20,.img-scan-wrap.h-16{display:block}
 
 .product-img-scan.is-failed svg,.product-gallery-thumb.is-failed svg,.img-scan-wrap.is-failed svg{display:block;margin:auto}
 
