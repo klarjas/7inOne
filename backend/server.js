@@ -13,6 +13,10 @@ import { randomUUID, randomBytes, randomInt, createHash, createHmac, timingSafeE
 
 const app = express();
 const port = Number(process.env.PORT || 10000);
+const PRODUCT_RENEWAL_DAY_MS=24*60*60*1000;
+const PRODUCT_PUBLIC_MAX_AGE_MS=7*PRODUCT_RENEWAL_DAY_MS;
+const PRODUCT_AUTO_DELETE_AGE_MS=14*PRODUCT_RENEWAL_DAY_MS;
+
 const frontendDir = fileURLToPath(new URL('../frontend', import.meta.url));
 const nextApp = next({ dev: process.env.NODE_ENV !== 'production', dir: frontendDir });
 const nextHandler = nextApp.getRequestHandler();
@@ -177,7 +181,7 @@ async function deleteTelegramMessage(messageId) {
 }
 
 registerSupportChat(app, { supabase, authenticate, requireAdmin, telegram, telegramStorageChatId, deleteTelegramMessage, clean, fail });
-registerSellerChat(app, { supabase, authenticate, requireVendor, upload, telegram, telegramStorageChatId, clean, fail });
+registerSellerChat(app, { supabase, authenticate, requireVendor, upload, telegram, telegramStorageChatId, clean, fail, productPublicMaxAgeMs: PRODUCT_PUBLIC_MAX_AGE_MS });
 const telegramMediaUrl = fileId => fileId ? `/api/media/telegram/${encodeURIComponent(fileId)}` : null;
 function publicMediaUrl(path) {
   if (!path || !supabase) return null;
@@ -348,23 +352,18 @@ async function getSiteBranding(){
   const {data,error}=await supabase.from('site_settings').select('value,updated_at').eq('key','site_branding').maybeSingle();
   if(error){console.error('Could not read website branding:',error.message);return defaults}
   const value=data?.value||{};
-  const logoFileId=clean(value.siteLogoFileId||value.faviconFileId,2048);
-  const version=clean(value.faviconVersion||value.siteLogoVersion,80)||data?.updated_at||'1';
-  const uploadedLogoUrl=logoFileId?'/api/site/favicon?v='+encodeURIComponent(version):'';
-  const siteLogoUrl=uploadedLogoUrl||clean(value.siteLogoUrl||value.faviconUrl,2000);
+  const sameLegacyFile=Boolean(value.siteLogoFileId&&value.faviconFileId&&value.siteLogoFileId===value.faviconFileId);
+  const logoFileId=clean(value.siteLogoFileId,2048)||(sameLegacyFile?clean(value.faviconFileId,2048):'');
+  const faviconFileId=clean(value.faviconFileId,2048)||(sameLegacyFile?clean(value.siteLogoFileId,2048):'');
+  const logoVersion=clean(value.siteLogoVersion,80)||clean(value.faviconVersion,80)||data?.updated_at||'1';
+  const faviconVersion=clean(value.faviconVersion,80)||clean(value.siteLogoVersion,80)||data?.updated_at||'1';
+  const siteLogoUrl=logoFileId?'/api/site/logo?v='+encodeURIComponent(logoVersion):clean(value.siteLogoUrl,2000);
+  const faviconUrl=faviconFileId?'/api/site/favicon?v='+encodeURIComponent(faviconVersion):clean(value.faviconUrl,2000);
   const heroImages=(Array.isArray(value.heroImages)?value.heroImages:[]).slice(0,3).map(image=>{
     const fileId=clean(image?.fileId||image?.file_id,2048);
     return {url:fileId?telegramMediaUrl(fileId):clean(image?.url||image?.imageUrl,2000),fileId};
   }).filter(image=>image.url);
-  return {
-    siteLogoUrl, faviconUrl:siteLogoUrl,
-    siteTitle:clean(value.siteTitle,80)||DEFAULT_SITE_BRANDING.siteTitle,
-    siteSubtitle:clean(value.siteSubtitle,120)||DEFAULT_SITE_BRANDING.siteSubtitle,
-    heroBadge:clean(value.heroBadge,100)||DEFAULT_SITE_BRANDING.heroBadge,
-    heroTitle:clean(value.heroTitle,160)||DEFAULT_SITE_BRANDING.heroTitle,
-    heroSubtitle:clean(value.heroSubtitle,600)||DEFAULT_SITE_BRANDING.heroSubtitle,
-    heroImages
-  };
+  return {siteLogoUrl,faviconUrl,siteTitle:clean(value.siteTitle,80)||DEFAULT_SITE_BRANDING.siteTitle,siteSubtitle:clean(value.siteSubtitle,120)||DEFAULT_SITE_BRANDING.siteSubtitle,heroBadge:clean(value.heroBadge,100)||DEFAULT_SITE_BRANDING.heroBadge,heroTitle:clean(value.heroTitle,160)||DEFAULT_SITE_BRANDING.heroTitle,heroSubtitle:clean(value.heroSubtitle,600)||DEFAULT_SITE_BRANDING.heroSubtitle,heroImages};
 }
 app.get('/api/config', async (_req, res) => {
   const [maintenance,branding,telegramBotUsername] = await Promise.all([
@@ -386,98 +385,61 @@ app.patch('/api/admin/settings', authenticate, requireAdmin, async (req, res) =>
   if (error) { console.error('Could not save maintenance settings:', error.message); return fail(res, 500, 'Could not save system status. Apply the site_settings database migration first.'); }
   res.json({ data: settings });
 });
+app.get('/api/site/logo', async (_req,res)=>{
+  try{if(!supabase)return fail(res,503,'Website logo is unavailable.');const {data,error}=await supabase.from('site_settings').select('value').eq('key','site_branding').maybeSingle();if(error)throw error;const value=data?.value||{};const fileId=clean(value.siteLogoFileId,2048)||(value.siteLogoFileId&&value.siteLogoFileId===value.faviconFileId?clean(value.faviconFileId,2048):'');if(!fileId)return res.status(404).end();return await streamTelegramFile(fileId,res,clean(value.siteLogoMimeType,80)||(value.siteLogoFileId&&value.siteLogoFileId===value.faviconFileId?clean(value.faviconMimeType,80):'')||'image/png','inline','public, max-age=300, stale-while-revalidate=3600')}catch(error){console.error('Website logo proxy failed:',error.message);return fail(res,502,'Could not retrieve website logo from Telegram.')}
+});
 app.get('/api/site/favicon', async (_req,res)=>{
-  try{
-    if(!supabase)return fail(res,503,'Website favicon is unavailable.');
-    const {data,error}=await supabase.from('site_settings').select('value').eq('key','site_branding').maybeSingle();
-    if(error)throw error;
-    const value=data?.value||{};
-    const fileId=clean(value.siteLogoFileId||value.faviconFileId,2048);
-    if(!fileId)return res.status(404).end();
-    return await streamTelegramFile(fileId,res,clean(value.siteLogoMimeType||value.faviconMimeType,80)||'image/png','inline','public, max-age=300, stale-while-revalidate=3600');
-  }catch(error){
-    console.error('Website favicon proxy failed:',error.message);
-    return fail(res,502,'Could not retrieve website favicon from Telegram.');
-  }
+  try{if(!supabase)return fail(res,503,'Website favicon is unavailable.');const {data,error}=await supabase.from('site_settings').select('value').eq('key','site_branding').maybeSingle();if(error)throw error;const value=data?.value||{};const fileId=clean(value.faviconFileId,2048)||(value.faviconFileId&&value.faviconFileId===value.siteLogoFileId?clean(value.siteLogoFileId,2048):'');if(!fileId)return res.status(404).end();return await streamTelegramFile(fileId,res,clean(value.faviconMimeType,80)||(value.faviconFileId&&value.faviconFileId===value.siteLogoFileId?clean(value.siteLogoMimeType,80):'')||'image/png','inline','public, max-age=300, stale-while-revalidate=3600')}catch(error){console.error('Website favicon proxy failed:',error.message);return fail(res,502,'Could not retrieve website favicon from Telegram.')}
 });
 app.post('/api/admin/favicon', authenticate, requireAdmin, upload.single('file'), async (req,res)=>{
   let uploaded=null;
   try{
-    const file=req.file, invalid=imageUploadError(file,2*1024*1024);
+    const file=req.file,invalid=imageUploadError(file,2*1024*1024);
     if(invalid)return fail(res,400,invalid);
     uploaded=await uploadToTelegram(file);
     const {data:prior}=await supabase.from('site_settings').select('value').eq('key','site_branding').maybeSingle();
-    const version=randomUUID(), faviconUrl='/api/site/favicon?v='+encodeURIComponent(version);
-    const old=prior?.value||{};
-    const value={...old,siteLogoUrl:faviconUrl,siteLogoFileId:uploaded.fileId,siteLogoMessageId:uploaded.messageId,siteLogoMimeType:file.mimetype,siteLogoVersion:version,faviconUrl,faviconFileId:uploaded.fileId,faviconMessageId:uploaded.messageId,faviconMimeType:file.mimetype,faviconVersion:version};
+    const old=prior?.value||{},version=randomUUID();
+    const value={...old,faviconUrl:'/api/site/favicon?v='+encodeURIComponent(version),faviconFileId:uploaded.fileId,faviconMessageId:uploaded.messageId,faviconMimeType:file.mimetype,faviconVersion:version};
     const {error:saveError}=await supabase.from('site_settings').upsert({key:'site_branding',value,updated_at:new Date().toISOString()},{onConflict:'key'});
     if(saveError)throw saveError;
-    const oldMessageId=clean(old.siteLogoMessageId||old.faviconMessageId,40);
-    if(oldMessageId&&oldMessageId!==uploaded.messageId)await deleteTelegramMessage(oldMessageId);
-    const oldPath=clean(old.faviconPath,500);
-    if(oldPath&&oldPath.startsWith('site/'))await supabase.storage.from('profile-media').remove([oldPath]);
+    const oldMessageId=clean(old.faviconMessageId,40);
+    if(oldMessageId&&oldMessageId!==uploaded.messageId&&oldMessageId!==clean(old.siteLogoMessageId,40))await deleteTelegramMessage(oldMessageId);
     res.set('Cache-Control','no-store');
     return res.status(201).json({data:{...(await getSiteBranding()),storage:'telegram'}});
   }catch(error){
     if(uploaded?.messageId)await deleteTelegramMessage(uploaded.messageId);
-    console.error('Website logo upload failed:',error.message);
-    return fail(res,500,'Could not save website logo. Check the configured Telegram image storage and Supabase service role.');
+    console.error('Website favicon upload failed:',error.message);
+    return fail(res,500,'Could not save website favicon. Check Telegram storage and Supabase service role.');
   }
 });
-app.patch('/api/admin/branding', authenticate, requireAdmin, upload.fields([{name:'logo',maxCount:1},{name:'heroImages',maxCount:3}]), async (req,res)=>{
-  const files=req.files||{}, logo=files.logo?.[0]||null, bannerFiles=files.heroImages||[];
-  const logoError=logo?imageUploadError(logo,2*1024*1024):null;
-  if(logoError)return fail(res,400,'Logo: '+logoError);
-  const bannerError=bannerFiles.map(file=>imageUploadError(file,8*1024*1024)).find(Boolean);
-  if(bannerError)return fail(res,400,'Banner: '+bannerError);
-  const clearHeroImages=String(req.body.clearHeroImages||'')==='true';
-  let newlyUploaded=[];
+app.patch('/api/admin/branding', authenticate, requireAdmin, upload.fields([{name:'logo',maxCount:1},{name:'favicon',maxCount:1},{name:'heroImages',maxCount:3}]), async (req,res)=>{
+  const files=req.files||{},logo=files.logo?.[0]||null,favicon=files.favicon?.[0]||null,bannerFiles=files.heroImages||[];
+  const logoError=logo?imageUploadError(logo,2*1024*1024):null;if(logoError)return fail(res,400,'Logo: '+logoError);
+  const faviconError=favicon?imageUploadError(favicon,2*1024*1024):null;if(faviconError)return fail(res,400,'Favicon: '+faviconError);
+  const bannerError=bannerFiles.map(file=>imageUploadError(file,8*1024*1024)).find(Boolean);if(bannerError)return fail(res,400,'Banner: '+bannerError);
+  const clearHeroImages=String(req.body.clearHeroImages||'')==='true',newlyUploaded=[];
   try{
-    const {data:priorRow,error:readError}=await supabase.from('site_settings').select('value').eq('key','site_branding').maybeSingle();
-    if(readError)throw readError;
-    const prior=priorRow?.value||{};
-    if(logo){const image=await uploadToTelegram(logo);newlyUploaded.push(image); }
-    const newLogo=newlyUploaded[0]||null;
-    const newHero=[];
-    for(const file of bannerFiles){const image=await uploadToTelegram(file);newlyUploaded.push(image);newHero.push({fileId:image.fileId,messageId:image.messageId,mimeType:image.mimeType,url:telegramMediaUrl(image.fileId)});}
-    const version=newLogo?randomUUID():clean(prior.siteLogoVersion||prior.faviconVersion,80)||randomUUID();
-    const logoUrl=newLogo?'/api/site/favicon?v='+encodeURIComponent(version):clean(prior.siteLogoUrl||prior.faviconUrl,2000);
-    const heroImages=newHero.length?newHero:(clearHeroImages?[]:(Array.isArray(prior.heroImages)?prior.heroImages.slice(0,3):[]));
-    const value={
-      ...prior,
-      siteLogoUrl:logoUrl,siteLogoFileId:newLogo?.fileId||prior.siteLogoFileId||prior.faviconFileId||null,
-      siteLogoMessageId:newLogo?.messageId||prior.siteLogoMessageId||prior.faviconMessageId||null,
-      siteLogoMimeType:newLogo?.mimeType||prior.siteLogoMimeType||prior.faviconMimeType||null,
-      siteLogoVersion:version,
-      faviconUrl:logoUrl,faviconFileId:newLogo?.fileId||prior.siteLogoFileId||prior.faviconFileId||null,
-      faviconMessageId:newLogo?.messageId||prior.siteLogoMessageId||prior.faviconMessageId||null,
-      faviconMimeType:newLogo?.mimeType||prior.siteLogoMimeType||prior.faviconMimeType||null,
-      faviconVersion:version,
-      siteTitle:clean(req.body.siteTitle,80)||DEFAULT_SITE_BRANDING.siteTitle,
-      siteSubtitle:clean(req.body.siteSubtitle,120)||DEFAULT_SITE_BRANDING.siteSubtitle,
-      heroBadge:clean(req.body.heroBadge,100)||DEFAULT_SITE_BRANDING.heroBadge,
-      heroTitle:clean(req.body.heroTitle,160)||DEFAULT_SITE_BRANDING.heroTitle,
-      heroSubtitle:clean(req.body.heroSubtitle,600)||DEFAULT_SITE_BRANDING.heroSubtitle,
-      heroImages
-    };
-    const {error:saveError}=await supabase.from('site_settings').upsert({key:'site_branding',value,updated_at:new Date().toISOString()},{onConflict:'key'});
-    if(saveError)throw saveError;
-    const oldLogoMessage=clean(prior.siteLogoMessageId||prior.faviconMessageId,40);
-    if(newLogo&&oldLogoMessage&&oldLogoMessage!==newLogo.messageId)await deleteTelegramMessage(oldLogoMessage);
-    if(newLogo){const oldPath=clean(prior.faviconPath,500);if(oldPath&&oldPath.startsWith('site/'))await supabase.storage.from('profile-media').remove([oldPath]);}
-    if(newHero.length||clearHeroImages){
-      for(const oldImage of (Array.isArray(prior.heroImages)?prior.heroImages:[])){
-        const oldMessage=clean(oldImage?.messageId,40);
-        if(oldMessage)await deleteTelegramMessage(oldMessage);
-      }
-    }
-    res.set('Cache-Control','no-store');
-    return res.status(200).json({data:await getSiteBranding()});
-  }catch(error){
-    for(const image of newlyUploaded)await deleteTelegramMessage(image.messageId);
-    console.error('Site branding save failed:',error.message);
-    return fail(res,500,'Could not save Brand & Banner settings. Check Telegram storage and Supabase settings.');
-  }
+    const {data:priorRow,error:readError}=await supabase.from('site_settings').select('value').eq('key','site_branding').maybeSingle();if(readError)throw readError;
+    const prior=priorRow?.value||{},priorLogoId=clean(prior.siteLogoFileId,2048)||(prior.siteLogoFileId&&prior.siteLogoFileId===prior.faviconFileId?clean(prior.faviconFileId,2048):''),priorFaviconId=clean(prior.faviconFileId,2048)||(prior.faviconFileId&&prior.faviconFileId===prior.siteLogoFileId?clean(prior.siteLogoFileId,2048):'');
+    const newLogo=logo?await uploadToTelegram(logo):null;if(newLogo)newlyUploaded.push(newLogo);
+    const newFavicon=favicon?await uploadToTelegram(favicon):null;if(newFavicon)newlyUploaded.push(newFavicon);
+    const newHero=[];for(const file of bannerFiles){const image=await uploadToTelegram(file);newlyUploaded.push(image);newHero.push({fileId:image.fileId,messageId:image.messageId,mimeType:image.mimeType,url:telegramMediaUrl(image.fileId)})}
+    const logoVersion=newLogo?randomUUID():clean(prior.siteLogoVersion,80)||clean(prior.faviconVersion,80)||randomUUID();
+    const faviconVersion=newFavicon?randomUUID():clean(prior.faviconVersion,80)||clean(prior.siteLogoVersion,80)||randomUUID();
+    const logoFileId=newLogo?.fileId||priorLogoId||null,faviconFileId=newFavicon?.fileId||priorFaviconId||null;
+    const value={...prior,
+      siteLogoUrl:logoFileId?'/api/site/logo?v='+encodeURIComponent(logoVersion):clean(prior.siteLogoUrl,2000),
+      siteLogoFileId:logoFileId,siteLogoMessageId:newLogo?.messageId||clean(prior.siteLogoMessageId,40)||(prior.siteLogoFileId&&prior.siteLogoFileId===prior.faviconFileId?clean(prior.faviconMessageId,40):'')||null,siteLogoMimeType:newLogo?.mimeType||clean(prior.siteLogoMimeType,80)||(prior.siteLogoFileId&&prior.siteLogoFileId===prior.faviconFileId?clean(prior.faviconMimeType,80):'')||null,siteLogoVersion:logoVersion,
+      faviconUrl:faviconFileId?'/api/site/favicon?v='+encodeURIComponent(faviconVersion):clean(prior.faviconUrl,2000),
+      faviconFileId:faviconFileId,faviconMessageId:newFavicon?.messageId||clean(prior.faviconMessageId,40)||(prior.faviconFileId&&prior.faviconFileId===prior.siteLogoFileId?clean(prior.siteLogoMessageId,40):'')||null,faviconMimeType:newFavicon?.mimeType||clean(prior.faviconMimeType,80)||(prior.faviconFileId&&prior.faviconFileId===prior.siteLogoFileId?clean(prior.siteLogoMimeType,80):'')||null,faviconVersion:faviconVersion,
+      siteTitle:clean(req.body.siteTitle,80)||DEFAULT_SITE_BRANDING.siteTitle,siteSubtitle:clean(req.body.siteSubtitle,120)||DEFAULT_SITE_BRANDING.siteSubtitle,heroBadge:clean(req.body.heroBadge,100)||DEFAULT_SITE_BRANDING.heroBadge,heroTitle:clean(req.body.heroTitle,160)||DEFAULT_SITE_BRANDING.heroTitle,heroSubtitle:clean(req.body.heroSubtitle,600)||DEFAULT_SITE_BRANDING.heroSubtitle,
+      heroImages:newHero.length?newHero:(clearHeroImages?[]:(Array.isArray(prior.heroImages)?prior.heroImages.slice(0,3):[]))};
+    const {error:saveError}=await supabase.from('site_settings').upsert({key:'site_branding',value,updated_at:new Date().toISOString()},{onConflict:'key'});if(saveError)throw saveError;
+    const retainedIds=new Set([logoFileId,faviconFileId].filter(Boolean)),oldIds=new Set([priorLogoId,priorFaviconId].filter(Boolean));
+    for(const oldId of oldIds)if(!retainedIds.has(oldId)){const oldMessage=oldId===priorLogoId?clean(prior.siteLogoMessageId,40):clean(prior.faviconMessageId,40);if(oldMessage)await deleteTelegramMessage(oldMessage)}
+    if(newHero.length||clearHeroImages)for(const oldImage of (Array.isArray(prior.heroImages)?prior.heroImages:[])){const oldMessage=clean(oldImage?.messageId,40);if(oldMessage)await deleteTelegramMessage(oldMessage)}
+    res.set('Cache-Control','no-store');return res.status(200).json({data:await getSiteBranding()});
+  }catch(error){for(const image of newlyUploaded)await deleteTelegramMessage(image.messageId);console.error('Site branding save failed:',error.message);return fail(res,500,'Could not save Brand & Banner settings. Check Telegram storage and Supabase settings.')}
 });
 app.use('/api', async (req, res, nextMiddleware) => {
   if (!['POST','PUT','PATCH','DELETE'].includes(req.method) || ['/admin/settings','/admin/favicon','/telegram/webhook'].includes(req.path)) return nextMiddleware();
@@ -513,10 +475,39 @@ app.get('/api/media/telegram/:fileId', async (req, res) => {
   }
 });
 
+
+let productCleanupPromise=null;
+async function cleanupExpiredProducts(){
+  if(!supabase)return {deleted:0,archived:0};
+  if(productCleanupPromise)return productCleanupPromise;
+  productCleanupPromise=(async()=>{
+    const cutoff=new Date(Date.now()-PRODUCT_AUTO_DELETE_AGE_MS).toISOString();
+    const {data:stale,error}=await supabase.from('products').select('id,status,product_images(id,telegram_message_id)').lt('renewed_at',cutoff).neq('status','archived').limit(200);
+    if(error){console.error('Product lifecycle cleanup failed:',error.message);return {deleted:0,archived:0,error:error.message}}
+    let deleted=0,archived=0;
+    for(const product of stale||[]){
+      const {count:soldCount,error:countError}=await supabase.from('order_items').select('id',{count:'exact',head:true}).eq('product_id',product.id);
+      if(countError){console.warn('Could not verify order history for expired product:',product.id,countError.message);continue}
+      if((soldCount||0)>0){
+        const {error:archiveError}=await supabase.from('products').update({status:'archived',updated_at:new Date().toISOString()}).eq('id',product.id);
+        if(!archiveError)archived++;else console.warn('Could not archive expired product:',product.id,archiveError.message);
+        continue;
+      }
+      const {error:deleteError}=await supabase.from('products').delete().eq('id',product.id);
+      if(deleteError){console.warn('Could not delete expired product:',product.id,deleteError.message);continue}
+      deleted++;
+      for(const image of product.product_images||[])if(image.telegram_message_id)await deleteTelegramMessage(image.telegram_message_id);
+    }
+    if(deleted||archived)console.log('Product lifecycle cleanup:',{deleted,archived});
+    return {deleted,archived};
+  })().finally(()=>{productCleanupPromise=null});
+  return productCleanupPromise;
+}
+
 // Public catalogue.
 app.get('/api/categories', async (_req, res) => {
   if (!db(res)) return;
-  const { data, error } = await supabase.from('products').select('category').eq('status', 'active');
+  const { data, error } = await supabase.from('products').select('category').eq('status', 'active').gte('renewed_at',new Date(Date.now()-PRODUCT_PUBLIC_MAX_AGE_MS).toISOString());
   if (error) return fail(res, 500, 'Could not load categories');
   res.json({ data: [...new Set((data || []).map(row => row.category).filter(Boolean))].sort() });
 });
@@ -526,8 +517,8 @@ app.get('/api/products', async (req, res) => {
   const limit = Math.min(50, Math.max(1, Number.parseInt(req.query.limit, 10) || 24));
   const q = clean(req.query.q, 100);
   const category = clean(req.query.category, 80);
-  let query = supabase.from('products').select('id,title,description,price,stock,category,location,condition,view_count,created_at,vendor_id,product_images(id,file_id,image_url,sort_order),vendors!inner(id,store_name,status)', { count: 'exact' })
-    .eq('status', 'active').eq('vendors.status', 'approved').gt('stock', 0).order('created_at', { ascending: false })
+  let query = supabase.from('products').select('id,title,description,price,stock,category,location,condition,view_count,created_at,updated_at,renewed_at,vendor_id,product_images(id,file_id,image_url,sort_order),vendors!inner(id,store_name,status)', { count: 'exact' })
+    .eq('status', 'active').eq('vendors.status', 'approved').gt('stock', 0).gte('renewed_at',new Date(Date.now()-PRODUCT_PUBLIC_MAX_AGE_MS).toISOString()).order('created_at', { ascending: false })
     .range((page - 1) * limit, page * limit - 1);
   if (q) { const term = q.replace(/[%_,()]/g, '').trim(); if (term) query = query.or(`title.ilike.%${term}%,description.ilike.%${term}%,location.ilike.%${term}%`); }
   if (category) query = query.eq('category', category);
@@ -541,7 +532,7 @@ app.get('/api/products/:id', async (req, res) => {
   if (!db(res)) return;
   let { data, error } = await supabase.from('products')
     .select('*,product_images(id,file_id,image_url,sort_order),vendors!inner(id,store_name,status)')
-    .eq('id', req.params.id).eq('status', 'active').eq('vendors.status', 'approved').gt('stock', 0).maybeSingle();
+    .eq('id', req.params.id).eq('status', 'active').eq('vendors.status', 'approved').gt('stock', 0).gte('renewed_at',new Date(Date.now()-PRODUCT_PUBLIC_MAX_AGE_MS).toISOString()).maybeSingle();
   if (error || !data) return fail(res, 404, 'Product not found');
   const nextViews = Number(data.view_count || 0) + 1;
   await supabase.from('products').update({ view_count: nextViews }).eq('id', data.id);
@@ -1424,7 +1415,7 @@ app.get('/api/vendor/products', authenticate, async (req, res) => {
   const { data: vendor } = await vendorFor(req.user.id);
   if (!vendor) return fail(res, 403, 'Vendor account not found');
   const { data, error } = await supabase.from('products')
-    .select('*,product_images(id,file_id,image_url,telegram_message_id,sort_order)')
+    .select('*,renewed_at,product_images(id,file_id,image_url,telegram_message_id,sort_order)')
     .eq('vendor_id', vendor.id).order('created_at', { ascending: false });
   if (error) return fail(res, 500, 'Could not load vendor products');
   res.json({ data: (data || []).map(publicProduct), vendor });
@@ -1470,17 +1461,19 @@ app.post('/api/products', authenticate, async (req, res) => {
   const location = clean(req.body.location, 100);
   const condition = clean(req.body.condition || 'ប្រើរួចស្អាត', 60);
   const { data, error } = await supabase.from('products')
-    .insert({ vendor_id: vendor.id, title, description, category, price, stock, location, condition, status }).select().single();
+    .insert({ vendor_id: vendor.id, title, description, category, price, stock, location, condition, status, renewed_at:new Date().toISOString() }).select().single();
   if (error) return fail(res, 400, 'Could not create product');
   res.status(201).json({ data });
 });
 app.patch('/api/products/:id', authenticate, async (req, res) => {
   const { data: vendor } = await vendorFor(req.user.id);
   const admin = await isAdmin(req.user.id);
-  const { data: existing } = await supabase.from('products').select('id,vendor_id,status').eq('id', req.params.id).maybeSingle();
+  const { data: existing } = await supabase.from('products').select('id,vendor_id,status,renewed_at,updated_at,created_at').eq('id', req.params.id).maybeSingle();
   if (!existing) return fail(res, 404, 'Product not found');
   if (!admin && (!vendor || vendor.status !== 'approved' || vendor.id !== existing.vendor_id)) return fail(res, 403, 'Approved store ownership required');
   const patch = {};
+  const isRenewal=req.body.renew===true;
+  if(isRenewal){const renewedAt=Date.parse(existing.renewed_at||existing.updated_at||existing.created_at||'');const age=Number.isFinite(renewedAt)?Date.now()-renewedAt:0;if(existing.status!=='active'||age>PRODUCT_AUTO_DELETE_AGE_MS)return fail(res,410,'This product is no longer eligible for renewal.');patch.renewed_at=new Date().toISOString();patch.status='active';}
   for (const key of ['title','description','category','location','condition']) if (req.body[key] !== undefined) patch[key] = clean(req.body[key], key === 'description' ? 5000 : key === 'title' ? 160 : 100);
   if (req.body.price !== undefined) patch.price = Number(req.body.price);
   if (req.body.stock !== undefined) patch.stock = Number(req.body.stock);
@@ -1575,8 +1568,9 @@ app.delete('/api/products/:id/images/:imageId', authenticate, async (req, res) =
 // Marketplace user data: wishlist, seller trust, offers and seller performance.
 app.get('/api/saved', authenticate, async (req, res) => {
   const { data, error } = await supabase.from('saved_products')
-    .select('id,created_at,products!inner(id,title,description,price,stock,category,location,condition,view_count,vendor_id,product_images(id,file_id,image_url,sort_order),vendors!inner(id,store_name,status))')
+    .select('id,created_at,products!inner(id,title,description,price,stock,category,location,condition,view_count,vendor_id,renewed_at,product_images(id,file_id,image_url,sort_order),vendors!inner(id,store_name,status))')
     .eq('user_id', req.user.id).eq('products.status', 'active').eq('products.vendors.status', 'approved').gt('products.stock', 0)
+    .gte('products.renewed_at', new Date(Date.now() - PRODUCT_PUBLIC_MAX_AGE_MS).toISOString())
     .order('created_at', { ascending: false });
   if (error) return fail(res, 500, 'Could not load saved products');
   const trust = await ratingsFor((data || []).map(row => row.products?.vendor_id));
@@ -1586,7 +1580,9 @@ app.get('/api/saved', authenticate, async (req, res) => {
   }) });
 });
 app.post('/api/saved/:productId', authenticate, async (req, res) => {
-  const { data: product } = await supabase.from('products').select('id').eq('id', req.params.productId).eq('status', 'active').maybeSingle();
+  const savedProductCutoff = new Date(Date.now() - PRODUCT_PUBLIC_MAX_AGE_MS).toISOString();
+  const { data: product, error: productError } = await supabase.from('products').select('id,renewed_at').eq('id', req.params.productId).eq('status', 'active').gte('renewed_at', savedProductCutoff).maybeSingle();
+  if (productError) return fail(res, 500, 'Could not verify product availability');
   if (!product) return fail(res, 404, 'Product not available');
   const { error } = await supabase.from('saved_products').upsert({ user_id: req.user.id, product_id: product.id }, { onConflict: 'user_id,product_id', ignoreDuplicates: true });
   if (error) return fail(res, 400, 'Could not save product');
@@ -1606,7 +1602,7 @@ app.get('/api/vendors/:id/ratings', async (req, res) => {
   if (error || !vendor) return fail(res, 404, 'Seller not found');
   const [{ data: reviews, error: reviewError }, { data: products }] = await Promise.all([
     supabase.from('seller_reviews').select('id,buyer_id,order_id,rating,comment,created_at').eq('vendor_id', vendor.id).order('created_at', { ascending: false }).limit(30),
-    supabase.from('products').select('id,status,view_count').eq('vendor_id', vendor.id)
+    supabase.from('products').select('id,status,view_count,renewed_at').eq('vendor_id', vendor.id)
   ]);
   if (reviewError) return fail(res, 500, 'Could not load seller reviews');
   const trust = await ratingsFor([vendor.id]);
@@ -1622,7 +1618,7 @@ app.get('/api/vendors/:id/ratings', async (req, res) => {
     profile: { display_name: profile.display_name, province: profile.province, bio: profile.bio, avatar_url: publicMediaUrl(profile.avatar_path) },
     rating: trust[vendor.id]?.average ?? null, review_count: trust[vendor.id]?.count ?? 0,
     distribution: trust[vendor.id]?.distribution ?? [0,0,0,0,0],
-    active_listings: (products || []).filter(row => row.status === 'active').length,
+    active_listings: (products || []).filter(row => row.status === 'active' && row.renewed_at && new Date(row.renewed_at).getTime() >= Date.now() - PRODUCT_PUBLIC_MAX_AGE_MS).length,
     total_views: (products || []).reduce((sum,row) => sum + Number(row.view_count || 0), 0),
     reviews: (reviews || []).map(row => ({ ...row, buyer_name: buyerNames[row.buyer_id] || 'អ្នកទិញ' }))
   } });
@@ -1657,12 +1653,12 @@ app.get('/api/offers', authenticate, async (req, res) => {
   const { data, error } = await query;
   if (error) return fail(res, 500, 'Could not load offers');
   const buyerIds = [...new Set((data || []).map(row => row.buyer_id))];
-  let buyerNames = {};
+  let buyerProfiles = {};
   if (buyerIds.length) {
-    const { data: buyers } = await supabase.from('profiles').select('id,display_name').in('id', buyerIds);
-    buyerNames = Object.fromEntries((buyers || []).map(row => [row.id, row.display_name]));
+    const { data: buyers } = await supabase.from('profiles').select('id,display_name,phone').in('id', buyerIds);
+    buyerProfiles = Object.fromEntries((buyers || []).map(row => [row.id, row]));
   }
-  res.json({ data: (data || []).map(row => ({ ...row, buyer_name: buyerNames[row.buyer_id] || 'អ្នកទិញ', products: row.products ? publicProduct(row.products) : null })) });
+  res.json({ data: (data || []).map(row => ({ ...row, buyer_name: buyerProfiles[row.buyer_id]?.display_name || 'អ្នកទិញ', buyer_phone: buyerProfiles[row.buyer_id]?.phone || null, products: row.products ? publicProduct(row.products) : null })) });
 });
 app.post('/api/products/:id/offers', authenticate, async (req, res) => {
   const offer_price = Number(req.body.offer_price);
@@ -1670,7 +1666,7 @@ app.post('/api/products/:id/offers', authenticate, async (req, res) => {
   if (!Number.isFinite(offer_price) || offer_price <= 0) return fail(res, 400, 'Enter a valid offer price');
   const { data: product } = await supabase.from('products')
     .select('id,vendor_id,status,price,vendors!inner(status,user_id)')
-    .eq('id', req.params.id).eq('status', 'active').eq('vendors.status', 'approved').gt('stock', 0).maybeSingle();
+    .eq('id', req.params.id).eq('status', 'active').eq('vendors.status', 'approved').gt('stock', 0).gte('renewed_at',new Date(Date.now()-PRODUCT_PUBLIC_MAX_AGE_MS).toISOString()).maybeSingle();
   if (!product) return fail(res, 404, 'Product not available');
   if (product.vendors.user_id === req.user.id) return fail(res, 400, 'You cannot make an offer on your own product');
   const { data, error } = await supabase.from('offers').insert({
@@ -1858,3 +1854,6 @@ app.use((error, _req, res, _next) => {
 await nextApp.prepare();
 app.use((req, res) => nextHandler(req, res));
 app.listen(port, () => console.log(`7inOne full-stack service listening on ${port}`));
+const productLifecycleTimer=setInterval(()=>{void cleanupExpiredProducts()},60*60*1000);
+productLifecycleTimer.unref?.();
+void cleanupExpiredProducts();
