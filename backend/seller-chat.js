@@ -212,4 +212,48 @@ export function registerSellerChat(app, { supabase, authenticate, requireVendor,
       return res.status(201).json({ data: { message } });
     } catch (error) { console.error('Seller voice upload failed:', error.message); return fail(res, 502, 'មិនអាចរក្សាទុក ឬផ្ញើសំឡេងទៅ Telegram បានទេ។'); }
   });
+  app.post('/api/seller-chat/conversations/:id/image', authenticate, upload.single('image'), async (req, res) => {
+    try {
+      const result = await getConversationForUser(req.params.id, req.user.id);
+      if (result.error) return fail(res, 404, result.error);
+      const conversation = result.conversation;
+      if (conversation.status !== 'open') return fail(res, 409, 'សន្ទនានេះត្រូវបានបិទ។');
+      const file = req.file;
+      const mimeType = String(file?.mimetype || '').toLowerCase();
+      const signatures = {
+        'image/jpeg': file?.buffer?.length >= 3 && file.buffer[0] === 0xff && file.buffer[1] === 0xd8 && file.buffer[2] === 0xff,
+        'image/png': file?.buffer?.length >= 8 && file.buffer.subarray(0,8).equals(Buffer.from([0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a])),
+        'image/webp': file?.buffer?.length >= 12 && file.buffer.toString('ascii',0,4) === 'RIFF' && file.buffer.toString('ascii',8,12) === 'WEBP'
+      };
+      if (!file || !signatures[mimeType] || !file.buffer?.length) return fail(res, 400, 'សូមផ្ញើរូប JPG, PNG ឬ WEBP ត្រឹមត្រូវ។');
+      if (file.size > 8 * 1024 * 1024) return fail(res, 413, 'រូបភាពមិនអាចលើស 8MB បានទេ។');
+      const chatId = telegramStorageChatId();
+      if (!process.env.TELEGRAM_BOT_TOKEN || !chatId) return fail(res, 503, 'មិនទាន់កំណត់ Telegram Storage សម្រាប់រូបភាពទេ។');
+      const form = new FormData();
+      form.append('chat_id', chatId);
+      form.append('photo', new Blob([file.buffer], { type: mimeType }), '7inone-chat-' + Date.now() + (mimeType==='image/png'?'.png':mimeType==='image/webp'?'.webp':'.jpg'));
+      const stored = await telegram('sendPhoto', { method: 'POST', body: form });
+      const media = Array.isArray(stored.photo) ? stored.photo[stored.photo.length-1] : null;
+      if (!media?.file_id || !stored.message_id) throw new Error('Telegram did not return an image file_id.');
+      const message = await saveMessage(conversation, req.user.id, conversation.current_role, {
+        body: '📷 រូបភាព', message_type: 'image', telegram_file_id: media.file_id, telegram_message_id: stored.message_id, mime_type: mimeType
+      }, '📷 រូបភាព');
+      return res.status(201).json({ data: { message } });
+    } catch (error) { console.error('Seller chat image upload failed:', error.message); return fail(res, 502, 'មិនអាចរក្សាទុក ឬផ្ញើរូបភាពទៅ Telegram បានទេ។'); }
+  });
+
+  app.post('/api/seller-chat/conversations/:id/location', authenticate, async (req, res) => {
+    try {
+      const result = await getConversationForUser(req.params.id, req.user.id);
+      if (result.error) return fail(res, 404, result.error);
+      const conversation = result.conversation;
+      if (conversation.status !== 'open') return fail(res, 409, 'សន្ទនានេះត្រូវបានបិទ។');
+      const latitude = Number(req.body?.latitude), longitude = Number(req.body?.longitude);
+      if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || Math.abs(latitude)>90 || Math.abs(longitude)>180) return fail(res, 400, 'ទីតាំង GPS មិនត្រឹមត្រូវទេ។');
+      const body = JSON.stringify({ latitude, longitude, accuracy: Number.isFinite(Number(req.body?.accuracy)) ? Math.max(0, Math.min(100000, Number(req.body.accuracy))) : null });
+      const message = await saveMessage(conversation, req.user.id, conversation.current_role, { body, message_type: 'location' }, '📍 ទីតាំង Google Maps');
+      return res.status(201).json({ data: { message } });
+    } catch (error) { console.error('Seller chat location send failed:', error.message); return fail(res, 500, 'មិនអាចផ្ញើទីតាំងបានទេ។'); }
+  });
+
 }
