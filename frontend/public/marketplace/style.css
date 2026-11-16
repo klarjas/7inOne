@@ -381,3 +381,10 @@ button,.product-card,.hero-copy-card,.hero-image-tile{scroll-behavior:auto}
   .storefront-avatar>div{width:54px;height:54px}
   #view-product .product-detail-page>div{grid-template-columns:1fr}
 }
+
+.product-detail-page>div{align-items:start}
+@media(min-width:1024px){.product-detail-page>div>div:nth-child(2){position:sticky;top:88px;align-self:start;max-height:calc(100vh - 104px);overflow-y:auto;scrollbar-width:thin}}
+#view-product .brand-gradient,#view-home #searchBtn{background:#1F2937!important;color:#fff!important;box-shadow:none!important}
+#view-product .brand-gradient:hover,#view-home #searchBtn:hover{background:#111827!important}
+#view-product .product-main-image{max-height:680px}
+.product-detail-page .product-safety-note{background:#F8FAFC!important;border-color:#E2E8F0!important}
