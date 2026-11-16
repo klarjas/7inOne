@@ -168,7 +168,7 @@ async function renderTelegramSecurity(){
       ? (result.data.username?'@'+result.data.username:'គណនី Telegram របស់អ្នកត្រូវបានភ្ជាប់។')
       : 'ភ្ជាប់ Telegram ដើម្បីទទួល OTP និងសារសុវត្ថិភាព។';
     $('connectTelegramBtn').classList.toggle('hidden',connected);
-    $('refreshTelegramStatusBtn').classList.toggle('hidden',!connected);
+    $('refreshTelegramStatusBtn').classList.remove('hidden');
     $('sendTelegramOtpBtn').disabled=!connected;
     $('changeTelegramPasswordBtn').disabled=!connected;
   }catch(error){
