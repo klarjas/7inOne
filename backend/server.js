@@ -254,6 +254,12 @@ app.get('/api/admin/telegram/diagnostics', authenticate, requireAdmin, async (_r
     last_error_date: webhookCheck.result.last_error_date || null
   } : webhookCheck;
 
+  const widgetBotUsername = await getTelegramBotUsername();
+  const telegramWidgetBot = {
+    ok: Boolean(widgetBotUsername),
+    username: widgetBotUsername,
+    error: widgetBotUsername ? null : 'Telegram Bot username is unavailable. Check TELEGRAM_BOT_TOKEN / TELEGRAM_BOT_USERNAME.'
+  };
   const database = { ok: Boolean(supabase), error: supabase ? null : 'Supabase service role is not configured.' };
   const tables = {};
   if (supabase) {
@@ -280,13 +286,13 @@ app.get('/api/admin/telegram/diagnostics', authenticate, requireAdmin, async (_r
   const loginReady = Boolean(bot.ok && secretConfigured && urlConfigured &&
     webhook.ok && webhook.url_matches && !webhook.last_error_message &&
     tables.telegram_account_links?.ok && tables.telegram_login_tokens?.ok);
-  const widgetLoginReady = Boolean(bot.ok && tables.telegram_widget_auth_events?.ok &&
-    tables.profiles_telegram_columns?.ok &&
+  const widgetLoginReady = Boolean(bot.ok && telegramWidgetBot.ok &&
+    tables.telegram_widget_auth_events?.ok && tables.profiles_telegram_columns?.ok &&
     (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY));
 
   return res.json({
     configured: botConfigured && Boolean(chatId),
-    bot, chat, membership, can_upload: Boolean(bot.ok && chat.ok && canPost),
+    bot, telegram_widget_bot: telegramWidgetBot, chat, membership, can_upload: Boolean(bot.ok && chat.ok && canPost),
     webhook, webhook_secret: { ok: secretConfigured, error: secretConfigured ? null : 'TELEGRAM_WEBHOOK_SECRET must be 32–256 characters (letters, numbers, _ or -).' },
     public_app_url: { ok: urlConfigured, value: publicUrl || null, error: urlConfigured ? null : 'PUBLIC_APP_URL must be your HTTPS website URL.' },
     database, tables, login_ready: loginReady, widget_login_ready: widgetLoginReady
