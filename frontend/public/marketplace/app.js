@@ -309,6 +309,7 @@ function diagnosticStatus(ok){return ok?'<span class="font-bold text-emerald-700
 function renderTelegramDiagnostics(data){
   const row=(label,item,detail='')=>'<div class="flex flex-col gap-1 border-b border-slate-100 py-2 last:border-0 sm:flex-row sm:items-start sm:justify-between"><span class="font-semibold text-slate-700">'+label+'</span><span class="text-left sm:text-right">'+diagnosticStatus(Boolean(item?.ok))+(detail?'<span class="mt-1 block break-words text-[10px] text-slate-500">'+esc(detail)+'</span>':'')+(item?.error?'<span class="mt-1 block break-words text-[10px] text-rose-600">'+esc(item.error)+'</span>':'')+'</span></div>';
   const botDetail=data.bot?.ok?((data.bot.first_name||'Bot')+' · @'+(data.bot.username||'—')+' · ID '+data.bot.id):'';
+  const widgetBotDetail=data.telegram_widget_bot?.username?'@'+data.telegram_widget_bot.username:'';
   const chatDetail=data.chat?.ok?((data.chat.title||'Channel')+' · '+(data.chat.type||'')+' · ID '+data.chat.id):'';
   const memberDetail=data.membership?.ok?('សិទ្ធិ៖ '+data.membership.status+(data.membership.can_post_messages===null?'':' · អាច Post៖ '+(data.membership.can_post_messages?'បាទ/ចាស':'ទេ'))):'';
   const webhookOk=Boolean(data.webhook?.ok&&data.webhook.url_matches&&!data.webhook.last_error_message);
@@ -318,6 +319,7 @@ function renderTelegramDiagnostics(data){
   const login='<div class="mt-3 rounded-lg '+(data.login_ready?'bg-emerald-50 text-emerald-800':'bg-amber-50 text-amber-800')+' p-3 text-[11px] font-bold">'+(data.login_ready?'Telegram Login៖ ត្រៀមរួចរាល់':'Telegram Login៖ មិនទាន់ត្រៀមរួច — សូមដោះស្រាយចំណុចដែលមានបញ្ហាខាងលើ')+'</div>';
   $('telegramDiagnosticsResult').innerHTML='<div class="mb-2 flex items-center justify-between"><b class="text-slate-800">លទ្ធផលត្រួតពិនិត្យ Telegram</b><span class="text-[9px] text-slate-400">'+(data.configured?'Bot/Channel បានកំណត់':'ខ្វះ Configuration')+'</span></div>'+
     row('Telegram Bot API (getMe)',data.bot,botDetail)+
+    row('Telegram Login Widget Bot Username',data.telegram_widget_bot,widgetBotDetail)+
     row('Telegram Channel (getChat)',data.chat,chatDetail)+
     row('Bot Admin / Post Permission',data.membership,memberDetail)+
     row('Webhook URL / getWebhookInfo',{ok:webhookOk,error:data.webhook?.error||(data.webhook?.ok&&!data.webhook.url_matches?'Webhook URL មិនត្រូវនឹង PUBLIC_APP_URL។':null)},webhookDetail)+
