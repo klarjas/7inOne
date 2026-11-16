@@ -212,8 +212,8 @@ function favoriteSpinner(){
 function setFavoriteHeart(button,saved,stage='idle'){
   if(!button)return;
   button.classList.toggle('saved',saved);
-  button.classList.toggle('text-rose-500',saved);
-  button.classList.toggle('fill-rose-500',saved);
+  button.classList.toggle('text-blue-600',saved);
+  button.classList.toggle('fill-blue-600',saved);
   button.classList.toggle('text-slate-500',!saved);
   button.classList.remove('text-emerald-500');
   button.setAttribute('aria-pressed',String(saved));
@@ -231,7 +231,7 @@ function setDetailFavoriteButton(button,saved){
   if(!button)return;
   button.disabled=false;
   button.innerHTML=ic('heart',14,'inline')+' '+(saved?'បានរក្សាទុក':'រក្សាទុក');
-  button.classList.toggle('text-rose-600',saved);
+  button.classList.toggle('text-blue-600',saved);
   button.classList.toggle('text-indigo-700',!saved);
   button.setAttribute('aria-pressed',String(saved));
 }
@@ -456,7 +456,7 @@ async function renderProfileTab(){
       const [orders,offers]=await Promise.all([loadOrders(),loadOffers()]);
       $('profileActivityCount').textContent=`${orders.length} ការបញ្ជាទិញ · ${offers.length} សំណើ`;
       const orderHtml=orders.map(o=>`<div class="rounded-xl border border-slate-100 p-3"><div class="flex justify-between gap-2"><b class="text-[11px]">Order #${esc(o.id.slice(0,8))}</b><span class="text-[10px] text-indigo-600">${esc(o.status)}</span></div><p class="mt-1 text-[10px] text-slate-500">${fmtDate(o.created_at)} · ${money(o.total)}</p>${(o.order_items||[]).map(i=>`<p class="mt-1 text-[10px] text-slate-500">${esc(i.products?.title||'ទំនិញ')} × ${i.quantity}</p>`).join('')}</div>`).join('');
-      const offerHtml=offers.map(o=>`<div class="rounded-xl border border-slate-100 p-3"><div class="flex justify-between gap-2"><b class="text-[11px]">${esc(o.products?.title||'ទំនិញ')}</b><span class="text-[10px] font-bold ${o.status==='accepted'?'text-emerald-600':o.status==='rejected'?'text-rose-500':'text-amber-600'}">${offerStatus(o.status)}</span></div><p class="mt-1 text-[10px] text-slate-500">ស្នើ ${money(o.offer_price)} · ${fmtDate(o.created_at)}</p></div>`).join('');
+      const offerHtml=offers.map(o=>`<div class="rounded-xl border border-slate-100 p-3"><div class="flex justify-between gap-2"><b class="text-[11px]">${esc(o.products?.title||'ទំនិញ')}</b><span class="text-[10px] font-bold ${o.status==='accepted'?'text-emerald-600':o.status==='rejected'?'text-blue-600':'text-amber-600'}">${offerStatus(o.status)}</span></div><p class="mt-1 text-[10px] text-slate-500">ស្នើ ${money(o.offer_price)} · ${fmtDate(o.created_at)}</p></div>`).join('');
       $('profileTabContent').innerHTML=`<div class="space-y-3"><h4 class="text-[11px] font-bold">ប្រវត្តិការបញ្ជាទិញ</h4>${orderHtml||'<p class="text-[10px] text-slate-400">មិនទាន់មានការបញ្ជាទិញ។</p>'}<h4 class="pt-2 text-[11px] font-bold">ប្រវត្តិសំណើតថ្លៃ</h4>${offerHtml||'<p class="text-[10px] text-slate-400">មិនទាន់មានសំណើតម្លៃ។</p>'}</div>`;
     }else{
       const v=me.vendor;
@@ -469,7 +469,7 @@ async function renderProfileTab(){
     }
   }catch(e){$('profileTabContent').innerHTML=`<p class="text-[11px] text-rose-600">${esc(e.message)}</p>`}
 }
-function savedCard(p){return `<div data-saved-card="${esc(p.id)}" class="flex gap-3 rounded-xl border border-slate-100 bg-white p-2.5">${productImage(p)?`<img class="h-20 w-20 rounded-lg object-cover" src="${esc(productImage(p))}">`:`<div class="grid h-20 w-20 place-items-center rounded-lg bg-slate-100 text-slate-400">${ic('image',22)}</div>`}<div class="min-w-0 flex-1"><b class="block truncate text-[11px]">${esc(p.title)}</b><b class="mt-1 block text-[13px] text-emerald-600">${money(p.price)}</b><p class="mt-1 truncate text-[9px] text-slate-400">${esc(p.location||'')}</p><div class="mt-2 flex gap-2"><button data-open-product="${esc(p.id)}" class="text-[10px] font-bold text-indigo-600">មើលទំនិញ</button><button data-remove-saved="${esc(p.id)}" class="text-[10px] font-bold text-rose-500">ដកចេញ</button></div></div></div>`}
+function savedCard(p){return `<div data-saved-card="${esc(p.id)}" class="flex gap-3 rounded-xl border border-slate-100 bg-white p-2.5">${productImage(p)?`<img class="h-20 w-20 rounded-lg object-cover" src="${esc(productImage(p))}">`:`<div class="grid h-20 w-20 place-items-center rounded-lg bg-slate-100 text-slate-400">${ic('image',22)}</div>`}<div class="min-w-0 flex-1"><b class="block truncate text-[11px]">${esc(p.title)}</b><b class="mt-1 block text-[13px] text-emerald-600">${money(p.price)}</b><p class="mt-1 truncate text-[9px] text-slate-400">${esc(p.location||'')}</p><div class="mt-2 flex gap-2"><button data-open-product="${esc(p.id)}" class="text-[10px] font-bold text-indigo-600">មើលទំនិញ</button><button data-remove-saved="${esc(p.id)}" class="text-[10px] font-bold text-blue-600">ដកចេញ</button></div></div></div>`}
 function vendorStatus(s){return ({pending:'កំពុងរង់ចាំការផ្ទៀងផ្ទាត់',approved:'បានផ្ទៀងផ្ទាត់',rejected:'បានបដិសេធ',blocked:'បានបិទ'})[s]||s}
 function offerStatus(s){return ({pending:'កំពុងរង់ចាំ',accepted:'បានទទួលយក',rejected:'បានបដិសេធ',withdrawn:'បានដកចេញ'})[s]||s}
 function ensureCheckoutModal(){
@@ -792,7 +792,7 @@ async function loadSupportAdminChats(){
     if(activeAdminChatId&&!chats.some(x=>x.id===activeAdminChatId))activeAdminChatId=null;
     if(!activeAdminChatId&&chats.length)activeAdminChatId=chats[0].id;
     if(activeAdminChatId)await loadSupportAdminChat();
-  }catch(error){console.warn('Admin chat list failed:',error.message);$('adminChatList').innerHTML='<p class="p-4 text-center text-xs text-rose-500">មិនអាចផ្ទុកបញ្ជី Chat បានទេ។</p>'}
+  }catch(error){console.warn('Admin chat list failed:',error.message);$('adminChatList').innerHTML='<p class="p-4 text-center text-xs text-blue-600">មិនអាចផ្ទុកបញ្ជី Chat បានទេ។</p>'}
 }
 async function loadSupportAdminChat(){
   if(!isAdmin()||!activeAdminChatId)return;
