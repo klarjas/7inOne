@@ -307,3 +307,22 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .seller-chat-bubble small{display:block;margin-top:4px;font-size:8px;opacity:.65}
 #sellerChatModal .modal-box{width:min(92vw,520px);height:min(82vh,680px)}
 #sellerChatMessages{height:360px;max-height:calc(82vh - 140px)}
+
+/* Unified buyer/seller inbox and Telegram voice messages */
+#supportChatPanel{display:none!important}
+#sellerChatModal .seller-chat-shell{width:min(96vw,940px);height:min(88vh,760px);max-width:940px}
+.seller-chat-layout{height:calc(min(88vh,760px) - 58px)}
+.seller-chat-inbox-item.active{border-color:#10B981;background:#ECFDF5}
+.seller-chat-bubble .seller-chat-voice{min-width:220px}
+.seller-chat-voice audio{display:block;width:min(100%,270px);height:38px;margin-top:7px}
+.seller-chat-voice span{font-size:10px;font-weight:700}
+.seller-chat-bubble small{display:block;margin-top:5px;font-size:8px;opacity:.65}
+@media(max-width:640px){
+ #sellerChatModal .seller-chat-shell{width:100vw;height:100dvh;max-width:none;max-height:none;border-radius:0}
+ .seller-chat-layout{height:calc(100dvh - 58px)}
+ .seller-chat-inbox-pane{width:100%;border-right:0}
+ .seller-chat-inbox-pane.mobile-hidden{display:none}
+ .seller-chat-thread{display:none}
+ .seller-chat-thread.mobile-active{display:flex}
+ #sellerChatMessages{height:auto;max-height:none}
+}

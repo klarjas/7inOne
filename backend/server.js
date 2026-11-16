@@ -177,7 +177,7 @@ async function deleteTelegramMessage(messageId) {
 }
 
 registerSupportChat(app, { supabase, authenticate, requireAdmin, telegram, telegramStorageChatId, deleteTelegramMessage, clean, fail });
-registerSellerChat(app, { supabase, authenticate, requireVendor, clean, fail });
+registerSellerChat(app, { supabase, authenticate, requireVendor, upload, telegram, telegramStorageChatId, clean, fail });
 const telegramMediaUrl = fileId => fileId ? `/api/media/telegram/${encodeURIComponent(fileId)}` : null;
 function publicMediaUrl(path) {
   if (!path || !supabase) return null;
@@ -201,7 +201,7 @@ async function streamTelegramFile(fileId, res, mimeType = 'application/octet-str
   });
   const fileResponse = await fetch(`https://api.telegram.org/file/bot${process.env.TELEGRAM_BOT_TOKEN}/${file.file_path}`);
   if (!fileResponse.ok) throw new Error('Telegram file download failed.');
-  const detectedType = fileResponse.headers.get('content-type') || mimeType;
+  const detectedType = mimeType !== 'application/octet-stream' ? mimeType : (fileResponse.headers.get('content-type') || mimeType);
   res.set('Content-Type', detectedType);
   res.set('Content-Disposition', disposition);
   res.set('X-Content-Type-Options', 'nosniff');
@@ -502,7 +502,9 @@ app.get('/api/media/telegram/:fileId', async (req, res) => {
     if (!process.env.TELEGRAM_BOT_TOKEN) return fail(res, 503, 'Telegram media is unavailable: TELEGRAM_BOT_TOKEN is not configured.');
     const fileId = clean(req.params.fileId, 2048);
     if (!fileId) return fail(res, 400, 'Invalid Telegram file ID.');
-    return await streamTelegramFile(fileId, res);
+    const requestedMime = clean(req.query.mime, 60).toLowerCase();
+    const safeAudioMimes = new Set(['audio/webm','audio/ogg','audio/mp4','audio/mpeg','audio/wav','audio/x-wav']);
+    return await streamTelegramFile(fileId, res, safeAudioMimes.has(requestedMime) ? requestedMime : 'application/octet-stream');
   } catch (error) {
     console.error('Telegram media proxy error:', error.message);
     return fail(res, 502, error.message || 'Could not retrieve Telegram media.');
