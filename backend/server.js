@@ -7,7 +7,7 @@ import multer from 'multer';
 import next from 'next';
 import { fileURLToPath } from 'node:url';
 import { createClient } from '@supabase/supabase-js';
-import { randomUUID, randomBytes, randomInt, createHash } from 'node:crypto';
+import { randomUUID, randomBytes, randomInt, createHash, timingSafeEqual } from 'node:crypto';
 
 const app = express();
 const port = Number(process.env.PORT || 10000);
@@ -391,7 +391,7 @@ function telegramWebhookSecret(req) {
   const supplied = req.get('x-telegram-bot-api-secret-token') || '';
   const expected = process.env.TELEGRAM_WEBHOOK_SECRET || '';
   return Boolean(expected && supplied && supplied.length === expected.length &&
-    Buffer.from(supplied).equals(Buffer.from(expected)));
+    timingSafeEqual(Buffer.from(supplied), Buffer.from(expected)));
 }
 async function sendTelegramMessage(chatId, text) {
   return telegram('sendMessage', {
@@ -402,7 +402,7 @@ async function sendTelegramMessage(chatId, text) {
 }
 async function ensureTelegramWebhook(req) {
   const secret = process.env.TELEGRAM_WEBHOOK_SECRET || '';
-  if (secret.length < 32 || secret.length > 256) {
+  if (!/^[A-Za-z0-9_-]{32,256}$/.test(secret)) {
     throw new Error('Set TELEGRAM_WEBHOOK_SECRET in Render to a random value of 32–256 characters.');
   }
   const baseUrl = clean(process.env.PUBLIC_APP_URL || `${req.protocol}://${req.get('host')}`, 500).replace(/\/$/, '');
@@ -562,8 +562,14 @@ app.post('/api/me/telegram/change-password', authenticate, telegramOtpLimiter, a
     await supabase.from(telegramOtpTable).delete().eq('user_id', req.user.id);
     const { data: link } = await supabase.from(telegramLinkTable)
       .select('telegram_user_id').eq('user_id', req.user.id).maybeSingle();
-    if (link) await sendTelegramMessage(link.telegram_user_id,
-      '7inOne Security៖ Password របស់អ្នកត្រូវបានប្ដូរជោគជ័យ។ ប្រសិនបើមិនមែនជាអ្នកធ្វើសកម្មភាពនេះ សូមទាក់ទងក្រុមការងារ 7inOne ភ្លាមៗ។');
+    if (link) {
+      try {
+        await sendTelegramMessage(link.telegram_user_id,
+          '7inOne Security៖ Password របស់អ្នកត្រូវបានប្ដូរជោគជ័យ។ ប្រសិនបើមិនមែនជាអ្នកធ្វើសកម្មភាពនេះ សូមទាក់ទងក្រុមការងារ 7inOne ភ្លាមៗ។');
+      } catch (notifyError) {
+        console.warn('Password changed but Telegram notification failed:', notifyError.message);
+      }
+    }
     return res.json({ data: { changed: true } });
   } catch (error) {
     console.error('Telegram password change failed:', error.message);
