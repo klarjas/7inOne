@@ -296,3 +296,14 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 @media(prefers-reduced-motion:reduce){
  *,*:before,*:after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
+
+/* 7inOne buyer-to-seller product chat */
+.seller-chat-inbox-item{display:flex;width:100%;align-items:center;gap:10px;border:1px solid #E5ECE7;border-radius:13px;background:#fff;padding:12px;text-align:left;margin-top:8px;transition:background .2s,border-color .2s}
+.seller-chat-inbox-item:hover{border-color:#A7D8BC;background:#F7FCF8}
+.seller-chat-inbox-item.unread{border-left:3px solid #10B981;background:#F0FDF4}
+.seller-chat-bubble{max-width:86%;border-radius:15px;padding:9px 11px;font-size:11px;line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere}
+.seller-chat-bubble.own{background:#065F46;color:#fff;border-bottom-right-radius:5px}
+.seller-chat-bubble.other{background:#fff;color:#1e293b;border:1px solid #e2e8f0;border-bottom-left-radius:5px}
+.seller-chat-bubble small{display:block;margin-top:4px;font-size:8px;opacity:.65}
+#sellerChatModal .modal-box{width:min(92vw,520px);height:min(82vh,680px)}
+#sellerChatMessages{height:360px;max-height:calc(82vh - 140px)}
