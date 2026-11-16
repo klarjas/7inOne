@@ -464,3 +464,17 @@ button,.product-card,.hero-copy-card,.hero-image-tile{scroll-behavior:auto}
 .seller-chat-voice-duration{font-size:9px;line-height:1;color:inherit;opacity:.7;font-variant-numeric:tabular-nums}
 .seller-chat-bubble:has(.seller-chat-voice){padding:9px 11px;min-width:235px}
 @keyframes chat-record-pulse{50%{box-shadow:0 0 0 7px rgba(239,68,68,.13)}}
+
+
+/* Voice message is visually lightweight; recorder controls keep identical geometry in every state. */
+#sellerChatRecord.seller-chat-record{width:44px!important;height:44px!important;min-width:44px!important;min-height:44px!important;flex:0 0 44px!important;padding:0!important;display:grid!important;place-items:center!important;font-size:19px!important;line-height:1!important}
+#sellerChatRecord.seller-chat-record svg{width:19px!important;height:19px!important;display:block}
+#sellerChatRecord.seller-chat-record.is-recording,#sellerChatRecord.seller-chat-record.is-locked{width:44px!important;height:44px!important;min-width:44px!important;min-height:44px!important;transform:none!important}
+.seller-chat-bubble:has(.seller-chat-voice){background:transparent!important;border:0!important;box-shadow:none!important;padding:2px 0!important;min-width:210px!important}
+.seller-chat-voice{background:transparent!important;padding:0!important}
+.seller-chat-voice-status{display:block;font-size:9px;line-height:1;color:#94A3B8}
+.seller-chat-bubble.own:has(.seller-chat-voice) .seller-chat-voice-wave i{background:#10B981!important}
+
+.seller-chat-bubble:has(.seller-chat-voice){color:#475569!important}
+.seller-chat-bubble.own:has(.seller-chat-voice) .seller-chat-voice-play{background:#10B981!important;color:#fff!important}
+.seller-chat-bubble:has(.seller-chat-voice)>small{color:#94A3B8!important}
