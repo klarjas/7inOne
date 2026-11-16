@@ -930,7 +930,11 @@ app.post('/api/auth/telegram', telegramWidgetLoginLimiter, async (req, res) => {
         throw accountError;
       }
     } else {
-      email = `telegram.${identity.id}@auth.7inone.invalid`;
+      // Use a keyed opaque address instead of embedding a predictable Telegram ID.
+      // This address is internal to Supabase Auth and is never shown to the user.
+      const accountDigest = createHmac('sha256', process.env.SUPABASE_SERVICE_ROLE_KEY)
+        .update(identity.id).digest('hex').slice(0, 40);
+      email = `telegram.${accountDigest}@auth.7inone.invalid`;
       const { data:created, error:createError } = await supabase.auth.admin.createUser({
         email,
         password: randomBytes(48).toString('base64url'),
@@ -947,7 +951,13 @@ app.post('/api/auth/telegram', telegramWidgetLoginLimiter, async (req, res) => {
         // Resolve a concurrent/partially-created deterministic Telegram account
         // with the supported paginated Admin listUsers API.
         const existingUser = await findAuthUserByEmail(email);
-        if (!existingUser) throw createError;
+        const existingTelegramId = String(existingUser?.user_metadata?.telegram_id || '');
+        if (!existingUser ||
+            existingUser.user_metadata?.auth_provider !== 'telegram' ||
+            existingTelegramId !== identity.id) {
+          // Never adopt an arbitrary account that happens to occupy this internal email.
+          throw createError;
+        }
         authUser = existingUser;
       } else {
         authUser = created.user;
