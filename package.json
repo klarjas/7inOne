@@ -13,9 +13,12 @@
   "scripts": {
     "build": "npm run build --workspace frontend",
     "start": "node backend/server.js",
-    "check": "node --check backend/server.js"
+    "check": "node --check backend/server.js",
+    "prebuild": "node scripts/build-marketplace-css.mjs"
   },
   "devDependencies": {
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "postcss": "^8.5.6",
+    "tailwindcss-v3": "npm:tailwindcss@3.4.17"
   }
 }
