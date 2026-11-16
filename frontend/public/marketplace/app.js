@@ -760,7 +760,7 @@ async function loadUnifiedSellerChatInbox(){
 }
 async function loadSellerChatPreferences(){
   if(!session)return;
-  try{const result=await api('/api/seller-chat/preferences');sellerChatMuted=result.data?.muted===true;const button=$('sellerChatMute');button.innerHTML=(sellerChatMuted?ic('volumeOff',15):ic('volume',15))+' '+(sellerChatMuted?'បើកសំឡេង':'បិទសំឡេង');button.setAttribute('aria-pressed',String(sellerChatMuted))}
+  try{const result=await api('/api/seller-chat/preferences');sellerChatMuted=result.data?.muted===true;const button=$('sellerChatMute');button.innerHTML=(sellerChatMuted?ic('volumeOff',15):ic('volume',15))+' '+(sellerChatMuted?'បើកសំឡេង':'បិទសំឡេង');button.setAttribute('aria-label',sellerChatMuted?'បើកសំឡេង':'បិទសំឡេង');button.setAttribute('title',sellerChatMuted?'បើកសំឡេង':'បិទសំឡេង');button.setAttribute('aria-pressed',String(sellerChatMuted))}
   catch(error){console.warn('Chat preference load failed:',error.message)}
 }
 async function loadSellerChatConversation(scrollToBottom=false){
