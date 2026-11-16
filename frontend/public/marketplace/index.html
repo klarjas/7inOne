@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<meta content="#4F46E5" name="theme-color"/>
+<meta content="#064E3B" name="theme-color"/>
 <title>7inOne — ផ្សារទិញលក់អនឡាញនៅកម្ពុជា</title>
 <meta content="7inOne — ផ្សារទិញលក់ពិតប្រាកដនៅកម្ពុជា ដំណើរការដោយគណនី និងទិន្នន័យ Supabase។" name="description"/>
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
@@ -15,12 +15,14 @@
 <script>
 (function(){
   var allowed=['home','profile','seller','admin','product','store'];
-  var fromHash=String(window.location.hash||'').replace(/^#/,'');
-  var fromStorage='';
-  try{fromStorage=sessionStorage.getItem('ecomstore.activeView')||''}catch(e){}
-  var initial=allowed.includes(fromHash)?fromHash:(allowed.includes(fromStorage)?fromStorage:'home');
-  document.documentElement.dataset.initialView=initial;
-  document.documentElement.classList.add('route-restoring');
+  var rawHash=String(window.location.hash||'').replace(/^#/,'');
+  var parts=rawHash.split('/'),hashView=parts[0]||'',fromStorage='';
+  var productId=hashView==='product'?decodeURIComponent(parts.slice(1).join('/')):'';
+  var storeId=hashView==='store'?decodeURIComponent(parts.slice(1).join('/')):'';
+  try{fromStorage=sessionStorage.getItem('ecomstore.activeView')||'';if(!productId&&hashView==='product')productId=sessionStorage.getItem('ecomstore.currentProductId')||'';if(!storeId&&hashView==='store')storeId=sessionStorage.getItem('ecomstore.currentStoreId')||'';if(!productId&&fromStorage==='product')productId=sessionStorage.getItem('ecomstore.currentProductId')||'';if(!storeId&&fromStorage==='store')storeId=sessionStorage.getItem('ecomstore.currentStoreId')||''}catch(e){}
+  var initial=allowed.includes(hashView)?hashView:(allowed.includes(fromStorage)?fromStorage:'home');
+  if(initial==='product'&&!productId)initial='home';if(initial==='store'&&!storeId)initial='home';
+  document.documentElement.dataset.initialView=initial;document.documentElement.dataset.initialProductId=productId;document.documentElement.dataset.initialStoreId=storeId;document.documentElement.classList.add('route-restoring');
 })();
 </script>
 <style>
@@ -80,7 +82,7 @@ html.route-restoring[data-initial-view="store"] #view-store::before{content:"";d
 <section class="view" id="view-product">
   <div class="shell py-5 sm:py-7">
     <nav class="mb-4 flex items-center gap-2 text-[11px] text-slate-500"><button type="button" data-view="home" class="font-semibold hover:text-slate-900">ទំព័រដើម</button><span>/</span><span class="font-semibold text-slate-800">ព័ត៌មានទំនិញ</span></nav>
-    <div class="product-detail-page" id="productDetail"></div>
+    <div class="product-detail-page" id="productDetail" aria-live="polite"></div>
   </div>
 </section>
 <!-- PUBLIC STORE VIEW -->
@@ -297,6 +299,7 @@ html.route-restoring[data-initial-view="store"] #view-store::before{content:"";d
     <button class="brand-gradient rounded-xl px-4 py-3 text-[11px] font-bold text-white" type="submit">ផ្ញើ</button>
   </form>
 </section>
+<div class="product-lightbox" id="productLightbox" aria-hidden="true" role="dialog" aria-modal="true" aria-label="រូបភាពទំនិញ"><button type="button" class="product-lightbox-close" id="productLightboxClose" aria-label="បិទរូបភាព">×</button><button type="button" class="product-lightbox-nav prev" id="productLightboxPrev" aria-label="រូបមុន">‹</button><img id="productLightboxImage" alt="រូបភាពទំនិញពង្រីក"><button type="button" class="product-lightbox-nav next" id="productLightboxNext" aria-label="រូបបន្ទាប់">›</button><span class="product-lightbox-count" id="productLightboxCount"></span></div>
 <div aria-hidden="true" class="maintenance-overlay hidden" id="maintenanceOverlay"><div class="maintenance-glass-card"><div class="maintenance-gear-wrap"><span class="maintenance-gear">⚙</span><span class="maintenance-spark">✦</span></div><p class="maintenance-eyebrow">7INONE · SYSTEM UPDATE</p><h1>ប្រព័ន្ធកំពុងអភិវឌ្ឍន៍</h1><p class="maintenance-english">Under Development</p><p class="maintenance-message" id="maintenanceOverlayMessage"></p><div class="maintenance-progress"><span></span></div><a href="#" id="maintenanceAdminLogin">Admin Login</a></div></div><div class="maintenance-admin-pill hidden" id="maintenanceAdminPill">🛠 កំពុងស្ថិតក្នុងទម្រង់អភិវឌ្ឍន៍ (Admin Preview)</div>
 <div class="fixed bottom-5 right-5 z-[150] flex w-[min(92vw,360px)] flex-col gap-2" id="toastArea"></div>
 
