@@ -231,12 +231,12 @@ export function registerSellerChat(app, { supabase, authenticate, requireVendor,
       if (!process.env.TELEGRAM_BOT_TOKEN || !chatId) return fail(res, 503, 'មិនទាន់កំណត់ Telegram Storage សម្រាប់រូបភាពទេ។');
       const form = new FormData();
       form.append('chat_id', chatId);
-      form.append('photo', new Blob([file.buffer], { type: mimeType }), '7inone-chat-' + Date.now() + (mimeType==='image/png'?'.png':mimeType==='image/webp'?'.webp':'.jpg'));
-      const stored = await telegram('sendPhoto', { method: 'POST', body: form });
-      const media = Array.isArray(stored.photo) ? stored.photo[stored.photo.length-1] : null;
+      form.append('document', new Blob([file.buffer], { type: mimeType }), '7inone-chat-' + Date.now() + (mimeType==='image/png'?'.png':mimeType==='image/webp'?'.webp':'.jpg'));
+      const stored = await telegram('sendDocument', { method: 'POST', body: form });
+      const media = stored.document;
       if (!media?.file_id || !stored.message_id) throw new Error('Telegram did not return an image file_id.');
       const message = await saveMessage(conversation, req.user.id, conversation.current_role, {
-        body: '📷 រូបភាព', message_type: 'image', telegram_file_id: media.file_id, telegram_message_id: stored.message_id, mime_type: 'image/jpeg'
+        body: '📷 រូបភាព', message_type: 'image', telegram_file_id: media.file_id, telegram_message_id: stored.message_id, mime_type: mimeType
       }, '📷 រូបភាព');
       return res.status(201).json({ data: { message } });
     } catch (error) { console.error('Seller chat image upload failed:', error.message); return fail(res, 502, 'មិនអាចរក្សាទុក ឬផ្ញើរូបភាពទៅ Telegram បានទេ។'); }
