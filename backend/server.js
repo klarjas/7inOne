@@ -537,10 +537,21 @@ async function claimTelegramWidgetPayload(identity) {
     throw replay;
   }
   if (error) {
-    console.error('Telegram widget replay protection failed:', error.message);
-    const migration = new Error('Please run supabase/telegram_login_widget.sql in Supabase SQL Editor.');
-    migration.status = 503;
-    throw migration;
+    const dbError = {
+      code: clean(error.code, 40) || null,
+      message: clean(error.message, 500),
+      details: clean(error.details, 500) || null,
+      hint: clean(error.hint, 300) || null
+    };
+    console.error('Telegram widget replay protection insert failed:', dbError);
+
+    const missingSchema = ['42P01', 'PGRST205', '42703', 'PGRST204'].includes(dbError.code) ||
+      /relation .* does not exist|could not find the table|column .* does not exist|schema cache/i.test(dbError.message);
+    const failure = new Error(missingSchema
+      ? 'Supabase cannot find the Telegram Login database objects. Confirm the SQL was run in the same Supabase project used by SUPABASE_URL, then reload the API schema cache.'
+      : 'Telegram Login reached Supabase, but the database rejected the login verification record. Check the 7inOne Render server logs for “Telegram widget replay protection insert failed”.');
+    failure.status = 503;
+    throw failure;
   }
   void supabase.from(telegramWidgetAuthEventsTable).delete()
     .lt('expires_at', new Date().toISOString())
