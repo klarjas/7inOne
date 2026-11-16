@@ -824,6 +824,6 @@ body{background:var(--market-bg);color:var(--market-ink)}.shell{width:min(1440px
 @media(prefers-reduced-motion:reduce){.product-gallery-stage>img,.product-gallery-arrow,.product-gallery-thumb,.product-gallery-save{transition:none!important}}
 
 /* Khmer readability baseline: preserve legibility for compact labels and form controls. */
-small, label, .label { line-height: 1.5; }
+small, label, .label, .text-xs { line-height: 1.5; }
 input, select, textarea, .field { font-size: 14px; line-height: 1.5; }
 @media (max-width: 360px) { .shell, .product-detail-page, .product-details-grid, .seller-dashboard, .seller-chat-modal { min-width: 0; max-width: 100%; } }
