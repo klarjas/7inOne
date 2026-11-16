@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="km">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#f5f7fb">
+<title>7inOne · Codex Review Monitor</title>
+<style>
+:root{color-scheme:light;--bg:#f5f7fb;--card:#fff;--ink:#182230;--muted:#667085;--line:#e6eaf0;--blue:#3867e8;--green:#16834b;--amber:#a96508;--red:#c33232;--shadow:0 8px 28px #1822300a}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
+.wrap{max-width:1120px;margin:auto;padding:32px 22px 56px}.top{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:26px}
+.brand{display:flex;align-items:center;gap:13px}.mark{width:42px;height:42px;border-radius:13px;background:#182230;color:#fff;display:grid;place-items:center;font-weight:800;letter-spacing:-1px}.eyebrow{font-size:12px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}.title{font-size:25px;font-weight:760;letter-spacing:-.7px}
+.actions{display:flex;gap:10px;align-items:center}.btn{border:1px solid var(--line);background:#fff;color:var(--ink);padding:9px 14px;border-radius:10px;text-decoration:none;font-weight:650;cursor:pointer}.btn.primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px}.stat,.panel,.pr{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow)}.stat{padding:17px 19px}.stat small{color:var(--muted)}.stat strong{display:block;font-size:25px;margin-top:4px;letter-spacing:-.5px}
+.panel{padding:20px;margin-bottom:16px}.panel h2{font-size:16px;margin:0 0 13px}.legend{display:flex;gap:18px;flex-wrap:wrap;color:var(--muted);font-size:13px}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;background:#98a2b3}.dot.ok{background:var(--green)}.dot.wait{background:#d99424}.dot.bad{background:var(--red)}
+.pr{padding:20px;margin-bottom:15px}.pr-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.pr-title{font-size:18px;font-weight:730}.pr-sub{font-size:13px;color:var(--muted);margin-top:3px}.pill{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:99px;font-size:12px;font-weight:700;background:#f0f2f5;color:#596273;white-space:nowrap}.pill.ok{background:#e8f6ee;color:var(--green)}.pill.wait{background:#fff4df;color:var(--amber)}.pill.bad{background:#ffeded;color:var(--red)}
+.bar{height:7px;background:#edf0f5;border-radius:99px;overflow:hidden;margin:18px 0 15px}.bar span{display:block;height:100%;width:0;background:var(--blue);border-radius:99px;transition:width .25s}
+.steps{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}.step{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:7px}.step i{width:19px;height:19px;border-radius:50%;display:grid;place-items:center;background:#edf0f5;color:#778195;font-style:normal;font-size:11px;font-weight:800;flex:0 0 auto}.step.done{color:var(--green)}.step.done i{background:#e8f6ee;color:var(--green)}.step.active{color:var(--amber);font-weight:700}.step.active i{background:#fff0d2;color:var(--amber)}
+.details{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:18px}.detail{border:1px solid var(--line);border-radius:11px;padding:11px 12px;min-width:0}.detail small{display:block;color:var(--muted);font-size:11px}.detail b{display:block;font-size:13px;margin-top:3px;overflow-wrap:anywhere}
+.footer{color:var(--muted);font-size:12px;text-align:center;margin-top:24px}.error{color:var(--red);font-size:13px;margin-top:12px}.muted{color:var(--muted)}a{color:var(--blue)}
+@media(max-width:680px){.wrap{padding:22px 14px 40px}.summary{grid-template-columns:1fr 1fr}.summary .stat:last-child{grid-column:1/-1}.steps{grid-template-columns:1fr 1fr}.details{grid-template-columns:1fr 1fr}.pr-head{display:block}.pr-head .pill{margin-top:10px}.title{font-size:21px}}
+</style></head>
+<body><main class="wrap">
+<header class="top"><div class="brand"><div class="mark">7i</div><div><div class="eyebrow">7inOne · Engineering</div><div class="title">Codex Review Monitor</div></div></div>
+<div class="actions"><span id="updated" class="muted">កំពុងភ្ជាប់…</span><button class="btn primary" id="refresh">↻ Refresh</button></div></header>
+<section class="summary">
+<div class="stat"><small>Open pull requests</small><strong id="openCount">—</strong></div>
+<div class="stat"><small>Codex reviews completed</small><strong id="reviewCount">—</strong></div>
+<div class="stat"><small>Ready to merge</small><strong id="readyCount">—</strong></div>
+</section>
+<section class="panel"><h2>របៀបអានស្ថានភាព</h2><div class="legend"><span><i class="dot ok"></i>បានបញ្ចប់ / Passed</span><span><i class="dot wait"></i>កំពុងដំណើរការ / Waiting</span><span><i class="dot bad"></i>មានបញ្ហា / Blocked</span></div></section>
+<div id="cards"><section class="panel">កំពុងទាញយកស្ថានភាព PR ពី GitHub…</section></div>
+<section class="panel"><h2>សុវត្ថិភាព និងដែនកំណត់</h2><div class="muted">Dashboard នេះអានតែព័ត៌មានសាធារណៈពី GitHub API ប៉ុណ្ណោះ។ វាមិនមាន GitHub token ឬ Secret ទេ ហើយមិនអាច Merge, កែ Code, Deploy Render ឬដំណើរការ Supabase Migration បានឡើយ។ ស្ថានភាព Codex បង្ហាញតាម Review status comment ដែល Codex បញ្ចេញក្នុង PR។</div></section>
+<div class="footer">Auto refresh every 30 seconds · Data source: GitHub · <a href="https://github.com/klarjas/7inOne" target="_blank" rel="noopener">Open repository</a></div>
+</main>
+<script>
+const OWNER='klarjas',REPO='7inOne',PULLS=[{n:14,label:'Product Detail'},{n:16,label:'Seller Dashboard'}],API='https://api.github.com';
+const el=id=>document.getElementById(id);
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+async function get(path){const r=await fetch(API+path,{headers:{Accept:'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'}});if(!r.ok)throw Error('GitHub API '+r.status+' · '+path);return r.json();}
+function latestCodex(comments){let found=null;for(const c of comments||[]){const body=c.body||'';if(!body.includes('codex-review-state:v1'))continue;const m=body.match(/<!--\s*codex-review-state:v1\s*(\{[\s\S]*?\})\s*-->/);if(!m)continue;try{const obj=JSON.parse(m[1]);if(obj.code_review)found={...obj.code_review,created_at:c.created_at,html_url:c.html_url};}catch{}}return found;}
+function status(label,kind){return '<span class="pill '+kind+'">'+label+'</span>'}
+async function loadOne(item){
+ const [pr,comments]=await Promise.all([get('/repos/'+OWNER+'/'+REPO+'/pulls/'+item.n),get('/repos/'+OWNER+'/'+REPO+'/issues/'+item.n+'/comments?per_page=100')]);
+ const codex=latestCodex(comments);let checks={total_count:0,check_runs:[]};try{checks=await get('/repos/'+OWNER+'/'+REPO+'/commits/'+pr.head.sha+'/check-runs?per_page=100')}catch{}
+ const runs=checks.check_runs||[];const bad=runs.some(x=>x.conclusion==='failure'||x.conclusion==='cancelled'||x.conclusion==='timed_out');const pending=runs.some(x=>x.status!=='completed');
+ const exact=!!codex&&codex.commit_sha===pr.head.sha;const reviewed=exact&&codex.status==='completed';const clean=reviewed&&codex.has_any_findings===false&&codex.has_unresolved_findings===false;
+ const ciOk=runs.length>0&&!bad&&!pending&&runs.every(x=>x.conclusion==='success'||x.conclusion==='neutral'||x.conclusion==='skipped');
+ const noCI=runs.length===0;const unresolved=pr.review_comments??0;const merged=pr.merged||pr.state==='closed'&&pr.merged_at;
+ const ready=clean&&ciOk&&pr.mergeable===true&&!merged;
+ let stage=merged?5:clean&&ciOk&&pr.mergeable===true?5:bad||codex?.has_any_findings===true||codex?.has_unresolved_findings===true?3:reviewed?3:codex?.status==='running'?2:1;
+ const pct=merged?100:ready?100:stage*20;
+ const pill=merged?status('Merged','ok'):ready?status('Ready to merge','ok'):bad||codex?.has_any_findings===true?status('Blocked','bad'):codex?.status==='running'?status('Codex កំពុង Review','wait'):status('កំពុងរង់ចាំ','wait');
+ const steps=[['Code submitted',stage>=1],['Codex review',reviewed],['Findings checked',clean],['CI checks',ciOk],['Merge gate',ready||merged]];
+ const stepHtml=steps.map((s,i)=>'<div class="step '+(s[1]?'done':i===Math.min(stage,4)?'active':'')+'"><i>'+(s[1]?'✓':i+1)+'</i>'+s[0]+'</div>').join('');
+ const reviewText=!codex?'មិនទាន់មាន Codex status':!exact?'Review មិនទាន់ត្រូវនឹង SHA បច្ចុប្បន្ន':codex.status==='running'?'កំពុង Review':clean?'Completed · No findings':reviewed?(codex.has_any_findings?'មាន Findings':'ត្រូវការត្រួតពិនិត្យ'):codex.status||'Unknown';
+ const ciText=bad?'Failed':pending?'Running':ciOk?'Passed':noCI?'No checks found':'Incomplete';
+ return {html:'<article class="pr"><div class="pr-head"><div><div class="pr-title">PR #'+item.n+' · '+esc(pr.title||item.label)+'</div><div class="pr-sub">'+esc(pr.head.ref)+' → '+esc(pr.base.ref)+' · SHA '+esc(pr.head.sha.slice(0,8))+'</div></div>'+pill+'</div><div class="bar"><span style="width:'+pct+'%"></span></div><div class="steps">'+stepHtml+'</div><div class="details"><div class="detail"><small>Codex Review</small><b>'+esc(reviewText)+'</b></div><div class="detail"><small>GitHub Actions</small><b>'+esc(ciText)+' · '+runs.length+' checks</b></div><div class="detail"><small>Mergeable</small><b>'+esc(pr.mergeable===true?'Yes':pr.mergeable===false?'No / Conflict':'Unknown')+'</b></div></div><div class="pr-sub" style="margin-top:13px">Latest SHA review: '+(exact?'✓ matches current commit':'⚠ not confirmed')+' · '+(codex?.created_at?new Date(codex.created_at).toLocaleString():'No review timestamp')+'</div><div style="margin-top:14px"><a href="'+esc(pr.html_url)+'" target="_blank" rel="noopener">Open PR #'+item.n+' on GitHub ↗</a> · <a href="'+esc(pr.html_url+'/checks')+'" target="_blank" rel="noopener">View checks ↗</a></div></article>',ready,reviewed,open:pr.state==='open',merged};}
+async function refresh(){el('refresh').disabled=true;try{const rows=await Promise.all(PULLS.map(loadOne));el('cards').innerHTML=rows.map(x=>x.html).join('');el('openCount').textContent=rows.filter(x=>x.open).length;el('reviewCount').textContent=rows.filter(x=>x.reviewed).length;el('readyCount').textContent=rows.filter(x=>x.ready).length;el('updated').textContent='Updated '+new Date().toLocaleTimeString();}catch(e){el('cards').innerHTML='<section class="panel"><b>មិនអាចទាញទិន្នន័យបានទេ</b><div class="error">'+esc(e.message)+'</div><div class="muted">ពិនិត្យ Internet ឬ GitHub API rate limit រួចចុច Refresh ម្ដងទៀត។</div></section>';el('updated').textContent='Update failed';}finally{el('refresh').disabled=false;}}
+el('refresh').addEventListener('click',refresh);refresh();setInterval(refresh,30000);
+</script></body></html>
