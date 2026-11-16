@@ -2,14 +2,17 @@
 const iconPaths={
  bag:'<path d="M5 8h14l1 13H4L5 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>',search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>',plus:'<path d="M12 5v14M5 12h14"/>',bell:'<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/>',chev:'<path d="m7 10 5 5 5-5"/>',x:'<path d="m18 6-12 12M6 6l12 12"/>',heart:'<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z"/>',pin:'<path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',shield:'<path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z"/><path d="m9 12 2 2 4-4"/>',check:'<path d="m5 12 4 4L19 6"/>',chat:'<path d="M21 11.5a8.5 8.5 0 0 1-9 8.5 9.7 9.7 0 0 1-4-.8L3 21l1.8-4.5A8.2 8.2 0 0 1 3 11.5 8.5 8.5 0 0 1 12 3a8.5 8.5 0 0 1 9 8.5Z"/>',tag:'<path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8Z"/><circle cx="7.5" cy="7.5" r="1"/>',arrow:'<path d="M5 12h14m-7-7 7 7-7 7"/>',grid:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',phone:'<rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/>',car:'<path d="m5 17-1 2v2h2v-2h12v2h2v-2l-1-2"/><path d="m4 17 1.5-6h13L20 17M7 11l1.5-4h7L17 11M7 17h.01M17 17h.01"/>',home:'<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-6v-7h-4v7H4a1 1 0 0 1-1-1Z"/>',shirt:'<path d="m16 4 5 3-3 4-2-1v10H8V10l-2 1-3-4 5-3 2 2h4z"/>',sofa:'<path d="M4 11V7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v4M3 12a2 2 0 0 1 4 0v3h10v-3a2 2 0 0 1 4 0v5H3zM5 17v3m14-3v3"/>',user:'<path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="8" r="4"/>',mic:'<rect x="9" y="2" width="6" height="13" rx="3"/><path d="M5 10a7 7 0 0 0 14 0m-7 7v5m-4 0h8"/>',camera:'<path d="M14 5 12.5 3h-5L6 5H3v14h18V5z"/><circle cx="12" cy="12" r="3.5"/>',image:'<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/>',eye:'<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>',star:'<path d="m12 3 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9Z"/>',send:'<path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>',store:'<path d="M3 10h18l-1 11H4L3 10Z"/><path d="m3 10 2-7h14l2 7M8 10v3m8-3v3"/>',wallet:'<path d="M4 6h15a2 2 0 0 1 2 2v11H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14"/><path d="M21 11h-5a2 2 0 0 0 0 4h5"/>',file:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h8"/>',trash:'<path d="M3 6h18M8 6V4h8v2m3 0-1 15H6L5 6m4 4v7m6-7v7"/>',edit:'<path d="m16 4 4 4M4 20l4-.8L19 8a2.8 2.8 0 0 0-4-4L4 15z"/>',checkcircle:'<circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16 9"/>',logout:'<path d="M10 17l5-5-5-5m5 5H3"/><path d="M12 3h7a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-7"/>',spark:'<path d="m12 3 1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8Z"/><path d="m19 14 1.2 2.8L23 18l-2.8 1.2L19 22l-1.2-2.8L15 18l2.8-1.2Z"/>',bookmark:'<path d="M6 4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18l-6-4-6 4z"/>',users:'<path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M20 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',chart:'<path d="M3 3v18h18M8 15l4-4 3 3 6-7"/>',briefcase:'<rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7V4h8v3M3 12h18m-11 0v2h4v-2"/>'
 };
-Object.assign(iconPaths,{play:'<path d="m8 5 11 7-11 7z"/>',pause:'<path d="M8 5h3v14H8zM15 5h3v14h-3z"/>',volume:'<path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7m3-10a9 9 0 0 1 0 13"/>',volumeOff:'<path d="M11 5 6 9H3v6h3l5 4z"/><path d="m16 9 5 6m0-6-5 6"/>',lock:'<rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 1 1 8 0v3"/>',external:'<path d="M14 4h6v6m0-6-9 9"/><path d="M18 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h6"/>'});
+Object.assign(iconPaths,{calendar:'<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',refresh:'<path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/>',package:'<path d="m12 3 9 5-9 5-9-5 9-5Z"/><path d="M3 8v9l9 5 9-5V8M12 13v9M7.5 5.5l9 5"/>',truck:'<path d="M3 6h11v12H3zM14 10h4l3 3v5h-7z"/><circle cx="7.5" cy="18" r="2"/><circle cx="17.5" cy="18" r="2"/>',play:'<path d="m8 5 11 7-11 7z"/>',pause:'<path d="M8 5h3v14H8zM15 5h3v14h-3z"/>',volume:'<path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7m3-10a9 9 0 0 1 0 13"/>',volumeOff:'<path d="M11 5 6 9H3v6h3l5 4z"/><path d="m16 9 5 6m0-6-5 6"/>',lock:'<rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 1 1 8 0v3"/>',external:'<path d="M14 4h6v6m0-6-9 9"/><path d="M18 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h6"/>'});
 const $=id=>document.getElementById(id);
 const ic=(name,size=17,extra='')=>`<svg aria-hidden="true" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="${extra}">${iconPaths[name]||iconPaths.spark}</svg>`;
+document.querySelectorAll('[data-seller-icon]').forEach(node=>{node.innerHTML=ic(node.dataset.sellerIcon,16)});
+if($('addProductIcon'))$('addProductIcon').innerHTML=ic('plus',15);
 const CAT={phones:'ទូរស័ព្ទ & អេឡិចត្រូនិក',vehicles:'រថយន្ត & ម៉ូតូ',property:'អចលនទ្រព្យ',fashion:'សម្លៀកបំពាក់',furniture:'គ្រឿងសង្ហារិម'};
 const CATICON={all:'grid',phones:'phone',vehicles:'car',property:'home',fashion:'shirt',furniture:'sofa'};
 let currentStoreId=null,currentStoreData=null,currentStoreProducts=[],currentStoreCategory='all',currentStoreSearch='';
-let productGalleryIndex=0,productLightboxOpen=false,scrollSaveTimer=null,routeSyncGuardKey='',routeSyncGuardTimer=null,routeSyncNavigationId=0;
-let siteBranding={siteTitle:'7inOne',siteSubtitle:'ផ្សារទិញលក់កម្ពុជា',heroBadge:'ផ្សារអនឡាញសម្រាប់អ្នកទាំងអស់គ្នា',heroTitle:'ទិញលក់ងាយៗ នៅជិតអ្នក',heroSubtitle:'ស្វែងរកទំនិញដែលអ្នកស្រឡាញ់ ឬដាក់លក់របស់ដែលអ្នកមិនប្រើ។ ភ្ជាប់អ្នកទិញ និងអ្នកលក់នៅទូទាំងប្រទេសកម្ពុជា។',siteLogoUrl:'',heroImages:[]},brandingLogoPreviewUrl=null,brandingHeroPreviewUrls=[],siteBrandingRefreshTimer=null;
+let productGalleryIndex=0,productLightboxOpen=false,scrollSaveTimer=null,routeSyncGuardKey='',routeSyncGuardTimer=null;
+let sellerProductCache=[],sellerActiveFilter='all',sellerActiveTab='products';
+let siteBranding={siteTitle:'7inOne',siteSubtitle:'ផ្សារទិញលក់កម្ពុជា',heroBadge:'ផ្សារអនឡាញសម្រាប់អ្នកទាំងអស់គ្នា',heroTitle:'ទិញលក់ងាយៗ នៅជិតអ្នក',heroSubtitle:'ស្វែងរកទំនិញដែលអ្នកស្រឡាញ់ ឬដាក់លក់របស់ដែលអ្នកមិនប្រើ។ ភ្ជាប់អ្នកទិញ និងអ្នកលក់នៅទូទាំងប្រទេសកម្ពុជា។',siteLogoUrl:'',faviconUrl:'',heroImages:[]},brandingLogoPreviewUrl=null,brandingFaviconPreviewUrl=null,brandingHeroPreviewUrls=[],siteBrandingRefreshTimer=null;
 let supabaseClient=null,session=null,sessionRefreshPromise=null,me=null,routeAccessReady=false,supportChatPollTimer=null,adminChatPollTimer=null,activeAdminChatId=null,restoredUserChatArchives={},restoredAdminChatArchives={},pendingPhone=null,products=[],savedIds=new Set(),favoritePending=new Set(),activeCategory='all',searchTerm='',currentProduct=null,currentVendor=null,profileTab='saved',authMode='login',currentOfferProduct=null,selectedProductImages=[],sellerDocPreviewUrl=null,telegramBotUsername='',telegramLoginWidgetMounted=false,telegramProfileWidgetMounted=false,productRealtimeChannel=null,productRealtimeRefreshTimer=null,productRealtimeFallbackTimer=null,productRealtimePendingRefresh=false,sellerChatChannel=null,sellerChatPollTimer=null,sellerInboxPollTimer=null,sellerChatConversationId=null,sellerChatInboxPollTimer=null,sellerChatMode='buyer',sellerChatInbox=[],sellerChatMuted=false,sellerChatRecorder=null,sellerChatDiscardRecording=false,sellerChatRecordChunks=[],sellerChatRecordStartedAt=0,sellerChatRecordTimer=null,sellerChatLastMessageId=null,sellerChatInboxUnreadSnapshot={},sellerChatInboxInitialized=false,sellerChatInboxUserId=null,sellerChatAudioUrls=new Set(),sellerChatLoadedMessages=[],sellerChatPendingVoices=[],sellerChatPendingMedia=[],sellerChatPointerDown=false,sellerChatPointerStartY=0,sellerChatRecordingLocked=false,sellerChatIgnoreNextClick=false;
 const DEFAULT_MAINTENANCE_MESSAGE='ប្រព័ន្ធកំពុងធ្វើការអភិវឌ្ឍន៍ និងបន្ថែមមុខងារថ្មីៗ សូមអធ្យាស្រ័យចំពោះការរំខាន!';let maintenanceMode=false,maintenanceMessage=DEFAULT_MAINTENANCE_MESSAGE,faviconUrl='';
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -78,7 +81,8 @@ function applySiteBranding(data={}){
   siteBranding={...siteBranding,...data};
   const title=String(siteBranding.siteTitle||'7inOne');
   const subtitle=String(siteBranding.siteSubtitle||'ផ្សារទិញលក់កម្ពុជា');
-  const logo=String(siteBranding.siteLogoUrl||siteBranding.faviconUrl||'');
+  const logo=String(siteBranding.siteLogoUrl||'');
+  const favicon=String(siteBranding.faviconUrl||'');
   document.title=title+' · '+subtitle;
   if($('siteTitle'))$('siteTitle').textContent=title;
   if($('siteSubtitle'))$('siteSubtitle').textContent=subtitle;
@@ -95,7 +99,7 @@ function applySiteBranding(data={}){
     if(logo)footerMark.innerHTML='<img src="'+esc(logo)+'" alt="" class="h-full w-full object-contain rounded-lg bg-white p-1">';
     else footerMark.textContent='7';
   }
-  if(logo)applyFavicon(logo);
+  if(favicon)applyFavicon(favicon);
   const textMap=[['heroBadge','heroBadge'],['heroTitle','heroTitle'],['heroSubtitle','heroSubtitle']];
   for(const [id,key] of textMap)if($(id))$(id).textContent=String(siteBranding[key]||'');
   const images=Array.isArray(siteBranding.heroImages)?siteBranding.heroImages.slice(0,3):[];
@@ -119,6 +123,10 @@ function brandingPreviewLogo(url){
   const target=$('brandLogoPreview');if(!target)return;
   target.innerHTML=url?'<img src="'+esc(url)+'" alt="" />':'<span>7</span>';
 }
+function brandingPreviewFavicon(url){
+  const target=$('brandFaviconPreview');if(!target)return;
+  target.innerHTML=url?'<img src="'+esc(url)+'" alt="" />':'<span>7</span>';
+}
 function renderBrandingAdmin(){
   if(!isAdmin())return;
   const b=siteBranding;
@@ -133,6 +141,7 @@ function renderBrandingAdmin(){
   $('brandHeroPreviewTitle').textContent=b.heroTitle||'';
   $('brandHeroPreviewSubtitle').textContent=b.heroSubtitle||'';
   brandingPreviewLogo(b.siteLogoUrl||'');
+  brandingPreviewFavicon(b.faviconUrl||'');
   renderBrandingHeroPreviews();
   $('brandingStatus').textContent=b.siteLogoUrl?'Logo និង Brand បច្ចុប្បន្នបានផ្ទុកពី Database។':'កំពុងប្រើ Brand Logo លំនាំដើម។';
 }
@@ -311,30 +320,20 @@ function saveAction(productId,button=null){
   });
 }
 function renderStars(value,size=15){return `<span class="inline-flex items-center gap-0.5 text-amber-500">${[1,2,3,4,5].map(n=>`<span class="${n<=Math.round(Number(value||0))?'':'text-slate-200'}">★</span>`).join('')}</span>`}
-function isRouteSyncRequestCurrent(options={}){return options.routeSyncNavigationId==null||options.routeSyncNavigationId===routeSyncNavigationId}
 async function openProduct(id,options={}){
  if(!id){toast('មិនមានលេខសម្គាល់ទំនិញទេ។','warning');return false}
  const productId=String(id);
- const isCurrent=()=>isRouteSyncRequestCurrent(options);
  try{
   if(session){try{await loadOrders()}catch(error){console.warn('Could not refresh review eligibility:',error)}}
-  if(!isCurrent())return false;
   try{sessionStorage.setItem('ecomstore.currentProductId',productId);sessionStorage.setItem('ecomstore.activeView','product')}catch{}
   $('productDetail').setAttribute('aria-busy','true');
   $('productDetail').innerHTML='<div class="product-detail-skeleton"><div class="skeleton product-detail-skeleton-image"></div><div class="product-detail-skeleton-copy"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div></div>';
-  const result=await api('/api/products/'+encodeURIComponent(productId));
-  if(!isCurrent())return false;
-  const product=result.data;if(!product)throw new Error('មិនមានព័ត៌មានទំនិញនេះទេ។');
-  const trust=await api('/api/vendors/'+encodeURIComponent(product.vendor_id)+'/ratings');
-  if(!isCurrent())return false;
-  currentProduct=product;currentVendor=trust.data;productGalleryIndex=0;
+  const result=await api('/api/products/'+encodeURIComponent(productId));currentProduct=result.data;
+  if(!currentProduct)throw new Error('មិនមានព័ត៌មានទំនិញនេះទេ។');
+  const trust=await api('/api/vendors/'+encodeURIComponent(currentProduct.vendor_id)+'/ratings');currentVendor=trust.data;productGalleryIndex=0;
   await showView('product',{preserveScroll:Boolean(options.preserveScroll)});
-  if(!isCurrent())return false;
   $('productDetail').removeAttribute('aria-busy');$('productDetail').classList.remove('detail-loaded');requestAnimationFrame(()=> $('productDetail')?.classList.add('detail-loaded'));return true;
- }catch(error){
-  if(!isCurrent())return false;
-  const target=$('productDetail');if(target){target.removeAttribute('aria-busy');target.innerHTML='<div class="route-load-error"><span>'+ic('alert',24)+'</span><b>មិនអាចទាញយកទំនិញនេះបានទេ</b><p>'+esc(error.message||'សូមព្យាយាមម្ដងទៀត។')+'</p><button type="button" class="brand-gradient" onclick="location.reload()">ព្យាយាមម្ដងទៀត</button></div>'}toast(error.message,'error');return false
- } 
+ }catch(error){const target=$('productDetail');if(target){target.removeAttribute('aria-busy');target.innerHTML='<div class="route-load-error"><span>'+ic('alert',24)+'</span><b>មិនអាចទាញយកទំនិញនេះបានទេ</b><p>'+esc(error.message||'សូមព្យាយាមម្ដងទៀត។')+'</p><button type="button" class="brand-gradient" onclick="location.reload()">ព្យាយាមម្ដងទៀត</button></div>'}toast(error.message,'error');return false}
 }
 function renderProductDetail(){
  const p=currentProduct,v=currentVendor;if(!p||!v)return;
@@ -356,8 +355,8 @@ function renderProductDetail(){
  <div class="product-mobile-actions" aria-label="សកម្មភាពទំនិញ"><button type="button" data-product-action="chat">${ic('chat',17)}<span>ឆាត</span></button><button type="button" data-product-action="offer">${ic('tag',17)}<span>តថ្លៃ</span></button><button type="button" class="brand-gradient" data-product-action="buy">${ic('bag',17)}<span>ទិញឥឡូវនេះ</span></button></div>`;
  markLoadedImages($('productDetail'));
  $('productDetail').querySelectorAll('[data-vendor-avatar-image]').forEach(image=>image.addEventListener('error',()=>{const box=image.closest('[data-vendor-avatar]');if(box){box.classList.add('is-failed');box.innerHTML=avatarFallbackMarkup(box.dataset.vendorAvatar||'')}},{once:true}));
- const updateGallery=index=>{if(!images.length)return;productGalleryIndex=(index+images.length)%images.length;const image=images[productGalleryIndex],main=$('productMainImage');if(main){main.classList.add('is-switching');const next=new Image();next.onload=()=>{main.src=image.image_url;main.classList.remove('is-switching','is-image-failed');main.closest('.product-gallery-main')?.classList.remove('is-failed');main.closest('.product-gallery-main')?.querySelector('.product-main-image-fallback')?.remove()};next.onerror=()=>main.classList.remove('is-switching');next.src=image.image_url}$('productGalleryThumbs')?.querySelectorAll('[data-image]').forEach(button=>button.classList.toggle('active',Number(button.dataset.image)===productGalleryIndex));const counter=$('productDetail').querySelector('.product-gallery-counter');if(counter)counter.textContent=(productGalleryIndex+1)+' / '+images.length;if(productLightboxOpen)updateProductLightbox()};
- $('productDetail').querySelectorAll('[data-image]').forEach(button=>button.addEventListener('click',()=>updateGallery(Number(button.dataset.image))));$('productDetail').querySelectorAll('[data-gallery-step]').forEach(button=>button.addEventListener('click',()=>updateGallery(productGalleryIndex+Number(button.dataset.galleryStep))));$('productDetail').querySelector('.product-gallery-main')?.addEventListener('click',event=>{if(event.target.closest('[data-gallery-zoom]'))openProductLightbox()});
+ const updateGallery=index=>{if(!images.length)return;productGalleryIndex=(index+images.length)%images.length;const image=images[productGalleryIndex],main=$('productMainImage');if(main){main.classList.add('is-switching');const next=new Image();next.onload=()=>{main.src=image.image_url;main.classList.remove('is-switching')};next.onerror=()=>main.classList.remove('is-switching');next.src=image.image_url}$('productGalleryThumbs')?.querySelectorAll('[data-image]').forEach(button=>button.classList.toggle('active',Number(button.dataset.image)===productGalleryIndex));const counter=$('productDetail').querySelector('.product-gallery-counter');if(counter)counter.textContent=(productGalleryIndex+1)+' / '+images.length;if(productLightboxOpen)updateProductLightbox()};
+ $('productDetail').querySelectorAll('[data-image]').forEach(button=>button.addEventListener('click',()=>updateGallery(Number(button.dataset.image))));$('productDetail').querySelectorAll('[data-gallery-step]').forEach(button=>button.addEventListener('click',()=>updateGallery(productGalleryIndex+Number(button.dataset.galleryStep))));$('productDetail').querySelector('[data-gallery-zoom]')?.addEventListener('click',openProductLightbox);
  const action=kind=>{if(kind==='store')void openStorefront(v.id);if(kind==='buy')openCheckout(p);if(kind==='save'){const button=$('productDetail').querySelector('[data-product-action="save"]');if(button)saveAction(p.id,button)}if(kind==='offer'){if(!requireLogin())return;currentOfferProduct=p;$('offerProductName').textContent=p.title+' · '+money(p.price);$('offerAmount').value=p.price;openModal('offerModal')}if(kind==='chat')void startBuyerSellerChat(p.id)};
  $('productDetail').querySelectorAll('[data-product-action]').forEach(button=>button.addEventListener('click',()=>action(button.dataset.productAction)));
  $('productDetail').querySelector('.product-related-grid')?.addEventListener('click',event=>{const save=event.target.closest('[data-action="save"]');if(save){event.preventDefault();event.stopPropagation();saveAction(save.dataset.id,save);return}const view=event.target.closest('[data-action="view"]');if(view){void openProduct(view.dataset.id);return}const store=event.target.closest('[data-action="store"]');if(store)void openStorefront(store.dataset.vendorId)});
@@ -367,23 +366,18 @@ function renderProductDetail(){
 function updateProductLightbox(){const images=(currentProduct?.product_images||[]).filter(item=>item.image_url),image=images[productGalleryIndex];if(!image)return;$('productLightboxImage').src=image.image_url;$('productLightboxCount').textContent=(productGalleryIndex+1)+' / '+images.length}
 function openProductLightbox(){if(!(currentProduct?.product_images||[]).some(item=>item.image_url))return;productLightboxOpen=true;updateProductLightbox();$('productLightbox').classList.add('open');$('productLightbox').setAttribute('aria-hidden','false')}
 function closeProductLightbox(){productLightboxOpen=false;$('productLightbox').classList.remove('open');$('productLightbox').setAttribute('aria-hidden','true')}
-function openSellerChatImageLightbox(src){if(!src)return;const viewer=$('sellerChatImageLightbox'),image=$('sellerChatImageLightboxImage');if(!viewer||!image)return;image.src=src;viewer.classList.add('open');viewer.setAttribute('aria-hidden','false')}
-function closeSellerChatImageLightbox(){const viewer=$('sellerChatImageLightbox'),image=$('sellerChatImageLightboxImage');if(!viewer)return;viewer.classList.remove('open');viewer.setAttribute('aria-hidden','true');if(image)image.removeAttribute('src')}
 
 async function openStorefront(vendorId,options={}){
  if(!vendorId){toast('មិនមានព័ត៌មានហាងនេះទេ។','warning');return false}
- const storeId=String(vendorId),isCurrent=()=>isRouteSyncRequestCurrent(options);
- currentStoreCategory='all';currentStoreSearch='';
+ currentStoreId=String(vendorId);currentStoreCategory='all';currentStoreSearch='';
  const storeTarget=$('storefrontContent');if(storeTarget){storeTarget.setAttribute('aria-busy','true');storeTarget.innerHTML='<div class="storefront-skeleton"><div class="skeleton storefront-skeleton-profile"></div><div class="storefront-skeleton-grid">'+Array.from({length:10},()=>'<div class="storefront-skeleton-card"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>').join('')+'</div></div>'}
  try{
-  try{sessionStorage.setItem('ecomstore.currentStoreId',storeId);sessionStorage.setItem('ecomstore.activeView','store')}catch{}
-  const [result,catalogue]=await Promise.all([api('/api/vendors/'+encodeURIComponent(storeId)+'/ratings'),api('/api/products?page=1&limit=50')]);
-  if(!isCurrent())return false;
-  const storeData=result.data||null;if(!storeData)throw new Error('មិនមានព័ត៌មានហាងទេ។');
-  currentStoreId=storeId;currentStoreData=storeData;currentStoreProducts=(catalogue.data||[]).filter(p=>String(p.vendor_id)===storeId);
-  await showView('store',{preserveScroll:Boolean(options.preserveScroll)});
-  return isCurrent();
- }catch(error){if(!isCurrent())return false;const target=$('storefrontContent');if(target){target.removeAttribute('aria-busy');target.innerHTML='<div class="route-load-error"><span>'+ic('alert',24)+'</span><b>មិនអាចបើកហាងនេះបានទេ</b><p>'+esc(error.message||'សូមព្យាយាមម្ដងទៀត។')+'</p><button type="button" class="brand-gradient" onclick="location.reload()">ព្យាយាមម្ដងទៀត</button></div>'}toast(error.message,'error');return false}
+  try{sessionStorage.setItem('ecomstore.currentStoreId',currentStoreId);sessionStorage.setItem('ecomstore.activeView','store')}catch{}
+  const [result,catalogue]=await Promise.all([api('/api/vendors/'+encodeURIComponent(currentStoreId)+'/ratings'),api('/api/products?page=1&limit=50')]);
+  currentStoreData=result.data||null;currentStoreProducts=(catalogue.data||[]).filter(p=>String(p.vendor_id)===currentStoreId);
+  if(!currentStoreData)throw new Error('មិនមានព័ត៌មានហាងទេ។');
+  await showView('store',{preserveScroll:Boolean(options.preserveScroll)});return true;
+ }catch(error){const target=$('storefrontContent');if(target){target.removeAttribute('aria-busy');target.innerHTML='<div class="route-load-error"><span>'+ic('alert',24)+'</span><b>មិនអាចបើកហាងនេះបានទេ</b><p>'+esc(error.message||'សូមព្យាយាមម្ដងទៀត។')+'</p><button type="button" class="brand-gradient" onclick="location.reload()">ព្យាយាមម្ដងទៀត</button></div>'}toast(error.message,'error');return false}
 }
 function renderStorefront(){
   const data=currentStoreData;if(!data)return;
@@ -570,16 +564,93 @@ function ensureCheckoutModal(){
 function openCheckout(p){if(!requireLogin())return;if(!p||Number(p.stock)<=0){toast('ទំនិញនេះអស់ស្តុកហើយ។','warning');return}ensureCheckoutModal();$('checkoutProductName').textContent=p.title;$('checkoutTotal').textContent=money(p.price);$('checkoutName').value=me?.profile?.display_name||session?.user?.user_metadata?.display_name||'';$('checkoutPhone').value=me?.profile?.phone||session?.user?.phone||'';$('checkoutAddress').value='';$('checkoutNote').value='';openModal('checkoutModal')}
 function openSellerModal(){if(!requireLogin())return;if(me?.vendor&&me.vendor.status!=='rejected'){toast(me.vendor.status==='approved'?'ហាងរបស់អ្នកបានផ្ទៀងផ្ទាត់រួចហើយ។':'ពាក្យរបស់អ្នកកំពុងរង់ចាំការផ្ទៀងផ្ទាត់។','warning');return}$('sellerApplyForm').reset();$('sellerDocName').textContent='ចុចដើម្បី Upload ឯកសារ';$('sellerDocThumb').innerHTML=ic('file',23);$('sellerDocPreview').classList.add('hidden');openModal('sellerModal')}
 function renderProductForm(product=null){if(!isVerifiedSeller()){if(me?.vendor?.status==='pending'){toast('ហាងកំពុងរង់ចាំ Admin អនុម័ត។','warning')}else openSellerModal();return}selectedProductImages=[];$('productForm').reset();$('editProductId').value=product?.id||'';$('productFormTitle').textContent=product?'កែប្រែព័ត៌មានទំនិញ':'បន្ថែមទំនិញថ្មី';$('productImageName').textContent='ជ្រើសរើសរូបភាពផលិតផល (អតិបរមា ៥ រូប)';$('productImageThumb').classList.remove('img-scan-wrap','shimmer-scan','is-loaded','is-failed');$('productImageThumb').innerHTML=ic('image',21);$('productImage').value='';if(product){$('productTitle').value=product.title;$('productPrice').value=product.price;$('productCategory').value=product.category;$('productLocation').value=product.location||'ភ្នំពេញ';$('productCondition').value=product.condition||'ប្រើរួចស្អាត';const descriptions=productDescriptionParts(product);$('productShortDesc').value=descriptions.short;$('productDescription').value=descriptions.full;const image=productImage(product);if(image){$('productImageThumb').classList.add('img-scan-wrap','shimmer-scan');$('productImageThumb').innerHTML=`<img class="h-full w-full object-cover" src="${esc(image)}">`;markLoadedImages($('productImageThumb'));}$('productImageName').textContent=product.product_images?.length?`${product.product_images.length} រូបដែលបាន Upload រួច`:'មិនទាន់មានរូបភាព'}updateShortDescriptionCounter();openModal('productFormModal')}
-async function renderSeller(){if(!isVerifiedSeller()){const v=me?.vendor;$('sellerGate').classList.remove('hidden');$('sellerDashboardContent').classList.add('hidden');$('sellerGateText').textContent=v?`ស្ថានភាពហាង៖ ${vendorStatus(v.status)}។ ${v.status==='rejected'?'សូមពិនិត្យមតិ Admin នៅក្នុងគណនីរបស់អ្នក។':'សូមរង់ចាំ Admin ពិនិត្យឯកសាររបស់អ្នក។'}`:'សូមចុះឈ្មោះ និងរង់ចាំ Admin ផ្ទៀងផ្ទាត់ឯកសារមុនពេលបង្ហោះទំនិញ។';$('sellerGateApply').textContent=v?.status==='pending'?'កំពុងរង់ចាំការអនុម័ត':'ចុះឈ្មោះអ្នកលក់';$('sellerGateApply').disabled=v?.status==='pending';return}$('sellerGate').classList.add('hidden');$('sellerDashboardContent').classList.remove('hidden');try{const [stats,productsRes,offers,ordersRes]=await Promise.all([api('/api/vendor/overview'),api('/api/vendor/products'),loadOffers(),api('/api/vendor/orders')]);$('kpiListings').textContent=stats.data.activeListings;$('kpiViews').textContent=Number(stats.data.totalViews).toLocaleString();$('kpiRating').textContent=stats.data.averageRating??'—';$('kpiSales').textContent=stats.data.completedSales;$('sellerProducts').innerHTML=(productsRes.data||[]).map(p=>`<div class="table-row flex flex-col gap-3 rounded-xl border border-slate-100 p-3 sm:flex-row sm:items-center">${productImage(p)?`<span class="img-scan-wrap shimmer-scan h-16 w-16 shrink-0 rounded-xl"><img src="${esc(productImage(p))}" class="h-full w-full object-cover"></span>`:`<div class="grid h-16 w-16 place-items-center rounded-xl bg-slate-100 text-slate-400">${ic('image',22)}</div>`}<div class="min-w-0 flex-1"><b class="block truncate text-[11px]">${esc(p.title)}</b><p class="mt-1 text-[10px] text-slate-500">${money(p.price)} · ${esc(p.category)} · ${p.stock} stock</p><p class="mt-1 text-[9px] text-slate-400">ស្ថានភាព៖ ${productStatus(p.status)} · ${Number(p.view_count||0)} views</p></div><div class="flex flex-wrap gap-2"><button data-seller-action="edit" data-id="${esc(p.id)}" class="rounded-lg border px-3 py-2 text-[10px] font-bold">កែប្រែ</button>${p.status==='active'?`<button data-seller-action="sold" data-id="${esc(p.id)}" class="rounded-lg bg-emerald-50 px-3 py-2 text-[10px] font-bold text-emerald-700">លក់រួច</button>`:''}<button data-seller-action="delete" data-id="${esc(p.id)}" class="rounded-lg bg-rose-50 px-3 py-2 text-[10px] font-bold text-rose-600">លុប</button></div></div>`).join('')||'<p class="rounded-xl border border-dashed p-6 text-center text-[11px] text-slate-400">មិនទាន់មានទំនិញ។ ចុចបន្ថែមទំនិញដើម្បីចាប់ផ្តើម។</p>';
-let offersPanel=$('sellerOffers');if(!offersPanel){offersPanel=document.createElement('div');offersPanel.id='sellerOffers';offersPanel.className='mt-5 rounded-2xl border border-slate-100 bg-white p-5 soft-shadow';$('sellerDashboardContent').appendChild(offersPanel)}const received=offers.filter(o=>o.vendor_id===me.vendor.id);offersPanel.innerHTML=`<h3 class="mb-3 font-bold">សំណើតថ្លៃពីអ្នកទិញ</h3>${received.map(o=>`<div class="mb-2 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-100 p-3"><div><b class="text-[11px]">${esc(o.products?.title||'ទំនិញ')}</b><p class="mt-1 text-[10px] text-slate-500">${money(o.offer_price)} · ${esc(o.buyer_name||'អ្នកទិញ')} · ${offerStatus(o.status)}</p><p class="mt-1 text-[10px] text-slate-400">${esc(o.message||'')}</p></div>${o.status==='pending'?`<div class="flex gap-2"><button data-offer-action="accepted" data-id="${esc(o.id)}" class="rounded-lg bg-emerald-50 px-3 py-2 text-[10px] font-bold text-emerald-700">ទទួលយក</button><button data-offer-action="rejected" data-id="${esc(o.id)}" class="rounded-lg bg-rose-50 px-3 py-2 text-[10px] font-bold text-rose-600">បដិសេធ</button></div>`:''}</div>`).join('')||'<p class="text-[10px] text-slate-400">មិនទាន់មានសំណើតថ្លៃទេ។</p>'}`
-
-let ordersPanel=$('sellerOrders');
-if(!ordersPanel){ordersPanel=document.createElement('div');ordersPanel.id='sellerOrders';ordersPanel.className='mt-5 rounded-2xl border border-slate-100 bg-white p-5 soft-shadow';$('sellerDashboardContent').appendChild(ordersPanel)}
-const sellerOrders=ordersRes.data||[];
-ordersPanel.innerHTML=`<h3 class="mb-3 font-bold">ការបញ្ជាទិញ និងការដឹកជញ្ជូន</h3>${sellerOrders.map(row=>{const order=row.orders||{};const state=row.fulfillment_status||'pending';const next=state==='pending'?'processing':state==='processing'?'shipped':state==='shipped'?'completed':null;const label=next==='processing'?'ទទួលការបញ្ជាទិញ':next==='shipped'?'សម្គាល់ថាបានដឹកជញ្ជូន':next==='completed'?'បញ្ចប់ការបញ្ជាទិញ':null;return `<div class="mb-2 rounded-xl border border-slate-100 p-3"><div class="flex flex-wrap items-center justify-between gap-2"><b class="text-[11px]">${esc(row.products?.title||'ទំនិញ')} × ${row.quantity}</b><span class="rounded-full bg-slate-100 px-2 py-1 text-[9px] font-bold text-slate-600">${productStatus(state)}</span></div><p class="mt-1 text-[10px] text-slate-500">Order #${esc(String(row.order_id||'').slice(0,8))} · ${money(Number(row.unit_price||0)*Number(row.quantity||0))} · ${fmtDate(order.created_at)}</p><p class="mt-1 text-[10px] text-slate-500">${esc(order.customer_name||'អ្នកទិញ')} · ${esc(order.customer_phone||'')}</p>${label?`<button data-order-status="${esc(next)}" data-order-id="${esc(row.order_id)}" class="mt-3 rounded-lg bg-indigo-50 px-3 py-2 text-[10px] font-bold text-indigo-700">${label}</button>`:''}</div>`}).join('')||'<p class="text-[10px] text-slate-400">មិនទាន់មានការបញ្ជាទិញទេ។</p>'}`
-await loadUnifiedSellerChatInbox();
-
-}catch(e){toast('មិនអាចផ្ទុក Dashboard៖ '+e.message,'error')}}
+function sellerProductAge(product){
+ const time=Date.parse(product.renewed_at||product.updated_at||product.created_at||'');
+ return Number.isFinite(time)?Math.max(0,Date.now()-time):0;
+}
+function sellerProductLifecycle(product){
+ const age=sellerProductAge(product),week=7*86400000,fortnight=14*86400000;
+ return {age,active:age<week,expired:age>=week&&age<=fortnight,daysLeft:Math.max(0,Math.ceil((week-age)/86400000)),graceDays:Math.max(0,Math.ceil((fortnight-age)/86400000)),autoDelete:age>fortnight};
+}
+function sellerStatusBadge(product,life){
+ if(product.status==='sold')return '<span class="seller-status-badge is-sold">'+ic('checkcircle',12)+' លក់រួច</span>';
+ if(product.status!=='active')return '<span class="seller-status-badge is-muted">'+ic('clock',12)+' '+esc(productStatus(product.status))+'</span>';
+ if(life.expired)return '<span class="seller-status-badge is-expired">'+ic('clock',12)+' ផុតកំណត់</span>';
+ return '<span class="seller-status-badge is-active">'+ic('checkcircle',12)+' កំពុងលក់</span>';
+}
+function sellerProductRow(product){
+ const life=sellerProductLifecycle(product),canRenew=product.status==='active',image=productImage(product);
+ const validity=product.status==='active'?(life.expired
+  ?'<span class="seller-expiry-warning">'+ic('clock',12)+' ផុតកំណត់ ១ សប្ដាហ៍ · នឹងលុបស្វ័យប្រវត្តិក្នុង '+life.graceDays+' ថ្ងៃទៀត បើមិន Renew</span>'
+  :'<span class="seller-validity">'+ic('clock',12)+' សុពលភាព៖ សល់ '+life.daysLeft+' ថ្ងៃ</span>')
+  :'<span class="seller-validity is-muted">—</span>';
+ const renewLabel=life.expired?'Renew Post':'បន្តសុពលភាព';
+ const imageMarkup=image?'<span class="img-scan-wrap shimmer-scan"><img src="'+esc(image)+'" alt="" loading="lazy" onload="this.closest(\'.img-scan-wrap\')?.classList.add(\'is-loaded\')" onerror="this.closest(\'.img-scan-wrap\')?.classList.add(\'is-failed\')"></span>':ic('image',22);
+ return '<article class="seller-product-row" data-product-id="'+esc(product.id)+'" data-product-status="'+esc(product.status)+'" data-renew-state="'+(life.expired?'expired':life.autoDelete?'delete':life.active?'active':'other')+'">'+
+  '<div class="seller-product-main"><div class="seller-product-thumb">'+imageMarkup+'</div><div class="seller-product-copy"><b>'+esc(product.title||'ទំនិញ')+'</b><small>'+esc(product.category||'ទូទៅ')+' · '+esc(product.condition||'មិនបានបញ្ជាក់')+'</small></div></div>'+
+  '<div class="seller-product-price">'+money(product.price)+'</div>'+
+  '<div class="seller-product-metrics"><span>'+ic('package',13)+' '+Number(product.stock||0)+' ស្តុក</span><span>'+ic('eye',13)+' '+Number(product.view_count||0).toLocaleString()+' Views</span></div>'+
+  '<div class="seller-product-validity">'+sellerStatusBadge(product,life)+validity+'</div>'+
+  '<div class="seller-product-actions">'+(canRenew?'<button type="button" data-seller-action="renew" data-id="'+esc(product.id)+'" class="seller-action-button is-renew">'+ic('refresh',13)+' '+renewLabel+'</button>':'')+
+  '<button type="button" data-seller-action="edit" data-id="'+esc(product.id)+'" class="seller-action-button">'+ic('edit',13)+' កែប្រែ</button>'+
+  (product.status==='active'?'<button type="button" data-seller-action="sold" data-id="'+esc(product.id)+'" class="seller-action-button is-complete">'+ic('check',13)+' លក់រួច</button>':'')+
+  '<button type="button" data-seller-action="delete" data-id="'+esc(product.id)+'" class="seller-action-button is-delete">'+ic('trash',13)+' លុប</button></div></article>';
+}
+function renderSellerProductList(){
+ const target=$('sellerProducts');if(!target)return;
+ const term=String($('sellerProductSearch')?.value||'').trim().toLocaleLowerCase();
+ const filtered=sellerProductCache.filter(product=>{
+  const life=sellerProductLifecycle(product),matchesTerm=!term||String(product.title||'').toLocaleLowerCase().includes(term);
+  const matchesFilter=sellerActiveFilter==='all'||(sellerActiveFilter==='active'&&product.status==='active'&&!life.expired)||(sellerActiveFilter==='renew'&&product.status==='active'&&life.expired)||(sellerActiveFilter==='sold'&&product.status==='sold');
+  return !life.autoDelete&&matchesTerm&&matchesFilter;
+ });
+ target.innerHTML=filtered.map(sellerProductRow).join('')||'<div class="seller-empty-state">'+ic('package',24)+'<b>មិនមានទំនិញក្នុងបញ្ជីនេះទេ</b><span>សូមប្តូរតម្រង ឬបន្ថែមទំនិញថ្មី។</span></div>';
+}
+function setSellerTab(name){
+ sellerActiveTab=name;
+ document.querySelectorAll('[data-seller-tab]').forEach(button=>{const active=button.dataset.sellerTab===name;button.classList.toggle('is-active',active);button.setAttribute('aria-selected',String(active))});
+ document.querySelectorAll('[data-seller-panel]').forEach(panel=>{const active=panel.dataset.sellerPanel===name;panel.classList.toggle('is-active',active);panel.hidden=!active});
+}
+async function renderSeller(){
+ if(!isVerifiedSeller()){
+  const v=me?.vendor;$('sellerGate').classList.remove('hidden');$('sellerDashboardContent').classList.add('hidden');
+  $('sellerGateText').textContent=v?('ស្ថានភាពហាង៖ '+vendorStatus(v.status)+'។ '+(v.status==='rejected'?'សូមពិនិត្យមតិ Admin នៅក្នុងគណនីរបស់អ្នក។':'សូមរង់ចាំ Admin ពិនិត្យឯកសាររបស់អ្នក។')):'សូមចុះឈ្មោះ និងរង់ចាំ Admin ផ្ទៀងផ្ទាត់ឯកសារមុនពេលបង្ហោះទំនិញ។';
+  $('sellerGateApply').textContent=v?.status==='pending'?'កំពុងរង់ចាំការអនុម័ត':'ចុះឈ្មោះអ្នកលក់';$('sellerGateApply').disabled=v?.status==='pending';return;
+ }
+ $('sellerGate').classList.add('hidden');$('sellerDashboardContent').classList.remove('hidden');
+ try{
+  const results=await Promise.all([api('/api/vendor/overview'),api('/api/vendor/products'),loadOffers(),api('/api/vendor/orders')]);
+  const stats=results[0],productsRes=results[1],offers=results[2],ordersRes=results[3];
+  $('kpiListings').textContent=stats.data.activeListings;$('kpiViews').textContent=Number(stats.data.totalViews).toLocaleString();$('kpiRating').textContent=stats.data.averageRating??'—';$('kpiSales').textContent=stats.data.completedSales;
+  const allProducts=productsRes.data||[],stale=allProducts.filter(p=>sellerProductLifecycle(p).autoDelete);
+  sellerProductCache=allProducts.filter(p=>!sellerProductLifecycle(p).autoDelete);
+  if(stale.length){
+   const removed=await Promise.allSettled(stale.map(p=>api('/api/products/'+encodeURIComponent(p.id),{method:'DELETE'})));
+   const removedIds=new Set(stale.filter((p,i)=>removed[i].status==='fulfilled').map(p=>p.id));
+   sellerProductCache=sellerProductCache.filter(p=>!removedIds.has(p.id));
+  }
+  $('kpiListings').textContent=String(sellerProductCache.filter(p=>p.status==='active'&&!sellerProductLifecycle(p).expired).length);
+  $('sellerProductsCount').textContent=String(sellerProductCache.length);
+  const received=(offers||[]).filter(o=>o.vendor_id===me.vendor.id),sellerOrders=ordersRes.data||[];
+  $('sellerOffersCount').textContent=String(received.length);$('sellerOrdersCount').textContent=String(sellerOrders.length);
+  renderSellerProductList();
+  $('sellerOffers').innerHTML=received.map(o=>{
+   const statusClass=o.status==='accepted'?'is-active':o.status==='rejected'?'is-muted':'is-pending';
+   const actions=o.status==='pending'?'<button type="button" data-offer-action="accepted" data-id="'+esc(o.id)+'" class="seller-action-button is-complete">'+ic('check',13)+' ទទួលយក</button><button type="button" data-offer-action="rejected" data-id="'+esc(o.id)+'" class="seller-action-button is-delete">'+ic('x',13)+' បដិសេធ</button>':'';
+   return '<article class="seller-transaction-row"><div class="seller-transaction-main"><b>'+esc(o.products?.title||'ទំនិញ')+'</b><small>'+esc(o.message||'សំណើតថ្លៃ')+'</small></div><div class="seller-transaction-contact"><span>'+ic('user',14)+' '+esc(o.buyer_name||'អ្នកទិញ')+'</span><small>'+ic('phone',12)+' '+esc(o.buyer_phone||'មិនមានលេខទូរស័ព្ទ')+'</small><small>'+ic('calendar',12)+' '+fmtDate(o.created_at)+'</small></div><div class="seller-transaction-price">'+money(o.offer_price)+'<span class="seller-status-badge '+statusClass+'">'+ic(o.status==='accepted'?'checkcircle':'clock',12)+' '+offerStatus(o.status)+'</span></div><div class="seller-transaction-actions">'+actions+'</div></article>';
+  }).join('')||'<div class="seller-empty-state">'+ic('tag',24)+'<b>មិនទាន់មានសំណើតថ្លៃទេ</b></div>';
+  $('sellerOrders').innerHTML=sellerOrders.map(row=>{
+   const order=row.orders||{},state=row.fulfillment_status||'pending';
+   let actions='';
+   if(state==='pending')actions='<button type="button" data-order-status="processing" data-order-id="'+esc(row.order_id)+'" class="seller-action-button is-complete">'+ic('check',13)+' ទទួលយក</button><button type="button" data-order-status="cancelled" data-order-id="'+esc(row.order_id)+'" class="seller-action-button is-delete">'+ic('x',13)+' បដិសេធ</button>';
+   else if(state==='processing')actions='<button type="button" data-order-status="shipped" data-order-id="'+esc(row.order_id)+'" class="seller-action-button is-renew">'+ic('truck',13)+' ដឹកជញ្ជូន</button>';
+   else if(state==='shipped')actions='<button type="button" data-order-status="completed" data-order-id="'+esc(row.order_id)+'" class="seller-action-button is-complete">'+ic('check',13)+' បញ្ចប់</button>';
+   const statusClass=state==='completed'?'is-active':state==='cancelled'?'is-muted':'is-pending';
+   return '<article class="seller-transaction-row"><div class="seller-transaction-main"><b>'+esc(row.products?.title||'ទំនិញ')+' × '+Number(row.quantity||1)+'</b><small>Order #'+esc(String(row.order_id||'').slice(0,8))+'</small></div><div class="seller-transaction-contact"><span>'+ic('user',14)+' '+esc(order.customer_name||'អ្នកទិញ')+'</span><small>'+ic('phone',12)+' '+esc(order.customer_phone||'មិនមានលេខទូរស័ព្ទ')+'</small><small>'+ic('calendar',12)+' '+fmtDate(order.created_at)+'</small></div><div class="seller-transaction-price">'+money(Number(row.unit_price||0)*Number(row.quantity||0))+'<span class="seller-status-badge '+statusClass+'">'+ic(state==='completed'?'checkcircle':'clock',12)+' '+productStatus(state)+'</span></div><div class="seller-transaction-actions">'+actions+'</div></article>';
+  }).join('')||'<div class="seller-empty-state">'+ic('file',24)+'<b>មិនទាន់មានការបញ្ជាទិញទេ</b></div>';
+  setSellerTab(sellerActiveTab);await loadUnifiedSellerChatInbox();
+ }catch(e){toast('មិនអាចផ្ទុក Dashboard៖ '+e.message,'error')}
+}
 function productStatus(s){return ({active:'កំពុងលក់',pending:'រង់ចាំ Admin',rejected:'បានបដិសេធ',sold:'លក់រួច',archived:'បានបិទ'})[s]||s}
 function diagnosticStatus(ok){return ok?'<span class="font-bold text-emerald-700">ជោគជ័យ</span>':'<span class="font-bold text-rose-600">មានបញ្ហា</span>'}
 function renderTelegramDiagnostics(data){
@@ -702,9 +773,17 @@ $('productShortDesc')?.addEventListener('input',updateShortDescriptionCounter);
 $('productShortDesc')?.addEventListener('paste',()=>requestAnimationFrame(updateShortDescriptionCounter));
 updateShortDescriptionCounter();
 $('productForm').addEventListener('submit',async e=>{e.preventDefault();if(!isVerifiedSeller()){toast('ហាងមិនទាន់បានផ្ទៀងផ្ទាត់ទេ។','warning');return}const id=$('editProductId').value,payload=productFormPayload(),button=$('productForm').querySelector('button[type="submit"]')||$('productForm').querySelector('button:last-child');button.disabled=true;try{let product;if(id){const r=await api('/api/products/'+encodeURIComponent(id),{method:'PATCH',body:JSON.stringify(payload)});product=r.data}else{const r=await api('/api/products',{method:'POST',body:JSON.stringify(payload)});product=r.data}if(selectedProductImages.length){const form=new FormData();selectedProductImages.forEach(f=>form.append('images',f));await api(`/api/products/${product.id}/images`,{method:'POST',body:form})}closeModal('productFormModal');selectedProductImages=[];toast(id?'បានរក្សាទុកការកែប្រែទំនិញរួចរាល់។':'បានបង្ហោះទំនិញជោគជ័យ! ទំនិញនឹងបង្ហាញលើ Marketplace ភ្លាមៗ។');await renderSeller();await loadProducts()}catch(err){toast(err.message,'error')}finally{button.disabled=false}});
-$('sellerProducts').addEventListener('click',async e=>{const b=e.target.closest('[data-seller-action]');if(!b)return;const id=b.dataset.id;try{if(b.dataset.sellerAction==='edit'){const data=await api('/api/vendor/products');const p=data.data.find(x=>x.id===id);if(p)renderProductForm(p)}if(b.dataset.sellerAction==='sold'){if(!confirm('សម្គាល់ទំនិញនេះថាលក់រួចមែនទេ?'))return;await api('/api/products/'+id,{method:'PATCH',body:JSON.stringify({status:'sold'})});toast('បានសម្គាល់ថាលក់រួច។')}if(b.dataset.sellerAction==='delete'){if(!confirm('លុបទំនិញនេះមែនទេ?'))return;await api('/api/products/'+id,{method:'DELETE'});toast('បានលុប ឬបិទទំនិញរួចរាល់។')}await renderSeller();await loadProducts()}catch(err){toast(err.message,'error')}});
+$('sellerProducts').addEventListener('click',async e=>{const b=e.target.closest('[data-seller-action]');if(!b)return;const id=b.dataset.id;try{b.disabled=true;if(b.dataset.sellerAction==='edit'){const p=sellerProductCache.find(x=>String(x.id)===String(id));if(p)renderProductForm(p)}if(b.dataset.sellerAction==='renew'){await api('/api/products/'+encodeURIComponent(id),{method:'PATCH',body:JSON.stringify({renew:true})});toast('បានបន្តសុពលភាពទំនិញ ៧ ថ្ងៃទៀត។','success')}if(b.dataset.sellerAction==='sold'){if(!confirm('សម្គាល់ទំនិញនេះថាលក់រួចមែនទេ?'))return;await api('/api/products/'+id,{method:'PATCH',body:JSON.stringify({status:'sold'})});toast('បានសម្គាល់ថាលក់រួច។')}if(b.dataset.sellerAction==='delete'){if(!confirm('លុបទំនិញនេះមែនទេ?'))return;await api('/api/products/'+id,{method:'DELETE'});toast('បានលុប ឬបិទទំនិញរួចរាល់។')}await renderSeller();await loadProducts()}catch(err){toast(err.message,'error')}finally{b.disabled=false}});
+$('sellerDashboardContent').addEventListener('click',e=>{const tab=e.target.closest('[data-seller-tab]');if(tab){setSellerTab(tab.dataset.sellerTab);return}const filter=e.target.closest('[data-seller-filter]');if(filter){sellerActiveFilter=filter.dataset.sellerFilter;document.querySelectorAll('[data-seller-filter]').forEach(x=>x.classList.toggle('is-active',x===filter));renderSellerProductList()}});
+$('sellerProductSearch').addEventListener('input',renderSellerProductList);
 $('sellerDashboardContent').addEventListener('click',async e=>{const b=e.target.closest('[data-offer-action]');if(!b)return;try{await api('/api/offers/'+b.dataset.id,{method:'PATCH',body:JSON.stringify({status:b.dataset.offerAction})});toast('បានកែប្រែសំណើតថ្លៃ។');await renderSeller()}catch(err){toast(err.message,'error')}});
 $('sellerDashboardContent').addEventListener('click',async e=>{const b=e.target.closest('[data-order-status]');if(!b)return;try{await api('/api/vendor/orders/'+encodeURIComponent(b.dataset.orderId),{method:'PATCH',body:JSON.stringify({status:b.dataset.orderStatus})});toast('បានធ្វើបច្ចុប្បន្នភាពការបញ្ជាទិញ។');await renderSeller();await loadOrders()}catch(err){toast(err.message,'error')}});
+$('brandingFaviconUpload').addEventListener('change',event=>{
+  const file=event.target.files?.[0];if(!file)return;
+  if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>2*1024*1024){toast('Favicon ត្រូវជា JPG, PNG ឬ WEBP និងមិនលើស 2MB។','warning');event.target.value='';return}
+  if(brandingFaviconPreviewUrl)URL.revokeObjectURL(brandingFaviconPreviewUrl);
+  brandingFaviconPreviewUrl=URL.createObjectURL(file);brandingPreviewFavicon(brandingFaviconPreviewUrl);
+});
 $('brandingLogoUpload').addEventListener('change',event=>{
   const file=event.target.files?.[0];if(!file)return;
   if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>2*1024*1024){toast('Logo ត្រូវជា JPG, PNG ឬ WEBP និងមិនលើស 2MB។','warning');event.target.value='';return}
@@ -722,8 +801,9 @@ $('brandingHeroUpload').addEventListener('change',event=>{
 ['brandTitleInput','brandSubtitleInput','heroBadgeInput','heroTitleInput','heroSubtitleInput'].forEach(id=>$(id).addEventListener('input',updateBrandingTextPreview));
 $('saveBrandingBtn').addEventListener('click',async()=>{
   if(!isAdmin()){toast('មុខងារនេះសម្រាប់ Admin ប៉ុណ្ណោះ។','error');return}
-  const button=$('saveBrandingBtn'),logo=$('brandingLogoUpload').files?.[0],heroFiles=Array.from($('brandingHeroUpload').files||[]);
+  const button=$('saveBrandingBtn'),logo=$('brandingLogoUpload').files?.[0],favicon=$('brandingFaviconUpload').files?.[0],heroFiles=Array.from($('brandingHeroUpload').files||[]);
   if(logo&&(!['image/jpeg','image/png','image/webp'].includes(logo.type)||logo.size>2*1024*1024)){toast('Logo ត្រូវជា JPG, PNG ឬ WEBP និងមិនលើស 2MB។','warning');return}
+  if(favicon&&(!['image/jpeg','image/png','image/webp'].includes(favicon.type)||favicon.size>2*1024*1024)){toast('Favicon ត្រូវជា JPG, PNG ឬ WEBP និងមិនលើស 2MB។','warning');return}
   if(heroFiles.length>3||heroFiles.some(file=>!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>8*1024*1024)){toast('Banner អាច Upload JPG, PNG ឬ WEBP ចំនួនមិនលើស ៣ រូប និង 8MB ក្នុងមួយរូប។','warning');return}
   const form=new FormData();
   form.append('siteTitle',$('brandTitleInput').value.trim());
@@ -733,14 +813,16 @@ $('saveBrandingBtn').addEventListener('click',async()=>{
   form.append('heroSubtitle',$('heroSubtitleInput').value.trim());
   form.append('clearHeroImages',$('clearHeroImages').checked?'true':'false');
   if(logo)form.append('logo',logo);
+  if(favicon)form.append('favicon',favicon);
   heroFiles.forEach(file=>form.append('heroImages',file));
   button.disabled=true;button.textContent='កំពុងរក្សាទុក...';
   try{
     const result=await api('/api/admin/branding',{method:'PATCH',body:form});
     applySiteBranding(result.data||{});
     $('brandingStatus').textContent='បានរក្សាទុក Brand & Banner ទៅ Database រួចរាល់។';
-    $('brandingLogoUpload').value='';$('brandingHeroUpload').value='';$('clearHeroImages').checked=false;
+    $('brandingLogoUpload').value='';$('brandingFaviconUpload').value='';$('brandingHeroUpload').value='';$('clearHeroImages').checked=false;
     if(brandingLogoPreviewUrl){URL.revokeObjectURL(brandingLogoPreviewUrl);brandingLogoPreviewUrl=null}
+    if(brandingFaviconPreviewUrl){URL.revokeObjectURL(brandingFaviconPreviewUrl);brandingFaviconPreviewUrl=null}
     brandingHeroPreviewUrls.forEach(url=>URL.revokeObjectURL(url));brandingHeroPreviewUrls=[];
     renderBrandingAdmin();toast('បានរក្សាទុក Brand & Hero Banner ជោគជ័យ។','success');
   }catch(error){toast(error.message,'error')}
@@ -803,7 +885,7 @@ function renderSellerChatMessages(messages){
       content='<article class="seller-chat-product-card '+(product?.id?'seller-chat-product-link':'')+'"'+(product?.id?' role="button" tabindex="0" data-chat-product-id="'+esc(product.id)+'" aria-label="មើលផលិតផល '+esc(product.title||'')+'"':'')+'>'+image+'<div class="seller-chat-product-info"><small>ផលិតផលដែលបានសួរ</small><b>'+esc(product?.title||message.body||'ផលិតផល')+'</b>'+(product?'<strong>'+money(product.price)+'</strong>':'<span class="seller-chat-product-unavailable">ផលិតផលនេះមិនមានលក់ទៀតទេ</span>')+'</div></article>';
     }else if(message.message_type==='image'&&(message.telegram_file_id||message.local_image_url)){
       const imageSrc=message.local_image_url||('/api/media/telegram/'+encodeURIComponent(message.telegram_file_id)+'?mime='+encodeURIComponent(message.mime_type||'image/jpeg'));
-      content='<button type="button" class="seller-chat-image-link" data-chat-image-src="'+esc(imageSrc)+'" aria-label="មើលរូបភាពពេញ"><img class="seller-chat-image" src="'+esc(imageSrc)+'" alt="រូបភាពក្នុងសារ" loading="lazy"></button>'+(message.upload_state==='pending'?'<span class="seller-chat-voice-status">កំពុងផ្ញើរូបភាព…</span>':'');
+      content='<a class="seller-chat-image-link" href="'+esc(imageSrc)+'" target="_blank" rel="noopener noreferrer"><img class="seller-chat-image" src="'+esc(imageSrc)+'" alt="រូបភាពក្នុងសារ" loading="lazy"></a>'+(message.upload_state==='pending'?'<span class="seller-chat-voice-status">កំពុងផ្ញើរូបភាព…</span>':'');
     }else if(message.message_type==='location'){
       let location=null;try{location=JSON.parse(message.body||'{}')}catch{}
       const lat=Number(location?.latitude),lng=Number(location?.longitude);
@@ -1047,9 +1129,8 @@ async function boot(){
     const cfg=await fetch('/api/config',{cache:'no-store'}).then(r=>r.json());
     maintenanceMode=cfg.maintenanceMode===true;
     maintenanceMessage=String(cfg.maintenanceMessage||DEFAULT_MAINTENANCE_MESSAGE);
-    faviconUrl=String(cfg.siteLogoUrl||cfg.faviconUrl||'');
+    faviconUrl=String(cfg.faviconUrl||'');
     applySiteBranding(cfg);
-    if(faviconUrl)applyFavicon(faviconUrl);
     if(!siteBrandingRefreshTimer){siteBrandingRefreshTimer=setInterval(()=>void refreshSiteBranding(),60000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)void refreshSiteBranding()})}
     if(!cfg.supabaseUrl||!cfg.supabaseAnonKey)throw new Error('Missing Supabase browser configuration');
     if(!window.supabase?.createClient)throw new Error('Supabase browser library failed to load');
@@ -1080,10 +1161,7 @@ async function boot(){
     const routeAllowed=requestedView==='home'||(requestedView==='profile'&&Boolean(session))||(requestedView==='seller'&&Boolean(session)&&me?.vendor?.status==='approved')||(requestedView==='admin'&&Boolean(session)&&Boolean(me?.isAdmin))||(requestedView==='product'&&Boolean(requestedProductId))||(requestedView==='store'&&Boolean(requestedStoreId));
     if(!routeAllowed)requestedView='home';routeAccessReady=true;
     let savedScrollY=0;try{savedScrollY=Math.max(0,Number(sessionStorage.getItem('ecomstore.scrollY')||0))}catch{}
-    // Give boot restoration a navigation token so a later Back/Forward event invalidates it.
-    const bootNavigationId=++routeSyncNavigationId;
-    const bootRouteOptions={preserveScroll:true,routeSyncNavigationId:bootNavigationId};
-    const pageTask=requestedView==='product'?openProduct(requestedProductId,bootRouteOptions):requestedView==='store'?openStorefront(requestedStoreId,bootRouteOptions):showView(requestedView,{preserveScroll:true});
+    const pageTask=requestedView==='product'?openProduct(requestedProductId,{preserveScroll:true}):requestedView==='store'?openStorefront(requestedStoreId,{preserveScroll:true}):showView(requestedView,{preserveScroll:true});
     const dataTasks=[pageTask,loadProducts()];if(session)dataTasks.push(Promise.all([loadSaved(),loadOrders(),loadUnifiedSellerChatInbox(),loadSellerChatPreferences()]).catch(e=>console.warn(e)));
     await Promise.all(dataTasks);if(requestedView==='product'&&currentProduct)renderProductDetail();
     if(!sellerInboxPollTimer)sellerInboxPollTimer=setInterval(()=>{if(!document.hidden&&$('view-seller')?.classList.contains('active')&&isVerifiedSeller())void loadUnifiedSellerChatInbox()},7000);
@@ -1111,7 +1189,7 @@ async function boot(){
   }
 }
 
-$('sellerChatMessages').addEventListener('click',event=>{const imageButton=event.target.closest('[data-chat-image-src]');if(imageButton){event.preventDefault();openSellerChatImageLightbox(imageButton.dataset.chatImageSrc);return}const card=event.target.closest('[data-chat-product-id]');if(card)openChatProduct(card.dataset.chatProductId)});
+$('sellerChatMessages').addEventListener('click',event=>{const card=event.target.closest('[data-chat-product-id]');if(card)openChatProduct(card.dataset.chatProductId)});
 $('sellerChatMessages').addEventListener('keydown',event=>{if(event.key!=='Enter'&&event.key!==' ')return;const card=event.target.closest('[data-chat-product-id]');if(card){event.preventDefault();openChatProduct(card.dataset.chatProductId)}});
 $('sellerChatClose').addEventListener('click',minimizeSellerChatPanel);
 $('sellerChatForm').addEventListener('submit',async event=>{event.preventDefault();const input=$('sellerChatInput'),body=input.value.trim();if(!body||!sellerChatConversationId)return;const button=$('sellerChatSend');button.disabled=true;try{await api('/api/seller-chat/conversations/'+encodeURIComponent(sellerChatConversationId)+'/messages',{method:'POST',body:JSON.stringify({body})});input.value='';syncSellerChatComposer();await loadSellerChatConversation(true);await loadUnifiedSellerChatInbox()}catch(error){toast(error.message,'error')}finally{button.disabled=false}});
@@ -1208,7 +1286,6 @@ function syncRouteFromHistory(){
  const eventKey=String(window.location.hash||'')+'|'+JSON.stringify(window.history.state||{});
  if(routeSyncGuardKey===eventKey)return;
  routeSyncGuardKey=eventKey;
- const navigationId=++routeSyncNavigationId;
  if(routeSyncGuardTimer)window.clearTimeout(routeSyncGuardTimer);
  routeSyncGuardTimer=window.setTimeout(()=>{if(routeSyncGuardKey===eventKey)routeSyncGuardKey=''},0);
  const raw=String(window.location.hash||'').replace(/^#/,'');const parts=raw.split('/'),name=parts[0]||'home';
@@ -1216,8 +1293,8 @@ function syncRouteFromHistory(){
  const storeId=name==='store'?(decodeURIComponent(parts.slice(1).join('/'))||(()=>{try{return sessionStorage.getItem('ecomstore.currentStoreId')||''}catch{return ''}})()):'';
  const route=['home','profile','seller','admin','product','store'].includes(name)?name:'home',active=document.querySelector('.view.active')?.id?.replace('view-','');
  if(!routeAccessReady){void showView(route,{optimistic:true,deferLoad:true,preserveScroll:true});return}
- if(route==='product'&&productId&&(active!=='product'||String(currentProduct?.id)!==String(productId))){void openProduct(productId,{preserveScroll:true,routeSyncNavigationId:navigationId});return}
- if(route==='store'&&storeId&&(active!=='store'||String(currentStoreId)!==String(storeId))){void openStorefront(storeId,{preserveScroll:true,routeSyncNavigationId:navigationId});return}
+ if(route==='product'&&productId&&(active!=='product'||String(currentProduct?.id)!==String(productId))){void openProduct(productId,{preserveScroll:true});return}
+ if(route==='store'&&storeId&&(active!=='store'||String(currentStoreId)!==String(storeId))){void openStorefront(storeId,{preserveScroll:true});return}
  if(active===route)return;void showView(route,{fromHistory:true,preserveScroll:true});
 }
 window.addEventListener('hashchange',syncRouteFromHistory);
@@ -1225,23 +1302,22 @@ window.addEventListener('popstate',syncRouteFromHistory);
 window.addEventListener('scroll',()=>{if(scrollSaveTimer)window.clearTimeout(scrollSaveTimer);scrollSaveTimer=window.setTimeout(()=>{try{sessionStorage.setItem('ecomstore.scrollY',String(window.scrollY))}catch{}},140)},{passive:true});
 window.addEventListener('pagehide',()=>{try{sessionStorage.setItem('ecomstore.scrollY',String(window.scrollY))}catch{}});
 $('productLightboxClose')?.addEventListener('click',closeProductLightbox);$('productLightbox')?.addEventListener('click',event=>{if(event.target.id==='productLightbox')closeProductLightbox()});
-$('sellerChatImageLightboxClose')?.addEventListener('click',closeSellerChatImageLightbox);$('sellerChatImageLightbox')?.addEventListener('click',event=>{if(event.target.id==='sellerChatImageLightbox')closeSellerChatImageLightbox()});
 $('productLightboxPrev')?.addEventListener('click',()=>{const count=(currentProduct?.product_images||[]).filter(item=>item.image_url).length;if(count){productGalleryIndex=(productGalleryIndex-1+count)%count;updateProductLightbox();const img=$('productMainImage');if(img)img.src=$('productLightboxImage').src;$('productDetail').querySelectorAll('[data-image]').forEach(button=>button.classList.toggle('active',Number(button.dataset.image)===productGalleryIndex));const counter=$('productDetail').querySelector('.product-gallery-counter');if(counter)counter.textContent=(productGalleryIndex+1)+' / '+count}});
 $('productLightboxNext')?.addEventListener('click',()=>{const count=(currentProduct?.product_images||[]).filter(item=>item.image_url).length;if(count){productGalleryIndex=(productGalleryIndex+1)%count;updateProductLightbox();const img=$('productMainImage');if(img)img.src=$('productLightboxImage').src;$('productDetail').querySelectorAll('[data-image]').forEach(button=>button.classList.toggle('active',Number(button.dataset.image)===productGalleryIndex));const counter=$('productDetail').querySelector('.product-gallery-counter');if(counter)counter.textContent=(productGalleryIndex+1)+' / '+count}});
-window.addEventListener('keydown',event=>{if(event.key==='Escape'&&productLightboxOpen)closeProductLightbox();if(event.key==='Escape'&&$('sellerChatImageLightbox')?.classList.contains('open'))closeSellerChatImageLightbox();if(productLightboxOpen&&event.key==='ArrowLeft')$('productLightboxPrev')?.click();if(productLightboxOpen&&event.key==='ArrowRight')$('productLightboxNext')?.click()});
+window.addEventListener('keydown',event=>{if(event.key==='Escape'&&productLightboxOpen)closeProductLightbox();if(productLightboxOpen&&event.key==='ArrowLeft')$('productLightboxPrev')?.click();if(productLightboxOpen&&event.key==='ArrowRight')$('productLightboxNext')?.click()});
 
 // Delegated image lifecycle: fade images in after load and stop shimmer on failures.
 document.addEventListener('load',event=>{
   const image=event.target;
   if(!(image instanceof HTMLImageElement))return;
   const wrapper=image.closest('.img-scan-wrap');
-  if(wrapper){wrapper.classList.add('is-loaded');if(image.id==='productMainImage'){image.classList.remove('is-image-failed');wrapper.classList.remove('is-failed');wrapper.querySelector('.product-main-image-fallback')?.remove()}}
+  if(wrapper)wrapper.classList.add('is-loaded');
 },true);
 document.addEventListener('error',event=>{
   const image=event.target;
   if(!(image instanceof HTMLImageElement))return;
   const wrapper=image.closest('.img-scan-wrap');
-  if(wrapper){wrapper.classList.add('is-failed');if(image.hasAttribute('data-vendor-avatar-image'))wrapper.innerHTML=avatarFallbackMarkup(wrapper.dataset.vendorAvatar||'អ្នកលក់');else if(image.id==='productMainImage'){image.classList.add('is-image-failed');if(!wrapper.querySelector('.product-main-image-fallback'))wrapper.insertAdjacentHTML('beforeend','<button type="button" class="product-main-image-fallback" data-gallery-zoom aria-label="ពង្រីករូបភាព">'+ic('image',40)+'</button>')}else if(image.closest('.hero-image-tile'))image.classList.add('hidden');else{image.remove();if(!wrapper.querySelector('svg'))wrapper.insertAdjacentHTML('beforeend',ic('image',24))}}
+  if(wrapper){wrapper.classList.add('is-failed');if(image.hasAttribute('data-vendor-avatar-image'))wrapper.innerHTML=avatarFallbackMarkup(wrapper.dataset.vendorAvatar||'អ្នកលក់');else if(image.closest('.hero-image-tile'))image.classList.add('hidden');else{image.remove();if(!wrapper.querySelector('svg'))wrapper.insertAdjacentHTML('beforeend',ic('image',24))}}
 },true);
 
 // Deliberately no magnetic or 3D tilt effects in the minimalist marketplace UI.

@@ -28,7 +28,8 @@ create table if not exists public.products (
   category text not null default 'General',
   status text not null default 'pending' check (status in ('pending','active','rejected','archived')),
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  renewed_at timestamptz
 );
 
 create table if not exists public.product_images (
@@ -59,6 +60,7 @@ create table if not exists public.order_items (
 
 create index if not exists products_public_listing_idx on public.products(status, created_at desc);
 create index if not exists products_vendor_idx on public.products(vendor_id);
+create index if not exists products_renewed_at_status_idx on public.products(status, renewed_at);
 create index if not exists product_images_product_idx on public.product_images(product_id, sort_order);
 
 alter table public.profiles enable row level security;
@@ -79,12 +81,20 @@ drop policy if exists "vendors_read_approved" on public.vendors;
 create policy "vendors_read_approved" on public.vendors for select using (status = 'approved' or user_id = auth.uid());
 drop policy if exists "products_read_active" on public.products;
 create policy "products_read_active" on public.products for select using (
-  status = 'active' and exists (select 1 from public.vendors v where v.id = vendor_id and v.status = 'approved')
+  status = 'active'
+  and renewed_at >= now() - interval '7 days'
+  and exists (select 1 from public.vendors v where v.id = vendor_id and v.status = 'approved')
 );
 drop policy if exists "product_images_read_public" on public.product_images;
 create policy "product_images_read_public" on public.product_images for select using (
-  exists (select 1 from public.products p join public.vendors v on v.id = p.vendor_id
-          where p.id = product_id and p.status = 'active' and v.status = 'approved')
+  exists (
+    select 1 from public.products p
+    join public.vendors v on v.id = p.vendor_id
+    where p.id = product_id
+      and p.status = 'active'
+      and p.renewed_at >= now() - interval '7 days'
+      and v.status = 'approved'
+  )
 );
 
 -- Customers can only see their own orders and order items.
@@ -159,6 +169,7 @@ begin
     join public.vendors v on v.id = p.vendor_id
     where p.id = (v_item->>'product_id')::uuid
       and p.status = 'active' and v.status = 'approved'
+      and p.renewed_at >= now() - interval '7 days'
     for update of p;
     if not found then raise exception 'A product is no longer available'; end if;
     if v_product.stock < v_qty then raise exception 'Insufficient stock for %', v_product.title; end if;
