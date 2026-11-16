@@ -5,12 +5,13 @@ const iconPaths={
 Object.assign(iconPaths,{refresh:'<path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/>',package:'<path d="m12 3 9 5-9 5-9-5 9-5Z"/><path d="M3 8v9l9 5 9-5V8M12 13v9M7.5 5.5l9 5"/>',truck:'<path d="M3 6h11v12H3zM14 10h4l3 3v5h-7z"/><circle cx="7.5" cy="18" r="2"/><circle cx="17.5" cy="18" r="2"/>',play:'<path d="m8 5 11 7-11 7z"/>',pause:'<path d="M8 5h3v14H8zM15 5h3v14h-3z"/>',volume:'<path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7m3-10a9 9 0 0 1 0 13"/>',volumeOff:'<path d="M11 5 6 9H3v6h3l5 4z"/><path d="m16 9 5 6m0-6-5 6"/>',lock:'<rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 1 1 8 0v3"/>',external:'<path d="M14 4h6v6m0-6-9 9"/><path d="M18 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h6"/>'});
 const $=id=>document.getElementById(id);
 const ic=(name,size=17,extra='')=>`<svg aria-hidden="true" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="${extra}">${iconPaths[name]||iconPaths.spark}</svg>`;
+document.querySelectorAll('[data-seller-icon]').forEach(node=>{node.innerHTML=ic(node.dataset.sellerIcon,16)});
 const CAT={phones:'ទូរស័ព្ទ & អេឡិចត្រូនិក',vehicles:'រថយន្ត & ម៉ូតូ',property:'អចលនទ្រព្យ',fashion:'សម្លៀកបំពាក់',furniture:'គ្រឿងសង្ហារិម'};
 const CATICON={all:'grid',phones:'phone',vehicles:'car',property:'home',fashion:'shirt',furniture:'sofa'};
 let currentStoreId=null,currentStoreData=null,currentStoreProducts=[],currentStoreCategory='all',currentStoreSearch='';
 let productGalleryIndex=0,productLightboxOpen=false,scrollSaveTimer=null;
 let sellerProductCache=[],sellerActiveFilter='all',sellerActiveTab='products';
-let siteBranding={siteTitle:'7inOne',siteSubtitle:'ផ្សារទិញលក់កម្ពុជា',heroBadge:'ផ្សារអនឡាញសម្រាប់អ្នកទាំងអស់គ្នា',heroTitle:'ទិញលក់ងាយៗ នៅជិតអ្នក',heroSubtitle:'ស្វែងរកទំនិញដែលអ្នកស្រឡាញ់ ឬដាក់លក់របស់ដែលអ្នកមិនប្រើ។ ភ្ជាប់អ្នកទិញ និងអ្នកលក់នៅទូទាំងប្រទេសកម្ពុជា។',siteLogoUrl:'',heroImages:[]},brandingLogoPreviewUrl=null,brandingHeroPreviewUrls=[],siteBrandingRefreshTimer=null;
+let siteBranding={siteTitle:'7inOne',siteSubtitle:'ផ្សារទិញលក់កម្ពុជា',heroBadge:'ផ្សារអនឡាញសម្រាប់អ្នកទាំងអស់គ្នា',heroTitle:'ទិញលក់ងាយៗ នៅជិតអ្នក',heroSubtitle:'ស្វែងរកទំនិញដែលអ្នកស្រឡាញ់ ឬដាក់លក់របស់ដែលអ្នកមិនប្រើ។ ភ្ជាប់អ្នកទិញ និងអ្នកលក់នៅទូទាំងប្រទេសកម្ពុជា។',siteLogoUrl:'',faviconUrl:'',heroImages:[]},brandingLogoPreviewUrl=null,brandingFaviconPreviewUrl=null,brandingHeroPreviewUrls=[],siteBrandingRefreshTimer=null;
 let supabaseClient=null,session=null,sessionRefreshPromise=null,me=null,routeAccessReady=false,supportChatPollTimer=null,adminChatPollTimer=null,activeAdminChatId=null,restoredUserChatArchives={},restoredAdminChatArchives={},pendingPhone=null,products=[],savedIds=new Set(),favoritePending=new Set(),activeCategory='all',searchTerm='',currentProduct=null,currentVendor=null,profileTab='saved',authMode='login',currentOfferProduct=null,selectedProductImages=[],sellerDocPreviewUrl=null,telegramBotUsername='',telegramLoginWidgetMounted=false,telegramProfileWidgetMounted=false,productRealtimeChannel=null,productRealtimeRefreshTimer=null,productRealtimeFallbackTimer=null,productRealtimePendingRefresh=false,sellerChatChannel=null,sellerChatPollTimer=null,sellerInboxPollTimer=null,sellerChatConversationId=null,sellerChatInboxPollTimer=null,sellerChatMode='buyer',sellerChatInbox=[],sellerChatMuted=false,sellerChatRecorder=null,sellerChatDiscardRecording=false,sellerChatRecordChunks=[],sellerChatRecordStartedAt=0,sellerChatRecordTimer=null,sellerChatLastMessageId=null,sellerChatInboxUnreadSnapshot={},sellerChatInboxInitialized=false,sellerChatInboxUserId=null,sellerChatAudioUrls=new Set(),sellerChatLoadedMessages=[],sellerChatPendingVoices=[],sellerChatPendingMedia=[],sellerChatPointerDown=false,sellerChatPointerStartY=0,sellerChatRecordingLocked=false,sellerChatIgnoreNextClick=false;
 const DEFAULT_MAINTENANCE_MESSAGE='ប្រព័ន្ធកំពុងធ្វើការអភិវឌ្ឍន៍ និងបន្ថែមមុខងារថ្មីៗ សូមអធ្យាស្រ័យចំពោះការរំខាន!';let maintenanceMode=false,maintenanceMessage=DEFAULT_MAINTENANCE_MESSAGE,faviconUrl='';
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -79,7 +80,8 @@ function applySiteBranding(data={}){
   siteBranding={...siteBranding,...data};
   const title=String(siteBranding.siteTitle||'7inOne');
   const subtitle=String(siteBranding.siteSubtitle||'ផ្សារទិញលក់កម្ពុជា');
-  const logo=String(siteBranding.siteLogoUrl||siteBranding.faviconUrl||'');
+  const logo=String(siteBranding.siteLogoUrl||'');
+  const favicon=String(siteBranding.faviconUrl||'');
   document.title=title+' · '+subtitle;
   if($('siteTitle'))$('siteTitle').textContent=title;
   if($('siteSubtitle'))$('siteSubtitle').textContent=subtitle;
@@ -96,7 +98,7 @@ function applySiteBranding(data={}){
     if(logo)footerMark.innerHTML='<img src="'+esc(logo)+'" alt="" class="h-full w-full object-contain rounded-lg bg-white p-1">';
     else footerMark.textContent='7';
   }
-  if(logo)applyFavicon(logo);
+  if(favicon)applyFavicon(favicon);
   const textMap=[['heroBadge','heroBadge'],['heroTitle','heroTitle'],['heroSubtitle','heroSubtitle']];
   for(const [id,key] of textMap)if($(id))$(id).textContent=String(siteBranding[key]||'');
   const images=Array.isArray(siteBranding.heroImages)?siteBranding.heroImages.slice(0,3):[];
@@ -120,6 +122,10 @@ function brandingPreviewLogo(url){
   const target=$('brandLogoPreview');if(!target)return;
   target.innerHTML=url?'<img src="'+esc(url)+'" alt="" />':'<span>7</span>';
 }
+function brandingPreviewFavicon(url){
+  const target=$('brandFaviconPreview');if(!target)return;
+  target.innerHTML=url?'<img src="'+esc(url)+'" alt="" />':'<span>7</span>';
+}
 function renderBrandingAdmin(){
   if(!isAdmin())return;
   const b=siteBranding;
@@ -134,6 +140,7 @@ function renderBrandingAdmin(){
   $('brandHeroPreviewTitle').textContent=b.heroTitle||'';
   $('brandHeroPreviewSubtitle').textContent=b.heroSubtitle||'';
   brandingPreviewLogo(b.siteLogoUrl||'');
+  brandingPreviewFavicon(b.faviconUrl||'');
   renderBrandingHeroPreviews();
   $('brandingStatus').textContent=b.siteLogoUrl?'Logo និង Brand បច្ចុប្បន្នបានផ្ទុកពី Database។':'កំពុងប្រើ Brand Logo លំនាំដើម។';
 }
@@ -769,6 +776,12 @@ $('sellerDashboardContent').addEventListener('click',e=>{const tab=e.target.clos
 $('sellerProductSearch').addEventListener('input',renderSellerProductList);
 $('sellerDashboardContent').addEventListener('click',async e=>{const b=e.target.closest('[data-offer-action]');if(!b)return;try{await api('/api/offers/'+b.dataset.id,{method:'PATCH',body:JSON.stringify({status:b.dataset.offerAction})});toast('បានកែប្រែសំណើតថ្លៃ។');await renderSeller()}catch(err){toast(err.message,'error')}});
 $('sellerDashboardContent').addEventListener('click',async e=>{const b=e.target.closest('[data-order-status]');if(!b)return;try{await api('/api/vendor/orders/'+encodeURIComponent(b.dataset.orderId),{method:'PATCH',body:JSON.stringify({status:b.dataset.orderStatus})});toast('បានធ្វើបច្ចុប្បន្នភាពការបញ្ជាទិញ។');await renderSeller();await loadOrders()}catch(err){toast(err.message,'error')}});
+$('brandingFaviconUpload').addEventListener('change',event=>{
+  const file=event.target.files?.[0];if(!file)return;
+  if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>2*1024*1024){toast('Favicon ត្រូវជា JPG, PNG ឬ WEBP និងមិនលើស 2MB។','warning');event.target.value='';return}
+  if(brandingFaviconPreviewUrl)URL.revokeObjectURL(brandingFaviconPreviewUrl);
+  brandingFaviconPreviewUrl=URL.createObjectURL(file);brandingPreviewFavicon(brandingFaviconPreviewUrl);
+});
 $('brandingLogoUpload').addEventListener('change',event=>{
   const file=event.target.files?.[0];if(!file)return;
   if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>2*1024*1024){toast('Logo ត្រូវជា JPG, PNG ឬ WEBP និងមិនលើស 2MB។','warning');event.target.value='';return}
@@ -786,8 +799,9 @@ $('brandingHeroUpload').addEventListener('change',event=>{
 ['brandTitleInput','brandSubtitleInput','heroBadgeInput','heroTitleInput','heroSubtitleInput'].forEach(id=>$(id).addEventListener('input',updateBrandingTextPreview));
 $('saveBrandingBtn').addEventListener('click',async()=>{
   if(!isAdmin()){toast('មុខងារនេះសម្រាប់ Admin ប៉ុណ្ណោះ។','error');return}
-  const button=$('saveBrandingBtn'),logo=$('brandingLogoUpload').files?.[0],heroFiles=Array.from($('brandingHeroUpload').files||[]);
+  const button=$('saveBrandingBtn'),logo=$('brandingLogoUpload').files?.[0],favicon=$('brandingFaviconUpload').files?.[0],heroFiles=Array.from($('brandingHeroUpload').files||[]);
   if(logo&&(!['image/jpeg','image/png','image/webp'].includes(logo.type)||logo.size>2*1024*1024)){toast('Logo ត្រូវជា JPG, PNG ឬ WEBP និងមិនលើស 2MB។','warning');return}
+  if(favicon&&(!['image/jpeg','image/png','image/webp'].includes(favicon.type)||favicon.size>2*1024*1024)){toast('Favicon ត្រូវជា JPG, PNG ឬ WEBP និងមិនលើស 2MB។','warning');return}
   if(heroFiles.length>3||heroFiles.some(file=>!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>8*1024*1024)){toast('Banner អាច Upload JPG, PNG ឬ WEBP ចំនួនមិនលើស ៣ រូប និង 8MB ក្នុងមួយរូប។','warning');return}
   const form=new FormData();
   form.append('siteTitle',$('brandTitleInput').value.trim());
@@ -797,14 +811,16 @@ $('saveBrandingBtn').addEventListener('click',async()=>{
   form.append('heroSubtitle',$('heroSubtitleInput').value.trim());
   form.append('clearHeroImages',$('clearHeroImages').checked?'true':'false');
   if(logo)form.append('logo',logo);
+  if(favicon)form.append('favicon',favicon);
   heroFiles.forEach(file=>form.append('heroImages',file));
   button.disabled=true;button.textContent='កំពុងរក្សាទុក...';
   try{
     const result=await api('/api/admin/branding',{method:'PATCH',body:form});
     applySiteBranding(result.data||{});
     $('brandingStatus').textContent='បានរក្សាទុក Brand & Banner ទៅ Database រួចរាល់។';
-    $('brandingLogoUpload').value='';$('brandingHeroUpload').value='';$('clearHeroImages').checked=false;
+    $('brandingLogoUpload').value='';$('brandingFaviconUpload').value='';$('brandingHeroUpload').value='';$('clearHeroImages').checked=false;
     if(brandingLogoPreviewUrl){URL.revokeObjectURL(brandingLogoPreviewUrl);brandingLogoPreviewUrl=null}
+    if(brandingFaviconPreviewUrl){URL.revokeObjectURL(brandingFaviconPreviewUrl);brandingFaviconPreviewUrl=null}
     brandingHeroPreviewUrls.forEach(url=>URL.revokeObjectURL(url));brandingHeroPreviewUrls=[];
     renderBrandingAdmin();toast('បានរក្សាទុក Brand & Hero Banner ជោគជ័យ។','success');
   }catch(error){toast(error.message,'error')}
