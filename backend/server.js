@@ -562,7 +562,7 @@ app.post('/api/auth/telegram/admin-bootstrap', adminBootstrapLimiter, async (req
   const email = clean(req.body.email, 254).toLowerCase();
   const suppliedKey = String(req.body.bootstrapKey || '');
   const expectedKey = process.env.ADMIN_TELEGRAM_BOOTSTRAP_KEY || '';
-  const keyMatches = Boolean(expectedKey && suppliedKey && suppliedKey.length === expectedKey.length &&
+  const keyMatches = Boolean(expectedKey.length >= 32 && suppliedKey && suppliedKey.length === expectedKey.length &&
     timingSafeEqual(Buffer.from(suppliedKey), Buffer.from(expectedKey)));
   if (!keyMatches) return fail(res, 401, 'Recovery Key មិនត្រឹមត្រូវ។');
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return fail(res, 400, 'សូមបញ្ចូល Email Admin ត្រឹមត្រូវ។');
