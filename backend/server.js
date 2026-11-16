@@ -13,6 +13,10 @@ import { randomUUID, randomBytes, randomInt, createHash, createHmac, timingSafeE
 
 const app = express();
 const port = Number(process.env.PORT || 10000);
+const PRODUCT_RENEWAL_DAY_MS=24*60*60*1000;
+const PRODUCT_PUBLIC_MAX_AGE_MS=7*PRODUCT_RENEWAL_DAY_MS;
+const PRODUCT_AUTO_DELETE_AGE_MS=14*PRODUCT_RENEWAL_DAY_MS;
+
 const frontendDir = fileURLToPath(new URL('../frontend', import.meta.url));
 const nextApp = next({ dev: process.env.NODE_ENV !== 'production', dir: frontendDir });
 const nextHandler = nextApp.getRequestHandler();
@@ -177,7 +181,7 @@ async function deleteTelegramMessage(messageId) {
 }
 
 registerSupportChat(app, { supabase, authenticate, requireAdmin, telegram, telegramStorageChatId, deleteTelegramMessage, clean, fail });
-registerSellerChat(app, { supabase, authenticate, requireVendor, upload, telegram, telegramStorageChatId, clean, fail });
+registerSellerChat(app, { supabase, authenticate, requireVendor, upload, telegram, telegramStorageChatId, clean, fail, productPublicMaxAgeMs: PRODUCT_PUBLIC_MAX_AGE_MS });
 const telegramMediaUrl = fileId => fileId ? `/api/media/telegram/${encodeURIComponent(fileId)}` : null;
 function publicMediaUrl(path) {
   if (!path || !supabase) return null;
@@ -472,16 +476,13 @@ app.get('/api/media/telegram/:fileId', async (req, res) => {
 });
 
 
-const PRODUCT_RENEWAL_DAY_MS=24*60*60*1000;
-const PRODUCT_PUBLIC_MAX_AGE_MS=7*PRODUCT_RENEWAL_DAY_MS;
-const PRODUCT_AUTO_DELETE_AGE_MS=14*PRODUCT_RENEWAL_DAY_MS;
 let productCleanupPromise=null;
 async function cleanupExpiredProducts(){
   if(!supabase)return {deleted:0,archived:0};
   if(productCleanupPromise)return productCleanupPromise;
   productCleanupPromise=(async()=>{
     const cutoff=new Date(Date.now()-PRODUCT_AUTO_DELETE_AGE_MS).toISOString();
-    const {data:stale,error}=await supabase.from('products').select('id,status,product_images(id,telegram_message_id)').lt('renewed_at',cutoff).limit(200);
+    const {data:stale,error}=await supabase.from('products').select('id,status,product_images(id,telegram_message_id)').lt('renewed_at',cutoff).neq('status','archived').limit(200);
     if(error){console.error('Product lifecycle cleanup failed:',error.message);return {deleted:0,archived:0,error:error.message}}
     let deleted=0,archived=0;
     for(const product of stale||[]){
