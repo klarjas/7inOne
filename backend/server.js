@@ -476,8 +476,48 @@ app.post('/api/telegram/webhook', async (req, res) => {
     const textValue = clean(message?.text, 500);
     if (!message || chat?.type !== 'private' || !textValue.startsWith('/start')) return;
     const payload = textValue.split(/\s+/, 2)[1] || '';
+    if (payload.startsWith('login_')) {
+      const rawLoginToken = payload.slice(6);
+      if (!/^[A-Za-z0-9_-]{32,80}$/.test(rawLoginToken)) {
+        await sendTelegramMessage(chat.id, 'តំណ Login មិនត្រឹមត្រូវ ឬផុតកំណត់។ សូមត្រឡប់ទៅ 7inOne ហើយសាកល្បងម្ដងទៀត។');
+        return;
+      }
+      const loginHash = sha256(rawLoginToken);
+      const { data: loginToken, error: loginTokenError } = await supabase.from('telegram_login_tokens')
+        .select('token_hash,expires_at,consumed_at').eq('token_hash', loginHash).maybeSingle();
+      if (loginTokenError || !loginToken || loginToken.consumed_at || new Date(loginToken.expires_at).getTime() < Date.now()) {
+        await sendTelegramMessage(chat.id, 'តំណ Login នេះបានប្រើរួច ឬផុតកំណត់។ សូមចាប់ផ្ដើមម្ដងទៀតពី 7inOne។');
+        return;
+      }
+      const { data: linkedAccount, error: linkedAccountError } = await supabase.from(telegramLinkTable)
+        .select('user_id,account_email').eq('telegram_user_id', chat.id).maybeSingle();
+      if (linkedAccountError) throw linkedAccountError;
+      if (!linkedAccount?.account_email) {
+        await sendTelegramMessage(chat.id, 'Telegram នេះមិនទាន់ភ្ជាប់ជាមួយគណនី 7inOne ទេ។ សូមចូល 7inOne ដោយ Email/Password រួច Connect Telegram ក្នុង Profile ជាមុនសិន។');
+        return;
+      }
+      const { data: consumed, error: consumeError } = await supabase.from('telegram_login_tokens')
+        .update({ consumed_at: new Date().toISOString() }).eq('token_hash', loginHash).is('consumed_at', null)
+        .gt('expires_at', new Date().toISOString()).select('token_hash').maybeSingle();
+      if (consumeError) throw consumeError;
+      if (!consumed) {
+        await sendTelegramMessage(chat.id, 'តំណ Login នេះត្រូវបានប្រើរួច ឬផុតកំណត់។');
+        return;
+      }
+      const baseUrl = clean(process.env.PUBLIC_APP_URL || '', 500).replace(/\/$/, '');
+      if (!/^https:\/\//i.test(baseUrl)) throw new Error('Set PUBLIC_APP_URL to the public HTTPS 7inOne website URL in Render.');
+      const { data: magic, error: magicError } = await supabase.auth.admin.generateLink({
+        type: 'magiclink',
+        email: linkedAccount.account_email,
+        options: { redirectTo: baseUrl }
+      });
+      if (magicError || !magic?.properties?.action_link) throw magicError || new Error('Supabase did not generate a sign-in link.');
+      await sendTelegramMessage(chat.id,
+        '7inOne Login៖ សូមចុចតំណសុវត្ថិភាពខាងក្រោម ដើម្បីចូលគណនីរបស់អ្នក។ តំណនេះប្រើបានតែម្តង និងមានសុពលភាពខ្លី។\n' + magic.properties.action_link);
+      return;
+    }
     if (!payload.startsWith('connect_')) {
-      await sendTelegramMessage(chat.id, 'សូមត្រឡប់ទៅ 7inOne ហើយចុច Connect Telegram ដើម្បីភ្ជាប់គណនីរបស់អ្នក។');
+      await sendTelegramMessage(chat.id, 'សូមត្រឡប់ទៅ 7inOne ហើយចុច Connect Telegram ឬ Continue with Telegram ដើម្បីបន្ត។');
       return;
     }
     const rawToken = payload.slice(8);
@@ -517,6 +557,35 @@ app.post('/api/telegram/webhook', async (req, res) => {
     await sendTelegramMessage(chat.id, 'បានភ្ជាប់ Telegram ជាមួយគណនី 7inOne រួចរាល់។ អ្នកអាចប្រើ Telegram នេះសម្រាប់ផ្ទៀងផ្ទាត់ការប្ដូរ Password និងទទួលសារសុវត្ថិភាព។');
   } catch (error) {
     console.error('Telegram webhook processing failed:', error.message);
+  }
+});
+
+const telegramLoginLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  limit: 5,
+  standardHeaders: 'draft-8',
+  legacyHeaders: false,
+  message: { error: 'សូមរង់ចាំមុនពេលស្នើ Login តាម Telegram ម្ដងទៀត។' }
+});
+
+// Start Telegram sign-in. The Telegram identity must already be linked to a 7inOne account.
+app.post('/api/auth/telegram/login/start', telegramLoginLimiter, async (req, res) => {
+  try {
+    if (!process.env.TELEGRAM_BOT_TOKEN) return fail(res, 503, 'Telegram Bot មិនទាន់កំណត់នៅ Render ទេ។');
+    await ensureTelegramWebhook(req);
+    const bot = await telegram('getMe', { method: 'POST' });
+    if (!bot?.username) throw new Error('Telegram Bot មិនមាន username ទេ។');
+    const token = randomBytes(32).toString('base64url');
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
+    const { error } = await supabase.from('telegram_login_tokens').insert({
+      token_hash: sha256(token), expires_at: expiresAt
+    });
+    if (error) throw error;
+    res.set('Cache-Control', 'no-store');
+    return res.json({ data: { url: `https://t.me/${bot.username}?start=login_${token}`, expiresAt } });
+  } catch (error) {
+    console.error('Telegram login initiation failed:', error.message);
+    return fail(res, 503, 'មិនអាចចាប់ផ្ដើម Login តាម Telegram បានទេ។ សូមព្យាយាមម្ដងទៀត។');
   }
 });
 
