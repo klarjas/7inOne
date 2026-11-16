@@ -171,6 +171,13 @@
 <form class="hidden mt-4 space-y-3" id="telegramRecoveryForm">
   <p class="text-[10px] leading-5 text-slate-500">បញ្ចូល Email របស់គណនីដែលបានភ្ជាប់ Telegram រួច ដើម្បីទទួល OTP សង្គ្រោះ Password។</p>
   <label><span class="label">Email គណនី 7inOne</span><input class="field" id="recoveryEmail" type="email" autocomplete="email" required placeholder="name@email.com"/></label>
+  <div class="rounded-xl border border-amber-200 bg-amber-50 p-3">
+    <b class="block text-[10px] text-amber-800">Admin មិនទាន់ភ្ជាប់ Telegram?</b>
+    <p class="mt-1 text-[9px] leading-5 text-amber-700">ដាក់ Temporary Recovery Key ពី Render ម្តង ដើម្បីភ្ជាប់ Telegram ទៅ Admin ដំបូង។</p>
+    <input class="field mt-2" id="adminBootstrapKey" type="password" autocomplete="off" placeholder="Admin Recovery Key"/>
+    <button class="mt-2 w-full rounded-xl border border-amber-300 bg-white py-2.5 text-[10px] font-bold text-amber-800" id="bootstrapAdminTelegramBtn" type="button">ភ្ជាប់ Telegram ទៅ Admin</button>
+    <a class="mt-2 hidden block rounded-lg bg-white px-3 py-2.5 text-center text-[10px] font-bold text-sky-700" id="adminTelegramStartLink" href="#" target="_blank" rel="noopener noreferrer">បើក Telegram Bot ហើយចុច Start</a>
+  </div>
   <button class="w-full rounded-xl border border-sky-200 bg-sky-50 py-3 text-[10px] font-bold text-sky-700" id="requestRecoveryOtpBtn" type="button">ផ្ញើ OTP ទៅ Telegram</button>
   <label><span class="label">OTP ៦ ខ្ទង់</span><input class="field" id="recoveryOtp" inputmode="numeric" maxlength="6" autocomplete="one-time-code" required placeholder="បញ្ចូលលេខកូដ Telegram"/></label>
   <label><span class="label">Password ថ្មី</span><input class="field" id="recoveryNewPassword" type="password" minlength="8" maxlength="72" autocomplete="new-password" required placeholder="យ៉ាងតិច ៨ តួអក្សរ"/></label>
