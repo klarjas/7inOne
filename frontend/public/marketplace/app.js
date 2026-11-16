@@ -144,7 +144,12 @@ async function renderProfile(){
   $('profileBio').value=p.bio||'';
   $('profileAvatar').src=p.avatar_url||'https://i.pravatar.cc/160?img=12';
   $('profileHeadingName').textContent=profileName();
-  $('profileHeadingMeta').textContent=session.user.email||session.user.phone||'សមាជិក 7inOne';
+  const accountEmail=String(session.user.email||'');
+  const isInternalTelegramEmail=accountEmail.endsWith('@auth.7inone.invalid');
+  $('profileHeadingMeta').textContent=session.user.phone ||
+    (!isInternalTelegramEmail&&accountEmail) ||
+    (p.telegram_username?'@'+p.telegram_username:'គណនី Telegram') ||
+    'សមាជិក 7inOne';
   const roleBadges=[];
   if(me.isAdmin) roleBadges.push('<span class="account-role-chip bg-violet-50 text-violet-700">'+ic('shield',12)+' អ្នកគ្រប់គ្រង</span>');
   if(isVerifiedSeller()) roleBadges.push('<span class="account-role-chip bg-emerald-50 text-emerald-700">'+ic('checkcircle',12)+' អ្នកលក់បានផ្ទៀងផ្ទាត់</span>');
