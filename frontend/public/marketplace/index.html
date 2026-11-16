@@ -12,8 +12,33 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <script>tailwind.config={theme:{extend:{fontFamily:{khmer:['Kantumruy Pro','sans-serif']},colors:{brand:'#4F46E5',emerald:'#10B981',amber:'#F59E0B'}}}};</script>
 <link rel="stylesheet" href="./style.css"/>
-<style>html.route-restoring .view{visibility:hidden!important}</style>
-<script>document.documentElement.classList.add("route-restoring");</script>
+<script>
+(function(){
+  var allowed=['home','profile','seller','admin'];
+  var fromHash=String(window.location.hash||'').replace(/^#/,'');
+  var fromStorage='';
+  try{fromStorage=sessionStorage.getItem('ecomstore.activeView')||''}catch(e){}
+  var initial=allowed.includes(fromHash)?fromHash:(allowed.includes(fromStorage)?fromStorage:'home');
+  document.documentElement.dataset.initialView=initial;
+  document.documentElement.classList.add('route-restoring');
+})();
+</script>
+<style>
+html.route-restoring .view{display:none!important}
+html.route-restoring[data-initial-view="home"] #view-home,
+html.route-restoring[data-initial-view="profile"] #view-profile,
+html.route-restoring[data-initial-view="seller"] #view-seller,
+html.route-restoring[data-initial-view="admin"] #view-admin{display:block!important;animation:none!important}
+html.route-restoring[data-initial-view="home"] #view-home>*,
+html.route-restoring[data-initial-view="profile"] #view-profile>*,
+html.route-restoring[data-initial-view="seller"] #view-seller>*,
+html.route-restoring[data-initial-view="admin"] #view-admin>*{visibility:hidden!important}
+html.route-restoring[data-initial-view="home"] #view-home::before,
+html.route-restoring[data-initial-view="profile"] #view-profile::before,
+html.route-restoring[data-initial-view="seller"] #view-seller::before,
+html.route-restoring[data-initial-view="admin"] #view-admin::before{content:"";display:block;width:min(1320px,calc(100% - 36px));height:clamp(220px,38vh,360px);margin:24px auto;border:1px solid #e8ecf4;border-radius:26px;background:linear-gradient(110deg,#edf0f6 8%,#f8fafc 18%,#edf0f6 33%);background-size:220% 100%;animation:initialRouteShimmer 1.5s linear infinite}
+@keyframes initialRouteShimmer{to{background-position-x:-220%}}
+</style>
 
 
 </head>
@@ -40,7 +65,7 @@
 </header>
 <main class="bottom-pad">
 <!-- HOME VIEW -->
-<section class="view active" id="view-home">
+<section class="view" id="view-home">
 <div class="shell pt-7 sm:pt-9"><div class="hero-bg relative overflow-hidden rounded-[28px] border border-indigo-100/80 px-6 py-8 sm:px-10 sm:py-10 lg:px-14">
 <div class="pointer-events-none absolute -right-16 -top-28 h-72 w-72 rounded-full border-[42px] border-white/40"></div>
 <div class="relative z-10 grid gap-7 md:grid-cols-[1.1fr_.9fr] md:items-center">
