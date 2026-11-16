@@ -6,7 +6,7 @@ const $=id=>document.getElementById(id);
 const ic=(name,size=17,extra='')=>`<svg aria-hidden="true" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="${extra}">${iconPaths[name]||iconPaths.spark}</svg>`;
 const CAT={phones:'ទូរស័ព្ទ & អេឡិចត្រូនិក',vehicles:'រថយន្ត & ម៉ូតូ',property:'អចលនទ្រព្យ',fashion:'សម្លៀកបំពាក់',furniture:'គ្រឿងសង្ហារិម'};
 const CATICON={all:'grid',phones:'phone',vehicles:'car',property:'home',fashion:'shirt',furniture:'sofa'};
-let supabaseClient=null,session=null,sessionRefreshPromise=null,me=null,supportChatPollTimer=null,adminChatPollTimer=null,activeAdminChatId=null,restoredUserChatArchives={},restoredAdminChatArchives={},pendingPhone=null,products=[],savedIds=new Set(),favoritePending=new Set(),activeCategory='all',searchTerm='',currentProduct=null,currentVendor=null,profileTab='saved',authMode='login',currentOfferProduct=null,selectedProductImages=[],sellerDocPreviewUrl=null,telegramBotUsername='',telegramLoginWidgetMounted=false,telegramProfileWidgetMounted=false;
+let supabaseClient=null,session=null,sessionRefreshPromise=null,me=null,routeAccessReady=false,supportChatPollTimer=null,adminChatPollTimer=null,activeAdminChatId=null,restoredUserChatArchives={},restoredAdminChatArchives={},pendingPhone=null,products=[],savedIds=new Set(),favoritePending=new Set(),activeCategory='all',searchTerm='',currentProduct=null,currentVendor=null,profileTab='saved',authMode='login',currentOfferProduct=null,selectedProductImages=[],sellerDocPreviewUrl=null,telegramBotUsername='',telegramLoginWidgetMounted=false,telegramProfileWidgetMounted=false;
 const DEFAULT_MAINTENANCE_MESSAGE='ប្រព័ន្ធកំពុងធ្វើការអភិវឌ្ឍន៍ និងបន្ថែមមុខងារថ្មីៗ សូមអធ្យាស្រ័យចំពោះការរំខាន!';let maintenanceMode=false,maintenanceMessage=DEFAULT_MAINTENANCE_MESSAGE,faviconUrl='';
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money=v=>'$'+Number(v||0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:2});
@@ -17,7 +17,29 @@ function openModal(id){closeDropdowns();$(id).classList.add('open');$(id).setAtt
 function closeModal(id){const el=$(id);if(!el)return;el.classList.remove('open');el.setAttribute('aria-hidden','true');if(!document.querySelector('.modal.open'))document.body.classList.remove('overflow-hidden')}
 function closeDropdowns(){document.querySelectorAll('.dropdown').forEach(x=>x.classList.remove('open'))}
 function toggleDrop(id){const el=$(id),open=el.classList.contains('open');closeDropdowns();if(!open)el.classList.add('open')}
-function showView(name,options={}){const role=me?.isAdmin?'admin':me?.vendor?.status==='approved'?'seller':'buyer';if(['profile','seller'].includes(name)&&!session){openAuth();return}if(name==='admin'&&!me?.isAdmin){toast('មុខងារនេះសម្រាប់ Admin ប៉ុណ្ណោះ។','error');return}if(name==='seller'&&me?.vendor?.status!=='approved'){toast(me?.vendor?.status==='pending'?'ពាក្យអ្នកលក់កំពុងរង់ចាំការអនុម័ត។':'សូមចុះឈ្មោះក្លាយជាអ្នកលក់ជាមុនសិន។','warning');if(!me?.vendor)openSellerModal();return}document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));$('view-'+name)?.classList.add('active');try{sessionStorage.setItem('ecomstore.activeView',name)}catch(error){console.warn('Could not save active page:',error)}closeDropdowns();if(!options.preserveScroll)window.scrollTo({top:0,behavior:'smooth'});if(name==='profile')void renderProfile();if(name==='seller')void renderSeller();if(name==='admin'){void renderAdmin();void loadSupportAdminChats();}void role}
+function showView(name,options={}){
+  const allowed=['home','profile','seller','admin'];
+  if(!allowed.includes(name))name='home';
+  if(!options.optimistic){
+    if(['profile','seller'].includes(name)&&!session){openAuth();return Promise.resolve(false)}
+    if(name==='admin'&&!me?.isAdmin){if(options.fromHistory){name='home'}else{toast('មុខងារនេះសម្រាប់ Admin ប៉ុណ្ណោះ។','error');return Promise.resolve(false)}}
+    if(name==='seller'&&me?.vendor?.status!=='approved'){if(options.fromHistory){name='home'}else{toast(me?.vendor?.status==='pending'?'ពាក្យអ្នកលក់កំពុងរង់ចាំការអនុម័ត។':'សូមចុះឈ្មោះក្លាយជាអ្នកលក់ជាមុនសិន។','warning');if(!me?.vendor)openSellerModal();return Promise.resolve(false)}}
+  }
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  $('view-'+name)?.classList.add('active');
+  document.documentElement.dataset.initialView=name;
+  try{sessionStorage.setItem('ecomstore.activeView',name)}catch(error){console.warn('Could not save active page:',error)}
+  if(window.location.hash!=='#'+name){try{window.location.hash='#'+name}catch(error){console.warn('Could not update route hash:',error)}}
+  closeDropdowns();
+  if(!options.preserveScroll)window.scrollTo({top:0,behavior:'smooth'});
+  const tasks=[];
+  if(!options.deferLoad){
+    if(name==='profile')tasks.push(renderProfile());
+    if(name==='seller')tasks.push(renderSeller());
+    if(name==='admin'){tasks.push(renderAdmin());tasks.push(loadSupportAdminChats())}
+  }
+  return Promise.all(tasks.map(task=>Promise.resolve(task))).then(()=>true);
+}
 function isAdmin(){return Boolean(me?.isAdmin)}
 function applyMaintenanceUI(){const adminPreview=maintenanceMode&&isAdmin(),blocked=maintenanceMode&&!isAdmin();document.body.classList.toggle('maintenance-active',blocked);$('maintenanceOverlay').classList.toggle('hidden',!blocked);$('maintenanceOverlay').setAttribute('aria-hidden',String(!blocked));$('maintenanceOverlayMessage').textContent=maintenanceMessage;$('maintenanceAdminPill').classList.toggle('hidden',!adminPreview);document.body.classList.add('maintenance-ready')}
 function applyFavicon(url){if(!url)return;faviconUrl=url;let link=document.querySelector('link[data-site-favicon]');if(!link){link=document.createElement('link');link.rel='icon';link.dataset.siteFavicon='true';document.head.appendChild(link)}link.href=url;link.removeAttribute('type');if($('faviconPreview'))$('faviconPreview').src=url}
@@ -478,23 +500,66 @@ async function restoreSupportChatArchive(archiveId,isAdminView){
   }catch(error){toast(error.message,'error')}
 }
 
-async function boot(){try{const cfg=await fetch('/api/config',{cache:'no-store'}).then(r=>r.json());maintenanceMode=cfg.maintenanceMode===true;maintenanceMessage=String(cfg.maintenanceMessage||DEFAULT_MAINTENANCE_MESSAGE);faviconUrl=String(cfg.faviconUrl||'');if(faviconUrl)applyFavicon(faviconUrl);if(!cfg.supabaseUrl||!cfg.supabaseAnonKey)throw new Error('Missing Supabase browser configuration');if(!window.supabase?.createClient)throw new Error('Supabase browser library failed to load');supabaseClient=window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseAnonKey);telegramBotUsername=String(cfg.telegramBotUsername||'').replace(/^@/,'');if($('authModal')?.classList.contains('open')&&!telegramLoginWidgetMounted)telegramLoginWidgetMounted=mountTelegramWidget('telegramLoginWidget','onTelegramAuth');
-      // Subscribe before reading the stored session so INITIAL_SESSION and token events are not missed.
-      // Keep this callback synchronous: Supabase auth callbacks must not await Supabase operations.
-      supabaseClient.auth.onAuthStateChange((event,newSession)=>{
-        session=newSession;
-        if(event==='INITIAL_SESSION')return;
-        Promise.resolve().then(async()=>{
-          try{
-            if(session){await loadIdentity();try{await loadSaved();await loadOrders()}catch(e){console.warn(e)}}
-            else me=null;
-            syncHeader();applyMaintenanceUI();
-            if($('view-profile').classList.contains('active')&&!session)showView('home');
-          }catch(e){console.warn('Auth state update failed:',e.message);toast(e.message,'error')}
-        });
+async function boot(){
+  let requestedView=document.documentElement.dataset.initialView||'home';
+  if(!['home','profile','seller','admin'].includes(requestedView))requestedView='home';
+  // Optimistically activate the requested route before any network/auth work.
+  void showView(requestedView,{optimistic:true,deferLoad:true,preserveScroll:true});
+  try{
+    const cfg=await fetch('/api/config',{cache:'no-store'}).then(r=>r.json());
+    maintenanceMode=cfg.maintenanceMode===true;
+    maintenanceMessage=String(cfg.maintenanceMessage||DEFAULT_MAINTENANCE_MESSAGE);
+    faviconUrl=String(cfg.faviconUrl||'');
+    if(faviconUrl)applyFavicon(faviconUrl);
+    if(!cfg.supabaseUrl||!cfg.supabaseAnonKey)throw new Error('Missing Supabase browser configuration');
+    if(!window.supabase?.createClient)throw new Error('Supabase browser library failed to load');
+    supabaseClient=window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseAnonKey);
+    telegramBotUsername=String(cfg.telegramBotUsername||'').replace(/^@/,'');
+    if($('authModal')?.classList.contains('open')&&!telegramLoginWidgetMounted)telegramLoginWidgetMounted=mountTelegramWidget('telegramLoginWidget','onTelegramAuth');
+    // Subscribe before reading the stored session so INITIAL_SESSION and token events are not missed.
+    supabaseClient.auth.onAuthStateChange((event,newSession)=>{
+      session=newSession;
+      if(event==='INITIAL_SESSION')return;
+      Promise.resolve().then(async()=>{
+        try{
+          if(session){await loadIdentity();try{await loadSaved();await loadOrders()}catch(e){console.warn(e)}}
+          else me=null;
+          syncHeader();applyMaintenanceUI();
+          const current=document.querySelector('.view.active')?.id?.replace('view-','')||'home';
+          if((['profile','seller'].includes(current)&&!session)||(current==='admin'&&!me?.isAdmin)||(current==='seller'&&me?.vendor?.status!=='approved'))showView('home',{preserveScroll:true});
+        }catch(e){console.warn('Auth state update failed:',e.message);toast(e.message,'error')}
       });
-      await refreshSession();
-      if(session){try{await loadSaved();await loadOrders()}catch(e){console.warn(e)}}await loadProducts();let savedView='home';try{savedView=sessionStorage.getItem('ecomstore.activeView')||'home'}catch(error){console.warn('Could not read saved page:',error)}if(!['home','profile','seller','admin'].includes(savedView)||(['profile','seller','admin'].includes(savedView)&&!session)||(savedView==='admin'&&!me?.isAdmin)||(savedView==='seller'&&me?.vendor?.status!=='approved')){try{sessionStorage.removeItem('ecomstore.activeView')}catch{}savedView='home'}let savedScrollY=0;try{savedScrollY=Math.max(0,Number(sessionStorage.getItem('ecomstore.scrollY')||0));}catch{}showView(savedView,{preserveScroll:true});document.documentElement.classList.remove('route-restoring');requestAnimationFrame(()=>requestAnimationFrame(()=>window.scrollTo(0,savedScrollY)));}catch(e){document.documentElement.classList.remove('route-restoring');console.error(e);applyMaintenanceUI();toast('មិនអាចភ្ជាប់ប្រព័ន្ធគណនីបានទេ៖ '+e.message,'error');$('listingSub').textContent='សូមកំណត់ Supabase Auth និង Environment Variables ដើម្បីបើកផ្សារ។';$('skeletonGrid').classList.add('hidden');$('emptyHome').classList.remove('hidden')}}
+    });
+    await refreshSession();
+    // Confirm the requested route only after the server has returned the user's role.
+    const hashRoute=String(window.location.hash||'').replace(/^#/,'');
+    if(['home','profile','seller','admin'].includes(hashRoute))requestedView=hashRoute;
+    const routeAllowed=requestedView==='home' ||
+      (requestedView==='profile'&&Boolean(session)) ||
+      (requestedView==='seller'&&Boolean(session)&&me?.vendor?.status==='approved') ||
+      (requestedView==='admin'&&Boolean(session)&&Boolean(me?.isAdmin));
+    if(!routeAllowed)requestedView='home';
+    routeAccessReady=true;
+    let savedScrollY=0;
+    try{savedScrollY=Math.max(0,Number(sessionStorage.getItem('ecomstore.scrollY')||0))}catch{}
+    const pageTask=showView(requestedView,{preserveScroll:true});
+    const dataTasks=[pageTask,loadProducts()];
+    if(session)dataTasks.push(Promise.all([loadSaved(),loadOrders()]).catch(e=>console.warn(e)));
+    await Promise.all(dataTasks);
+    document.documentElement.classList.remove('route-restoring');
+    requestAnimationFrame(()=>requestAnimationFrame(()=>window.scrollTo(0,savedScrollY)));
+  }catch(e){
+    routeAccessReady=true;
+    console.error(e);
+    showView('home',{preserveScroll:true});
+    document.documentElement.classList.remove('route-restoring');
+    applyMaintenanceUI();
+    toast('មិនអាចភ្ជាប់ប្រព័ន្ធគណនីបានទេ៖ '+e.message,'error');
+    $('listingSub').textContent='សូមកំណត់ Supabase Auth និង Environment Variables ដើម្បីបើកផ្សារ។';
+    $('skeletonGrid').classList.add('hidden');
+    $('emptyHome').classList.remove('hidden');
+  }
+}
 
 $('supportChatLauncher').addEventListener('click',async()=>{
   if(!session){openAuth();return}
@@ -524,5 +589,16 @@ $('adminChatForm').addEventListener('submit',async event=>{
 });
 $('adminChatArchives').addEventListener('click',event=>{const button=event.target.closest('[data-chat-archive]');if(button)void restoreSupportChatArchive(button.dataset.chatArchive,true)});
 if(!adminChatPollTimer)adminChatPollTimer=setInterval(()=>{if(isAdmin()&&$('view-admin').classList.contains('active'))void loadSupportAdminChats()},5000);
+
+function syncRouteFromHistory(){
+  const route=String(window.location.hash||'').replace(/^#/,'');
+  const name=['home','profile','seller','admin'].includes(route)?route:'home';
+  const active=document.querySelector('.view.active')?.id?.replace('view-','');
+  if(active===name)return;
+  if(!routeAccessReady){void showView(name,{optimistic:true,deferLoad:true,preserveScroll:true});return}
+  void showView(name,{fromHistory:true,preserveScroll:true});
+}
+window.addEventListener('hashchange',syncRouteFromHistory);
+window.addEventListener('popstate',syncRouteFromHistory);
 
 void boot();
