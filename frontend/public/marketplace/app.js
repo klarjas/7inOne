@@ -173,7 +173,6 @@ function mountTelegramWidget(targetId,callbackName){
   script.setAttribute('data-size','large');
   script.setAttribute('data-userpic','false');
   script.setAttribute('data-radius','10');
-  script.setAttribute('data-lang','km');
   script.setAttribute('data-onauth',callbackName+'(user)');
   target.appendChild(script);
 }
