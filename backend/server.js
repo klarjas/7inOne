@@ -120,8 +120,15 @@ async function getTelegramBotUsername() {
   try {
     // Prefer the username actually returned for the configured token. An
     // optional environment override is only a fallback if Telegram is unavailable.
-    const bot = await telegram('getMe', { method: 'POST' });
-    const username = clean(bot?.username, 80);
+    const response = await fetch(
+      `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/getMe`,
+      { method: 'POST', signal: AbortSignal.timeout(3500) }
+    );
+    const payload = await response.json().catch(() => null);
+    if (!response.ok || !payload?.ok) {
+      throw new Error(clean(payload?.description || `Telegram HTTP ${response.status}`, 200));
+    }
+    const username = clean(payload.result?.username, 80);
     telegramBotUsernameCache = {
       value: /^[A-Za-z0-9_]{5,32}$/.test(username) ? username : fallback,
       expiresAt: Date.now() + 5 * 60 * 1000
