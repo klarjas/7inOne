@@ -133,3 +133,8 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .admin-chat-item.active{border-color:#818cf8;background:#eef2ff}
 .admin-chat-item.unread{border-left:3px solid #0ea5e9}
 @media(max-width:640px){.support-chat-panel{right:10px;bottom:88px;width:calc(100vw - 20px);height:min(570px,calc(100dvh - 110px))}#supportChatLauncher{right:14px;bottom:18px}.support-chat-messages{height:280px}}
+
+
+/* Initial route skeleton keeps the main/footer layout stable while auth restores. */
+html.route-restoring body>main{min-height:58vh}
+html.route-restoring .view{min-height:58vh}
