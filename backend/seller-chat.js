@@ -1,4 +1,4 @@
-export function registerSellerChat(app, { supabase, authenticate, requireVendor, upload, telegram, telegramStorageChatId, clean, fail }) {
+export function registerSellerChat(app, { supabase, authenticate, requireVendor, upload, telegram, telegramStorageChatId, clean, fail, productPublicMaxAgeMs }) {
   async function getConversationForUser(id, userId) {
     const { data: conversation, error } = await supabase.from('seller_conversations').select('*').eq('id', id).maybeSingle();
     if (error || !conversation) return { error: 'សន្ទនានេះមិនមានទេ។' };
@@ -90,7 +90,7 @@ export function registerSellerChat(app, { supabase, authenticate, requireVendor,
     const productId = clean(req.body.product_id, 80);
     if (!productId) return fail(res, 400, 'សូមជ្រើសរើសទំនិញជាមុនសិន។');
     try {
-      const { data: product, error: productError } = await supabase.from('products').select('id,vendor_id,status,stock,title,price').eq('id', productId).maybeSingle();
+      const { data: product, error: productError } = await supabase.from('products').select('id,vendor_id,status,stock,title,price').eq('id', productId).gte('renewed_at',new Date(Date.now()-(Number(productPublicMaxAgeMs)||7*24*60*60*1000)).toISOString()).maybeSingle();
       if (productError || !product || product.status !== 'active' || Number(product.stock) < 1) return fail(res, 404, 'ទំនិញនេះមិនអាចឆាតបានទេ។');
       const { data: vendor, error: vendorError } = await supabase.from('vendors').select('id,user_id,status,store_name').eq('id', product.vendor_id).maybeSingle();
       if (vendorError || !vendor || vendor.status !== 'approved') return fail(res, 404, 'រកមិនឃើញហាងអ្នកលក់ទេ។');
