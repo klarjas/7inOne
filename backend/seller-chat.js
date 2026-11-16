@@ -236,7 +236,7 @@ export function registerSellerChat(app, { supabase, authenticate, requireVendor,
       const media = Array.isArray(stored.photo) ? stored.photo[stored.photo.length-1] : null;
       if (!media?.file_id || !stored.message_id) throw new Error('Telegram did not return an image file_id.');
       const message = await saveMessage(conversation, req.user.id, conversation.current_role, {
-        body: '📷 រូបភាព', message_type: 'image', telegram_file_id: media.file_id, telegram_message_id: stored.message_id, mime_type: mimeType
+        body: '📷 រូបភាព', message_type: 'image', telegram_file_id: media.file_id, telegram_message_id: stored.message_id, mime_type: 'image/jpeg'
       }, '📷 រូបភាព');
       return res.status(201).json({ data: { message } });
     } catch (error) { console.error('Seller chat image upload failed:', error.message); return fail(res, 502, 'មិនអាចរក្សាទុក ឬផ្ញើរូបភាពទៅ Telegram បានទេ។'); }
