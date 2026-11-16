@@ -474,21 +474,54 @@ app.get('/api/media/telegram/:fileId', async (req, res) => {
   }
 });
 
+
+const PRODUCT_RENEWAL_DAY_MS=24*60*60*1000;
+const PRODUCT_PUBLIC_MAX_AGE_MS=7*PRODUCT_RENEWAL_DAY_MS;
+const PRODUCT_AUTO_DELETE_AGE_MS=14*PRODUCT_RENEWAL_DAY_MS;
+let productCleanupPromise=null;
+async function cleanupExpiredProducts(){
+  if(!supabase)return {deleted:0,archived:0};
+  if(productCleanupPromise)return productCleanupPromise;
+  productCleanupPromise=(async()=>{
+    const cutoff=new Date(Date.now()-PRODUCT_AUTO_DELETE_AGE_MS).toISOString();
+    const {data:stale,error}=await supabase.from('products').select('id,status,product_images(id,telegram_message_id)').lt('renewed_at',cutoff).neq('status','sold').limit(200);
+    if(error){console.error('Product lifecycle cleanup failed:',error.message);return {deleted:0,archived:0,error:error.message}}
+    let deleted=0,archived=0;
+    for(const product of stale||[]){
+      const {count:soldCount,error:countError}=await supabase.from('order_items').select('id',{count:'exact',head:true}).eq('product_id',product.id);
+      if(countError){console.warn('Could not verify order history for expired product:',product.id,countError.message);continue}
+      if((soldCount||0)>0){
+        const {error:archiveError}=await supabase.from('products').update({status:'archived',updated_at:new Date().toISOString()}).eq('id',product.id);
+        if(!archiveError)archived++;else console.warn('Could not archive expired product:',product.id,archiveError.message);
+        continue;
+      }
+      const {error:deleteError}=await supabase.from('products').delete().eq('id',product.id);
+      if(deleteError){console.warn('Could not delete expired product:',product.id,deleteError.message);continue}
+      deleted++;
+      for(const image of product.product_images||[])if(image.telegram_message_id)await deleteTelegramMessage(image.telegram_message_id);
+    }
+    if(deleted||archived)console.log('Product lifecycle cleanup:',{deleted,archived});
+    return {deleted,archived};
+  })().finally(()=>{productCleanupPromise=null});
+  return productCleanupPromise;
+}
+
 // Public catalogue.
 app.get('/api/categories', async (_req, res) => {
   if (!db(res)) return;
-  const { data, error } = await supabase.from('products').select('category').eq('status', 'active');
+  const { data, error } = await supabase.from('products').select('category').eq('status', 'active').gte('renewed_at',new Date(Date.now()-PRODUCT_PUBLIC_MAX_AGE_MS).toISOString());
   if (error) return fail(res, 500, 'Could not load categories');
   res.json({ data: [...new Set((data || []).map(row => row.category).filter(Boolean))].sort() });
 });
 app.get('/api/products', async (req, res) => {
   if (!db(res)) return;
+  await cleanupExpiredProducts();
   const page = Math.max(1, Number.parseInt(req.query.page, 10) || 1);
   const limit = Math.min(50, Math.max(1, Number.parseInt(req.query.limit, 10) || 24));
   const q = clean(req.query.q, 100);
   const category = clean(req.query.category, 80);
-  let query = supabase.from('products').select('id,title,description,price,stock,category,location,condition,view_count,created_at,vendor_id,product_images(id,file_id,image_url,sort_order),vendors!inner(id,store_name,status)', { count: 'exact' })
-    .eq('status', 'active').eq('vendors.status', 'approved').gt('stock', 0).order('created_at', { ascending: false })
+  let query = supabase.from('products').select('id,title,description,price,stock,category,location,condition,view_count,created_at,updated_at,renewed_at,vendor_id,product_images(id,file_id,image_url,sort_order),vendors!inner(id,store_name,status)', { count: 'exact' })
+    .eq('status', 'active').eq('vendors.status', 'approved').gt('stock', 0).gte('renewed_at',new Date(Date.now()-PRODUCT_PUBLIC_MAX_AGE_MS).toISOString()).order('created_at', { ascending: false })
     .range((page - 1) * limit, page * limit - 1);
   if (q) { const term = q.replace(/[%_,()]/g, '').trim(); if (term) query = query.or(`title.ilike.%${term}%,description.ilike.%${term}%,location.ilike.%${term}%`); }
   if (category) query = query.eq('category', category);
@@ -502,7 +535,7 @@ app.get('/api/products/:id', async (req, res) => {
   if (!db(res)) return;
   let { data, error } = await supabase.from('products')
     .select('*,product_images(id,file_id,image_url,sort_order),vendors!inner(id,store_name,status)')
-    .eq('id', req.params.id).eq('status', 'active').eq('vendors.status', 'approved').gt('stock', 0).maybeSingle();
+    .eq('id', req.params.id).eq('status', 'active').eq('vendors.status', 'approved').gt('stock', 0).gte('renewed_at',new Date(Date.now()-PRODUCT_PUBLIC_MAX_AGE_MS).toISOString()).maybeSingle();
   if (error || !data) return fail(res, 404, 'Product not found');
   const nextViews = Number(data.view_count || 0) + 1;
   await supabase.from('products').update({ view_count: nextViews }).eq('id', data.id);
@@ -1382,10 +1415,11 @@ app.post('/api/vendors/register', authenticate, upload.single('document'), async
 
 // Vendor product management.
 app.get('/api/vendor/products', authenticate, async (req, res) => {
+  await cleanupExpiredProducts();
   const { data: vendor } = await vendorFor(req.user.id);
   if (!vendor) return fail(res, 403, 'Vendor account not found');
   const { data, error } = await supabase.from('products')
-    .select('*,product_images(id,file_id,image_url,telegram_message_id,sort_order)')
+    .select('*,renewed_at,product_images(id,file_id,image_url,telegram_message_id,sort_order)')
     .eq('vendor_id', vendor.id).order('created_at', { ascending: false });
   if (error) return fail(res, 500, 'Could not load vendor products');
   res.json({ data: (data || []).map(publicProduct), vendor });
@@ -1431,17 +1465,19 @@ app.post('/api/products', authenticate, async (req, res) => {
   const location = clean(req.body.location, 100);
   const condition = clean(req.body.condition || 'ប្រើរួចស្អាត', 60);
   const { data, error } = await supabase.from('products')
-    .insert({ vendor_id: vendor.id, title, description, category, price, stock, location, condition, status }).select().single();
+    .insert({ vendor_id: vendor.id, title, description, category, price, stock, location, condition, status, renewed_at:new Date().toISOString() }).select().single();
   if (error) return fail(res, 400, 'Could not create product');
   res.status(201).json({ data });
 });
 app.patch('/api/products/:id', authenticate, async (req, res) => {
   const { data: vendor } = await vendorFor(req.user.id);
   const admin = await isAdmin(req.user.id);
-  const { data: existing } = await supabase.from('products').select('id,vendor_id,status').eq('id', req.params.id).maybeSingle();
+  const { data: existing } = await supabase.from('products').select('id,vendor_id,status,renewed_at').eq('id', req.params.id).maybeSingle();
   if (!existing) return fail(res, 404, 'Product not found');
   if (!admin && (!vendor || vendor.status !== 'approved' || vendor.id !== existing.vendor_id)) return fail(res, 403, 'Approved store ownership required');
   const patch = {};
+  const isRenewal=req.body.renew===true;
+  if(isRenewal){if(existing.status==='sold')return fail(res,400,'Sold products cannot be renewed.');patch.renewed_at=new Date().toISOString();patch.status='active';}
   for (const key of ['title','description','category','location','condition']) if (req.body[key] !== undefined) patch[key] = clean(req.body[key], key === 'description' ? 5000 : key === 'title' ? 160 : 100);
   if (req.body.price !== undefined) patch.price = Number(req.body.price);
   if (req.body.stock !== undefined) patch.stock = Number(req.body.stock);
@@ -1819,3 +1855,6 @@ app.use((error, _req, res, _next) => {
 await nextApp.prepare();
 app.use((req, res) => nextHandler(req, res));
 app.listen(port, () => console.log(`7inOne full-stack service listening on ${port}`));
+const productLifecycleTimer=setInterval(()=>{void cleanupExpiredProducts()},60*60*1000);
+productLifecycleTimer.unref?.();
+void cleanupExpiredProducts();
