@@ -39,6 +39,9 @@ function showView(name,options={}){
     if(name==='profile')tasks.push(renderProfile());
     if(name==='seller')tasks.push(renderSeller());
     if(name==='admin'){tasks.push(renderAdmin());tasks.push(loadSupportAdminChats())}
+    // Detail and storefront views must render their fetched data after activation.
+    if(name==='product')tasks.push(Promise.resolve().then(()=>renderProductDetail()));
+    if(name==='store')tasks.push(Promise.resolve().then(()=>renderStorefront()));
   }
   return Promise.all(tasks.map(task=>Promise.resolve(task))).then(()=>true);
 }
