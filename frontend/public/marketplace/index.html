@@ -12,7 +12,7 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <script>tailwind.config={theme:{extend:{fontFamily:{khmer:['Kantumruy Pro','sans-serif']},colors:{brand:'#4F46E5',emerald:'#10B981',amber:'#F59E0B'}}}};</script>
 <link rel="stylesheet" href="./style.css"/>
-<style>html.route-restoring .view{display:none!important}</style>
+<style>html.route-restoring .view:not(#view-home){display:none!important}html.route-restoring #view-home{display:block}</style>
 <script>document.documentElement.classList.add("route-restoring");</script>
 
 
@@ -22,7 +22,7 @@
 <div class="shell flex min-h-[74px] flex-wrap items-center gap-3 py-3">
 <button class="flex shrink-0 items-center gap-2.5 text-left" data-view="home">
 <span class="brand-gradient grid h-10 w-10 place-items-center rounded-2xl text-white shadow-lg shadow-indigo-200"><span id="logoIcon"></span></span>
-<span class="leading-tight"><b class="block text-[18px] tracking-tight">Ecom<span class="text-indigo-600">Store</span></b><small class="block text-[9px] font-medium tracking-wide text-slate-400">ផ្សារទិញលក់កម្ពុជា</small></span>
+<span class="leading-tight"><b class="block text-[18px] tracking-tight">7in<span class="text-indigo-600">One</span></b><small class="block text-[9px] font-medium tracking-wide text-slate-400">ផ្សារទិញលក់កម្ពុជា</small></span>
 </button>
 <form class="order-3 flex w-full items-center rounded-2xl border border-slate-200 bg-slate-50/90 p-1.5 focus-within:border-indigo-300 focus-within:bg-white focus-within:shadow-[0_0_0_4px_rgba(99,102,241,.08)] md:order-none md:ml-5 md:flex-1 md:max-w-[650px]" id="searchForm">
 <select class="hidden h-10 max-w-[145px] cursor-pointer bg-transparent px-2 text-[11px] font-semibold text-slate-600 outline-none sm:block" id="searchCategory"><option value="all">គ្រប់ប្រភេទ</option><option value="phones">ទូរស័ព្ទ &amp; អេឡិចត្រូនិក</option><option value="vehicles">រថយន្ត &amp; ម៉ូតូ</option><option value="property">អចលនទ្រព្យ</option><option value="fashion">សម្លៀកបំពាក់</option><option value="furniture">គ្រឿងសង្ហារិម</option></select>
