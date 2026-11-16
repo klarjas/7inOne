@@ -221,34 +221,41 @@ html.route-restoring[data-initial-view="admin"] #view-admin::before{content:"";d
 <div aria-hidden="true" class="modal" id="productFormModal"><section class="modal-box max-w-[620px] p-5 sm:p-7"><div class="mb-5 flex items-start justify-between"><div><p class="text-[10px] font-bold text-indigo-600">SELLER STUDIO</p><h2 class="mt-1 text-xl font-bold" id="productFormTitle">បន្ថែមទំនិញថ្មី</h2></div><button class="close-btn" data-close="productFormModal"></button></div><form class="space-y-3" id="productForm"><input id="editProductId" type="hidden"/><div class="grid gap-3 sm:grid-cols-2"><label class="sm:col-span-2"><span class="label">ឈ្មោះទំនិញ *</span><input class="field" id="productTitle" maxlength="90" placeholder="ឧ. iPhone 14 Pro Max 256GB" required=""/></label><label><span class="label">តម្លៃ (USD) *</span><div class="relative"><span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">$</span><input class="field pl-8" id="productPrice" min="0.01" placeholder="0.00" required="" step="0.01" type="number"/></div></label><label><span class="label">ប្រភេទ *</span><select class="field" id="productCategory" required=""><option value="">ជ្រើសរើសប្រភេទ</option><option value="phones">ទូរស័ព្ទ &amp; អេឡិចត្រូនិក</option><option value="vehicles">រថយន្ត &amp; ម៉ូតូ</option><option value="property">អចលនទ្រព្យ</option><option value="fashion">សម្លៀកបំពាក់</option><option value="furniture">គ្រឿងសង្ហារិម</option></select></label><label><span class="label">ទីតាំង *</span><select class="field" id="productLocation" required=""><option>ភ្នំពេញ</option><option>សៀមរាប</option><option>បាត់ដំបង</option><option>ព្រះសីហនុ</option><option>កំពង់ចាម</option><option>កំពត</option><option>តាកែវ</option><option>កណ្តាល</option></select></label><label><span class="label">ស្ថានភាព</span><select class="field" id="productCondition"><option>ប្រើរួចស្អាត</option><option>ថ្មី ១០០%</option><option>ល្អដូចថ្មី</option></select></label><label class="sm:col-span-2"><span class="label">ការពិពណ៌នា</span><textarea class="field min-h-[86px] resize-y" id="productDescription" maxlength="600" placeholder="ពិពណ៌នាអំពីទំនិញ..."></textarea></label></div><div><span class="label">រូបភាពទំនិញ (អាចបញ្ចូលរហូតដល់ ៥ រូប)</span><label class="flex cursor-pointer items-center gap-3 rounded-2xl border border-dashed border-indigo-200 bg-indigo-50/40 p-3" for="productImage"><span class="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-xl bg-white text-indigo-500" id="productImageThumb"></span><span class="min-w-0 flex-1"><b class="block truncate text-[10px]" id="productImageName">ជ្រើសរើសរូបភាពផលិតផល</b><small class="text-[9px] text-slate-400">JPG / PNG / WEBP · រហូតដល់ ៥ រូប</small></span><span class="rounded-lg bg-white px-3 py-2 text-[9px] font-bold text-indigo-600">Upload</span></label><input accept="image/jpeg,image/png,image/webp" class="hidden" id="productImage" multiple="" type="file"/></div><div class="flex flex-col-reverse gap-2 border-t border-slate-100 pt-4 sm:flex-row sm:justify-end"><button class="rounded-xl border border-slate-200 px-5 py-3 text-[11px] font-bold text-slate-600" data-close="productFormModal" type="button">បោះបង់</button><button class="brand-gradient rounded-xl px-6 py-3 text-[11px] font-bold text-white">រក្សាទុកទំនិញ</button></div></form></section></div>
 <!-- OFFER MODAL -->
 <div aria-hidden="true" class="modal" id="offerModal"><section class="modal-box max-w-[430px] p-6"><div class="mb-5 flex items-start justify-between"><div><p class="text-[10px] font-bold text-indigo-600">PRICE OFFER</p><h2 class="mt-1 text-xl font-bold">ស្នើសុំតម្លៃរបស់អ្នក</h2><p class="mt-1 text-[10px] text-slate-400" id="offerProductName"></p></div><button class="close-btn" data-close="offerModal"></button></div><form class="space-y-3" id="offerForm"><label><span class="label">តម្លៃដែលអ្នកចង់ទិញ (USD)</span><div class="relative"><span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">$</span><input class="field pl-8" id="offerAmount" min=".01" required="" step=".01" type="number"/></div></label><label><span class="label">សារជូនអ្នកលក់</span><textarea class="field min-h-[80px]" id="offerMessage" placeholder="សួស្តី ខ្ញុំចាប់អារម្មណ៍លើទំនិញនេះ..."></textarea></label><button class="brand-gradient w-full rounded-xl py-3 text-[11px] font-bold text-white">ផ្ញើសំណើតម្លៃ</button></form></section></div>
-<!-- BUYER / SELLER PRODUCT CHAT -->
+<!-- UNIFIED BUYER / SELLER CHAT -->
 <div aria-hidden="true" class="modal" id="sellerChatModal">
-  <section class="modal-box relative flex max-h-[82vh] max-w-[520px] flex-col overflow-hidden rounded-2xl bg-white">
+  <section class="modal-box seller-chat-shell relative flex flex-col overflow-hidden rounded-2xl bg-white">
     <header class="flex items-center justify-between border-b border-slate-100 bg-white px-4 py-3">
-      <div class="min-w-0"><b id="sellerChatTitle" class="block truncate text-sm">ឆាតជាមួយអ្នកលក់</b><span id="sellerChatSubtitle" class="mt-1 block truncate text-[9px] text-slate-400">សន្ទនាអំពីទំនិញ</span></div>
-      <button id="sellerChatClose" type="button" class="rounded-lg px-2 py-1 text-xl text-slate-500" aria-label="បិទ">×</button>
+      <div class="min-w-0"><b class="block text-sm">ឆាតអ្នកទិញ និងអ្នកលក់</b><span class="mt-1 block text-[9px] text-slate-400">សន្ទនាទាំងអស់នៅទីនេះ · 1 អ្នកទិញ · 2 អ្នកលក់</span></div>
+      <div class="flex items-center gap-2">
+        <button id="sellerChatMute" type="button" class="rounded-xl border border-slate-200 px-3 py-2 text-[10px] font-bold text-slate-600" aria-pressed="false">🔔 បិទសំឡេង</button>
+        <button id="sellerChatClose" type="button" class="rounded-lg px-2 py-1 text-xl text-slate-500" aria-label="បិទ">×</button>
+      </div>
     </header>
-    <div id="sellerChatMessages" class="support-chat-messages min-h-[220px] flex-1 space-y-3 overflow-y-auto bg-slate-50 p-3" aria-live="polite"></div>
-    <form id="sellerChatForm" class="flex items-end gap-2 border-t border-slate-100 bg-white p-3">
-      <textarea id="sellerChatInput" class="field min-h-[42px] max-h-24 flex-1 resize-y text-xs" rows="1" maxlength="4000" placeholder="សរសេរសារទៅអ្នកលក់..." required></textarea>
-      <button class="brand-gradient rounded-xl px-4 py-3 text-[11px] font-bold text-white" type="submit">ផ្ញើ</button>
-    </form>
+    <div class="seller-chat-layout flex min-h-0 flex-1">
+      <aside id="sellerChatInboxPane" class="seller-chat-inbox-pane w-[270px] shrink-0 overflow-y-auto border-r border-slate-100 bg-white p-3">
+        <div class="mb-3 flex items-center justify-between"><b class="text-[11px]">ប្រអប់សារ</b><button id="sellerChatInboxRefresh" class="text-[9px] font-bold text-emerald-700" type="button">ធ្វើបច្ចុប្បន្នភាព</button></div>
+        <div id="sellerChatInboxList"><p class="py-8 text-center text-[10px] text-slate-400">កំពុងផ្ទុកសារ...</p></div>
+      </aside>
+      <main class="seller-chat-thread flex min-w-0 flex-1 flex-col">
+        <div id="sellerChatProductContext" class="flex items-center gap-3 border-b border-slate-100 bg-white px-3 py-2">
+          <button id="sellerChatBack" class="hidden rounded-lg border border-slate-200 px-2 py-1 text-[10px]" type="button">← សារទាំងអស់</button>
+          <div id="sellerChatProductImage" class="h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-slate-100"></div>
+          <div class="min-w-0 flex-1"><b id="sellerChatTitle" class="block truncate text-[11px]">ជ្រើសរើសសន្ទនា</b><span id="sellerChatSubtitle" class="mt-1 block truncate text-[9px] text-slate-400">ព័ត៌មានផលិតផលនឹងបង្ហាញនៅទីនេះ</span></div>
+        </div>
+        <div id="sellerChatMessages" class="support-chat-messages min-h-0 flex-1 space-y-3 overflow-y-auto bg-slate-50 p-3" aria-live="polite"><p class="py-8 text-center text-xs text-slate-400">ជ្រើសរើសសន្ទនាមួយ ដើម្បីចាប់ផ្ដើម។</p></div>
+        <div id="sellerChatRecordingStatus" class="hidden border-t border-rose-100 bg-rose-50 px-3 py-2 text-[10px] font-semibold text-rose-700">កំពុងថតសំឡេង…</div>
+        <form id="sellerChatForm" class="flex items-end gap-2 border-t border-slate-100 bg-white p-3">
+          <button id="sellerChatRecord" class="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700" type="button" title="ថតសំឡេង" aria-label="ថតសំឡេង">🎙</button>
+          <textarea id="sellerChatInput" class="field min-h-[42px] max-h-24 min-w-0 flex-1 resize-y text-xs" rows="1" maxlength="4000" placeholder="សរសេរសាររបស់អ្នក…" ></textarea>
+          <button class="brand-gradient rounded-xl px-4 py-3 text-[11px] font-bold text-white" type="submit">ផ្ញើ</button>
+        </form>
+      </main>
+    </div>
   </section>
 </div>
-<!-- WEBSITE SUPPORT CHAT -->
-<button id="supportChatLauncher" type="button" class="hidden fixed bottom-6 right-5 z-[120] grid h-14 w-14 place-items-center rounded-full bg-slate-900 text-xl text-white shadow-xl" aria-label="ឆាតជាមួយ Admin">✉</button>
-<section id="supportChatPanel" class="support-chat-panel hidden fixed bottom-24 right-5 z-[120] w-[min(92vw,370px)] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl" aria-label="ឆាតជាមួយ Admin">
-  <header class="flex items-center justify-between bg-slate-900 px-4 py-3 text-white">
-    <div><b class="block text-sm">ជំនួយ 7inOne</b><span class="text-[10px] text-slate-300">ឆាតផ្ទាល់ជាមួយ Admin</span></div>
-    <button id="supportChatClose" type="button" class="rounded-lg px-2 py-1 text-lg" aria-label="បិទ">×</button>
-  </header>
-  <div id="supportChatMessages" class="support-chat-messages space-y-3 bg-slate-50 p-3" aria-live="polite"><p class="text-center text-xs text-slate-400">កំពុងផ្ទុកសារ...</p></div>
-  <div id="supportChatArchives" class="max-h-24 space-y-1 overflow-y-auto border-t border-slate-100 bg-white px-3 py-2"></div>
-  <form id="supportChatForm" class="flex items-end gap-2 border-t border-slate-100 bg-white p-3">
-    <textarea id="supportChatInput" class="field min-h-[42px] max-h-24 flex-1 resize-y text-xs" rows="1" maxlength="4000" placeholder="សរសេរសាររបស់អ្នក..." required></textarea>
-    <button class="brand-gradient rounded-xl px-4 py-3 text-[11px] font-bold text-white" type="submit">ផ្ញើ</button>
-  </form>
-</section>
+<!-- ADMIN SUPPORT IS TEMPORARILY HIDDEN; backend and history are preserved. -->
+<button id="supportChatLauncher" type="button" class="hidden fixed bottom-6 right-5 z-[120] grid h-14 w-14 place-items-center rounded-full bg-emerald-700 text-xl text-white shadow-xl" aria-label="ឆាតអ្នកទិញ និងអ្នកលក់">💬<span id="sellerChatUnreadBadge" class="absolute -right-1 -top-1 hidden min-w-5 rounded-full bg-rose-600 px-1.5 py-0.5 text-[9px] font-bold text-white"></span></button>
+<section id="supportChatPanel" class="support-chat-panel hidden" aria-hidden="true"></section>
 <div aria-hidden="true" class="maintenance-overlay hidden" id="maintenanceOverlay"><div class="maintenance-glass-card"><div class="maintenance-gear-wrap"><span class="maintenance-gear">⚙</span><span class="maintenance-spark">✦</span></div><p class="maintenance-eyebrow">7INONE · SYSTEM UPDATE</p><h1>ប្រព័ន្ធកំពុងអភិវឌ្ឍន៍</h1><p class="maintenance-english">Under Development</p><p class="maintenance-message" id="maintenanceOverlayMessage"></p><div class="maintenance-progress"><span></span></div><a href="#" id="maintenanceAdminLogin">Admin Login</a></div></div><div class="maintenance-admin-pill hidden" id="maintenanceAdminPill">🛠 កំពុងស្ថិតក្នុងទម្រង់អភិវឌ្ឍន៍ (Admin Preview)</div>
 <div class="fixed bottom-5 right-5 z-[150] flex w-[min(92vw,360px)] flex-col gap-2" id="toastArea"></div>
 
