@@ -279,15 +279,17 @@ app.get('/api/admin/telegram/diagnostics', authenticate, requireAdmin, async (_r
     (membership.status === 'creator' || membership.can_post_messages !== false));
   const loginReady = Boolean(bot.ok && secretConfigured && urlConfigured &&
     webhook.ok && webhook.url_matches && !webhook.last_error_message &&
-    tables.telegram_account_links?.ok && tables.telegram_login_tokens?.ok &&
-    tables.telegram_widget_auth_events?.ok && tables.profiles_telegram_columns?.ok);
+    tables.telegram_account_links?.ok && tables.telegram_login_tokens?.ok);
+  const widgetLoginReady = Boolean(bot.ok && tables.telegram_widget_auth_events?.ok &&
+    tables.profiles_telegram_columns?.ok &&
+    (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY));
 
   return res.json({
     configured: botConfigured && Boolean(chatId),
     bot, chat, membership, can_upload: Boolean(bot.ok && chat.ok && canPost),
     webhook, webhook_secret: { ok: secretConfigured, error: secretConfigured ? null : 'TELEGRAM_WEBHOOK_SECRET must be 32–256 characters (letters, numbers, _ or -).' },
     public_app_url: { ok: urlConfigured, value: publicUrl || null, error: urlConfigured ? null : 'PUBLIC_APP_URL must be your HTTPS website URL.' },
-    database, tables, login_ready: loginReady
+    database, tables, login_ready: loginReady, widget_login_ready: widgetLoginReady
   });
 });
 // Only the Supabase anon/publishable key is exposed to the browser. Never return the service-role key.
@@ -530,6 +532,21 @@ async function claimTelegramWidgetPayload(identity) {
     .then(({error: cleanupError}) => {
       if (cleanupError) console.warn('Telegram widget auth cleanup failed:', cleanupError.message);
     });
+}
+
+async function findAuthUserByEmail(email) {
+  const target = String(email || '').trim().toLowerCase();
+  if (!target) return null;
+  for (let page = 1; page <= 10; page += 1) {
+    const { data, error } = await supabase.auth.admin.listUsers({ page, perPage: 1000 });
+    if (error) throw error;
+    const found = (data?.users || []).find(user =>
+      String(user.email || '').trim().toLowerCase() === target
+    );
+    if (found) return found;
+    if (!data?.users || data.users.length < 1000) break;
+  }
+  return null;
 }
 
 async function createSupabaseSessionForEmail(email) {
@@ -899,9 +916,11 @@ app.post('/api/auth/telegram', telegramWidgetLoginLimiter, async (req, res) => {
         }
       });
       if (createError) {
-        const { data:existing, error:existingError } = await supabase.auth.admin.getUserByEmail(email);
-        if (existingError || !existing?.user) throw createError;
-        authUser = existing.user;
+        // Resolve a concurrent/partially-created deterministic Telegram account
+        // with the supported paginated Admin listUsers API.
+        const existingUser = await findAuthUserByEmail(email);
+        if (!existingUser) throw createError;
+        authUser = existingUser;
       } else {
         authUser = created.user;
         isNewUser = true;
