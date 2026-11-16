@@ -6,7 +6,7 @@ const $=id=>document.getElementById(id);
 const ic=(name,size=17,extra='')=>`<svg aria-hidden="true" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="${extra}">${iconPaths[name]||iconPaths.spark}</svg>`;
 const CAT={phones:'ទូរស័ព្ទ & អេឡិចត្រូនិក',vehicles:'រថយន្ត & ម៉ូតូ',property:'អចលនទ្រព្យ',fashion:'សម្លៀកបំពាក់',furniture:'គ្រឿងសង្ហារិម'};
 const CATICON={all:'grid',phones:'phone',vehicles:'car',property:'home',fashion:'shirt',furniture:'sofa'};
-let supabaseClient=null,session=null,me=null,pendingPhone=null,products=[],savedIds=new Set(),favoritePending=new Set(),activeCategory='all',searchTerm='',currentProduct=null,currentVendor=null,profileTab='saved',authMode='login',currentOfferProduct=null,selectedProductImages=[],sellerDocPreviewUrl=null,telegramBotUsername='',telegramLoginWidgetMounted=false,telegramProfileWidgetMounted=false;
+let supabaseClient=null,session=null,sessionRefreshPromise=null,me=null,pendingPhone=null,products=[],savedIds=new Set(),favoritePending=new Set(),activeCategory='all',searchTerm='',currentProduct=null,currentVendor=null,profileTab='saved',authMode='login',currentOfferProduct=null,selectedProductImages=[],sellerDocPreviewUrl=null,telegramBotUsername='',telegramLoginWidgetMounted=false,telegramProfileWidgetMounted=false;
 const DEFAULT_MAINTENANCE_MESSAGE='ប្រព័ន្ធកំពុងធ្វើការអភិវឌ្ឍន៍ និងបន្ថែមមុខងារថ្មីៗ សូមអធ្យាស្រ័យចំពោះការរំខាន!';let maintenanceMode=false,maintenanceMessage=DEFAULT_MAINTENANCE_MESSAGE,faviconUrl='';
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money=v=>'$'+Number(v||0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:2});
@@ -24,7 +24,40 @@ function applyFavicon(url){if(!url)return;faviconUrl=url;let link=document.query
 function isVerifiedSeller(){return me?.vendor?.status==='approved'}
 function profileName(){return me?.profile?.display_name||session?.user?.user_metadata?.display_name||session?.user?.email?.split('@')[0]||'គណនីអ្នកប្រើប្រាស់'}
 function syncHeader(){const logged=Boolean(session),verified=isVerifiedSeller(),admin=isAdmin();$('navName').textContent=logged?profileName():'ភ្ញៀវ';$('menuUserName').textContent=logged?profileName():'សួស្តី!';$('menuUserStatus').textContent=admin?'អ្នកគ្រប់គ្រង':verified?'អ្នកលក់បានផ្ទៀងផ្ទាត់':me?.vendor?.status==='pending'?'កំពុងរង់ចាំការផ្ទៀងផ្ទាត់':logged?'អ្នកទិញ':'មិនទាន់ចូលគណនី';$('navRole').textContent=admin?'Admin':verified?'Seller':logged?'Buyer':'Guest';$('navAvatar').src=me?.profile?.avatar_url||'https://i.pravatar.cc/100?img=12';$('postAdBtn').classList.toggle('hidden',!logged);$('mobilePostBtn').classList.toggle('hidden',!logged);$('profileMenu').querySelector('[data-action="seller-dashboard"]').classList.toggle('hidden',!verified);$('profileMenu').querySelector('[data-action="admin"]').classList.toggle('hidden',!admin);const accountAction=$('profileMenu').querySelector('[data-action="login"],[data-action="logout"]');if(accountAction){accountAction.textContent=logged?'ចាកចេញ':'ចូលគណនី';accountAction.dataset.action=logged?'logout':'login'}$('profileMenu').querySelector('[data-action="profile"]').classList.toggle('hidden',!logged);$('profileMenu').querySelector('[data-action="saved"]').classList.toggle('hidden',!logged);}
-async function api(path,options={}){const headers=new Headers(options.headers||{});if(session?.access_token)headers.set('Authorization','Bearer '+session.access_token);if(options.body&&!(options.body instanceof FormData)&&!headers.has('Content-Type'))headers.set('Content-Type','application/json');const response=await fetch(path,{...options,headers,cache:'no-store'});let payload={};try{payload=await response.json()}catch{}if(!response.ok)throw new Error(payload.error||`សំណើមិនជោគជ័យ (${response.status})`);return payload}
+async function api(path,options={}){
+  const headers=new Headers(options.headers||{});
+  if(session?.access_token)headers.set('Authorization','Bearer '+session.access_token);
+  if(options.body&&!(options.body instanceof FormData)&&!headers.has('Content-Type'))headers.set('Content-Type','application/json');
+  const requestOptions={...options,headers,cache:'no-store'};
+  let response=await fetch(path,requestOptions);
+  let payload={};
+  try{payload=await response.json()}catch{}
+  // A saved access token can expire between page load and the first authenticated request.
+  // Refresh it once, share concurrent refreshes, then retry the original request once.
+  if(response.status===401&&session?.refresh_token&&supabaseClient){
+    try{
+      if(!sessionRefreshPromise){
+        sessionRefreshPromise=supabaseClient.auth.refreshSession()
+          .then(({data,error})=>{
+            if(error)throw error;
+            if(!data.session?.access_token)throw new Error('Session refresh did not return a valid session.');
+            session=data.session;
+            return session;
+          })
+          .finally(()=>{sessionRefreshPromise=null});
+      }
+      const refreshed=await sessionRefreshPromise;
+      headers.set('Authorization','Bearer '+refreshed.access_token);
+      response=await fetch(path,requestOptions);
+      payload={};
+      try{payload=await response.json()}catch{}
+    }catch(refreshError){
+      console.warn('Session refresh after API 401 failed:',refreshError.message);
+    }
+  }
+  if(!response.ok)throw new Error(payload.error||`សំណើមិនជោគជ័យ (${response.status})`);
+  return payload;
+}
 async function loadIdentity(){if(!session){me=null;return}try{const res=await api('/api/me');me=res.data}catch(error){me=null;throw error}}
 async function refreshSession(){if(!supabaseClient)return;const {data,error}=await supabaseClient.auth.getSession();if(error)throw error;session=data.session;if(session)await loadIdentity();else me=null;syncHeader();applyMaintenanceUI()}
 function requireLogin(){if(session)return true;openAuth();return false}
