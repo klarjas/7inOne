@@ -10,7 +10,7 @@ if($('addProductIcon'))$('addProductIcon').innerHTML=ic('plus',15);
 const CAT={phones:'ទូរស័ព្ទ & អេឡិចត្រូនិក',vehicles:'រថយន្ត & ម៉ូតូ',property:'អចលនទ្រព្យ',fashion:'សម្លៀកបំពាក់',furniture:'គ្រឿងសង្ហារិម'};
 const CATICON={all:'grid',phones:'phone',vehicles:'car',property:'home',fashion:'shirt',furniture:'sofa'};
 let currentStoreId=null,currentStoreData=null,currentStoreProducts=[],currentStoreCategory='all',currentStoreSearch='';
-let productGalleryIndex=0,productLightboxOpen=false,scrollSaveTimer=null;
+let productGalleryIndex=0,productLightboxOpen=false,scrollSaveTimer=null,routeSyncGuardKey='',routeSyncGuardTimer=null;
 let sellerProductCache=[],sellerActiveFilter='all',sellerActiveTab='products';
 let siteBranding={siteTitle:'7inOne',siteSubtitle:'ផ្សារទិញលក់កម្ពុជា',heroBadge:'ផ្សារអនឡាញសម្រាប់អ្នកទាំងអស់គ្នា',heroTitle:'ទិញលក់ងាយៗ នៅជិតអ្នក',heroSubtitle:'ស្វែងរកទំនិញដែលអ្នកស្រឡាញ់ ឬដាក់លក់របស់ដែលអ្នកមិនប្រើ។ ភ្ជាប់អ្នកទិញ និងអ្នកលក់នៅទូទាំងប្រទេសកម្ពុជា។',siteLogoUrl:'',faviconUrl:'',heroImages:[]},brandingLogoPreviewUrl=null,brandingFaviconPreviewUrl=null,brandingHeroPreviewUrls=[],siteBrandingRefreshTimer=null;
 let supabaseClient=null,session=null,sessionRefreshPromise=null,me=null,routeAccessReady=false,supportChatPollTimer=null,adminChatPollTimer=null,activeAdminChatId=null,restoredUserChatArchives={},restoredAdminChatArchives={},pendingPhone=null,products=[],savedIds=new Set(),favoritePending=new Set(),activeCategory='all',searchTerm='',currentProduct=null,currentVendor=null,profileTab='saved',authMode='login',currentOfferProduct=null,selectedProductImages=[],sellerDocPreviewUrl=null,telegramBotUsername='',telegramLoginWidgetMounted=false,telegramProfileWidgetMounted=false,productRealtimeChannel=null,productRealtimeRefreshTimer=null,productRealtimeFallbackTimer=null,productRealtimePendingRefresh=false,sellerChatChannel=null,sellerChatPollTimer=null,sellerInboxPollTimer=null,sellerChatConversationId=null,sellerChatInboxPollTimer=null,sellerChatMode='buyer',sellerChatInbox=[],sellerChatMuted=false,sellerChatRecorder=null,sellerChatDiscardRecording=false,sellerChatRecordChunks=[],sellerChatRecordStartedAt=0,sellerChatRecordTimer=null,sellerChatLastMessageId=null,sellerChatInboxUnreadSnapshot={},sellerChatInboxInitialized=false,sellerChatInboxUserId=null,sellerChatAudioUrls=new Set(),sellerChatLoadedMessages=[],sellerChatPendingVoices=[],sellerChatPendingMedia=[],sellerChatPointerDown=false,sellerChatPointerStartY=0,sellerChatRecordingLocked=false,sellerChatIgnoreNextClick=false;
@@ -1284,6 +1284,11 @@ $('adminChatArchives').addEventListener('click',event=>{const button=event.targe
 if(!adminChatPollTimer)adminChatPollTimer=setInterval(()=>{if(isAdmin()&&$('view-admin').classList.contains('active'))void loadSupportAdminChats()},5000);
 
 function syncRouteFromHistory(){
+ const eventKey=String(window.location.hash||'')+'|'+JSON.stringify(window.history.state||{});
+ if(routeSyncGuardKey===eventKey)return;
+ routeSyncGuardKey=eventKey;
+ if(routeSyncGuardTimer)window.clearTimeout(routeSyncGuardTimer);
+ routeSyncGuardTimer=window.setTimeout(()=>{if(routeSyncGuardKey===eventKey)routeSyncGuardKey=''},0);
  const raw=String(window.location.hash||'').replace(/^#/,'');const parts=raw.split('/'),name=parts[0]||'home';
  const productId=name==='product'?(decodeURIComponent(parts.slice(1).join('/'))||(()=>{try{return sessionStorage.getItem('ecomstore.currentProductId')||''}catch{return ''}})()):'';
  const storeId=name==='store'?(decodeURIComponent(parts.slice(1).join('/'))||(()=>{try{return sessionStorage.getItem('ecomstore.currentStoreId')||''}catch{return ''}})()):'';
