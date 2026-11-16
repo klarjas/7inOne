@@ -117,3 +117,19 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .telegram-widget-slot{display:flex;min-height:42px;align-items:center;justify-content:center;overflow:hidden}
 .telegram-widget-slot iframe{max-width:100%!important}
 .telegram-widget-slot>script{display:block}
+
+
+/* 7inOne Website Support Chat */
+.support-chat-panel{height:min(590px,calc(100dvh - 125px));display:flex;flex-direction:column}
+.support-chat-messages{height:310px;min-height:180px;overflow-y:auto;overscroll-behavior:contain}
+#adminChatMessages{height:320px;min-height:220px}
+.support-chat-bubble{max-width:88%;border-radius:15px;padding:9px 11px;font-size:11px;line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere}
+.support-chat-bubble.user{margin-left:auto;background:#312e81;color:#fff;border-bottom-right-radius:5px}
+.support-chat-bubble.admin{margin-right:auto;background:#fff;color:#1e293b;border:1px solid #e2e8f0;border-bottom-left-radius:5px}
+.support-chat-time{display:block;margin-top:4px;font-size:8px;opacity:.65}
+.support-chat-archive{display:flex;width:100%;align-items:center;justify-content:space-between;gap:8px;border-radius:9px;background:#f1f5f9;padding:7px 9px;text-align:left;font-size:9px;color:#475569}
+.support-chat-archive:hover{background:#e2e8f0}
+.admin-chat-item{width:100%;border:1px solid #e2e8f0;border-radius:12px;background:#fff;padding:10px;text-align:left}
+.admin-chat-item.active{border-color:#818cf8;background:#eef2ff}
+.admin-chat-item.unread{border-left:3px solid #0ea5e9}
+@media(max-width:640px){.support-chat-panel{right:10px;bottom:88px;width:calc(100vw - 20px);height:min(570px,calc(100dvh - 110px))}#supportChatLauncher{right:14px;bottom:18px}.support-chat-messages{height:280px}}
