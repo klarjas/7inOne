@@ -181,57 +181,86 @@ async function ratingsFor(vendorIds) {
 
 app.get('/health', (_req, res) => res.json({ status: 'ok', service: '7inOne', database: Boolean(supabase) }));
 
-// Admin-only Telegram storage diagnostics. Never returns the bot token.
+// Admin-only Telegram diagnostics. Never returns bot tokens or webhook secrets.
 app.get('/api/admin/telegram/diagnostics', authenticate, requireAdmin, async (_req, res) => {
   res.set('Cache-Control', 'no-store');
   const chatId = telegramStorageChatId();
-  if (!process.env.TELEGRAM_BOT_TOKEN || !chatId) {
-    return res.status(503).json({
-      configured: false,
-      bot: { ok: false, error: process.env.TELEGRAM_BOT_TOKEN ? null : 'TELEGRAM_BOT_TOKEN is missing.' },
-      chat: { ok: false, error: chatId ? null : 'TELEGRAM_CHANNEL_ID / TELEGRAM_STORAGE_CHAT_ID is missing.' },
-      membership: { ok: false, error: 'Cannot check membership until bot and chat are available.' }
-    });
-  }
+  const secret = process.env.TELEGRAM_WEBHOOK_SECRET || '';
+  const publicUrl = clean(process.env.PUBLIC_APP_URL, 500).replace(/\/$/, '');
+  const botConfigured = Boolean(process.env.TELEGRAM_BOT_TOKEN);
+  const secretConfigured = /^[A-Za-z0-9_-]{32,256}$/.test(secret);
+  const urlConfigured = /^https:\/\//i.test(publicUrl);
 
-  const botCheck = await telegramDiagnosticCall('getMe');
+  const botCheck = botConfigured
+    ? await telegramDiagnosticCall('getMe')
+    : { ok: false, error: 'TELEGRAM_BOT_TOKEN is missing.' };
   const bot = botCheck.ok ? {
-    ok: true,
-    id: botCheck.result.id,
+    ok: true, id: botCheck.result.id,
     username: botCheck.result.username || null,
     first_name: botCheck.result.first_name || null
   } : botCheck;
 
-  const chatCheck = await telegramDiagnosticCall('getChat', { chat_id: chatId });
+  const chatCheck = botConfigured && chatId
+    ? await telegramDiagnosticCall('getChat', { chat_id: chatId })
+    : { ok: false, error: chatId ? 'Bot token is not configured.' : 'TELEGRAM_STORAGE_CHAT_ID / TELEGRAM_CHANNEL_ID is missing.' };
   const chat = chatCheck.ok ? {
-    ok: true,
-    id: chatCheck.result.id,
+    ok: true, id: chatCheck.result.id,
     title: chatCheck.result.title || null,
     type: chatCheck.result.type || null
   } : chatCheck;
 
-  let membership = { ok: false, error: 'Skipped because getMe failed.' };
-  if (botCheck.ok) {
+  let membership = { ok: false, error: 'Skipped because Bot or Channel is unavailable.' };
+  if (botCheck.ok && chatCheck.ok) {
     const memberCheck = await telegramDiagnosticCall('getChatMember', {
-      chat_id: chatId,
-      user_id: botCheck.result.id
+      chat_id: chatId, user_id: botCheck.result.id
     });
     membership = memberCheck.ok ? {
-      ok: true,
-      status: memberCheck.result.status,
+      ok: true, status: memberCheck.result.status,
       can_post_messages: memberCheck.result.can_post_messages ?? null
     } : memberCheck;
   }
 
-  res.json({
-    configured: true,
-    chat_id: chatId,
-    bot,
-    chat,
-    membership,
-    can_upload: Boolean(bot.ok && chat.ok && membership.ok &&
-      ['administrator', 'creator'].includes(membership.status) &&
-      (membership.status === 'creator' || membership.can_post_messages !== false))
+  const webhookCheck = botConfigured
+    ? await telegramDiagnosticCall('getWebhookInfo')
+    : { ok: false, error: 'Bot token is not configured.' };
+  const expectedWebhook = urlConfigured ? publicUrl + '/api/telegram/webhook' : '';
+  const webhook = webhookCheck.ok ? {
+    ok: true,
+    url_matches: Boolean(expectedWebhook && webhookCheck.result.url === expectedWebhook),
+    configured_url: webhookCheck.result.url || '',
+    expected_url: expectedWebhook,
+    pending_update_count: Number(webhookCheck.result.pending_update_count || 0),
+    last_error_message: webhookCheck.result.last_error_message || null,
+    last_error_date: webhookCheck.result.last_error_date || null
+  } : webhookCheck;
+
+  const database = { ok: Boolean(supabase), error: supabase ? null : 'Supabase service role is not configured.' };
+  const tables = {};
+  if (supabase) {
+    for (const table of ['telegram_account_links', 'telegram_login_tokens']) {
+      const check = await supabase.from(table).select('*', { head: true, count: 'exact' }).limit(1);
+      tables[table] = check.error
+        ? { ok: false, error: clean(check.error.message, 250) }
+        : { ok: true };
+    }
+  } else {
+    tables.telegram_account_links = { ok: false, error: database.error };
+    tables.telegram_login_tokens = { ok: false, error: database.error };
+  }
+
+  const canPost = Boolean(membership.ok &&
+    ['administrator', 'creator'].includes(membership.status) &&
+    (membership.status === 'creator' || membership.can_post_messages !== false));
+  const loginReady = Boolean(bot.ok && secretConfigured && urlConfigured &&
+    webhook.ok && webhook.url_matches && !webhook.last_error_message &&
+    tables.telegram_account_links?.ok && tables.telegram_login_tokens?.ok);
+
+  return res.json({
+    configured: botConfigured && Boolean(chatId),
+    bot, chat, membership, can_upload: Boolean(bot.ok && chat.ok && canPost),
+    webhook, webhook_secret: { ok: secretConfigured, error: secretConfigured ? null : 'TELEGRAM_WEBHOOK_SECRET must be 32–256 characters (letters, numbers, _ or -).' },
+    public_app_url: { ok: urlConfigured, value: publicUrl || null, error: urlConfigured ? null : 'PUBLIC_APP_URL must be your HTTPS website URL.' },
+    database, tables, login_ready: loginReady
   });
 });
 // Only the Supabase anon/publishable key is exposed to the browser. Never return the service-role key.
