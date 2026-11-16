@@ -33,7 +33,7 @@ function showView(name,options={}){
   $('view-'+name)?.classList.add('active');
   document.documentElement.dataset.initialView=name;
   try{sessionStorage.setItem('ecomstore.activeView',name)}catch(error){console.warn('Could not save active page:',error)}
-  const routeHash=name==='product'&&currentProduct?.id?'product/'+encodeURIComponent(currentProduct.id):name==='store'&&currentStoreId?'store/'+encodeURIComponent(currentStoreId):name;
+  const routeHash=name==='product'?(currentProduct?.id?'product/'+encodeURIComponent(currentProduct.id):(options.optimistic?String(window.location.hash||'#product').replace(/^#/,''):'product')):name==='store'?(currentStoreId?'store/'+encodeURIComponent(currentStoreId):(options.optimistic?String(window.location.hash||'#store').replace(/^#/,''):'store')):name;
   try{sessionStorage.setItem('ecomstore.activeView',name);if(name==='product'&&currentProduct?.id)sessionStorage.setItem('ecomstore.currentProductId',String(currentProduct.id));if(name==='store'&&currentStoreId)sessionStorage.setItem('ecomstore.currentStoreId',String(currentStoreId))}catch(error){console.warn('Could not save route state:',error)}
   if(window.location.hash!=='#'+routeHash){try{window.location.hash='#'+routeHash}catch(error){console.warn('Could not update route hash:',error)}}
   closeDropdowns();
@@ -308,6 +308,7 @@ async function openProduct(id,options={}){
  if(!id){toast('មិនមានលេខសម្គាល់ទំនិញទេ។','warning');return false}
  const productId=String(id);
  try{
+  if(session){try{await loadOrders()}catch(error){console.warn('Could not refresh review eligibility:',error)}}
   try{sessionStorage.setItem('ecomstore.currentProductId',productId);sessionStorage.setItem('ecomstore.activeView','product')}catch{}
   $('productDetail').setAttribute('aria-busy','true');
   $('productDetail').innerHTML='<div class="product-detail-skeleton"><div class="skeleton product-detail-skeleton-image"></div><div class="product-detail-skeleton-copy"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div></div>';
