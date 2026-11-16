@@ -785,24 +785,46 @@ app.post('/api/telegram/webhook', async (req, res) => {
       await sendTelegramMessage(chat.id, 'តំណភ្ជាប់នេះបានប្រើរួច ឬផុតកំណត់។ សូមបង្កើតតំណថ្មីពី 7inOne។');
       return;
     }
-    const { data: prior, error: priorError } = await supabase.from(telegramLinkTable)
-      .select('user_id').eq('telegram_user_id', chat.id).maybeSingle();
-    if (priorError) throw priorError;
-    if (prior && prior.user_id !== linkToken.user_id) {
+    const [{ data: prior, error: priorError }, { data: profileOwner, error: profileOwnerError }, { data: targetProfile, error: targetProfileError }] = await Promise.all([
+      supabase.from(telegramLinkTable).select('user_id')
+        .eq('telegram_user_id', chat.id).maybeSingle(),
+      supabase.from('profiles').select('id').eq('telegram_id', String(chat.id)).maybeSingle(),
+      supabase.from('profiles').select('telegram_id')
+        .eq('id', linkToken.user_id).maybeSingle()
+    ]);
+    if (priorError || profileOwnerError || targetProfileError) {
+      throw priorError || profileOwnerError || targetProfileError;
+    }
+    if ((prior && prior.user_id !== linkToken.user_id) ||
+        (profileOwner && profileOwner.id !== linkToken.user_id)) {
       await sendTelegramMessage(chat.id, 'Telegram នេះបានភ្ជាប់ជាមួយគណនី 7inOne ផ្សេងរួចហើយ។');
       return;
     }
+    if (targetProfile?.telegram_id && String(targetProfile.telegram_id) !== String(chat.id)) {
+      await sendTelegramMessage(chat.id, 'គណនី 7inOne នេះបានភ្ជាប់ Telegram ផ្សេងរួចហើយ។ សូមចូល Profile ដើម្បីពិនិត្យ។');
+      return;
+    }
+    const username = clean(message.from?.username, 80) || null;
     const { error: saveError } = await supabase.from(telegramLinkTable).upsert({
       user_id: linkToken.user_id,
       account_email: linkToken.account_email,
       telegram_user_id: chat.id,
-      username: clean(message.from?.username, 80) || null,
+      username,
       first_name: clean(message.from?.first_name, 120) || null,
       linked_at: new Date().toISOString()
     }, { onConflict: 'user_id' });
     if (saveError) {
       console.error('Telegram account link save failed:', saveError.message);
       await sendTelegramMessage(chat.id, 'មិនអាចភ្ជាប់គណនីបានទេ។ Telegram នេះអាចបានភ្ជាប់ជាមួយគណនីផ្សេងរួចហើយ។');
+      return;
+    }
+    const { error: profileSaveError } = await supabase.from('profiles').update({
+      telegram_id: String(chat.id),
+      telegram_username: username
+    }).eq('id', linkToken.user_id);
+    if (profileSaveError) {
+      console.error('Telegram profile ID sync failed:', profileSaveError.message);
+      await sendTelegramMessage(chat.id, 'បានភ្ជាប់ Bot Chat ប៉ុន្តែមិនអាចរក្សាទុក Telegram Login ID បានទេ។ សូមពិនិត្យ Migration។');
       return;
     }
     await supabase.from(telegramLinkTokenTable).update({ consumed_at: new Date().toISOString() })
