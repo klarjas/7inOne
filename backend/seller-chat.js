@@ -125,7 +125,7 @@ export function registerSellerChat(app, { supabase, authenticate, requireVendor,
       let productCards=messages||[];
       if(productIds.length){
         const [productsResult,imagesResult]=await Promise.all([
-          supabase.from('products').select('id,title,price').in('id',productIds),
+          supabase.from('products').select('id,title,price,status,stock').in('id',productIds),
           supabase.from('product_images').select('product_id,sort_order,file_id,image_url').in('product_id',productIds).order('sort_order',{ascending:true})
         ]);
         if(productsResult.error||imagesResult.error)throw productsResult.error||imagesResult.error;
