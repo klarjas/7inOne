@@ -390,25 +390,22 @@ app.get('/api/site/favicon', async (_req,res)=>{
 app.post('/api/admin/favicon', authenticate, requireAdmin, upload.single('file'), async (req,res)=>{
   let uploaded=null;
   try{
-    const file=req.file, invalid=imageUploadError(file,2*1024*1024);
+    const file=req.file,invalid=imageUploadError(file,2*1024*1024);
     if(invalid)return fail(res,400,invalid);
     uploaded=await uploadToTelegram(file);
     const {data:prior}=await supabase.from('site_settings').select('value').eq('key','site_branding').maybeSingle();
-    const version=randomUUID(), faviconUrl='/api/site/favicon?v='+encodeURIComponent(version);
-    const old=prior?.value||{};
-    const value={...old,siteLogoUrl:faviconUrl,siteLogoFileId:uploaded.fileId,siteLogoMessageId:uploaded.messageId,siteLogoMimeType:file.mimetype,siteLogoVersion:version,faviconUrl,faviconFileId:uploaded.fileId,faviconMessageId:uploaded.messageId,faviconMimeType:file.mimetype,faviconVersion:version};
+    const old=prior?.value||{},version=randomUUID();
+    const value={...old,faviconUrl:'/api/site/favicon?v='+encodeURIComponent(version),faviconFileId:uploaded.fileId,faviconMessageId:uploaded.messageId,faviconMimeType:file.mimetype,faviconVersion:version};
     const {error:saveError}=await supabase.from('site_settings').upsert({key:'site_branding',value,updated_at:new Date().toISOString()},{onConflict:'key'});
     if(saveError)throw saveError;
-    const oldMessageId=clean(old.siteLogoMessageId||old.faviconMessageId,40);
-    if(oldMessageId&&oldMessageId!==uploaded.messageId)await deleteTelegramMessage(oldMessageId);
-    const oldPath=clean(old.faviconPath,500);
-    if(oldPath&&oldPath.startsWith('site/'))await supabase.storage.from('profile-media').remove([oldPath]);
+    const oldMessageId=clean(old.faviconMessageId,40);
+    if(oldMessageId&&oldMessageId!==uploaded.messageId&&oldMessageId!==clean(old.siteLogoMessageId,40))await deleteTelegramMessage(oldMessageId);
     res.set('Cache-Control','no-store');
     return res.status(201).json({data:{...(await getSiteBranding()),storage:'telegram'}});
   }catch(error){
     if(uploaded?.messageId)await deleteTelegramMessage(uploaded.messageId);
-    console.error('Website logo upload failed:',error.message);
-    return fail(res,500,'Could not save website logo. Check the configured Telegram image storage and Supabase service role.');
+    console.error('Website favicon upload failed:',error.message);
+    return fail(res,500,'Could not save website favicon. Check Telegram storage and Supabase service role.');
   }
 });
 app.patch('/api/admin/branding', authenticate, requireAdmin, upload.fields([{name:'logo',maxCount:1},{name:'favicon',maxCount:1},{name:'heroImages',maxCount:3}]), async (req,res)=>{
