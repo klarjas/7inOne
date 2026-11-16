@@ -325,9 +325,14 @@ function renderTelegramDiagnostics(data){
     row('TELEGRAM_WEBHOOK_SECRET',data.webhook_secret)+
     row('PUBLIC_APP_URL (HTTPS)',data.public_app_url,data.public_app_url?.value||'')+
     row('Supabase Service Role Connection',data.database)+
-    row('Database: telegram_account_links',tableDetail('telegram_account_links'))+
-    row('Database: telegram_login_tokens',tableDetail('telegram_login_tokens'))+
-    (data.chat_id?'<p class="mt-2 break-all text-[10px] text-slate-500">Channel ID៖ '+esc(data.chat_id)+'</p>':'')+upload+login;
+    row('Database: telegram_account_links (Bot Chat)',tableDetail('telegram_account_links'))+
+    row('Database: telegram_login_tokens (Bot Login)',tableDetail('telegram_login_tokens'))+
+    row('Database: profiles.telegram_id / telegram_username',tableDetail('profiles_telegram_columns'))+
+    row('Database: Telegram Widget replay protection',tableDetail('telegram_widget_auth_events'))+
+    (data.chat_id?'<p class="mt-2 break-all text-[10px] text-slate-500">Channel ID៖ '+esc(data.chat_id)+'</p>':'')+
+    '<div class="mt-3 rounded-lg '+(data.widget_login_ready?'bg-emerald-50 text-emerald-800':'bg-amber-50 text-amber-800')+' p-3 text-[11px] font-bold">'+
+    (data.widget_login_ready?'Telegram Login Widget៖ ត្រៀមរួចរាល់':'Telegram Login Widget៖ មិនទាន់ត្រៀមរួច — ពិនិត្យ Telegram Bot Token, Supabase Anon Key និង SQL Migration')+'</div>'+
+    upload+login;
 }
 async function runTelegramDiagnostics(){
   if(!isAdmin()){toast('មុខងារនេះសម្រាប់ Admin ប៉ុណ្ណោះ។','error');return}
