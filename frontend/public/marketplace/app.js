@@ -729,14 +729,20 @@ function renderSellerChatMessages(messages){
       wave.setAttribute('aria-valuenow',String(Math.floor(audio.currentTime)));
       time.textContent=format(audio.currentTime)+' / '+format(duration);
     };
-    audio.addEventListener('loadedmetadata',paint);
+    let pendingSeekRatio=null,pendingSeekTime=null;
+    audio.addEventListener('loadedmetadata',()=>{
+      if(pendingSeekRatio!==null){audio.currentTime=pendingSeekRatio*audio.duration;pendingSeekRatio=null}
+      else if(pendingSeekTime!==null){audio.currentTime=Math.max(0,Math.min(audio.duration,pendingSeekTime));pendingSeekTime=null}
+      paint();
+    });
     audio.addEventListener('timeupdate',paint);
     audio.addEventListener('play',()=>{button.innerHTML=ic('pause',16);button.setAttribute('aria-label','ផ្អាកសារសំឡេង');player.classList.add('is-playing')});
     audio.addEventListener('pause',()=>{button.innerHTML=ic('play',17);button.setAttribute('aria-label','ចាក់សារសំឡេង');player.classList.remove('is-playing')});
     audio.addEventListener('ended',()=>{audio.currentTime=0;paint();button.innerHTML=ic('play',17);player.classList.remove('is-playing')});
-    const seek=event=>{if(!Number.isFinite(audio.duration)||audio.duration<=0)return;const rect=wave.getBoundingClientRect(),ratio=Math.max(0,Math.min(1,(event.clientX-rect.left)/rect.width));audio.currentTime=ratio*audio.duration;paint()};
+    const loadMetadataForSeek=()=>{audio.preload='metadata';audio.load()};
+    const seek=event=>{const rect=wave.getBoundingClientRect(),ratio=Math.max(0,Math.min(1,(event.clientX-rect.left)/rect.width));if(!Number.isFinite(audio.duration)||audio.duration<=0){pendingSeekRatio=ratio;pendingSeekTime=null;loadMetadataForSeek();return}audio.currentTime=ratio*audio.duration;paint()};
     wave.addEventListener('click',seek);
-    wave.addEventListener('keydown',event=>{if(event.key==='ArrowRight'||event.key==='ArrowLeft'){event.preventDefault();if(Number.isFinite(audio.duration))audio.currentTime=Math.max(0,Math.min(audio.duration,audio.currentTime+(event.key==='ArrowRight'?5:-5)));paint()}});
+    wave.addEventListener('keydown',event=>{if(event.key==='ArrowRight'||event.key==='ArrowLeft'){event.preventDefault();const delta=event.key==='ArrowRight'?5:-5;if(!Number.isFinite(audio.duration)||audio.duration<=0){pendingSeekTime=Math.max(0,(Number(audio.currentTime)||0)+delta);pendingSeekRatio=null;loadMetadataForSeek();return}audio.currentTime=Math.max(0,Math.min(audio.duration,audio.currentTime+delta));paint()}});
     button.addEventListener('click',()=>{if(audio.paused){target.querySelectorAll('[data-voice-audio]').forEach(other=>{if(other!==audio)other.pause()});audio.preload='auto';void audio.play().catch(()=>toast('មិនអាចចាក់សារសំឡេងបានទេ។','error'))}else audio.pause()});
     paint();
   });
