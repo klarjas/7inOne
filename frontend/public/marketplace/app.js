@@ -6,7 +6,7 @@ const $=id=>document.getElementById(id);
 const ic=(name,size=17,extra='')=>`<svg aria-hidden="true" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="${extra}">${iconPaths[name]||iconPaths.spark}</svg>`;
 const CAT={phones:'ទូរស័ព្ទ & អេឡិចត្រូនិក',vehicles:'រថយន្ត & ម៉ូតូ',property:'អចលនទ្រព្យ',fashion:'សម្លៀកបំពាក់',furniture:'គ្រឿងសង្ហារិម'};
 const CATICON={all:'grid',phones:'phone',vehicles:'car',property:'home',fashion:'shirt',furniture:'sofa'};
-let supabaseClient=null,session=null,sessionRefreshPromise=null,me=null,pendingPhone=null,products=[],savedIds=new Set(),favoritePending=new Set(),activeCategory='all',searchTerm='',currentProduct=null,currentVendor=null,profileTab='saved',authMode='login',currentOfferProduct=null,selectedProductImages=[],sellerDocPreviewUrl=null,telegramBotUsername='',telegramLoginWidgetMounted=false,telegramProfileWidgetMounted=false;
+let supabaseClient=null,session=null,sessionRefreshPromise=null,me=null,supportChatPollTimer=null,adminChatPollTimer=null,activeAdminChatId=null,restoredUserChatArchives={},restoredAdminChatArchives={},pendingPhone=null,products=[],savedIds=new Set(),favoritePending=new Set(),activeCategory='all',searchTerm='',currentProduct=null,currentVendor=null,profileTab='saved',authMode='login',currentOfferProduct=null,selectedProductImages=[],sellerDocPreviewUrl=null,telegramBotUsername='',telegramLoginWidgetMounted=false,telegramProfileWidgetMounted=false;
 const DEFAULT_MAINTENANCE_MESSAGE='ប្រព័ន្ធកំពុងធ្វើការអភិវឌ្ឍន៍ និងបន្ថែមមុខងារថ្មីៗ សូមអធ្យាស្រ័យចំពោះការរំខាន!';let maintenanceMode=false,maintenanceMessage=DEFAULT_MAINTENANCE_MESSAGE,faviconUrl='';
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money=v=>'$'+Number(v||0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:2});
@@ -17,13 +17,13 @@ function openModal(id){closeDropdowns();$(id).classList.add('open');$(id).setAtt
 function closeModal(id){const el=$(id);if(!el)return;el.classList.remove('open');el.setAttribute('aria-hidden','true');if(!document.querySelector('.modal.open'))document.body.classList.remove('overflow-hidden')}
 function closeDropdowns(){document.querySelectorAll('.dropdown').forEach(x=>x.classList.remove('open'))}
 function toggleDrop(id){const el=$(id),open=el.classList.contains('open');closeDropdowns();if(!open)el.classList.add('open')}
-function showView(name){const role=me?.isAdmin?'admin':me?.vendor?.status==='approved'?'seller':'buyer';if(['profile','seller'].includes(name)&&!session){openAuth();return}if(name==='admin'&&!me?.isAdmin){toast('មុខងារនេះសម្រាប់ Admin ប៉ុណ្ណោះ។','error');return}if(name==='seller'&&me?.vendor?.status!=='approved'){toast(me?.vendor?.status==='pending'?'ពាក្យអ្នកលក់កំពុងរង់ចាំការអនុម័ត។':'សូមចុះឈ្មោះក្លាយជាអ្នកលក់ជាមុនសិន។','warning');if(!me?.vendor)openSellerModal();return}document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));$('view-'+name)?.classList.add('active');try{sessionStorage.setItem('ecomstore.activeView',name)}catch(error){console.warn('Could not save active page:',error)}closeDropdowns();window.scrollTo({top:0,behavior:'smooth'});if(name==='profile')void renderProfile();if(name==='seller')void renderSeller();if(name==='admin')void renderAdmin();void role}
+function showView(name){const role=me?.isAdmin?'admin':me?.vendor?.status==='approved'?'seller':'buyer';if(['profile','seller'].includes(name)&&!session){openAuth();return}if(name==='admin'&&!me?.isAdmin){toast('មុខងារនេះសម្រាប់ Admin ប៉ុណ្ណោះ។','error');return}if(name==='seller'&&me?.vendor?.status!=='approved'){toast(me?.vendor?.status==='pending'?'ពាក្យអ្នកលក់កំពុងរង់ចាំការអនុម័ត។':'សូមចុះឈ្មោះក្លាយជាអ្នកលក់ជាមុនសិន។','warning');if(!me?.vendor)openSellerModal();return}document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));$('view-'+name)?.classList.add('active');try{sessionStorage.setItem('ecomstore.activeView',name)}catch(error){console.warn('Could not save active page:',error)}closeDropdowns();window.scrollTo({top:0,behavior:'smooth'});if(name==='profile')void renderProfile();if(name==='seller')void renderSeller();if(name==='admin'){void renderAdmin();void loadSupportAdminChats();}void role}
 function isAdmin(){return Boolean(me?.isAdmin)}
 function applyMaintenanceUI(){const adminPreview=maintenanceMode&&isAdmin(),blocked=maintenanceMode&&!isAdmin();document.body.classList.toggle('maintenance-active',blocked);$('maintenanceOverlay').classList.toggle('hidden',!blocked);$('maintenanceOverlay').setAttribute('aria-hidden',String(!blocked));$('maintenanceOverlayMessage').textContent=maintenanceMessage;$('maintenanceAdminPill').classList.toggle('hidden',!adminPreview);document.body.classList.add('maintenance-ready')}
 function applyFavicon(url){if(!url)return;faviconUrl=url;let link=document.querySelector('link[data-site-favicon]');if(!link){link=document.createElement('link');link.rel='icon';link.dataset.siteFavicon='true';document.head.appendChild(link)}link.href=url;link.removeAttribute('type');if($('faviconPreview'))$('faviconPreview').src=url}
 function isVerifiedSeller(){return me?.vendor?.status==='approved'}
 function profileName(){return me?.profile?.display_name||session?.user?.user_metadata?.display_name||session?.user?.email?.split('@')[0]||'គណនីអ្នកប្រើប្រាស់'}
-function syncHeader(){const logged=Boolean(session),verified=isVerifiedSeller(),admin=isAdmin();$('navName').textContent=logged?profileName():'ភ្ញៀវ';$('menuUserName').textContent=logged?profileName():'សួស្តី!';$('menuUserStatus').textContent=admin?'អ្នកគ្រប់គ្រង':verified?'អ្នកលក់បានផ្ទៀងផ្ទាត់':me?.vendor?.status==='pending'?'កំពុងរង់ចាំការផ្ទៀងផ្ទាត់':logged?'អ្នកទិញ':'មិនទាន់ចូលគណនី';$('navRole').textContent=admin?'Admin':verified?'Seller':logged?'Buyer':'Guest';$('navAvatar').src=me?.profile?.avatar_url||'https://i.pravatar.cc/100?img=12';$('postAdBtn').classList.toggle('hidden',!logged);$('mobilePostBtn').classList.toggle('hidden',!logged);$('profileMenu').querySelector('[data-action="seller-dashboard"]').classList.toggle('hidden',!verified);$('profileMenu').querySelector('[data-action="admin"]').classList.toggle('hidden',!admin);const accountAction=$('profileMenu').querySelector('[data-action="login"],[data-action="logout"]');if(accountAction){accountAction.textContent=logged?'ចាកចេញ':'ចូលគណនី';accountAction.dataset.action=logged?'logout':'login'}$('profileMenu').querySelector('[data-action="profile"]').classList.toggle('hidden',!logged);$('profileMenu').querySelector('[data-action="saved"]').classList.toggle('hidden',!logged);}
+function syncHeader(){const logged=Boolean(session),verified=isVerifiedSeller(),admin=isAdmin();$('supportChatLauncher')?.classList.toggle('hidden',!logged);$('navName').textContent=logged?profileName():'ភ្ញៀវ';$('menuUserName').textContent=logged?profileName():'សួស្តី!';$('menuUserStatus').textContent=admin?'អ្នកគ្រប់គ្រង':verified?'អ្នកលក់បានផ្ទៀងផ្ទាត់':me?.vendor?.status==='pending'?'កំពុងរង់ចាំការផ្ទៀងផ្ទាត់':logged?'អ្នកទិញ':'មិនទាន់ចូលគណនី';$('navRole').textContent=admin?'Admin':verified?'Seller':logged?'Buyer':'Guest';$('navAvatar').src=me?.profile?.avatar_url||'https://i.pravatar.cc/100?img=12';$('postAdBtn').classList.toggle('hidden',!logged);$('mobilePostBtn').classList.toggle('hidden',!logged);$('profileMenu').querySelector('[data-action="seller-dashboard"]').classList.toggle('hidden',!verified);$('profileMenu').querySelector('[data-action="admin"]').classList.toggle('hidden',!admin);const accountAction=$('profileMenu').querySelector('[data-action="login"],[data-action="logout"]');if(accountAction){accountAction.textContent=logged?'ចាកចេញ':'ចូលគណនី';accountAction.dataset.action=logged?'logout':'login'}$('profileMenu').querySelector('[data-action="profile"]').classList.toggle('hidden',!logged);$('profileMenu').querySelector('[data-action="saved"]').classList.toggle('hidden',!logged);}
 async function api(path,options={}){
   const headers=new Headers(options.headers||{});
   if(session?.access_token)headers.set('Authorization','Bearer '+session.access_token);
@@ -424,6 +424,60 @@ $('offerForm').addEventListener('submit',async e=>{e.preventDefault();if(!requir
 $('notificationList').innerHTML='<p class="py-4 text-center text-[10px] text-slate-400">ការជូនដំណឹងថ្មីៗនឹងបង្ហាញនៅទីនេះ។</p>';
 document.querySelectorAll('.close-btn').forEach(b=>b.innerHTML=ic('x',16));document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',()=>closeModal(b.dataset.close)));document.querySelectorAll('.modal').forEach(m=>m.addEventListener('mousedown',e=>{if(e.target===m)closeModal(m.id)}));document.addEventListener('keydown',e=>{if(e.key==='Escape'){document.querySelectorAll('.modal.open').forEach(m=>closeModal(m.id));closeDropdowns()}});
 
+
+function supportChatTime(value){return value?new Date(value).toLocaleString('km-KH',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):''}
+function supportChatRenderMessages(targetId,messages){
+  const target=$(targetId);if(!target)return;
+  if(!messages?.length){target.innerHTML='<p class="py-8 text-center text-xs text-slate-400">មិនទាន់មានសារ។ សូមចាប់ផ្តើមសន្ទនា។</p>';return}
+  target.innerHTML=messages.map(m=>'<div class="support-chat-bubble '+(m.sender_role==='admin'?'admin':'user')+'"><div>'+esc(m.body).replace(/\n/g,'<br>')+'</div><time class="support-chat-time">'+esc(supportChatTime(m.created_at))+(m.archived?' · Archive':'')+'</time></div>').join('');
+  target.scrollTop=target.scrollHeight;
+}
+function supportChatRenderArchives(targetId,archives,isAdminView){
+  const target=$(targetId);if(!target)return;
+  if(!archives?.length){target.innerHTML='';return}
+  target.innerHTML=archives.map(a=>'<button type="button" class="support-chat-archive" data-chat-archive="'+esc(a.id)+'" data-chat-admin="'+(isAdminView?'1':'0')+'"><span>📦 '+esc(a.file_name)+' · '+esc(a.message_count)+' សារ</span><span>មើល</span></button>').join('');
+}
+async function loadSupportUserChat(){
+  if(!session)return;
+  const result=await api('/api/chat');
+  const data=result.data||{};
+  const restored=Object.values(restoredUserChatArchives).flat();
+  supportChatRenderMessages('supportChatMessages',[...restored,...(data.messages||[])]);
+  supportChatRenderArchives('supportChatArchives',data.archives||[],false);
+}
+async function loadSupportAdminChats(){
+  if(!isAdmin())return;
+  try{
+    const result=await api('/api/admin/chats');
+    const chats=result.data||[];
+    $('adminChatList').innerHTML=chats.map(chat=>'<button type="button" class="admin-chat-item '+(chat.id===activeAdminChatId?'active ':'')+(Number(chat.unread_admin_count)>0?'unread':'')+'" data-admin-chat="'+esc(chat.id)+'"><span class="flex items-center justify-between gap-2"><b class="truncate text-[11px]">'+esc(chat.profiles?.display_name||'អតិថិជន')+'</b>'+(Number(chat.unread_admin_count)>0?'<span class="rounded-full bg-sky-100 px-2 py-0.5 text-[9px] font-bold text-sky-700">'+esc(chat.unread_admin_count)+'</span>':'')+'</span><span class="mt-1 block truncate text-[9px] text-slate-500">'+esc(chat.last_message_preview||'មិនទាន់មានសារ')+'</span><span class="mt-1 block text-[8px] text-slate-400">'+esc(supportChatTime(chat.last_message_at))+'</span></button>').join('')||'<p class="p-4 text-center text-xs text-slate-400">មិនទាន់មានសន្ទនា។</p>';
+    if(activeAdminChatId&&!chats.some(x=>x.id===activeAdminChatId))activeAdminChatId=null;
+    if(!activeAdminChatId&&chats.length)activeAdminChatId=chats[0].id;
+    if(activeAdminChatId)await loadSupportAdminChat();
+  }catch(error){console.warn('Admin chat list failed:',error.message);$('adminChatList').innerHTML='<p class="p-4 text-center text-xs text-rose-500">មិនអាចផ្ទុកបញ្ជី Chat បានទេ។</p>'}
+}
+async function loadSupportAdminChat(){
+  if(!isAdmin()||!activeAdminChatId)return;
+  try{
+    const result=await api('/api/admin/chats/'+encodeURIComponent(activeAdminChatId));
+    const data=result.data||{},conv=data.conversation||{};
+    $('adminChatTitle').textContent=conv.profiles?.display_name||'អតិថិជន';
+    $('adminChatStatus').textContent=conv.status==='closed'?'បានបិទសន្ទនា':'កំពុងសន្ទនា';
+    const restored=Object.values(restoredAdminChatArchives).flat();
+    supportChatRenderMessages('adminChatMessages',[...restored,...(data.messages||[])]);
+    supportChatRenderArchives('adminChatArchives',data.archives||[],true);
+  }catch(error){console.warn('Admin chat detail failed:',error.message)}
+}
+async function restoreSupportChatArchive(archiveId,isAdminView){
+  try{
+    const path=isAdminView?'/api/admin/chats/'+encodeURIComponent(activeAdminChatId)+'/archives/'+encodeURIComponent(archiveId):'/api/chat/archives/'+encodeURIComponent(archiveId);
+    const result=await api(path),messages=result.data?.messages||[];
+    if(isAdminView){restoredAdminChatArchives[archiveId]=messages;supportChatRenderMessages('adminChatMessages',[...Object.values(restoredAdminChatArchives).flat(),...(await api('/api/admin/chats/'+encodeURIComponent(activeAdminChatId))).data.messages||[]]);}
+    else{restoredUserChatArchives[archiveId]=messages;const current=await api('/api/chat');supportChatRenderMessages('supportChatMessages',[...Object.values(restoredUserChatArchives).flat(),...(current.data?.messages||[])]);}
+    toast('បានទាញប្រវត្តិឆាតចាស់មកបង្ហាញរួចរាល់។','success');
+  }catch(error){toast(error.message,'error')}
+}
+
 async function boot(){try{const cfg=await fetch('/api/config',{cache:'no-store'}).then(r=>r.json());maintenanceMode=cfg.maintenanceMode===true;maintenanceMessage=String(cfg.maintenanceMessage||DEFAULT_MAINTENANCE_MESSAGE);faviconUrl=String(cfg.faviconUrl||'');if(faviconUrl)applyFavicon(faviconUrl);if(!cfg.supabaseUrl||!cfg.supabaseAnonKey)throw new Error('Missing Supabase browser configuration');if(!window.supabase?.createClient)throw new Error('Supabase browser library failed to load');supabaseClient=window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseAnonKey);telegramBotUsername=String(cfg.telegramBotUsername||'').replace(/^@/,'');if($('authModal')?.classList.contains('open')&&!telegramLoginWidgetMounted)telegramLoginWidgetMounted=mountTelegramWidget('telegramLoginWidget','onTelegramAuth');
       // Subscribe before reading the stored session so INITIAL_SESSION and token events are not missed.
       // Keep this callback synchronous: Supabase auth callbacks must not await Supabase operations.
@@ -441,4 +495,34 @@ async function boot(){try{const cfg=await fetch('/api/config',{cache:'no-store'}
       });
       await refreshSession();
       if(session){try{await loadSaved();await loadOrders()}catch(e){console.warn(e)}}await loadProducts();let savedView='home';try{savedView=sessionStorage.getItem('ecomstore.activeView')||'home'}catch(error){console.warn('Could not read saved page:',error)}if(!['home','profile','seller','admin'].includes(savedView)||(['profile','seller','admin'].includes(savedView)&&!session)||(savedView==='admin'&&!me?.isAdmin)||(savedView==='seller'&&me?.vendor?.status!=='approved')){try{sessionStorage.removeItem('ecomstore.activeView')}catch{}savedView='home'}showView(savedView);document.documentElement.classList.remove('route-restoring');}catch(e){document.documentElement.classList.remove('route-restoring');console.error(e);applyMaintenanceUI();toast('មិនអាចភ្ជាប់ប្រព័ន្ធគណនីបានទេ៖ '+e.message,'error');$('listingSub').textContent='សូមកំណត់ Supabase Auth និង Environment Variables ដើម្បីបើកផ្សារ។';$('skeletonGrid').classList.add('hidden');$('emptyHome').classList.remove('hidden')}}
+
+$('supportChatLauncher').addEventListener('click',async()=>{
+  if(!session){openAuth();return}
+  $('supportChatPanel').classList.remove('hidden');
+  try{await loadSupportUserChat()}catch(error){toast(error.message,'error')}
+  if(!supportChatPollTimer)supportChatPollTimer=setInterval(()=>{if(!$('supportChatPanel').classList.contains('hidden'))void loadSupportUserChat().catch(()=>{})},5000);
+});
+$('supportChatClose').addEventListener('click',()=>$('supportChatPanel').classList.add('hidden'));
+$('supportChatForm').addEventListener('submit',async event=>{
+  event.preventDefault();const input=$('supportChatInput'),body=input.value.trim();if(!body)return;
+  const button=$('supportChatForm').querySelector('button[type="submit"]');button.disabled=true;
+  try{await api('/api/chat/messages',{method:'POST',body:JSON.stringify({body})});input.value='';await loadSupportUserChat();}
+  catch(error){toast(error.message,'error')}finally{button.disabled=false}
+});
+$('supportChatArchives').addEventListener('click',event=>{const button=event.target.closest('[data-chat-archive]');if(button)void restoreSupportChatArchive(button.dataset.chatArchive,false)});
+$('adminChatList').addEventListener('click',event=>{
+  const button=event.target.closest('[data-admin-chat]');if(!button)return;
+  activeAdminChatId=button.dataset.adminChat;restoredAdminChatArchives={};void loadSupportAdminChats();
+});
+$('refreshAdminChats').addEventListener('click',()=>void loadSupportAdminChats());
+$('adminChatForm').addEventListener('submit',async event=>{
+  event.preventDefault();if(!activeAdminChatId)return;
+  const input=$('adminChatInput'),body=input.value.trim();if(!body)return;
+  const button=$('adminChatForm').querySelector('button[type="submit"]');button.disabled=true;
+  try{await api('/api/admin/chats/'+encodeURIComponent(activeAdminChatId)+'/messages',{method:'POST',body:JSON.stringify({body})});input.value='';await loadSupportAdminChat();await loadSupportAdminChats();}
+  catch(error){toast(error.message,'error')}finally{button.disabled=false}
+});
+$('adminChatArchives').addEventListener('click',event=>{const button=event.target.closest('[data-chat-archive]');if(button)void restoreSupportChatArchive(button.dataset.chatArchive,true)});
+if(!adminChatPollTimer)adminChatPollTimer=setInterval(()=>{if(isAdmin()&&$('view-admin').classList.contains('active'))void loadSupportAdminChats()},5000);
+
 void boot();
