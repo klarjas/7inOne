@@ -306,7 +306,7 @@ $('productDetail').querySelectorAll('[data-image]').forEach(b=>b.addEventListene
 async function openStorefront(vendorId){
   if(!vendorId){toast('មិនមានព័ត៌មានហាងនេះទេ។','warning');return}
   currentStoreId=String(vendorId);currentStoreCategory='all';currentStoreSearch='';
-  try{const result=await api('/api/vendors/'+encodeURIComponent(currentStoreId)+'/ratings');currentStoreData=result.data||null;if(!currentStoreData)throw new Error('មិនមានព័ត៌មានហាងទេ។');await showView('store')}
+  try{const [result,catalogue]=await Promise.all([api('/api/vendors/'+encodeURIComponent(currentStoreId)+'/ratings'),api('/api/products?page=1&limit=50')]);currentStoreData=result.data||null;currentStoreProducts=(catalogue.data||[]).filter(p=>String(p.vendor_id)===currentStoreId);if(!currentStoreData)throw new Error('មិនមានព័ត៌មានហាងទេ។');await showView('store')}
   catch(error){toast(error.message,'error')}
 }
 function renderStorefront(){
