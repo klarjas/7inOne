@@ -510,7 +510,7 @@ app.post('/api/products', authenticate, async (req, res) => {
     } else {
       const { data: createdVendor, error } = await supabase.from('vendors').insert({
         user_id: req.user.id,
-        store_name: 'EcomStore Admin',
+        store_name: '7inOne Admin',
         description: 'Official products managed by the marketplace administrator.',
         status: 'approved'
       }).select().single();
@@ -907,10 +907,10 @@ app.patch('/api/admin/orders/:id', authenticate, requireAdmin, async (req, res) 
 
 app.use((error, _req, res, _next) => {
   if (error instanceof multer.MulterError) return fail(res, 400, error.message);
-  console.error('EcomStore request error:', error);
+  console.error('7inOne request error:', error);
   return fail(res, 500, 'Internal server error');
 });
 
 await nextApp.prepare();
 app.use((req, res) => nextHandler(req, res));
-app.listen(port, () => console.log(`EcomStore full-stack service listening on ${port}`));
+app.listen(port, () => console.log(`7inOne full-stack service listening on ${port}`));
