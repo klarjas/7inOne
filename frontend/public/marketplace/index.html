@@ -236,7 +236,7 @@ html.route-restoring[data-initial-view="admin"] #view-admin::before{content:"";d
         <div class="mb-3 flex items-center justify-between"><b class="text-[11px]">ប្រអប់សារ</b><button id="sellerChatInboxRefresh" class="text-[9px] font-bold text-emerald-700" type="button">ធ្វើបច្ចុប្បន្នភាព</button></div>
         <div id="sellerChatInboxList"><p class="py-8 text-center text-[10px] text-slate-400">កំពុងផ្ទុកសារ...</p></div>
       </aside>
-      <main class="seller-chat-thread flex min-w-0 flex-1 flex-col">
+      <main id="sellerChatThread" class="seller-chat-thread flex min-w-0 flex-1 flex-col">
         <div id="sellerChatProductContext" class="flex items-center gap-3 border-b border-slate-100 bg-white px-3 py-2">
           <button id="sellerChatBack" class="hidden rounded-lg border border-slate-200 px-2 py-1 text-[10px]" type="button">← សារទាំងអស់</button>
           <div id="sellerChatProductImage" class="h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-slate-100"></div>
@@ -255,7 +255,18 @@ html.route-restoring[data-initial-view="admin"] #view-admin::before{content:"";d
 </div>
 <!-- ADMIN SUPPORT IS TEMPORARILY HIDDEN; backend and history are preserved. -->
 <button id="supportChatLauncher" type="button" class="hidden fixed bottom-6 right-5 z-[120] grid h-14 w-14 place-items-center rounded-full bg-emerald-700 text-xl text-white shadow-xl" aria-label="ឆាតអ្នកទិញ និងអ្នកលក់">💬<span id="sellerChatUnreadBadge" class="absolute -right-1 -top-1 hidden min-w-5 rounded-full bg-rose-600 px-1.5 py-0.5 text-[9px] font-bold text-white"></span></button>
-<section id="supportChatPanel" class="support-chat-panel hidden" aria-hidden="true"></section>
+<section id="supportChatPanel" class="support-chat-panel hidden fixed bottom-24 right-5 z-[120] w-[min(92vw,370px)] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl" aria-label="ឆាតជាមួយ Admin">
+  <header class="flex items-center justify-between bg-slate-900 px-4 py-3 text-white">
+    <div><b class="block text-sm">ជំនួយ 7inOne</b><span class="text-[10px] text-slate-300">ឆាតផ្ទាល់ជាមួយ Admin</span></div>
+    <button id="supportChatClose" type="button" class="rounded-lg px-2 py-1 text-lg" aria-label="បិទ">×</button>
+  </header>
+  <div id="supportChatMessages" class="support-chat-messages space-y-3 bg-slate-50 p-3" aria-live="polite"><p class="text-center text-xs text-slate-400">កំពុងផ្ទុកសារ...</p></div>
+  <div id="supportChatArchives" class="max-h-24 space-y-1 overflow-y-auto border-t border-slate-100 bg-white px-3 py-2"></div>
+  <form id="supportChatForm" class="flex items-end gap-2 border-t border-slate-100 bg-white p-3">
+    <textarea id="supportChatInput" class="field min-h-[42px] max-h-24 flex-1 resize-y text-xs" rows="1" maxlength="4000" placeholder="សរសេរសាររបស់អ្នក..." required></textarea>
+    <button class="brand-gradient rounded-xl px-4 py-3 text-[11px] font-bold text-white" type="submit">ផ្ញើ</button>
+  </form>
+</section>
 <div aria-hidden="true" class="maintenance-overlay hidden" id="maintenanceOverlay"><div class="maintenance-glass-card"><div class="maintenance-gear-wrap"><span class="maintenance-gear">⚙</span><span class="maintenance-spark">✦</span></div><p class="maintenance-eyebrow">7INONE · SYSTEM UPDATE</p><h1>ប្រព័ន្ធកំពុងអភិវឌ្ឍន៍</h1><p class="maintenance-english">Under Development</p><p class="maintenance-message" id="maintenanceOverlayMessage"></p><div class="maintenance-progress"><span></span></div><a href="#" id="maintenanceAdminLogin">Admin Login</a></div></div><div class="maintenance-admin-pill hidden" id="maintenanceAdminPill">🛠 កំពុងស្ថិតក្នុងទម្រង់អភិវឌ្ឍន៍ (Admin Preview)</div>
 <div class="fixed bottom-5 right-5 z-[150] flex w-[min(92vw,360px)] flex-col gap-2" id="toastArea"></div>
 
