@@ -239,7 +239,7 @@ body>footer{flex:0 0 auto;margin-top:auto;background:rgba(255,255,255,.94)!impor
 .product-card .text-emerald-600{color:#047857!important}
 .product-card .bg-amber-50{background:#FFFBEB!important}
 .account-hero,.account-panel,.soft-shadow{box-shadow:var(--surface-shadow)!important}
-.account-cover{background:linear-gradient(125deg,#064E3B 0%,#065F46 55%,#10B981 100%)!important}
+.account-cover{background-image:linear-gradient(125deg,#064E3B 0%,#065F46 55%,#10B981 100%)}
 .account-avatar{display:grid;place-items:center;overflow:hidden;background:#E8F7EE!important}
 .account-avatar svg{width:100%;height:100%;display:block}
 #view-admin .rounded-2xl.border,#view-admin .rounded-2xl.border-slate-100{border-color:#E5ECE7!important}
