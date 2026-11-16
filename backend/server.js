@@ -555,7 +555,7 @@ app.post('/api/auth/telegram/recovery/request', recoveryOtpLimiter, async (req, 
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return fail(res, 400, 'សូមបញ្ចូល Email ត្រឹមត្រូវ។');
   try {
     const { data: link, error } = await supabase.from(telegramLinkTable)
-      .select('user_id,telegram_user_id').ilike('account_email', email).maybeSingle();
+      .select('user_id,telegram_user_id').eq('account_email', email).maybeSingle();
     if (error) throw error;
     if (link) {
       const code = String(randomInt(100000, 1000000));
