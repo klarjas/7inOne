@@ -176,7 +176,7 @@ async function ratingsFor(vendorIds) {
   return grouped;
 }
 
-app.get('/health', (_req, res) => res.json({ status: 'ok', service: 'EcomStore', database: Boolean(supabase) }));
+app.get('/health', (_req, res) => res.json({ status: 'ok', service: '7inOne', database: Boolean(supabase) }));
 
 // Admin-only Telegram storage diagnostics. Never returns the bot token.
 app.get('/api/admin/telegram/diagnostics', authenticate, requireAdmin, async (_req, res) => {
