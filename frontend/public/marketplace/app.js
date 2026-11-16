@@ -367,6 +367,8 @@ function renderProductDetail(){
 function updateProductLightbox(){const images=(currentProduct?.product_images||[]).filter(item=>item.image_url),image=images[productGalleryIndex];if(!image)return;$('productLightboxImage').src=image.image_url;$('productLightboxCount').textContent=(productGalleryIndex+1)+' / '+images.length}
 function openProductLightbox(){if(!(currentProduct?.product_images||[]).some(item=>item.image_url))return;productLightboxOpen=true;updateProductLightbox();$('productLightbox').classList.add('open');$('productLightbox').setAttribute('aria-hidden','false')}
 function closeProductLightbox(){productLightboxOpen=false;$('productLightbox').classList.remove('open');$('productLightbox').setAttribute('aria-hidden','true')}
+function openSellerChatImageLightbox(src){if(!src)return;const viewer=$('sellerChatImageLightbox'),image=$('sellerChatImageLightboxImage');if(!viewer||!image)return;image.src=src;viewer.classList.add('open');viewer.setAttribute('aria-hidden','false')}
+function closeSellerChatImageLightbox(){const viewer=$('sellerChatImageLightbox'),image=$('sellerChatImageLightboxImage');if(!viewer)return;viewer.classList.remove('open');viewer.setAttribute('aria-hidden','true');if(image)image.removeAttribute('src')}
 
 async function openStorefront(vendorId,options={}){
  if(!vendorId){toast('មិនមានព័ត៌មានហាងនេះទេ។','warning');return false}
@@ -801,7 +803,7 @@ function renderSellerChatMessages(messages){
       content='<article class="seller-chat-product-card '+(product?.id?'seller-chat-product-link':'')+'"'+(product?.id?' role="button" tabindex="0" data-chat-product-id="'+esc(product.id)+'" aria-label="មើលផលិតផល '+esc(product.title||'')+'"':'')+'>'+image+'<div class="seller-chat-product-info"><small>ផលិតផលដែលបានសួរ</small><b>'+esc(product?.title||message.body||'ផលិតផល')+'</b>'+(product?'<strong>'+money(product.price)+'</strong>':'<span class="seller-chat-product-unavailable">ផលិតផលនេះមិនមានលក់ទៀតទេ</span>')+'</div></article>';
     }else if(message.message_type==='image'&&(message.telegram_file_id||message.local_image_url)){
       const imageSrc=message.local_image_url||('/api/media/telegram/'+encodeURIComponent(message.telegram_file_id)+'?mime='+encodeURIComponent(message.mime_type||'image/jpeg'));
-      content='<a class="seller-chat-image-link" href="'+esc(imageSrc)+'" target="_blank" rel="noopener noreferrer"><img class="seller-chat-image" src="'+esc(imageSrc)+'" alt="រូបភាពក្នុងសារ" loading="lazy"></a>'+(message.upload_state==='pending'?'<span class="seller-chat-voice-status">កំពុងផ្ញើរូបភាព…</span>':'');
+      content='<button type="button" class="seller-chat-image-link" data-chat-image-src="'+esc(imageSrc)+'" aria-label="មើលរូបភាពពេញ"><img class="seller-chat-image" src="'+esc(imageSrc)+'" alt="រូបភាពក្នុងសារ" loading="lazy"></button>'+(message.upload_state==='pending'?'<span class="seller-chat-voice-status">កំពុងផ្ញើរូបភាព…</span>':'');
     }else if(message.message_type==='location'){
       let location=null;try{location=JSON.parse(message.body||'{}')}catch{}
       const lat=Number(location?.latitude),lng=Number(location?.longitude);
@@ -1106,7 +1108,7 @@ async function boot(){
   }
 }
 
-$('sellerChatMessages').addEventListener('click',event=>{const card=event.target.closest('[data-chat-product-id]');if(card)openChatProduct(card.dataset.chatProductId)});
+$('sellerChatMessages').addEventListener('click',event=>{const imageButton=event.target.closest('[data-chat-image-src]');if(imageButton){event.preventDefault();openSellerChatImageLightbox(imageButton.dataset.chatImageSrc);return}const card=event.target.closest('[data-chat-product-id]');if(card)openChatProduct(card.dataset.chatProductId)});
 $('sellerChatMessages').addEventListener('keydown',event=>{if(event.key!=='Enter'&&event.key!==' ')return;const card=event.target.closest('[data-chat-product-id]');if(card){event.preventDefault();openChatProduct(card.dataset.chatProductId)}});
 $('sellerChatClose').addEventListener('click',minimizeSellerChatPanel);
 $('sellerChatForm').addEventListener('submit',async event=>{event.preventDefault();const input=$('sellerChatInput'),body=input.value.trim();if(!body||!sellerChatConversationId)return;const button=$('sellerChatSend');button.disabled=true;try{await api('/api/seller-chat/conversations/'+encodeURIComponent(sellerChatConversationId)+'/messages',{method:'POST',body:JSON.stringify({body})});input.value='';syncSellerChatComposer();await loadSellerChatConversation(true);await loadUnifiedSellerChatInbox()}catch(error){toast(error.message,'error')}finally{button.disabled=false}});
@@ -1220,9 +1222,10 @@ window.addEventListener('popstate',syncRouteFromHistory);
 window.addEventListener('scroll',()=>{if(scrollSaveTimer)window.clearTimeout(scrollSaveTimer);scrollSaveTimer=window.setTimeout(()=>{try{sessionStorage.setItem('ecomstore.scrollY',String(window.scrollY))}catch{}},140)},{passive:true});
 window.addEventListener('pagehide',()=>{try{sessionStorage.setItem('ecomstore.scrollY',String(window.scrollY))}catch{}});
 $('productLightboxClose')?.addEventListener('click',closeProductLightbox);$('productLightbox')?.addEventListener('click',event=>{if(event.target.id==='productLightbox')closeProductLightbox()});
+$('sellerChatImageLightboxClose')?.addEventListener('click',closeSellerChatImageLightbox);$('sellerChatImageLightbox')?.addEventListener('click',event=>{if(event.target.id==='sellerChatImageLightbox')closeSellerChatImageLightbox()});
 $('productLightboxPrev')?.addEventListener('click',()=>{const count=(currentProduct?.product_images||[]).filter(item=>item.image_url).length;if(count){productGalleryIndex=(productGalleryIndex-1+count)%count;updateProductLightbox();const img=$('productMainImage');if(img)img.src=$('productLightboxImage').src;$('productDetail').querySelectorAll('[data-image]').forEach(button=>button.classList.toggle('active',Number(button.dataset.image)===productGalleryIndex));const counter=$('productDetail').querySelector('.product-gallery-counter');if(counter)counter.textContent=(productGalleryIndex+1)+' / '+count}});
 $('productLightboxNext')?.addEventListener('click',()=>{const count=(currentProduct?.product_images||[]).filter(item=>item.image_url).length;if(count){productGalleryIndex=(productGalleryIndex+1)%count;updateProductLightbox();const img=$('productMainImage');if(img)img.src=$('productLightboxImage').src;$('productDetail').querySelectorAll('[data-image]').forEach(button=>button.classList.toggle('active',Number(button.dataset.image)===productGalleryIndex));const counter=$('productDetail').querySelector('.product-gallery-counter');if(counter)counter.textContent=(productGalleryIndex+1)+' / '+count}});
-window.addEventListener('keydown',event=>{if(event.key==='Escape'&&productLightboxOpen)closeProductLightbox();if(productLightboxOpen&&event.key==='ArrowLeft')$('productLightboxPrev')?.click();if(productLightboxOpen&&event.key==='ArrowRight')$('productLightboxNext')?.click()});
+window.addEventListener('keydown',event=>{if(event.key==='Escape'&&productLightboxOpen)closeProductLightbox();if(event.key==='Escape'&&$('sellerChatImageLightbox')?.classList.contains('open'))closeSellerChatImageLightbox();if(productLightboxOpen&&event.key==='ArrowLeft')$('productLightboxPrev')?.click();if(productLightboxOpen&&event.key==='ArrowRight')$('productLightboxNext')?.click()});
 
 // Delegated image lifecycle: fade images in after load and stop shimmer on failures.
 document.addEventListener('load',event=>{
