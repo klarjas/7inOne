@@ -17,8 +17,9 @@
   var allowed=['home','profile','seller','admin','product','store'];
   var rawHash=String(window.location.hash||'').replace(/^#/,'');
   var parts=rawHash.split('/'),hashView=parts[0]||'',fromStorage='';
-  var productId=hashView==='product'?decodeURIComponent(parts.slice(1).join('/')):'';
-  var storeId=hashView==='store'?decodeURIComponent(parts.slice(1).join('/')):'';
+  var decodeRouteId=function(value){try{return decodeURIComponent(value)}catch(e){return value}};
+  var productId=hashView==='product'?decodeRouteId(parts.slice(1).join('/')):'';
+  var storeId=hashView==='store'?decodeRouteId(parts.slice(1).join('/')):'';
   try{fromStorage=sessionStorage.getItem('ecomstore.activeView')||'';if(!productId&&hashView==='product')productId=sessionStorage.getItem('ecomstore.currentProductId')||'';if(!storeId&&hashView==='store')storeId=sessionStorage.getItem('ecomstore.currentStoreId')||'';if(!productId&&fromStorage==='product')productId=sessionStorage.getItem('ecomstore.currentProductId')||'';if(!storeId&&fromStorage==='store')storeId=sessionStorage.getItem('ecomstore.currentStoreId')||''}catch(e){}
   var initial=allowed.includes(hashView)?hashView:(allowed.includes(fromStorage)?fromStorage:'home');
   if(initial==='product'&&!productId)initial='home';if(initial==='store'&&!storeId)initial='home';
