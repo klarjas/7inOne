@@ -165,7 +165,9 @@ export function registerSellerChat(app, { supabase, authenticate, requireVendor,
       const allowed = new Set(['audio/webm','audio/ogg','audio/mp4','audio/mpeg','audio/wav','audio/x-wav']);
       if (!file || !allowed.has(String(file.mimetype).split(';')[0].toLowerCase()) || !file.buffer?.length) return fail(res, 400, 'ទម្រង់សំឡេងមិនត្រឹមត្រូវទេ។');
       if (file.size > 12 * 1024 * 1024) return fail(res, 413, 'សំឡេងមិនអាចលើស 12MB បានទេ។');
-      const duration = Math.max(1, Math.min(180, Number(req.body.duration_seconds || 1)));
+      const requestedDuration = Number(req.body.duration_seconds || 1);
+      const duration = Number.isFinite(requestedDuration) ? Math.max(1, Math.min(180, Math.round(requestedDuration))) : 1;
+      const mimeType = String(file.mimetype).split(';')[0].toLowerCase();
       const chatId = telegramStorageChatId();
       if (!process.env.TELEGRAM_BOT_TOKEN || !chatId) return fail(res, 503, 'មិនទាន់កំណត់ Telegram Storage សម្រាប់សារសំឡេងទេ។');
       const form = new FormData();
@@ -177,7 +179,7 @@ export function registerSellerChat(app, { supabase, authenticate, requireVendor,
       if (!media?.file_id || !stored.message_id) throw new Error('Telegram did not return a voice file_id.');
       const message = await saveMessage(conversation, req.user.id, conversation.current_role, {
         body: '🎤 សារសំឡេង', message_type: 'voice', telegram_file_id: media.file_id,
-        telegram_message_id: stored.message_id, mime_type: file.mimetype, duration_seconds: duration
+        telegram_message_id: stored.message_id, mime_type: mimeType, duration_seconds: duration
       }, '🎤 សារសំឡេង · ' + duration + ' វិនាទី');
       return res.status(201).json({ data: { message } });
     } catch (error) { console.error('Seller voice upload failed:', error.message); return fail(res, 502, 'មិនអាចរក្សាទុក ឬផ្ញើសំឡេងទៅ Telegram បានទេ។'); }
