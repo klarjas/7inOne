@@ -954,12 +954,15 @@ voiceButton.addEventListener('pointermove',event=>{
   }
 });
 const releaseVoicePointer=event=>{
-  if(!sellerChatPointerDown)return;
-  sellerChatPointerDown=false;sellerChatIgnoreNextClick=true;
-  if(sellerChatRecorder?.state==='recording'&&!sellerChatRecordingLocked)stopSellerVoiceRecording(false);
+  if(sellerChatPointerDown){
+    sellerChatPointerDown=false;
+    if(sellerChatRecorder?.state==='recording'&&!sellerChatRecordingLocked)stopSellerVoiceRecording(false);
+  }
+  sellerChatIgnoreNextClick=true;
+  setTimeout(()=>{sellerChatIgnoreNextClick=false},350);
 };
 voiceButton.addEventListener('pointerup',releaseVoicePointer);
-voiceButton.addEventListener('pointercancel',()=>{if(sellerChatPointerDown){sellerChatPointerDown=false;stopSellerVoiceRecording(true)}});
+voiceButton.addEventListener('pointercancel',()=>{if(sellerChatPointerDown){sellerChatPointerDown=false;stopSellerVoiceRecording(true)}sellerChatIgnoreNextClick=true;setTimeout(()=>{sellerChatIgnoreNextClick=false},350)});
 voiceButton.addEventListener('click',()=>{
   if(sellerChatIgnoreNextClick){sellerChatIgnoreNextClick=false;return}
   if(sellerChatRecordingLocked)stopSellerVoiceRecording(false);
