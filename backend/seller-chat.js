@@ -60,6 +60,11 @@ export function registerSellerChat(app, { supabase, authenticate, requireVendor,
     catch (error) { console.error('Seller chat inbox failed:', error.message); return fail(res, 500, 'មិនអាចផ្ទុកប្រអប់សារបានទេ។'); }
   });
 
+  app.get('/api/seller-chat/conversations', authenticate, requireVendor, async (req, res) => {
+    try { res.set('Cache-Control', 'no-store'); return res.json({ data: (await listInbox(req.user.id)).filter(row => row.current_role === 'seller') }); }
+    catch (error) { console.error('Seller dashboard inbox failed:', error.message); return fail(res, 500, 'មិនអាចផ្ទុកសារអ្នកទិញបានទេ។'); }
+  });
+
   app.get('/api/seller-chat/preferences', authenticate, async (req, res) => {
     const { data, error } = await supabase.from('seller_chat_preferences').select('muted').eq('user_id', req.user.id).maybeSingle();
     if (error) return fail(res, 500, 'មិនអាចផ្ទុកការកំណត់សំឡេងបានទេ។');
