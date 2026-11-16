@@ -323,7 +323,7 @@ function renderTelegramDiagnostics(data){
   const webhookDetail=data.webhook?.ok?('URL៖ '+(data.webhook.configured_url||'មិនទាន់កំណត់')+' · Pending៖ '+Number(data.webhook.pending_update_count||0)+(data.webhook.last_error_message?' · Telegram Error៖ '+data.webhook.last_error_message:'')):'';
   const tableDetail=(key)=>data.tables?.[key]||{ok:false,error:'មិនអាចពិនិត្យ Database បាន។'};
   const upload='<div class="mt-3 rounded-lg '+(data.can_upload?'bg-emerald-50 text-emerald-800':'bg-rose-50 text-rose-700')+' p-3 text-[11px] font-bold">'+(data.can_upload?'អាច Upload ទៅ Channel បាន':'មិនទាន់អាច Upload ទៅ Channel បាន')+'</div>';
-  const login='<div class="mt-3 rounded-lg '+(data.login_ready?'bg-emerald-50 text-emerald-800':'bg-amber-50 text-amber-800')+' p-3 text-[11px] font-bold">'+(data.login_ready?'Telegram Login៖ ត្រៀមរួចរាល់':'Telegram Login៖ មិនទាន់ត្រៀមរួច — សូមដោះស្រាយចំណុចដែលមានបញ្ហាខាងលើ')+'</div>';
+  const login='<div class="mt-3 rounded-lg '+(data.login_ready?'bg-emerald-50 text-emerald-800':'bg-amber-50 text-amber-800')+' p-3 text-[11px] font-bold">'+(data.login_ready?'Bot Deep-link Login ចាស់៖ ត្រៀមរួចរាល់':'Bot Deep-link Login ចាស់៖ មិនទាន់ត្រៀមរួច — ពិនិត្យ Webhook និង Bot Security')+'</div>';
   $('telegramDiagnosticsResult').innerHTML='<div class="mb-2 flex items-center justify-between"><b class="text-slate-800">លទ្ធផលត្រួតពិនិត្យ Telegram</b><span class="text-[9px] text-slate-400">'+(data.configured?'Bot/Channel បានកំណត់':'ខ្វះ Configuration')+'</span></div>'+
     row('Telegram Bot API (getMe)',data.bot,botDetail)+
     row('Telegram Login Widget Bot Username',data.telegram_widget_bot,widgetBotDetail)+
