@@ -179,6 +179,17 @@ export function registerSupportChat(app, deps) {
     } catch (e) { console.error('Chat archive restore failed:', e.message); fail(res, 502, 'មិនអាចទាញប្រវត្តិឆាតពី Telegram បានទេ។'); }
   });
 
+  app.get('/api/admin/chats/:conversationId/archives/:archiveId', authenticate, requireAdmin, async (req, res) => {
+    try {
+      const { data: archive, error } = await supabase.from('support_chat_archives')
+        .select('id,conversation_id,telegram_file_id,file_name')
+        .eq('id', req.params.archiveId).eq('conversation_id', req.params.conversationId).maybeSingle();
+      if (error || !archive) return fail(res, 404, 'រកមិនឃើញប្រវត្តិឆាតនេះទេ។');
+      const text = await readArchive(archive.telegram_file_id);
+      res.json({ data: { archive_id: archive.id, file_name: archive.file_name, messages: parseArchive(text) } });
+    } catch (e) { console.error('Admin archive restore failed:', e.message); fail(res, 502, 'មិនអាចទាញប្រវត្តិឆាតពី Telegram បានទេ។'); }
+  });
+
   app.get('/api/admin/chats', authenticate, requireAdmin, async (_req, res) => {
     const { data, error } = await supabase.from('support_conversations')
       .select('id,user_id,status,last_message_at,last_message_preview,unread_admin_count,created_at,profiles(display_name,phone)')
