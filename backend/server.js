@@ -1651,12 +1651,12 @@ app.get('/api/offers', authenticate, async (req, res) => {
   const { data, error } = await query;
   if (error) return fail(res, 500, 'Could not load offers');
   const buyerIds = [...new Set((data || []).map(row => row.buyer_id))];
-  let buyerNames = {};
+  let buyerProfiles = {};
   if (buyerIds.length) {
-    const { data: buyers } = await supabase.from('profiles').select('id,display_name').in('id', buyerIds);
-    buyerNames = Object.fromEntries((buyers || []).map(row => [row.id, row.display_name]));
+    const { data: buyers } = await supabase.from('profiles').select('id,display_name,phone').in('id', buyerIds);
+    buyerProfiles = Object.fromEntries((buyers || []).map(row => [row.id, row]));
   }
-  res.json({ data: (data || []).map(row => ({ ...row, buyer_name: buyerNames[row.buyer_id] || 'អ្នកទិញ', products: row.products ? publicProduct(row.products) : null })) });
+  res.json({ data: (data || []).map(row => ({ ...row, buyer_name: buyerProfiles[row.buyer_id]?.display_name || 'អ្នកទិញ', buyer_phone: buyerProfiles[row.buyer_id]?.phone || null, products: row.products ? publicProduct(row.products) : null })) });
 });
 app.post('/api/products/:id/offers', authenticate, async (req, res) => {
   const offer_price = Number(req.body.offer_price);
