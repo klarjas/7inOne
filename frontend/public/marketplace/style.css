@@ -110,3 +110,10 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 @media(hover:none){.product-card:hover{transform:none;box-shadow:var(--surface-shadow)}.product-card:hover .product-img{transform:none}}
 @media(max-width:640px){body>main{min-height:0}.view{min-height:44vh}#view-home{min-height:52vh}#productGrid,#skeletonGrid{min-height:300px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+
+
+/* Telegram Login Widget */
+.telegram-widget-panel{display:block}
+.telegram-widget-slot{display:flex;min-height:42px;align-items:center;justify-content:center;overflow:hidden}
+.telegram-widget-slot iframe{max-width:100%!important}
+.telegram-widget-slot>script{display:block}
