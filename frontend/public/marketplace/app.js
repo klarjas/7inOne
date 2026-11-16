@@ -622,7 +622,7 @@ async function renderSeller(){
   const results=await Promise.all([api('/api/vendor/overview'),api('/api/vendor/products'),loadOffers(),api('/api/vendor/orders')]);
   const stats=results[0],productsRes=results[1],offers=results[2],ordersRes=results[3];
   $('kpiListings').textContent=stats.data.activeListings;$('kpiViews').textContent=Number(stats.data.totalViews).toLocaleString();$('kpiRating').textContent=stats.data.averageRating??'—';$('kpiSales').textContent=stats.data.completedSales;
-  const allProducts=productsRes.data||[],stale=allProducts.filter(p=>sellerProductLifecycle(p).autoDelete&&p.status!=='sold');
+  const allProducts=productsRes.data||[],stale=allProducts.filter(p=>sellerProductLifecycle(p).autoDelete);
   sellerProductCache=allProducts.filter(p=>!sellerProductLifecycle(p).autoDelete);
   if(stale.length){
    const removed=await Promise.allSettled(stale.map(p=>api('/api/products/'+encodeURIComponent(p.id),{method:'DELETE'})));
