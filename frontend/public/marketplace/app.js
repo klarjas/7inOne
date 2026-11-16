@@ -669,6 +669,7 @@ function playSellerChatNotification(){
 function showSellerChatLauncher(){ $('supportChatLauncher')?.classList.remove('hidden'); }
 function minimizeSellerChatPanel(){
   const modal=$('sellerChatModal');if(!modal)return;
+  if(sellerChatRecorder?.state==='recording')stopSellerVoiceRecording(true);
   modal.classList.remove('open');modal.setAttribute('aria-hidden','true');
   showSellerChatLauncher();
   if(!document.querySelector('.modal.open'))document.body.classList.remove('overflow-hidden');
@@ -1020,9 +1021,9 @@ $('sellerChatImageInput').addEventListener('change',async event=>{
 $('sellerChatShareLocation').addEventListener('click',()=>{
   if(!sellerChatConversationId||$('sellerChatInput').disabled)return;
   if(!navigator.geolocation){toast('Browser នេះមិនគាំទ្រការចែករំលែកទីតាំងទេ។','error');return}
-  const button=$('sellerChatShareLocation');button.disabled=true;
+  const button=$('sellerChatShareLocation'),conversationId=sellerChatConversationId;button.disabled=true;
   navigator.geolocation.getCurrentPosition(async position=>{
-    const latitude=Number(position.coords.latitude),longitude=Number(position.coords.longitude),conversationId=sellerChatConversationId;
+    const latitude=Number(position.coords.latitude),longitude=Number(position.coords.longitude);
     const pending={id:'local-location-'+Date.now(),conversation_id:conversationId,sender_id:session.user.id,sender_role:sellerChatMode,message_type:'location',body:JSON.stringify({latitude,longitude}),created_at:new Date().toISOString(),upload_state:'pending'};
     sellerChatPendingMedia.push(pending);renderSellerChatMessages([...sellerChatLoadedMessages,...sellerChatPendingVoices.filter(x=>x.conversation_id===conversationId),...sellerChatPendingMedia.filter(x=>x.conversation_id===conversationId)]);
     try{await api('/api/seller-chat/conversations/'+encodeURIComponent(conversationId)+'/location',{method:'POST',body:JSON.stringify({latitude,longitude,accuracy:position.coords.accuracy})});}
