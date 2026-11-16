@@ -1601,7 +1601,7 @@ app.get('/api/vendors/:id/ratings', async (req, res) => {
   if (error || !vendor) return fail(res, 404, 'Seller not found');
   const [{ data: reviews, error: reviewError }, { data: products }] = await Promise.all([
     supabase.from('seller_reviews').select('id,buyer_id,order_id,rating,comment,created_at').eq('vendor_id', vendor.id).order('created_at', { ascending: false }).limit(30),
-    supabase.from('products').select('id,status,view_count').eq('vendor_id', vendor.id)
+    supabase.from('products').select('id,status,view_count,renewed_at').eq('vendor_id', vendor.id)
   ]);
   if (reviewError) return fail(res, 500, 'Could not load seller reviews');
   const trust = await ratingsFor([vendor.id]);
@@ -1617,7 +1617,7 @@ app.get('/api/vendors/:id/ratings', async (req, res) => {
     profile: { display_name: profile.display_name, province: profile.province, bio: profile.bio, avatar_url: publicMediaUrl(profile.avatar_path) },
     rating: trust[vendor.id]?.average ?? null, review_count: trust[vendor.id]?.count ?? 0,
     distribution: trust[vendor.id]?.distribution ?? [0,0,0,0,0],
-    active_listings: (products || []).filter(row => row.status === 'active').length,
+    active_listings: (products || []).filter(row => row.status === 'active' && row.renewed_at && new Date(row.renewed_at).getTime() >= Date.now() - PRODUCT_PUBLIC_MAX_AGE_MS).length,
     total_views: (products || []).reduce((sum,row) => sum + Number(row.view_count || 0), 0),
     reviews: (reviews || []).map(row => ({ ...row, buyer_name: buyerNames[row.buyer_id] || 'អ្នកទិញ' }))
   } });
