@@ -7,7 +7,7 @@ import multer from 'multer';
 import next from 'next';
 import { fileURLToPath } from 'node:url';
 import { createClient } from '@supabase/supabase-js';
-import { randomUUID, randomBytes, randomInt, createHash, timingSafeEqual } from 'node:crypto';
+import { randomUUID, randomBytes, randomInt, createHash, createHmac, timingSafeEqual } from 'node:crypto';
 
 const app = express();
 const port = Number(process.env.PORT || 10000);
@@ -110,6 +110,26 @@ async function telegram(method, payload) {
     throw new Error(`Telegram API ${method} failed (${json?.error_code || response.status}): ${description}`);
   }
   return json.result;
+}
+let telegramBotUsernameCache = { value: null, expiresAt: 0 };
+async function getTelegramBotUsername() {
+  const configured = clean(process.env.TELEGRAM_BOT_USERNAME, 80).replace(/^@/, '');
+  if (configured && /^[A-Za-z0-9_]{5,32}$/.test(configured)) return configured;
+  if (!process.env.TELEGRAM_BOT_TOKEN) return null;
+  if (telegramBotUsernameCache.expiresAt > Date.now()) return telegramBotUsernameCache.value;
+  try {
+    const bot = await telegram('getMe', { method: 'POST' });
+    const username = clean(bot?.username, 80);
+    telegramBotUsernameCache = {
+      value: /^[A-Za-z0-9_]{5,32}$/.test(username) ? username : null,
+      expiresAt: Date.now() + 5 * 60 * 1000
+    };
+    return telegramBotUsernameCache.value;
+  } catch (error) {
+    console.warn('Could not resolve Telegram bot username:', clean(error.message, 200));
+    telegramBotUsernameCache = { value: null, expiresAt: Date.now() + 60 * 1000 };
+    return null;
+  }
 }
 async function uploadToTelegram(file) {
   assertTelegramStorageConfig();
@@ -237,15 +257,21 @@ app.get('/api/admin/telegram/diagnostics', authenticate, requireAdmin, async (_r
   const database = { ok: Boolean(supabase), error: supabase ? null : 'Supabase service role is not configured.' };
   const tables = {};
   if (supabase) {
-    for (const table of ['telegram_account_links', 'telegram_login_tokens']) {
+    for (const table of ['telegram_account_links', 'telegram_login_tokens', telegramWidgetAuthEventsTable]) {
       const check = await supabase.from(table).select('*', { head: true, count: 'exact' }).limit(1);
       tables[table] = check.error
         ? { ok: false, error: clean(check.error.message, 250) }
         : { ok: true };
     }
+    const profileColumns = await supabase.from('profiles')
+      .select('telegram_id,telegram_username', { head: true }).limit(1);
+    tables.profiles_telegram_columns = profileColumns.error
+      ? { ok: false, error: clean(profileColumns.error.message, 250) }
+      : { ok: true };
   } else {
-    tables.telegram_account_links = { ok: false, error: database.error };
-    tables.telegram_login_tokens = { ok: false, error: database.error };
+    for (const table of ['telegram_account_links', 'telegram_login_tokens', telegramWidgetAuthEventsTable, 'profiles_telegram_columns']) {
+      tables[table] = { ok: false, error: database.error };
+    }
   }
 
   const canPost = Boolean(membership.ok &&
@@ -253,7 +279,8 @@ app.get('/api/admin/telegram/diagnostics', authenticate, requireAdmin, async (_r
     (membership.status === 'creator' || membership.can_post_messages !== false));
   const loginReady = Boolean(bot.ok && secretConfigured && urlConfigured &&
     webhook.ok && webhook.url_matches && !webhook.last_error_message &&
-    tables.telegram_account_links?.ok && tables.telegram_login_tokens?.ok);
+    tables.telegram_account_links?.ok && tables.telegram_login_tokens?.ok &&
+    tables.telegram_widget_auth_events?.ok && tables.profiles_telegram_columns?.ok);
 
   return res.json({
     configured: botConfigured && Boolean(chatId),
@@ -285,9 +312,17 @@ async function getSiteBranding(){
   return {faviconUrl:clean(value.faviconUrl,2000)};
 }
 app.get('/api/config', async (_req, res) => {
-  const [maintenance,branding] = await Promise.all([getMaintenanceSettings(),getSiteBranding()]);
+  const [maintenance,branding,telegramBotUsername] = await Promise.all([
+    getMaintenanceSettings(), getSiteBranding(), getTelegramBotUsername()
+  ]);
   res.set('Cache-Control', 'no-store');
-  res.json({ supabaseUrl: supabaseUrl || process.env.NEXT_PUBLIC_SUPABASE_URL || null, supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || null, ...maintenance, ...branding });
+  res.json({
+    supabaseUrl: supabaseUrl || process.env.NEXT_PUBLIC_SUPABASE_URL || null,
+    supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || null,
+    telegramBotUsername,
+    ...maintenance,
+    ...branding
+  });
 });
 app.patch('/api/admin/settings', authenticate, requireAdmin, async (req, res) => {
   if (typeof req.body.maintenanceMode !== 'boolean') return fail(res, 400, 'maintenanceMode must be a boolean.');
@@ -416,6 +451,113 @@ const sha256 = value => createHash('sha256').update(String(value)).digest('hex')
 const telegramLinkTable = 'telegram_account_links';
 const telegramLinkTokenTable = 'telegram_link_tokens';
 const telegramOtpTable = 'telegram_password_otps';
+const telegramWidgetAuthEventsTable = 'telegram_widget_auth_events';
+
+function verifyTelegramWidgetPayload(body) {
+  if (!process.env.TELEGRAM_BOT_TOKEN) throw new Error('Telegram Bot is not configured.');
+  if (!body || typeof body !== 'object' || Array.isArray(body)) throw new Error('Invalid Telegram payload.');
+  const allowed = new Set(['id','first_name','last_name','username','photo_url','auth_date']);
+  const entries = Object.entries(body).filter(([key]) => key !== 'hash');
+  if (!entries.length || entries.some(([key,value]) =>
+    !allowed.has(key) || !['string','number'].includes(typeof value))) {
+    throw new Error('Invalid Telegram authorization fields.');
+  }
+  const values = Object.fromEntries(entries.map(([key,value]) => [key, String(value)]));
+  if (!values.id || !/^\d{1,20}$/.test(values.id) || !values.first_name?.trim() || !values.auth_date) {
+    throw new Error('Telegram authorization data is incomplete.');
+  }
+  const receivedHash = typeof body.hash === 'string' ? body.hash.toLowerCase() : '';
+  if (!/^[a-f0-9]{64}$/.test(receivedHash)) throw new Error('Invalid Telegram signature.');
+  const dataCheckString = entries
+    .sort(([a],[b]) => a < b ? -1 : a > b ? 1 : 0)
+    .map(([key,value]) => key + '=' + String(value))
+    .join('\n');
+  const secretKey = createHash('sha256').update(process.env.TELEGRAM_BOT_TOKEN).digest();
+  const expectedHash = createHmac('sha256', secretKey).update(dataCheckString, 'utf8').digest();
+  const suppliedHash = Buffer.from(receivedHash, 'hex');
+  if (suppliedHash.length !== expectedHash.length || !timingSafeEqual(suppliedHash, expectedHash)) {
+    throw new Error('Telegram signature verification failed.');
+  }
+
+  const telegramIdBig = BigInt(values.id);
+  if (telegramIdBig <= 0n || telegramIdBig > 9223372036854775807n) throw new Error('Invalid Telegram user ID.');
+  const authDate = Number(values.auth_date);
+  const now = Math.floor(Date.now() / 1000);
+  if (!Number.isSafeInteger(authDate) || authDate > now + 60 || now - authDate > 24 * 60 * 60) {
+    throw new Error('Telegram authorization has expired. Please try again.');
+  }
+
+  let photoUrl = clean(values.photo_url, 2048);
+  if (photoUrl) {
+    try {
+      const parsed = new URL(photoUrl);
+      if (parsed.protocol !== 'https:') photoUrl = '';
+    } catch { photoUrl = ''; }
+  }
+  return {
+    id: telegramIdBig.toString(),
+    firstName: clean(values.first_name, 100),
+    lastName: clean(values.last_name, 100),
+    username: clean(values.username, 80).replace(/^@/, '') || null,
+    photoUrl: photoUrl || null,
+    displayName: [clean(values.first_name, 100), clean(values.last_name, 100)].filter(Boolean).join(' ').slice(0, 100),
+    authDate,
+    signatureHash: receivedHash,
+    dataCheckString
+  };
+}
+
+async function claimTelegramWidgetPayload(identity) {
+  const authHash = sha256(identity.id + ':' + identity.authDate + ':' + identity.signatureHash);
+  const { error } = await supabase.from(telegramWidgetAuthEventsTable).insert({
+    auth_hash: authHash,
+    telegram_id: identity.id,
+    expires_at: new Date((identity.authDate + 24 * 60 * 60) * 1000).toISOString()
+  });
+  if (error?.code === '23505') {
+    const replay = new Error('Telegram login request has already been used. Please open the Telegram button again.');
+    replay.status = 409;
+    throw replay;
+  }
+  if (error) {
+    console.error('Telegram widget replay protection failed:', error.message);
+    const migration = new Error('Please run supabase/telegram_login_widget.sql in Supabase SQL Editor.');
+    migration.status = 503;
+    throw migration;
+  }
+  void supabase.from(telegramWidgetAuthEventsTable).delete()
+    .lt('expires_at', new Date().toISOString())
+    .then(({error: cleanupError}) => {
+      if (cleanupError) console.warn('Telegram widget auth cleanup failed:', cleanupError.message);
+    });
+}
+
+async function createSupabaseSessionForEmail(email) {
+  const { data:magic, error:magicError } = await supabase.auth.admin.generateLink({
+    type: 'magiclink',
+    email
+  });
+  if (magicError || !magic?.properties?.hashed_token) {
+    throw magicError || new Error('Supabase could not generate a Telegram sign-in token.');
+  }
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+  if (!anonKey) {
+    const configError = new Error('Set NEXT_PUBLIC_SUPABASE_ANON_KEY (or SUPABASE_ANON_KEY) in Render.');
+    configError.status = 503;
+    throw configError;
+  }
+  const authClient = createClient(supabaseUrl, anonKey, {
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
+  });
+  const { data, error } = await authClient.auth.verifyOtp({
+    token_hash: magic.properties.hashed_token,
+    type: 'email'
+  });
+  if (error || !data?.session?.access_token || !data?.session?.refresh_token) {
+    throw error || new Error('Supabase did not return an authenticated session.');
+  }
+  return data.session;
+}
 function telegramWebhookSecret(req) {
   const supplied = req.get('x-telegram-bot-api-secret-token') || '';
   const expected = process.env.TELEGRAM_WEBHOOK_SECRET || '';
