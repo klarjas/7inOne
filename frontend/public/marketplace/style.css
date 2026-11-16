@@ -564,3 +564,5 @@ body{background:var(--market-bg);color:var(--market-ink)}.shell{width:min(1440px
 .img-scan-wrap{display:block;min-width:0}
 
 .product-img-scan.is-failed svg,.product-gallery-thumb.is-failed svg,.img-scan-wrap.is-failed svg{display:block;margin:auto}
+
+.img-scan-wrap.is-failed:not(.hero-image-scan){display:grid;place-items:center}
