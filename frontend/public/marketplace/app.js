@@ -1019,9 +1019,13 @@ async function boot(){
     if(!requestedProductId)requestedProductId=bootRoute==='product'?decodeURIComponent(bootParts.slice(1).join('/')):'';
     if(!requestedStoreId)requestedStoreId=bootRoute==='store'?decodeURIComponent(bootParts.slice(1).join('/')):'';
   }catch(error){console.warn('Could not restore saved route:',error)}
-  if(bootRoute==='product'&&bootParts.length>1)requestedProductId=decodeURIComponent(bootParts.slice(1).join('/'))||requestedProductId;
-  if(bootRoute==='store'&&bootParts.length>1)requestedStoreId=decodeURIComponent(bootParts.slice(1).join('/'))||requestedStoreId;
+  if(bootRoute==='product'&&bootParts.length>1){try{requestedProductId=decodeURIComponent(bootParts.slice(1).join('/'))||requestedProductId}catch{}}
+  if(bootRoute==='store'&&bootParts.length>1){try{requestedStoreId=decodeURIComponent(bootParts.slice(1).join('/'))||requestedStoreId}catch{}}
   if(!['home','profile','seller','admin','product','store'].includes(requestedView))requestedView='home';
+  // Paint the matching skeleton before config/auth/API work starts.
+  if(requestedView==='product'&&$('productDetail')){$('productDetail').setAttribute('aria-busy','true');$('productDetail').innerHTML='<div class="product-detail-skeleton"><div class="skeleton product-detail-skeleton-image"></div><div class="product-detail-skeleton-copy"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div></div>'}
+  else if(requestedView==='store'&&$('storefrontContent')){$('storefrontContent').setAttribute('aria-busy','true');$('storefrontContent').innerHTML='<div class="storefront-skeleton"><div class="skeleton storefront-skeleton-profile"></div><div class="storefront-skeleton-grid">'+Array.from({length:10},()=>'<div class="storefront-skeleton-card"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>').join('')+'</div></div>'}
+  else if(requestedView==='home'){$('skeletonGrid')?.classList.remove('hidden');$('productGrid')?.classList.add('hidden')}
   // Optimistically activate the requested route before any network/auth work.
   void showView(requestedView,{optimistic:true,deferLoad:true,preserveScroll:true});
   try{
