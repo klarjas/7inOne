@@ -95,7 +95,7 @@ export function registerSupportChat(app, deps) {
           telegram_file_id: fileId, telegram_message_id: messageId, file_name: fileName,
           message_count: messages.length, archived_from: messages[0].created_at,
           archived_to: messages[messages.length - 1].created_at, format_version: 1
-        });
+        }).select('id').single();
         if (saved.error) {
           await deleteTelegramMessage(messageId);
           throw saved.error;
@@ -103,7 +103,9 @@ export function registerSupportChat(app, deps) {
         const removed = await supabase.from('support_messages').delete()
           .in('id', messages.map(x => x.id)).eq('conversation_id', conversationId);
         if (removed.error) {
-          console.error('Archive saved but message cleanup failed:', removed.error.message);
+          await supabase.from('support_chat_archives').delete().eq('id', saved.data.id);
+          await deleteTelegramMessage(messageId);
+          console.error('Archive cleanup failed; Telegram copy rolled back to avoid duplicate history:', removed.error.message);
           continue;
         }
         count += messages.length;
