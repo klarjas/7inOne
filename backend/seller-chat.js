@@ -248,7 +248,9 @@ export function registerSellerChat(app, { supabase, authenticate, requireVendor,
       if (result.error) return fail(res, 404, result.error);
       const conversation = result.conversation;
       if (conversation.status !== 'open') return fail(res, 409, 'សន្ទនានេះត្រូវបានបិទ។');
-      const latitude = Number(req.body?.latitude), longitude = Number(req.body?.longitude);
+      const rawLatitude = req.body?.latitude, rawLongitude = req.body?.longitude;
+      if (rawLatitude == null || rawLongitude == null || rawLatitude === '' || rawLongitude === '') return fail(res, 400, 'ទីតាំង GPS មិនត្រឹមត្រូវទេ។');
+      const latitude = Number(rawLatitude), longitude = Number(rawLongitude);
       if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || Math.abs(latitude)>90 || Math.abs(longitude)>180) return fail(res, 400, 'ទីតាំង GPS មិនត្រឹមត្រូវទេ។');
       const body = JSON.stringify({ latitude, longitude, accuracy: Number.isFinite(Number(req.body?.accuracy)) ? Math.max(0, Math.min(100000, Number(req.body.accuracy))) : null });
       const message = await saveMessage(conversation, req.user.id, conversation.current_role, { body, message_type: 'location' }, '📍 ទីតាំង Google Maps');
