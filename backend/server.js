@@ -504,7 +504,9 @@ app.get('/api/media/telegram/:fileId', async (req, res) => {
     if (!fileId) return fail(res, 400, 'Invalid Telegram file ID.');
     const requestedMime = clean(req.query.mime, 60).toLowerCase();
     const safeAudioMimes = new Set(['audio/webm','audio/ogg','audio/mp4','audio/mpeg','audio/wav','audio/x-wav']);
-    return await streamTelegramFile(fileId, res, safeAudioMimes.has(requestedMime) ? requestedMime : 'application/octet-stream');
+    const safeImageMimes = new Set(['image/jpeg','image/png','image/webp']);
+    const safeMime = safeAudioMimes.has(requestedMime) || safeImageMimes.has(requestedMime) ? requestedMime : 'application/octet-stream';
+    return await streamTelegramFile(fileId, res, safeMime);
   } catch (error) {
     console.error('Telegram media proxy error:', error.message);
     return fail(res, 502, error.message || 'Could not retrieve Telegram media.');
