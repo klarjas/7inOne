@@ -474,3 +474,7 @@ button,.product-card,.hero-copy-card,.hero-image-tile{scroll-behavior:auto}
 .seller-chat-voice{background:transparent!important;padding:0!important}
 .seller-chat-voice-status{display:block;font-size:9px;line-height:1;color:#94A3B8}
 .seller-chat-bubble.own:has(.seller-chat-voice) .seller-chat-voice-wave i{background:#10B981!important}
+
+.seller-chat-bubble:has(.seller-chat-voice){color:#475569!important}
+.seller-chat-bubble.own:has(.seller-chat-voice) .seller-chat-voice-play{background:#10B981!important;color:#fff!important}
+.seller-chat-bubble:has(.seller-chat-voice)>small{color:#94A3B8!important}
