@@ -436,7 +436,7 @@ app.post('/api/me/telegram/connect', authenticate, async (req, res) => {
     const token = randomBytes(32).toString('base64url');
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
     const { error } = await supabase.from(telegramLinkTokenTable).insert({
-      token_hash: sha256(token), user_id: req.user.id, expires_at: expiresAt
+      token_hash: sha256(token), user_id: req.user.id, account_email: clean(req.user.email, 254).toLowerCase() || null, expires_at: expiresAt
     });
     if (error) {
       console.error('Telegram link token insert failed:', error.message);
@@ -487,7 +487,7 @@ app.post('/api/telegram/webhook', async (req, res) => {
     }
     const tokenHash = sha256(rawToken);
     const { data: linkToken, error: tokenError } = await supabase.from(telegramLinkTokenTable)
-      .select('user_id,expires_at,consumed_at').eq('token_hash', tokenHash).maybeSingle();
+      .select('user_id,account_email,expires_at,consumed_at').eq('token_hash', tokenHash).maybeSingle();
     if (tokenError || !linkToken || linkToken.consumed_at || new Date(linkToken.expires_at).getTime() < Date.now()) {
       await sendTelegramMessage(chat.id, 'តំណភ្ជាប់នេះបានប្រើរួច ឬផុតកំណត់។ សូមបង្កើតតំណថ្មីពី 7inOne។');
       return;
@@ -501,6 +501,7 @@ app.post('/api/telegram/webhook', async (req, res) => {
     }
     const { error: saveError } = await supabase.from(telegramLinkTable).upsert({
       user_id: linkToken.user_id,
+      account_email: linkToken.account_email,
       telegram_user_id: chat.id,
       username: clean(message.from?.username, 80) || null,
       first_name: clean(message.from?.first_name, 120) || null,
@@ -538,6 +539,76 @@ app.post('/api/me/telegram/password-otp', authenticate, telegramOtpLimiter, asyn
   } catch (error) {
     console.error('Telegram password OTP request failed:', error.message);
     return fail(res, 500, 'មិនអាចផ្ញើ OTP បានទេ។ សូមពិនិត្យ Telegram Bot និង Database Migration។');
+  }
+});
+
+
+const recoveryOtpLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 5,
+  standardHeaders: 'draft-8',
+  legacyHeaders: false,
+  message: { error: 'សូមរង់ចាំមុនពេលស្នើលេខកូដម្ដងទៀត។' }
+});
+app.post('/api/auth/telegram/recovery/request', recoveryOtpLimiter, async (req, res) => {
+  const email = clean(req.body.email, 254).toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return fail(res, 400, 'សូមបញ្ចូល Email ត្រឹមត្រូវ។');
+  try {
+    const { data: link, error } = await supabase.from(telegramLinkTable)
+      .select('user_id,telegram_user_id').ilike('account_email', email).maybeSingle();
+    if (error) throw error;
+    if (link) {
+      const code = String(randomInt(100000, 1000000));
+      const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
+      const { error: saveError } = await supabase.from(telegramOtpTable).upsert({
+        user_id: link.user_id, otp_hash: sha256(code), expires_at: expiresAt,
+        attempts: 0, created_at: new Date().toISOString()
+      }, { onConflict: 'user_id' });
+      if (saveError) throw saveError;
+      await sendTelegramMessage(link.telegram_user_id,
+        `7inOne Account Recovery\nលេខកូដសង្គ្រោះគណនី៖ ${code}\nមានសុពលភាព ៥ នាទី។ កុំចែករំលែកកូដនេះ។`);
+    }
+    return res.json({ data: { accepted: true }, message: 'ប្រសិនបើគណនីនេះបានភ្ជាប់ Telegram រួច លេខកូដនឹងត្រូវបានផ្ញើទៅ Telegram នោះ។' });
+  } catch (error) {
+    console.error('Telegram recovery OTP request failed:', error.message);
+    return fail(res, 500, 'មិនអាចស្នើសុំសង្គ្រោះគណនីបានទេ។ សូមព្យាយាមម្ដងទៀត។');
+  }
+});
+app.post('/api/auth/telegram/recovery/confirm', recoveryOtpLimiter, async (req, res) => {
+  const email = clean(req.body.email, 254).toLowerCase();
+  const code = clean(req.body.code, 6);
+  const password = String(req.body.password || '');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return fail(res, 400, 'Email មិនត្រឹមត្រូវ។');
+  if (!/^\d{6}$/.test(code)) return fail(res, 400, 'សូមបញ្ចូល OTP ៦ ខ្ទង់។');
+  if (password.length < 8 || password.length > 72) return fail(res, 400, 'Password ថ្មីត្រូវមាន ៨–៧២ តួអក្សរ។');
+  try {
+    const { data: link, error: linkError } = await supabase.from(telegramLinkTable)
+      .select('user_id,telegram_user_id').ilike('account_email', email).maybeSingle();
+    if (linkError) throw linkError;
+    if (!link) return fail(res, 400, 'OTP មិនត្រឹមត្រូវ ឬផុតកំណត់។');
+    const { data: otp, error: otpError } = await supabase.from(telegramOtpTable)
+      .select('otp_hash,expires_at,attempts').eq('user_id', link.user_id).maybeSingle();
+    if (otpError) throw otpError;
+    if (!otp || new Date(otp.expires_at).getTime() < Date.now() || Number(otp.attempts) >= 5) {
+      return fail(res, 400, 'OTP មិនត្រឹមត្រូវ ឬផុតកំណត់។');
+    }
+    if (sha256(code) !== otp.otp_hash) {
+      await supabase.from(telegramOtpTable).update({ attempts: Number(otp.attempts || 0) + 1 }).eq('user_id', link.user_id);
+      return fail(res, 400, 'OTP មិនត្រឹមត្រូវ។');
+    }
+    const { error: updateError } = await supabase.auth.admin.updateUserById(link.user_id, { password });
+    if (updateError) throw updateError;
+    await supabase.from(telegramOtpTable).delete().eq('user_id', link.user_id);
+    try {
+      await sendTelegramMessage(link.telegram_user_id,
+        '7inOne Security៖ Password គណនីរបស់អ្នកត្រូវបានសង្គ្រោះ និងកំណត់ថ្មីជោគជ័យ។ ប្រសិនបើមិនមែនជាអ្នក សូមទាក់ទងក្រុមការងារ 7inOne។');
+    } catch (notifyError) {
+      console.warn('Account recovered but Telegram notification failed:', notifyError.message);
+    }
+    return res.json({ data: { recovered: true } });
+  } catch (error) {
+    console.error('Telegram account recovery failed:', error.message);
+    return fail(res, 500, 'មិនអាចសង្គ្រោះគណនីបានទេ។ សូមព្យាយាមម្ដងទៀត។');
   }
 });
 
