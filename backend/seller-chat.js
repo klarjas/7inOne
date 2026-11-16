@@ -5,14 +5,17 @@ export function registerSellerChat(app, { supabase, authenticate, requireVendor,
     const [{ data: vendor }, { data: product }, { data: buyer }] = await Promise.all([
       supabase.from('vendors').select('id,user_id,store_name').eq('id', conversation.vendor_id).maybeSingle(),
       supabase.from('products').select('id,title,price,status,stock').eq('id', conversation.product_id).maybeSingle(),
-      supabase.from('profiles').select('id,display_name').eq('id', conversation.buyer_id).maybeSingle()
+      supabase.from('profiles').select('id,display_name,avatar_url').eq('id', conversation.buyer_id).maybeSingle()
     ]);
+    const { data: vendorProfile } = vendor?.user_id
+      ? await supabase.from('profiles').select('id,avatar_url').eq('id', vendor.user_id).maybeSingle()
+      : { data: null };
     const role = conversation.buyer_id === userId ? 'buyer' : vendor?.user_id === userId ? 'seller' : null;
     if (!role) return { error: 'អ្នកមិនមានសិទ្ធិចូលសន្ទនានេះទេ។' };
     const { data: images } = await supabase.from('product_images').select('id,sort_order,file_id,image_url')
       .eq('product_id', conversation.product_id).order('sort_order', { ascending: true }).limit(1);
     const image = images?.[0];
-    return { conversation: { ...conversation, vendor, product: product ? { ...product, image_url: image?.image_url || (image?.file_id ? '/api/media/telegram/' + encodeURIComponent(image.file_id) : '') } : null, buyer, current_role: role } };
+    return { conversation: { ...conversation, vendor: vendor ? { ...vendor, profile: vendorProfile } : null, product: product ? { ...product, image_url: image?.image_url || (image?.file_id ? '/api/media/telegram/' + encodeURIComponent(image.file_id) : '') } : null, buyer, current_role: role } };
   }
 
   async function listInbox(userId) {
@@ -28,15 +31,21 @@ export function registerSellerChat(app, { supabase, authenticate, requireVendor,
     const vendorIds = [...new Set(rows.map(row => row.vendor_id))];
     const productIds = [...new Set(rows.map(row => row.product_id).filter(Boolean))];
     const [buyersResult, vendorsResult, productsResult, imagesResult] = await Promise.all([
-      buyerIds.length ? supabase.from('profiles').select('id,display_name').in('id', buyerIds) : Promise.resolve({ data: [] }),
+      buyerIds.length ? supabase.from('profiles').select('id,display_name,avatar_url').in('id', buyerIds) : Promise.resolve({ data: [] }),
       vendorIds.length ? supabase.from('vendors').select('id,user_id,store_name').in('id', vendorIds) : Promise.resolve({ data: [] }),
       productIds.length ? supabase.from('products').select('id,title,price,status,stock').in('id', productIds) : Promise.resolve({ data: [] }),
       productIds.length ? supabase.from('product_images').select('product_id,sort_order,file_id,image_url').in('product_id', productIds).order('sort_order', { ascending: true }) : Promise.resolve({ data: [] })
     ]);
     const issue = buyersResult.error || vendorsResult.error || productsResult.error || imagesResult.error;
     if (issue) throw issue;
+    const vendorUserIds = [...new Set((vendorsResult.data || []).map(row => row.user_id).filter(Boolean))];
+    const vendorProfilesResult = vendorUserIds.length
+      ? await supabase.from('profiles').select('id,avatar_url').in('id', vendorUserIds)
+      : { data: [] };
+    if (vendorProfilesResult.error) throw vendorProfilesResult.error;
+    const vendorProfiles = new Map((vendorProfilesResult.data || []).map(row => [row.id, row]));
     const buyers = new Map((buyersResult.data || []).map(row => [row.id, row]));
-    const vendors = new Map((vendorsResult.data || []).map(row => [row.id, row]));
+    const vendors = new Map((vendorsResult.data || []).map(row => [row.id, { ...row, profile: vendorProfiles.get(row.user_id) || null }]));
     const products = new Map((productsResult.data || []).map(row => [row.id, row]));
     const images = new Map();
     for (const row of imagesResult.data || []) if (!images.has(row.product_id)) images.set(row.product_id, row);
