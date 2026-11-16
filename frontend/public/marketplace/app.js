@@ -1080,7 +1080,10 @@ async function boot(){
     const routeAllowed=requestedView==='home'||(requestedView==='profile'&&Boolean(session))||(requestedView==='seller'&&Boolean(session)&&me?.vendor?.status==='approved')||(requestedView==='admin'&&Boolean(session)&&Boolean(me?.isAdmin))||(requestedView==='product'&&Boolean(requestedProductId))||(requestedView==='store'&&Boolean(requestedStoreId));
     if(!routeAllowed)requestedView='home';routeAccessReady=true;
     let savedScrollY=0;try{savedScrollY=Math.max(0,Number(sessionStorage.getItem('ecomstore.scrollY')||0))}catch{}
-    const pageTask=requestedView==='product'?openProduct(requestedProductId,{preserveScroll:true}):requestedView==='store'?openStorefront(requestedStoreId,{preserveScroll:true}):showView(requestedView,{preserveScroll:true});
+    // Give boot restoration a navigation token so a later Back/Forward event invalidates it.
+    const bootNavigationId=++routeSyncNavigationId;
+    const bootRouteOptions={preserveScroll:true,routeSyncNavigationId:bootNavigationId};
+    const pageTask=requestedView==='product'?openProduct(requestedProductId,bootRouteOptions):requestedView==='store'?openStorefront(requestedStoreId,bootRouteOptions):showView(requestedView,{preserveScroll:true});
     const dataTasks=[pageTask,loadProducts()];if(session)dataTasks.push(Promise.all([loadSaved(),loadOrders(),loadUnifiedSellerChatInbox(),loadSellerChatPreferences()]).catch(e=>console.warn(e)));
     await Promise.all(dataTasks);if(requestedView==='product'&&currentProduct)renderProductDetail();
     if(!sellerInboxPollTimer)sellerInboxPollTimer=setInterval(()=>{if(!document.hidden&&$('view-seller')?.classList.contains('active')&&isVerifiedSeller())void loadUnifiedSellerChatInbox()},7000);
