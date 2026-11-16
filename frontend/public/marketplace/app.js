@@ -713,7 +713,7 @@ function renderSellerChatMessages(messages){
       const heights=[7,12,17,10,20,14,8,18,11,22,13,8,16,21,10,15,7,19,12,23,9,16,11,20,8,14,18,10,15,9,21,13,18,8,16,11,22,14,7,19];
       const audioSrc=message.local_audio_url||('/api/media/telegram/'+encodeURIComponent(message.telegram_file_id)+'?mime='+encodeURIComponent(message.mime_type||'audio/webm'));
       const pendingLabel=message.upload_state==='pending'?'<span class="seller-chat-voice-status">កំពុងផ្ញើ…</span>':'';
-      content='<div class="seller-chat-voice"><button type="button" class="seller-chat-voice-play" data-voice-toggle aria-label="ចាក់សារសំឡេង">'+ic('play',17)+'</button><div class="seller-chat-voice-track"><div class="seller-chat-voice-wave" data-voice-wave role="slider" tabindex="0" aria-label="ទីតាំងសារសំឡេង" aria-valuemin="0" aria-valuemax="'+seconds+'" aria-valuenow="0">'+heights.map((h,index)=>'<i style="--bar:'+h+'px;--bar-index:'+index+'"></i>').join('')+'</div><span class="seller-chat-voice-duration" data-voice-time>0:00 / '+Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0')+'</span>'+pendingLabel+'</div><audio data-voice-audio preload="metadata" src="'+esc(audioSrc)+'"></audio></div>';
+      content='<div class="seller-chat-voice"><button type="button" class="seller-chat-voice-play" data-voice-toggle aria-label="ចាក់សារសំឡេង">'+ic('play',17)+'</button><div class="seller-chat-voice-track"><div class="seller-chat-voice-wave" data-voice-wave role="slider" tabindex="0" aria-label="ទីតាំងសារសំឡេង" aria-valuemin="0" aria-valuemax="'+seconds+'" aria-valuenow="0">'+heights.map((h,index)=>'<i style="--bar:'+h+'px;--bar-index:'+index+'"></i>').join('')+'</div><span class="seller-chat-voice-duration" data-voice-time>0:00 / '+Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0')+'</span>'+pendingLabel+'</div><audio data-voice-audio preload="none" src="'+esc(audioSrc)+'"></audio></div>';
     }else content='<p>'+esc(message.body).replace(/\n/g,'<br>')+'</p>';
     return '<div class="flex '+(own?'justify-end':'justify-start')+'"><div class="seller-chat-bubble '+(own?'own':'other')+'">'+content+'<small>'+esc(supportChatTime(message.created_at))+'</small></div></div>';
   }).join('')||'<p class="py-8 text-center text-xs text-slate-400">មិនទាន់មានសារទេ។ សូមចាប់ផ្ដើមសន្ទនា។</p>';
@@ -737,7 +737,7 @@ function renderSellerChatMessages(messages){
     const seek=event=>{if(!Number.isFinite(audio.duration)||audio.duration<=0)return;const rect=wave.getBoundingClientRect(),ratio=Math.max(0,Math.min(1,(event.clientX-rect.left)/rect.width));audio.currentTime=ratio*audio.duration;paint()};
     wave.addEventListener('click',seek);
     wave.addEventListener('keydown',event=>{if(event.key==='ArrowRight'||event.key==='ArrowLeft'){event.preventDefault();if(Number.isFinite(audio.duration))audio.currentTime=Math.max(0,Math.min(audio.duration,audio.currentTime+(event.key==='ArrowRight'?5:-5)));paint()}});
-    button.addEventListener('click',()=>{if(audio.paused){target.querySelectorAll('[data-voice-audio]').forEach(other=>{if(other!==audio)other.pause()});void audio.play().catch(()=>toast('មិនអាចចាក់សារសំឡេងបានទេ។','error'))}else audio.pause()});
+    button.addEventListener('click',()=>{if(audio.paused){target.querySelectorAll('[data-voice-audio]').forEach(other=>{if(other!==audio)other.pause()});audio.preload='auto';void audio.play().catch(()=>toast('មិនអាចចាក់សារសំឡេងបានទេ។','error'))}else audio.pause()});
     paint();
   });
   if(wasNearBottom)target.scrollTop=target.scrollHeight;
