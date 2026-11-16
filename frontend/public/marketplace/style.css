@@ -326,3 +326,16 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
  .seller-chat-thread.mobile-active{display:flex}
  #sellerChatMessages{height:auto;max-height:none}
 }
+
+
+/* Product inquiry cards stay inside the Alibaba-style conversation timeline. */
+.seller-chat-product-card{display:flex;align-items:center;gap:11px;max-width:min(100%,340px);overflow:hidden;border:1px solid #D8E9DF;border-radius:14px;background:#fff;padding:9px;color:#173B2D;white-space:normal}
+.seller-chat-product-card>img,.seller-chat-product-placeholder{display:grid;width:76px;height:76px;flex:0 0 76px;place-items:center;overflow:hidden;border-radius:10px;background:#ECFDF5;object-fit:cover;font-size:25px}
+.seller-chat-product-info{display:flex;min-width:0;flex:1;flex-direction:column;align-items:flex-start;gap:4px}
+.seller-chat-product-info small{color:#0B8A5A;font-size:8px;font-weight:800}
+.seller-chat-product-info b{display:-webkit-box;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:2;font-size:10px;line-height:1.55}
+.seller-chat-product-info strong{color:#065F46;font-size:12px}
+.seller-chat-product-unavailable{color:#94A3B8;font-size:8px}
+.seller-chat-bubble:has(.seller-chat-product-card){max-width:min(92%,390px);background:#F0FDF4;color:#173B2D;border:1px solid #D8E9DF}
+.seller-chat-bubble:has(.seller-chat-product-card) small{color:#64748B}
+@media(max-width:640px){.seller-chat-product-card{max-width:100%}.seller-chat-product-card>img,.seller-chat-product-placeholder{width:68px;height:68px;flex-basis:68px}}

@@ -26,7 +26,7 @@ export function registerSellerChat(app, { supabase, authenticate, requireVendor,
     const rows = data || [];
     const buyerIds = [...new Set(rows.map(row => row.buyer_id))];
     const vendorIds = [...new Set(rows.map(row => row.vendor_id))];
-    const productIds = [...new Set(rows.map(row => row.product_id))];
+    const productIds = [...new Set(rows.map(row => row.product_id).filter(Boolean))];
     const [buyersResult, vendorsResult, productsResult, imagesResult] = await Promise.all([
       buyerIds.length ? supabase.from('profiles').select('id,display_name').in('id', buyerIds) : Promise.resolve({ data: [] }),
       vendorIds.length ? supabase.from('vendors').select('id,user_id,store_name').in('id', vendorIds) : Promise.resolve({ data: [] }),
@@ -81,32 +81,34 @@ export function registerSellerChat(app, { supabase, authenticate, requireVendor,
     const productId = clean(req.body.product_id, 80);
     if (!productId) return fail(res, 400, 'សូមជ្រើសរើសទំនិញជាមុនសិន។');
     try {
-      const { data: product, error: productError } = await supabase.from('products')
-        .select('id,vendor_id,status,stock').eq('id', productId).maybeSingle();
+      const { data: product, error: productError } = await supabase.from('products').select('id,vendor_id,status,stock,title,price').eq('id', productId).maybeSingle();
       if (productError || !product || product.status !== 'active' || Number(product.stock) < 1) return fail(res, 404, 'ទំនិញនេះមិនអាចឆាតបានទេ។');
-      const { data: vendor, error: vendorError } = await supabase.from('vendors')
-        .select('id,user_id,status').eq('id', product.vendor_id).maybeSingle();
+      const { data: vendor, error: vendorError } = await supabase.from('vendors').select('id,user_id,status,store_name').eq('id', product.vendor_id).maybeSingle();
       if (vendorError || !vendor || vendor.status !== 'approved') return fail(res, 404, 'រកមិនឃើញហាងអ្នកលក់ទេ។');
-      if (vendor.user_id === req.user.id) return fail(res, 400, 'អ្នកមិនអាចឆាតទៅហាងរបស់ខ្លួនឯងបានទេ.');
-      let { data: conversation, error } = await supabase.from('seller_conversations')
-        .select('id').eq('product_id', product.id).eq('buyer_id', req.user.id).maybeSingle();
+      if (vendor.user_id === req.user.id) return fail(res, 400, 'អ្នកមិនអាចឆាតទៅហាងរបស់ខ្លួនឯងបានទេ។');
+      let { data: conversation, error } = await supabase.from('seller_conversations').select('id,unread_seller_count').eq('vendor_id', vendor.id).eq('buyer_id', req.user.id).maybeSingle();
       if (error) throw error;
       if (!conversation) {
-        const created = await supabase.from('seller_conversations').insert({
-          product_id: product.id, vendor_id: vendor.id, buyer_id: req.user.id,
-          status: 'open', last_message_at: new Date().toISOString()
-        }).select('id').single();
+        const created = await supabase.from('seller_conversations').insert({product_id:product.id,vendor_id:vendor.id,buyer_id:req.user.id,status:'open',last_message_at:new Date().toISOString()}).select('id,unread_seller_count').single();
         if (created.error) {
           if (created.error.code !== '23505') throw created.error;
-          const retry = await supabase.from('seller_conversations').select('id').eq('product_id', product.id).eq('buyer_id', req.user.id).single();
+          const retry = await supabase.from('seller_conversations').select('id,unread_seller_count').eq('vendor_id',vendor.id).eq('buyer_id',req.user.id).single();
           if (retry.error) throw retry.error;
           conversation = retry.data;
         } else conversation = created.data;
-      } else {
-        const reopened = await supabase.from('seller_conversations').update({ status: 'open', updated_at: new Date().toISOString() }).eq('id', conversation.id);
-        if (reopened.error) throw reopened.error;
       }
-      return res.status(200).json({ data: { id: conversation.id } });
+      const cardMessage = await supabase.from('seller_messages').insert({
+        conversation_id:conversation.id,sender_id:req.user.id,sender_role:'buyer',
+        body:'📦 បានសួរអំពីផលិតផល៖ '+product.title,message_type:'product',product_id:product.id
+      }).select('id').single();
+      if (cardMessage.error) throw cardMessage.error;
+      const now=new Date().toISOString();
+      const updated=await supabase.from('seller_conversations').update({
+        product_id:product.id,status:'open',last_message_at:now,last_message_preview:'📦 '+product.title,
+        unread_seller_count:Number(conversation.unread_seller_count||0)+1,updated_at:now
+      }).eq('id',conversation.id);
+      if(updated.error)throw updated.error;
+      return res.status(200).json({data:{id:conversation.id}});
     } catch (error) { console.error('Seller chat conversation create failed:', error.message); return fail(res, 500, 'មិនអាចបើកសន្ទនាជាមួយអ្នកលក់បានទេ។'); }
   });
 
@@ -116,14 +118,31 @@ export function registerSellerChat(app, { supabase, authenticate, requireVendor,
       if (result.error) return fail(res, 404, result.error);
       const conversation = result.conversation;
       const { data: messages, error } = await supabase.from('seller_messages')
-        .select('id,conversation_id,sender_id,sender_role,body,message_type,telegram_file_id,mime_type,duration_seconds,created_at')
+        .select('id,conversation_id,sender_id,sender_role,body,message_type,telegram_file_id,mime_type,duration_seconds,product_id,created_at')
         .eq('conversation_id', conversation.id).order('created_at', { ascending: true }).limit(200);
       if (error) throw error;
-      const unreadField = conversation.current_role === 'buyer' ? 'unread_buyer_count' : 'unread_seller_count';
-      const marked = await supabase.from('seller_conversations').update({ [unreadField]: 0 }).eq('id', conversation.id);
-      if (marked.error) throw marked.error;
-      res.set('Cache-Control', 'no-store');
-      return res.json({ data: { conversation, messages: messages || [] } });
+      const productIds=[...new Set((messages||[]).filter(m=>m.message_type==='product'&&m.product_id).map(m=>m.product_id))];
+      let productCards=messages||[];
+      if(productIds.length){
+        const [productsResult,imagesResult]=await Promise.all([
+          supabase.from('products').select('id,title,price').in('id',productIds),
+          supabase.from('product_images').select('product_id,sort_order,file_id,image_url').in('product_id',productIds).order('sort_order',{ascending:true})
+        ]);
+        if(productsResult.error||imagesResult.error)throw productsResult.error||imagesResult.error;
+        const productMap=new Map((productsResult.data||[]).map(row=>[row.id,row]));
+        const imageMap=new Map();
+        for(const row of imagesResult.data||[])if(!imageMap.has(row.product_id))imageMap.set(row.product_id,row);
+        productCards=(messages||[]).map(message=>{
+          if(message.message_type!=='product')return message;
+          const product=productMap.get(message.product_id),image=imageMap.get(message.product_id);
+          return {...message,product:product?{...product,image_url:image?.image_url||(image?.file_id?'/api/media/telegram/'+encodeURIComponent(image.file_id):'')}:null};
+        });
+      }
+      const unreadField=conversation.current_role==='buyer'?'unread_buyer_count':'unread_seller_count';
+      const marked=await supabase.from('seller_conversations').update({[unreadField]:0}).eq('id',conversation.id);
+      if(marked.error)throw marked.error;
+      res.set('Cache-Control','no-store');
+      return res.json({data:{conversation,messages:productCards}});
     } catch (error) { console.error('Seller chat load failed:', error.message); return fail(res, 500, 'មិនអាចផ្ទុកសារបានទេ។'); }
   });
 
