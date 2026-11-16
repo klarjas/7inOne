@@ -455,12 +455,12 @@ button,.product-card,.hero-copy-card,.hero-image-tile{scroll-behavior:auto}
 .seller-chat-send:after{content:"➤";font-size:20px;line-height:1}
 #sellerChatRecordingStatus{background:#FFF1F2;color:#BE123C;border-top:1px solid #FFE4E6;text-align:center}
 .seller-chat-voice{display:flex;min-width:210px;max-width:290px;align-items:center;gap:10px;padding:3px 1px}
-.seller-chat-voice-play{display:grid;width:38px;height:38px;flex:0 0 38px;place-items:center;border:0;border-radius:50%;background:#10B981;color:white;font-size:14px}
+.seller-chat-voice-play{display:grid;width:38px;height:38px;flex:0 0 38px;place-items:center;border:0;border-radius:50%;background:#10B981;color:white;transition:transform .16s,background .16s}.seller-chat-voice-play svg{display:block}.seller-chat-voice-play:active{transform:scale(.92)}
 .seller-chat-bubble.own .seller-chat-voice-play{background:#fff;color:#059669}
 .seller-chat-voice-track{display:flex;min-width:0;flex:1;flex-direction:column;gap:5px}
 .seller-chat-voice-wave{display:flex;height:26px;align-items:center;gap:2px;overflow:hidden}
-.seller-chat-voice-wave i{display:block;width:3px;min-width:2px;height:var(--bar);border-radius:3px;background:#10B981;opacity:.8}
-.seller-chat-bubble.own .seller-chat-voice-wave i{background:#D1FAE5}
+.seller-chat-voice-wave{cursor:pointer;touch-action:pan-y;outline:none}.seller-chat-voice-wave:focus-visible{outline:2px solid #10B981;outline-offset:4px;border-radius:5px}.seller-chat-voice-wave i{display:block;width:3px;min-width:2px;height:var(--bar);border-radius:3px;background:#C7D2D9;opacity:.95;transition:background .12s,transform .16s}.seller-chat-voice-wave i.played{background:#10B981}.seller-chat-voice.is-playing .seller-chat-voice-wave i{animation:telegram-voice-wave .72s ease-in-out infinite alternate;animation-delay:calc(var(--bar-index)*-23ms)}.seller-chat-voice.is-playing .seller-chat-voice-wave i:nth-child(3n){animation-duration:.58s}.seller-chat-voice.is-playing .seller-chat-voice-wave i:nth-child(4n){animation-duration:.9s}@keyframes telegram-voice-wave{from{transform:scaleY(.72)}to{transform:scaleY(1.12)}}
+.seller-chat-bubble.own .seller-chat-voice-wave i{background:#C7D2D9}.seller-chat-bubble.own .seller-chat-voice-wave i.played{background:#10B981}
 .seller-chat-voice-duration{font-size:9px;line-height:1;color:inherit;opacity:.7;font-variant-numeric:tabular-nums}
 .seller-chat-bubble:has(.seller-chat-voice){padding:9px 11px;min-width:235px}
 @keyframes chat-record-pulse{50%{box-shadow:0 0 0 7px rgba(239,68,68,.13)}}
@@ -473,7 +473,7 @@ button,.product-card,.hero-copy-card,.hero-image-tile{scroll-behavior:auto}
 .seller-chat-bubble:has(.seller-chat-voice){background:transparent!important;border:0!important;box-shadow:none!important;padding:2px 0!important;min-width:210px!important}
 .seller-chat-voice{background:transparent!important;padding:0!important}
 .seller-chat-voice-status{display:block;font-size:9px;line-height:1;color:#94A3B8}
-.seller-chat-bubble.own:has(.seller-chat-voice) .seller-chat-voice-wave i{background:#10B981!important}
+.seller-chat-bubble.own:has(.seller-chat-voice) .seller-chat-voice-wave i{background:#C7D2D9!important}.seller-chat-bubble.own:has(.seller-chat-voice) .seller-chat-voice-wave i.played{background:#10B981!important}
 
 .seller-chat-bubble:has(.seller-chat-voice){color:#475569!important}
 .seller-chat-bubble.own:has(.seller-chat-voice) .seller-chat-voice-play{background:#10B981!important;color:#fff!important}
@@ -515,3 +515,16 @@ button,.product-card,.hero-copy-card,.hero-image-tile{scroll-behavior:auto}
  .seller-chat-attach{width:34px;height:40px;flex-basis:34px}
  .seller-chat-image-link{max-width:min(230px,68vw)}
 }
+
+
+/* Line-icon controls for the unified chat */
+.seller-chat-header-icon{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:36px;padding:0 10px;border:1px solid #E2E8F0;border-radius:11px;background:#fff;color:#475569;font-size:10px;font-weight:700;transition:background .15s,border-color .15s}
+.seller-chat-header-icon:hover,.seller-chat-attach:hover{background:#F1F5F9;border-color:#CBD5E1}
+.seller-chat-header-icon svg,.seller-chat-attach svg,.seller-chat-record svg,.seller-chat-send svg{display:block;flex:0 0 auto}
+.seller-chat-attach{font-size:0}
+.seller-chat-send:after{content:none!important}
+.seller-chat-send{display:grid;place-items:center}
+.seller-chat-location-icon{font-size:0}
+.seller-chat-location-icon svg{width:21px;height:21px;display:block}
+.seller-chat-product-placeholder{font-size:0}
+.seller-chat-product-placeholder svg{width:25px;height:25px;display:block}

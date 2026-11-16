@@ -2,6 +2,7 @@
 const iconPaths={
  bag:'<path d="M5 8h14l1 13H4L5 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>',search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>',plus:'<path d="M12 5v14M5 12h14"/>',bell:'<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/>',chev:'<path d="m7 10 5 5 5-5"/>',x:'<path d="m18 6-12 12M6 6l12 12"/>',heart:'<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z"/>',pin:'<path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',shield:'<path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z"/><path d="m9 12 2 2 4-4"/>',check:'<path d="m5 12 4 4L19 6"/>',chat:'<path d="M21 11.5a8.5 8.5 0 0 1-9 8.5 9.7 9.7 0 0 1-4-.8L3 21l1.8-4.5A8.2 8.2 0 0 1 3 11.5 8.5 8.5 0 0 1 12 3a8.5 8.5 0 0 1 9 8.5Z"/>',tag:'<path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8Z"/><circle cx="7.5" cy="7.5" r="1"/>',arrow:'<path d="M5 12h14m-7-7 7 7-7 7"/>',grid:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',phone:'<rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/>',car:'<path d="m5 17-1 2v2h2v-2h12v2h2v-2l-1-2"/><path d="m4 17 1.5-6h13L20 17M7 11l1.5-4h7L17 11M7 17h.01M17 17h.01"/>',home:'<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-6v-7h-4v7H4a1 1 0 0 1-1-1Z"/>',shirt:'<path d="m16 4 5 3-3 4-2-1v10H8V10l-2 1-3-4 5-3 2 2h4z"/>',sofa:'<path d="M4 11V7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v4M3 12a2 2 0 0 1 4 0v3h10v-3a2 2 0 0 1 4 0v5H3zM5 17v3m14-3v3"/>',user:'<path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="8" r="4"/>',mic:'<rect x="9" y="2" width="6" height="13" rx="3"/><path d="M5 10a7 7 0 0 0 14 0m-7 7v5m-4 0h8"/>',camera:'<path d="M14 5 12.5 3h-5L6 5H3v14h18V5z"/><circle cx="12" cy="12" r="3.5"/>',image:'<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/>',eye:'<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>',star:'<path d="m12 3 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9Z"/>',send:'<path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>',store:'<path d="M3 10h18l-1 11H4L3 10Z"/><path d="m3 10 2-7h14l2 7M8 10v3m8-3v3"/>',wallet:'<path d="M4 6h15a2 2 0 0 1 2 2v11H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14"/><path d="M21 11h-5a2 2 0 0 0 0 4h5"/>',file:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h8"/>',trash:'<path d="M3 6h18M8 6V4h8v2m3 0-1 15H6L5 6m4 4v7m6-7v7"/>',edit:'<path d="m16 4 4 4M4 20l4-.8L19 8a2.8 2.8 0 0 0-4-4L4 15z"/>',checkcircle:'<circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16 9"/>',logout:'<path d="M10 17l5-5-5-5m5 5H3"/><path d="M12 3h7a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-7"/>',spark:'<path d="m12 3 1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8Z"/><path d="m19 14 1.2 2.8L23 18l-2.8 1.2L19 22l-1.2-2.8L15 18l2.8-1.2Z"/>',bookmark:'<path d="M6 4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18l-6-4-6 4z"/>',users:'<path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M20 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',chart:'<path d="M3 3v18h18M8 15l4-4 3 3 6-7"/>',briefcase:'<rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7V4h8v3M3 12h18m-11 0v2h4v-2"/>'
 };
+Object.assign(iconPaths,{play:'<path d="m8 5 11 7-11 7z"/>',pause:'<path d="M8 5h3v14H8zM15 5h3v14h-3z"/>',volume:'<path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7m3-10a9 9 0 0 1 0 13"/>',volumeOff:'<path d="M11 5 6 9H3v6h3l5 4z"/><path d="m16 9 5 6m0-6-5 6"/>',lock:'<rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 1 1 8 0v3"/>',external:'<path d="M14 4h6v6m0-6-9 9"/><path d="M18 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h6"/>'});
 const $=id=>document.getElementById(id);
 const ic=(name,size=17,extra='')=>`<svg aria-hidden="true" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="${extra}">${iconPaths[name]||iconPaths.spark}</svg>`;
 const CAT={phones:'ទូរស័ព្ទ & អេឡិចត្រូនិក',vehicles:'រថយន្ត & ម៉ូតូ',property:'អចលនទ្រព្យ',fashion:'សម្លៀកបំពាក់',furniture:'គ្រឿងសង្ហារិម'};
@@ -695,7 +696,7 @@ function renderSellerChatMessages(messages){
     let content='';
     if(message.message_type==='product'){
       const product=message.product||null;
-      const image=product?.image_url?'<img src="'+esc(product.image_url)+'" alt="" loading="lazy">':'<span class="seller-chat-product-placeholder">📦</span>';
+      const image=product?.image_url?'<img src="'+esc(product.image_url)+'" alt="" loading="lazy">':'<span class="seller-chat-product-placeholder">'+ic('bag',25)+'</span>';
       content='<article class="seller-chat-product-card '+(product?.id?'seller-chat-product-link':'')+'"'+(product?.id?' role="button" tabindex="0" data-chat-product-id="'+esc(product.id)+'" aria-label="មើលផលិតផល '+esc(product.title||'')+'"':'')+'>'+image+'<div class="seller-chat-product-info"><small>ផលិតផលដែលបានសួរ</small><b>'+esc(product?.title||message.body||'ផលិតផល')+'</b>'+(product?'<strong>'+money(product.price)+'</strong>':'<span class="seller-chat-product-unavailable">ផលិតផលនេះមិនមានលក់ទៀតទេ</span>')+'</div></article>';
     }else if(message.message_type==='image'&&(message.telegram_file_id||message.local_image_url)){
       const imageSrc=message.local_image_url||('/api/media/telegram/'+encodeURIComponent(message.telegram_file_id)+'?mime='+encodeURIComponent(message.mime_type||'image/jpeg'));
@@ -705,23 +706,45 @@ function renderSellerChatMessages(messages){
       const lat=Number(location?.latitude),lng=Number(location?.longitude);
       if(Number.isFinite(lat)&&Number.isFinite(lng)&&Math.abs(lat)<=90&&Math.abs(lng)<=180){
         const mapUrl='https://www.google.com/maps?q='+encodeURIComponent(lat+','+lng);
-        content='<a class="seller-chat-location" href="'+mapUrl+'" target="_blank" rel="noopener noreferrer"><span class="seller-chat-location-icon">📍</span><span><b>ទីតាំង Google Maps</b><small>'+lat.toFixed(5)+', '+lng.toFixed(5)+'</small><em>ចុចដើម្បីបើកផែនទី ↗</em></span></a>';
+        content='<a class="seller-chat-location" href="'+mapUrl+'" target="_blank" rel="noopener noreferrer"><span class="seller-chat-location-icon">'+ic('pin',21)+'</span><span><b>ទីតាំង Google Maps</b><small>'+lat.toFixed(5)+', '+lng.toFixed(5)+'</small><em>ចុចដើម្បីបើកផែនទី '+ic('external',11,'inline')+'</em></span></a>';
       }else content='<p>ទីតាំងមិនត្រឹមត្រូវ</p>';
     }else if(message.message_type==='voice'&&(message.telegram_file_id||message.local_audio_url)){
       const seconds=Math.max(1,Number(message.duration_seconds||0));
-      const heights=[7,12,17,10,20,14,8,18,11,22,13,8,16,21,10,15,7,19,12,23,9,16,11,20,8,14,18,10];
+      const heights=[7,12,17,10,20,14,8,18,11,22,13,8,16,21,10,15,7,19,12,23,9,16,11,20,8,14,18,10,15,9,21,13,18,8,16,11,22,14,7,19];
       const audioSrc=message.local_audio_url||('/api/media/telegram/'+encodeURIComponent(message.telegram_file_id)+'?mime='+encodeURIComponent(message.mime_type||'audio/webm'));
       const pendingLabel=message.upload_state==='pending'?'<span class="seller-chat-voice-status">កំពុងផ្ញើ…</span>':'';
-      content='<div class="seller-chat-voice"><button type="button" class="seller-chat-voice-play" data-voice-toggle aria-label="ចាក់សារសំឡេង">▶</button><div class="seller-chat-voice-track"><div class="seller-chat-voice-wave" aria-hidden="true">'+heights.map(h=>'<i style="--bar:'+h+'px"></i>').join('')+'</div><span class="seller-chat-voice-duration">'+Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0')+'</span>'+pendingLabel+'</div><audio data-voice-audio preload="none" src="'+esc(audioSrc)+'"></audio></div>';
+      content='<div class="seller-chat-voice"><button type="button" class="seller-chat-voice-play" data-voice-toggle aria-label="ចាក់សារសំឡេង">'+ic('play',17)+'</button><div class="seller-chat-voice-track"><div class="seller-chat-voice-wave" data-voice-wave role="slider" tabindex="0" aria-label="ទីតាំងសារសំឡេង" aria-valuemin="0" aria-valuemax="'+seconds+'" aria-valuenow="0">'+heights.map((h,index)=>'<i style="--bar:'+h+'px;--bar-index:'+index+'"></i>').join('')+'</div><span class="seller-chat-voice-duration" data-voice-time>0:00 / '+Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0')+'</span>'+pendingLabel+'</div><audio data-voice-audio preload="none" src="'+esc(audioSrc)+'"></audio></div>';
     }else content='<p>'+esc(message.body).replace(/\n/g,'<br>')+'</p>';
     return '<div class="flex '+(own?'justify-end':'justify-start')+'"><div class="seller-chat-bubble '+(own?'own':'other')+'">'+content+'<small>'+esc(supportChatTime(message.created_at))+'</small></div></div>';
   }).join('')||'<p class="py-8 text-center text-xs text-slate-400">មិនទាន់មានសារទេ។ សូមចាប់ផ្ដើមសន្ទនា។</p>';
   target.querySelectorAll('[data-voice-audio]').forEach(audio=>{
-    const button=audio.parentElement.querySelector('[data-voice-toggle]');
-    audio.addEventListener('play',()=>{button.textContent='Ⅱ';button.setAttribute('aria-label','ផ្អាកសារសំឡេង')});
-    audio.addEventListener('pause',()=>{button.textContent='▶';button.setAttribute('aria-label','ចាក់សារសំឡេង')});
-    audio.addEventListener('ended',()=>{button.textContent='▶';audio.currentTime=0});
-    button.addEventListener('click',()=>{if(audio.paused){target.querySelectorAll('[data-voice-audio]').forEach(other=>{if(other!==audio)other.pause()});void audio.play().catch(()=>toast('មិនអាចចាក់សារសំឡេងបានទេ។','error'))}else audio.pause()});
+    const player=audio.closest('.seller-chat-voice'),button=player?.querySelector('[data-voice-toggle]'),wave=player?.querySelector('[data-voice-wave]'),time=player?.querySelector('[data-voice-time]');
+    if(!button||!wave||!time)return;
+    const bars=[...wave.querySelectorAll('i')];
+    const format=value=>{const safe=Math.max(0,Math.floor(Number(value)||0));return Math.floor(safe/60)+':'+String(safe%60).padStart(2,'0')};
+    const paint=()=>{
+      const duration=Number.isFinite(audio.duration)&&audio.duration>0?audio.duration:Math.max(1,Number(wave.getAttribute('aria-valuemax'))||1);
+      const progress=Math.max(0,Math.min(1,audio.currentTime/duration)),played=Math.floor(progress*bars.length);
+      bars.forEach((bar,index)=>bar.classList.toggle('played',index<played));
+      wave.setAttribute('aria-valuenow',String(Math.floor(audio.currentTime)));
+      time.textContent=format(audio.currentTime)+' / '+format(duration);
+    };
+    let pendingSeekRatio=null,pendingSeekTime=null;
+    audio.addEventListener('loadedmetadata',()=>{
+      if(pendingSeekRatio!==null){audio.currentTime=pendingSeekRatio*audio.duration;pendingSeekRatio=null}
+      else if(pendingSeekTime!==null){audio.currentTime=Math.max(0,Math.min(audio.duration,pendingSeekTime));pendingSeekTime=null}
+      paint();
+    });
+    audio.addEventListener('timeupdate',paint);
+    audio.addEventListener('play',()=>{button.innerHTML=ic('pause',16);button.setAttribute('aria-label','ផ្អាកសារសំឡេង');player.classList.add('is-playing')});
+    audio.addEventListener('pause',()=>{button.innerHTML=ic('play',17);button.setAttribute('aria-label','ចាក់សារសំឡេង');player.classList.remove('is-playing')});
+    audio.addEventListener('ended',()=>{audio.currentTime=0;paint();button.innerHTML=ic('play',17);player.classList.remove('is-playing')});
+    const loadMetadataForSeek=()=>{audio.preload='metadata';audio.load()};
+    const seek=event=>{const rect=wave.getBoundingClientRect(),ratio=Math.max(0,Math.min(1,(event.clientX-rect.left)/rect.width));if(!Number.isFinite(audio.duration)||audio.duration<=0){pendingSeekRatio=ratio;pendingSeekTime=null;loadMetadataForSeek();return}audio.currentTime=ratio*audio.duration;paint()};
+    wave.addEventListener('click',seek);
+    wave.addEventListener('keydown',event=>{if(event.key==='ArrowRight'||event.key==='ArrowLeft'){event.preventDefault();const delta=event.key==='ArrowRight'?5:-5;if(!Number.isFinite(audio.duration)||audio.duration<=0){pendingSeekTime=Math.max(0,(Number(audio.currentTime)||0)+delta);pendingSeekRatio=null;loadMetadataForSeek();return}audio.currentTime=Math.max(0,Math.min(audio.duration,audio.currentTime+delta));paint()}});
+    button.addEventListener('click',()=>{if(audio.paused){target.querySelectorAll('[data-voice-audio]').forEach(other=>{if(other!==audio)other.pause()});audio.preload='auto';void audio.play().catch(()=>toast('មិនអាចចាក់សារសំឡេងបានទេ។','error'))}else audio.pause()});
+    paint();
   });
   if(wasNearBottom)target.scrollTop=target.scrollHeight;
 }
@@ -743,7 +766,7 @@ async function loadUnifiedSellerChatInbox(){
 }
 async function loadSellerChatPreferences(){
   if(!session)return;
-  try{const result=await api('/api/seller-chat/preferences');sellerChatMuted=result.data?.muted===true;const button=$('sellerChatMute');button.textContent=sellerChatMuted?'🔕 បើកសំឡេង':'🔔 បិទសំឡេង';button.setAttribute('aria-pressed',String(sellerChatMuted))}
+  try{const result=await api('/api/seller-chat/preferences');sellerChatMuted=result.data?.muted===true;const button=$('sellerChatMute');button.innerHTML=(sellerChatMuted?ic('volumeOff',15):ic('volume',15))+' '+(sellerChatMuted?'បើកសំឡេង':'បិទសំឡេង');button.setAttribute('aria-label',sellerChatMuted?'បើកសំឡេង':'បិទសំឡេង');button.setAttribute('title',sellerChatMuted?'បើកសំឡេង':'បិទសំឡេង');button.setAttribute('aria-pressed',String(sellerChatMuted))}
   catch(error){console.warn('Chat preference load failed:',error.message)}
 }
 async function loadSellerChatConversation(scrollToBottom=false){
@@ -986,7 +1009,7 @@ voiceButton.addEventListener('pointermove',event=>{
   if(sellerChatPointerStartY-event.clientY>72){
     sellerChatRecordingLocked=true;sellerChatPointerDown=false;voiceButton.classList.add('is-locked');
     voiceButton.innerHTML=ic('send',19);voiceButton.title='ចុចដើម្បីផ្ញើសារសំឡេង';
-    $('sellerChatRecordingStatus').textContent='🔒 បានចាក់សោ · ចុចប៊ូតុងផ្ញើដើម្បីបញ្ចប់ និងផ្ញើ';
+    $('sellerChatRecordingStatus').innerHTML=ic('lock',14,'inline')+' បានចាក់សោ · ចុចប៊ូតុងផ្ញើដើម្បីបញ្ចប់ និងផ្ញើ';
   }
 });
 const releaseVoicePointer=event=>{
