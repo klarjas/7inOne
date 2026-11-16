@@ -8,6 +8,7 @@ import next from 'next';
 import { fileURLToPath } from 'node:url';
 import { createClient } from '@supabase/supabase-js';
 import { registerSupportChat } from './support-chat.js';
+import { registerSellerChat } from './seller-chat.js';
 import { randomUUID, randomBytes, randomInt, createHash, createHmac, timingSafeEqual } from 'node:crypto';
 
 const app = express();
@@ -176,6 +177,7 @@ async function deleteTelegramMessage(messageId) {
 }
 
 registerSupportChat(app, { supabase, authenticate, requireAdmin, telegram, telegramStorageChatId, deleteTelegramMessage, clean, fail });
+registerSellerChat(app, { supabase, authenticate, requireVendor, clean, fail });
 const telegramMediaUrl = fileId => fileId ? `/api/media/telegram/${encodeURIComponent(fileId)}` : null;
 function publicMediaUrl(path) {
   if (!path || !supabase) return null;
@@ -1460,7 +1462,7 @@ app.post('/api/products', authenticate, async (req, res) => {
     vendor = seller;
   }
 
-  const status = admin || process.env.AUTO_APPROVE_PRODUCTS === 'true' ? 'active' : 'pending';
+  const status = 'active'; // Approved vendors can publish immediately; vendor approval remains mandatory.
   const location = clean(req.body.location, 100);
   const condition = clean(req.body.condition || 'ប្រើរួចស្អាត', 60);
   const { data, error } = await supabase.from('products')
@@ -1471,7 +1473,7 @@ app.post('/api/products', authenticate, async (req, res) => {
 app.patch('/api/products/:id', authenticate, async (req, res) => {
   const { data: vendor } = await vendorFor(req.user.id);
   const admin = await isAdmin(req.user.id);
-  const { data: existing } = await supabase.from('products').select('id,vendor_id').eq('id', req.params.id).maybeSingle();
+  const { data: existing } = await supabase.from('products').select('id,vendor_id,status').eq('id', req.params.id).maybeSingle();
   if (!existing) return fail(res, 404, 'Product not found');
   if (!admin && (!vendor || vendor.status !== 'approved' || vendor.id !== existing.vendor_id)) return fail(res, 403, 'Approved store ownership required');
   const patch = {};
@@ -1487,7 +1489,8 @@ app.patch('/api/products/:id', authenticate, async (req, res) => {
     if (requestedStatus === 'sold') { if (!admin && (!vendor || vendor.id !== existing.vendor_id)) return fail(res, 403, 'Not allowed'); patch.status = 'sold'; patch.sold_at = new Date().toISOString(); }
     else if (requestedStatus === 'active' && admin) patch.status = 'active';
     else if (requestedStatus !== 'sold') return fail(res, 400, 'Only Admin can activate products');
-  } else if (!admin) patch.status = process.env.AUTO_APPROVE_PRODUCTS === 'true' ? 'active' : 'pending';
+  }
+  // Keep the existing listing state when a seller edits details; sellers cannot reactivate hidden listings.
   patch.updated_at = new Date().toISOString();
   const { data, error } = await supabase.from('products').update(patch).eq('id', existing.id).select().single();
   if (error) return fail(res, 400, 'Could not update product');
