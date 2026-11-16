@@ -4,7 +4,7 @@ export function registerSellerChat(app, { supabase, authenticate, requireVendor,
     if (error || !conversation) return { error: 'សន្ទនានេះមិនមានទេ។' };
     const [{ data: vendor }, { data: product }, { data: buyer }] = await Promise.all([
       supabase.from('vendors').select('id,user_id,store_name').eq('id', conversation.vendor_id).maybeSingle(),
-      supabase.from('products').select('id,title,price').eq('id', conversation.product_id).maybeSingle(),
+      supabase.from('products').select('id,title,price,status,stock').eq('id', conversation.product_id).maybeSingle(),
       supabase.from('profiles').select('id,display_name').eq('id', conversation.buyer_id).maybeSingle()
     ]);
     const role = conversation.buyer_id === userId ? 'buyer' : vendor?.user_id === userId ? 'seller' : null;
@@ -30,7 +30,7 @@ export function registerSellerChat(app, { supabase, authenticate, requireVendor,
     const [buyersResult, vendorsResult, productsResult, imagesResult] = await Promise.all([
       buyerIds.length ? supabase.from('profiles').select('id,display_name').in('id', buyerIds) : Promise.resolve({ data: [] }),
       vendorIds.length ? supabase.from('vendors').select('id,user_id,store_name').in('id', vendorIds) : Promise.resolve({ data: [] }),
-      productIds.length ? supabase.from('products').select('id,title,price').in('id', productIds) : Promise.resolve({ data: [] }),
+      productIds.length ? supabase.from('products').select('id,title,price,status,stock').in('id', productIds) : Promise.resolve({ data: [] }),
       productIds.length ? supabase.from('product_images').select('product_id,sort_order,file_id,image_url').in('product_id', productIds).order('sort_order', { ascending: true }) : Promise.resolve({ data: [] })
     ]);
     const issue = buyersResult.error || vendorsResult.error || productsResult.error || imagesResult.error;
