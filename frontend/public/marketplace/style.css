@@ -1892,3 +1892,36 @@ body{background:var(--page)!important;color:var(--ink);font-family:"Kantumruy Pr
   #view-product .product-reviews,#view-product .product-related-section{padding:16px}
   #view-product .product-related-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 }
+
+
+ 
+/* Apple Store redesign — design tokens and neutral foundation */
+:root{
+  --bg:#F5F5F7;
+  --card:#FFFFFF;
+  --text:#1D1D1F;
+  --muted:#6E6E73;
+  --line:rgba(0,0,0,.08);
+  --accent:#064E3B;
+  --accent-bright:#10B981;
+  --radius-lg:24px;
+  --shadow-sm:0 2px 12px rgba(0,0,0,.06);
+  --brand:var(--accent);
+  --brand2:#065F46;
+  --green:var(--accent-bright);
+  --ink:var(--text);
+  --page:var(--bg);
+  --muted:var(--muted);
+  --line:var(--line);
+  --motion-ease:cubic-bezier(.22,1,.36,1);
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg)!important;color:var(--text)!important;font-family:'Kantumruy Pro',sans-serif!important;line-height:1.7!important;letter-spacing:0!important}
+body,button,input,select,textarea{letter-spacing:0!important}
+h1,h2,h3,h4,p,li,small{letter-spacing:0}
+button,a{ -webkit-tap-highlight-color:transparent}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid rgba(16,185,129,.35)!important;outline-offset:3px}
+.brand-gradient{background:var(--accent)!important}
+.soft-shadow,.lift:hover,.account-hero,.account-panel{box-shadow:var(--shadow-sm)!important}
+.post-glow{animation:none!important;box-shadow:none!important}
+
