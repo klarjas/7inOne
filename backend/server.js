@@ -590,36 +590,35 @@ const telegramOtpTable = 'telegram_password_otps';
 const telegramWidgetAuthEventsTable = 'telegram_widget_auth_events';
 
 async function issueTelegramPasswordOtp(userId, telegramUserId) {
-  const now = Date.now();
-  const { data: existing, error: lookupError } = await supabase.from(telegramOtpTable)
-    .select('expires_at,attempts,locked_until').eq('user_id', userId).maybeSingle();
-  if (lookupError) throw lookupError;
-
-  const lockedUntil = existing?.locked_until ? new Date(existing.locked_until).getTime() : 0;
-  if (lockedUntil > now) return { expiresAt: existing.expires_at, alreadyIssued: true };
-
-  if (Number(existing?.attempts || 0) >= 5 && !existing?.locked_until) {
-    const nextLock = new Date(now + 15 * 60 * 1000).toISOString();
-    const { error: lockError } = await supabase.from(telegramOtpTable)
-      .update({ locked_until: nextLock }).eq('user_id', userId);
-    if (lockError) throw lockError;
-    return { expiresAt: existing.expires_at, alreadyIssued: true };
-  }
-  if (existing && new Date(existing.expires_at).getTime() > now) {
-    return { expiresAt: existing.expires_at, alreadyIssued: true };
-  }
-
   const code = String(randomInt(100000, 1000000));
-  const expiresAt = new Date(now + 5 * 60 * 1000).toISOString();
-  const { error: saveError } = await supabase.from(telegramOtpTable).upsert({
-    user_id: userId, otp_hash: sha256(code), expires_at: expiresAt,
-    attempts: 0, locked_until: null, created_at: new Date(now).toISOString()
-  }, { onConflict: 'user_id' });
-  if (saveError) throw saveError;
+  const otpHash = sha256(code);
+  const now = new Date();
+  const expiresAt = new Date(now.getTime() + 5 * 60 * 1000).toISOString();
+  const { data: issued, error: issueError } = await supabase.rpc('issue_telegram_password_otp', {
+    p_user_id: userId,
+    p_otp_hash: otpHash,
+    p_expires_at: expiresAt,
+    p_created_at: now.toISOString()
+  });
+  if (issueError) throw issueError;
 
-  await sendTelegramMessage(telegramUserId,
-    `7inOne Security\nលេខកូដផ្ទៀងផ្ទាត់ Password របស់អ្នក៖ ${code}\nកូដនេះមានសុពលភាព ៥ នាទី។ កុំចែករំលែកកូដនេះជាមួយអ្នកណា។`);
-  return { expiresAt, alreadyIssued: false };
+  const { data: currentOtp, error: lookupError } = await supabase.from(telegramOtpTable)
+    .select('expires_at,locked_until').eq('user_id', userId).maybeSingle();
+  if (lookupError) throw lookupError;
+  if (!currentOtp) throw new Error('Could not load the Telegram OTP state.');
+
+  if (issued) {
+    try {
+      await sendTelegramMessage(telegramUserId,
+        `7inOne Security\nលេខកូដផ្ទៀងផ្ទាត់ Password របស់អ្នក៖ ${code}\nកូដនេះមានសុពលភាព ៥ នាទី។ កុំចែករំលែកកូដនេះជាមួយអ្នកណា។`);
+    } catch (error) {
+      await supabase.from(telegramOtpTable).delete().eq('user_id', userId).eq('otp_hash', otpHash);
+      throw error;
+    }
+  }
+
+  const locked = Boolean(currentOtp.locked_until && new Date(currentOtp.locked_until).getTime() > Date.now());
+  return { expiresAt: currentOtp.expires_at, alreadyIssued: !issued, locked };
 }
 
 async function recordTelegramPasswordOtpFailure(userId) {
