@@ -1475,7 +1475,7 @@ app.post('/api/products', authenticate, async (req, res) => {
     vendor = seller;
   }
 
-  const status = 'active'; // Approved vendors can publish immediately; vendor approval remains mandatory.
+  const status = 'active'; // Active sellers may publish, whether verified or not.
   const location = clean(req.body.location, 100);
   const condition = clean(req.body.condition || 'ប្រើរួចស្អាត', 60);
   const { data, error } = await supabase.from('products')
