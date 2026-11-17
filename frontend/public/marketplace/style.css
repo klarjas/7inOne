@@ -1911,8 +1911,6 @@ body{background:var(--page)!important;color:var(--ink);font-family:"Kantumruy Pr
   --green:var(--accent-bright);
   --ink:var(--text);
   --page:var(--bg);
-  --muted:var(--muted);
-  --line:var(--line);
   --motion-ease:cubic-bezier(.22,1,.36,1);
 }
 html{scroll-behavior:smooth}
@@ -2125,3 +2123,15 @@ footer .brand-gradient{background:var(--accent)!important;box-shadow:none!import
  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}
 }
 
+
+
+/* Responsive product density: four desktop, three tablet, two phone */
+@media(min-width:1200px){
+ #productGrid,#storeProductGrid,#skeletonGrid{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+}
+@media(min-width:700px) and (max-width:1199px){
+ #productGrid,#storeProductGrid,#skeletonGrid{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+}
+@media(max-width:699px){
+ #productGrid,#storeProductGrid,#skeletonGrid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
