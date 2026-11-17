@@ -386,7 +386,7 @@ const DEFAULT_SITE_BRANDING = {
   heroSubtitle: 'ស្វែងរកទំនិញដែលអ្នកស្រឡាញ់ ឬដាក់លក់របស់ដែលអ្នកមិនប្រើ។ ភ្ជាប់អ្នកទិញ និងអ្នកលក់នៅទូទាំងប្រទេសកម្ពុជា។'
 };
 async function getSiteBranding(){
-  const defaults = { ...DEFAULT_SITE_BRANDING, siteLogoUrl: '', faviconUrl: '', heroImages: [] };
+  const defaults = { ...DEFAULT_SITE_BRANDING, siteLogoUrl: '', faviconUrl: '', heroImages: [], sidePosters: {} };
   if(!supabase)return defaults;
   const {data,error}=await supabase.from('site_settings').select('value,updated_at').eq('key','site_branding').maybeSingle();
   if(error){console.error('Could not read website branding:',error.message);return defaults}
@@ -402,7 +402,11 @@ async function getSiteBranding(){
     const fileId=clean(image?.fileId||image?.file_id,2048);
     return {url:fileId?telegramMediaUrl(fileId):clean(image?.url||image?.imageUrl,2000),fileId};
   }).filter(image=>image.url);
-  return {siteLogoUrl,faviconUrl,siteTitle:clean(value.siteTitle,80)||DEFAULT_SITE_BRANDING.siteTitle,siteSubtitle:clean(value.siteSubtitle,120)||DEFAULT_SITE_BRANDING.siteSubtitle,heroBadge:clean(value.heroBadge,100)||DEFAULT_SITE_BRANDING.heroBadge,heroTitle:clean(value.heroTitle,160)||DEFAULT_SITE_BRANDING.heroTitle,heroSubtitle:clean(value.heroSubtitle,600)||DEFAULT_SITE_BRANDING.heroSubtitle,heroImages};
+  return {siteLogoUrl,faviconUrl,siteTitle:clean(value.siteTitle,80)||DEFAULT_SITE_BRANDING.siteTitle,siteSubtitle:clean(value.siteSubtitle,120)||DEFAULT_SITE_BRANDING.siteSubtitle,heroBadge:clean(value.heroBadge,100)||DEFAULT_SITE_BRANDING.heroBadge,heroTitle:clean(value.heroTitle,160)||DEFAULT_SITE_BRANDING.heroTitle,heroSubtitle:clean(value.heroSubtitle,600)||DEFAULT_SITE_BRANDING.heroSubtitle,heroImages,sidePosters:Object.fromEntries(['top','middle','tall'].map(slot=>{
+    const item=value.sidePosters?.[slot];if(!item||typeof item!=='object')return [slot,null];
+    const fileId=clean(item.fileId||item.file_id,2048);
+    return [slot,{url:fileId?telegramMediaUrl(fileId):clean(item.url,2000),fileId,link:clean(item.link,2000),enabled:item.enabled!==false,alt:clean(item.alt,120)}];
+  }).filter(([,item])=>item?.url))};
 }
 app.get('/api/config', async (_req, res) => {
   const [maintenance,branding,telegramBotUsername] = await Promise.all([
@@ -451,11 +455,13 @@ app.post('/api/admin/favicon', authenticate, requireAdmin, upload.single('file')
     return fail(res,500,'Could not save website favicon. Check Telegram storage and Supabase service role.');
   }
 });
-app.patch('/api/admin/branding', authenticate, requireAdmin, upload.fields([{name:'logo',maxCount:1},{name:'favicon',maxCount:1},{name:'heroImages',maxCount:3}]), async (req,res)=>{
+app.patch('/api/admin/branding', authenticate, requireAdmin, upload.fields([{name:'logo',maxCount:1},{name:'favicon',maxCount:1},{name:'heroImages',maxCount:3},{name:'posterTop',maxCount:1},{name:'posterMiddle',maxCount:1},{name:'posterTall',maxCount:1}]), async (req,res)=>{
   const files=req.files||{},logo=files.logo?.[0]||null,favicon=files.favicon?.[0]||null,bannerFiles=files.heroImages||[];
+  const posterFiles={top:files.posterTop?.[0]||null,middle:files.posterMiddle?.[0]||null,tall:files.posterTall?.[0]||null};
   const logoError=logo?imageUploadError(logo,2*1024*1024):null;if(logoError)return fail(res,400,'Logo: '+logoError);
   const faviconError=favicon?imageUploadError(favicon,2*1024*1024):null;if(faviconError)return fail(res,400,'Favicon: '+faviconError);
   const bannerError=bannerFiles.map(file=>imageUploadError(file,8*1024*1024)).find(Boolean);if(bannerError)return fail(res,400,'Banner: '+bannerError);
+  const posterError=Object.values(posterFiles).map(file=>file?imageUploadError(file,5*1024*1024):null).find(Boolean);if(posterError)return fail(res,400,'Poster: '+posterError);
   const clearHeroImages=String(req.body.clearHeroImages||'')==='true',newlyUploaded=[];
   try{
     const {data:priorRow,error:readError}=await supabase.from('site_settings').select('value').eq('key','site_branding').maybeSingle();if(readError)throw readError;
@@ -463,6 +469,16 @@ app.patch('/api/admin/branding', authenticate, requireAdmin, upload.fields([{nam
     const newLogo=logo?await uploadToTelegram(logo):null;if(newLogo)newlyUploaded.push(newLogo);
     const newFavicon=favicon?await uploadToTelegram(favicon):null;if(newFavicon)newlyUploaded.push(newFavicon);
     const newHero=[];for(const file of bannerFiles){const image=await uploadToTelegram(file);newlyUploaded.push(image);newHero.push({fileId:image.fileId,messageId:image.messageId,mimeType:image.mimeType,url:telegramMediaUrl(image.fileId)})}
+    const priorPosters=prior.sidePosters&&typeof prior.sidePosters==='object'?prior.sidePosters:{},newSidePosters={};
+    for(const slot of ['top','middle','tall']){
+      const key=slot[0].toUpperCase()+slot.slice(1),file=posterFiles[slot],old=priorPosters[slot]||{},clear=String(req.body['clearPoster'+key]||'')==='true';
+      const image=file?await uploadToTelegram(file):null;if(image)newlyUploaded.push(image);
+      const linkValue=clean(req.body['poster'+key+'Link'],2000)||clean(old.link,2000);
+      if(linkValue){try{const parsed=new URL(linkValue);if(parsed.protocol!=='https:')throw new Error('HTTPS required')}catch{throw new Error('Poster links must be valid HTTPS URLs')}}
+      if(file&&!clear)newSidePosters[slot]={fileId:image.fileId,messageId:image.messageId,mimeType:image.mimeType,link:linkValue,enabled:String(req.body['poster'+key+'Enabled']||'true')==='true',alt:slot==='tall'?'Promotion poster':'Homepage promotion'};
+      else if(!clear&&old.fileId)newSidePosters[slot]={...old,link:linkValue,enabled:String(req.body['poster'+key+'Enabled']??(old.enabled!==false))==='true'};
+      else if(!clear&&old.url)newSidePosters[slot]={...old,link:linkValue,enabled:String(req.body['poster'+key+'Enabled']??(old.enabled!==false))==='true'};
+    }
     const logoVersion=newLogo?randomUUID():clean(prior.siteLogoVersion,80)||clean(prior.faviconVersion,80)||randomUUID();
     const faviconVersion=newFavicon?randomUUID():clean(prior.faviconVersion,80)||clean(prior.siteLogoVersion,80)||randomUUID();
     const logoFileId=newLogo?.fileId||priorLogoId||null,faviconFileId=newFavicon?.fileId||priorFaviconId||null;
@@ -472,11 +488,15 @@ app.patch('/api/admin/branding', authenticate, requireAdmin, upload.fields([{nam
       faviconUrl:faviconFileId?'/api/site/favicon?v='+encodeURIComponent(faviconVersion):clean(prior.faviconUrl,2000),
       faviconFileId:faviconFileId,faviconMessageId:newFavicon?.messageId||clean(prior.faviconMessageId,40)||(prior.faviconFileId&&prior.faviconFileId===prior.siteLogoFileId?clean(prior.siteLogoMessageId,40):'')||null,faviconMimeType:newFavicon?.mimeType||clean(prior.faviconMimeType,80)||(prior.faviconFileId&&prior.faviconFileId===prior.siteLogoFileId?clean(prior.siteLogoMimeType,80):'')||null,faviconVersion:faviconVersion,
       siteTitle:clean(req.body.siteTitle,80)||DEFAULT_SITE_BRANDING.siteTitle,siteSubtitle:clean(req.body.siteSubtitle,120)||DEFAULT_SITE_BRANDING.siteSubtitle,heroBadge:clean(req.body.heroBadge,100)||DEFAULT_SITE_BRANDING.heroBadge,heroTitle:clean(req.body.heroTitle,160)||DEFAULT_SITE_BRANDING.heroTitle,heroSubtitle:clean(req.body.heroSubtitle,600)||DEFAULT_SITE_BRANDING.heroSubtitle,
-      heroImages:newHero.length?newHero:(clearHeroImages?[]:(Array.isArray(prior.heroImages)?prior.heroImages.slice(0,3):[]))};
+      heroImages:newHero.length?newHero:(clearHeroImages?[]:(Array.isArray(prior.heroImages)?prior.heroImages.slice(0,3):[])),sidePosters:newSidePosters};
     const {error:saveError}=await supabase.from('site_settings').upsert({key:'site_branding',value,updated_at:new Date().toISOString()},{onConflict:'key'});if(saveError)throw saveError;
     const retainedIds=new Set([logoFileId,faviconFileId].filter(Boolean)),oldIds=new Set([priorLogoId,priorFaviconId].filter(Boolean));
     for(const oldId of oldIds)if(!retainedIds.has(oldId)){const oldMessage=oldId===priorLogoId?clean(prior.siteLogoMessageId,40):clean(prior.faviconMessageId,40);if(oldMessage)await deleteTelegramMessage(oldMessage)}
     if(newHero.length||clearHeroImages)for(const oldImage of (Array.isArray(prior.heroImages)?prior.heroImages:[])){const oldMessage=clean(oldImage?.messageId,40);if(oldMessage)await deleteTelegramMessage(oldMessage)}
+    for(const slot of ['top','middle','tall']){
+      const old=priorPosters[slot],next=newSidePosters[slot];
+      if(old?.messageId&&old.messageId!==next?.messageId)await deleteTelegramMessage(clean(old.messageId,40));
+    }
     res.set('Cache-Control','no-store');return res.status(200).json({data:await getSiteBranding()});
   }catch(error){for(const image of newlyUploaded)await deleteTelegramMessage(image.messageId);console.error('Site branding save failed:',error.message);return fail(res,500,'Could not save Brand & Banner settings. Check Telegram storage and Supabase settings.')}
 });
