@@ -822,3 +822,106 @@ body{background:var(--market-bg);color:var(--market-ink)}.shell{width:min(1440px
  .product-related-grid{gap:8px}
 }
 @media(prefers-reduced-motion:reduce){.product-gallery-stage>img,.product-gallery-arrow,.product-gallery-thumb,.product-gallery-save{transition:none!important}}
+
+
+/* === 7inOne UI/UX Clean Fixes === */
+/* 1. Stable Product Card Images (no disappearing or flickering on hover) */
+.product-img-scan > img,
+.product-img-primary-wrap > img {
+  opacity: 1 !important;
+  transition: opacity .28s ease, transform .5s cubic-bezier(.22,1,.36,1) !important;
+}
+.product-img-secondary-wrap {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .28s ease !important;
+}
+.product-card:hover .product-img-primary-wrap {
+  opacity: 1 !important;
+}
+.product-card:hover .product-img-secondary-wrap {
+  opacity: 1 !important;
+}
+
+/* 2. Disable 3D tilt jitter on product cards; keep smooth vertical lift */
+.product-card {
+  transform-style: flat !important;
+}
+.product-card:hover {
+  transform: translateY(-4px) !important;
+}
+
+/* 3. Khmer Typography Readability Improvements */
+body {
+  line-height: 1.65;
+}
+.product-card-description {
+  font-size: 11.5px !important;
+  line-height: 1.65 !important;
+  height: 3.7rem !important;
+  min-height: 3.7rem !important;
+}
+.product-image-count {
+  font-size: 10.5px !important;
+}
+.seller-table-head,
+.seller-product-metrics,
+.seller-validity,
+.seller-expiry-warning,
+.seller-action-button,
+.seller-status-badge {
+  font-size: 11px !important;
+  line-height: 1.55 !important;
+}
+.seller-product-copy b {
+  font-size: 13px !important;
+}
+.seller-product-copy small {
+  font-size: 11px !important;
+}
+.seller-chat-bubble {
+  font-size: 13.5px !important;
+  line-height: 1.65 !important;
+}
+.seller-chat-inbox-item b {
+  font-size: 13px !important;
+}
+.seller-chat-inbox-item span span,
+.seller-chat-inbox-item small {
+  font-size: 11px !important;
+}
+
+/* 4. Mobile Navigation & Floating Chat Non-Overlapping Layout */
+@media (max-width: 639px) {
+  body:has(#view-product.active) .mobile-market-nav {
+    display: none !important;
+  }
+  .product-mobile-actions {
+    bottom: 0 !important;
+    z-index: 85 !important;
+    border-radius: 18px 18px 0 0 !important;
+    border-bottom: 0 !important;
+    padding: 10px 12px calc(10px + env(safe-area-inset-bottom)) !important;
+    box-shadow: 0 -8px 28px rgba(6, 46, 37, .12) !important;
+  }
+  body:has(#view-product.active) {
+    padding-bottom: 84px !important;
+  }
+  #supportChatLauncher {
+    right: 16px !important;
+    bottom: 78px !important;
+    width: 52px !important;
+    height: 52px !important;
+    z-index: 90 !important;
+  }
+  body:has(#view-product.active) #supportChatLauncher {
+    bottom: 82px !important;
+  }
+  #sellerChatModal .seller-chat-shell {
+    margin: 0 10px 76px 0 !important;
+    height: min(600px, calc(100dvh - 96px)) !important;
+  }
+  .mobile-market-item small {
+    font-size: 10.5px !important;
+  }
+}
