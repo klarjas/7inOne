@@ -98,7 +98,7 @@ async function telegramDiagnosticCall(method, body) {
 async function requireVendor(req, res, nextMiddleware) {
   const { data: vendor, error } = await vendorFor(req.user.id);
   if (error || !vendor) return fail(res, 403, 'Vendor account not found');
-  if (vendor.status !== 'approved') return fail(res, 403, 'Vendor account is not approved');
+  if (vendor.status === 'blocked') return fail(res, 403, 'Vendor account is blocked');
   req.vendor = vendor;
   return nextMiddleware();
 }
@@ -518,7 +518,7 @@ app.get('/api/products', async (req, res) => {
   const q = clean(req.query.q, 100);
   const category = clean(req.query.category, 80);
   let query = supabase.from('products').select('id,title,description,price,stock,category,location,condition,view_count,created_at,updated_at,renewed_at,vendor_id,product_images(id,file_id,image_url,sort_order),vendors!inner(id,store_name,status)', { count: 'exact' })
-    .eq('status', 'active').eq('vendors.status', 'approved').gt('stock', 0).gte('renewed_at',new Date(Date.now()-PRODUCT_PUBLIC_MAX_AGE_MS).toISOString()).order('created_at', { ascending: false })
+    .eq('status', 'active').in('vendors.status', ['approved','pending','rejected']).gt('stock', 0).gte('renewed_at',new Date(Date.now()-PRODUCT_PUBLIC_MAX_AGE_MS).toISOString()).order('created_at', { ascending: false })
     .range((page - 1) * limit, page * limit - 1);
   if (q) { const term = q.replace(/[%_,()]/g, '').trim(); if (term) query = query.or(`title.ilike.%${term}%,description.ilike.%${term}%,location.ilike.%${term}%`); }
   if (category) query = query.eq('category', category);
@@ -532,7 +532,7 @@ app.get('/api/products/:id', async (req, res) => {
   if (!db(res)) return;
   let { data, error } = await supabase.from('products')
     .select('*,product_images(id,file_id,image_url,sort_order),vendors!inner(id,store_name,status)')
-    .eq('id', req.params.id).eq('status', 'active').eq('vendors.status', 'approved').gt('stock', 0).gte('renewed_at',new Date(Date.now()-PRODUCT_PUBLIC_MAX_AGE_MS).toISOString()).maybeSingle();
+    .eq('id', req.params.id).eq('status', 'active').in('vendors.status', ['approved','pending','rejected']).gt('stock', 0).gte('renewed_at',new Date(Date.now()-PRODUCT_PUBLIC_MAX_AGE_MS).toISOString()).maybeSingle();
   if (error || !data) return fail(res, 404, 'Product not found');
   const nextViews = Number(data.view_count || 0) + 1;
   await supabase.from('products').update({ view_count: nextViews }).eq('id', data.id);
@@ -1372,53 +1372,71 @@ app.post('/api/me/media', authenticate, upload.single('file'), async (req, res) 
 app.post('/api/vendors/register', authenticate, upload.single('document'), async (req, res) => {
   let uploaded = null;
   try {
-    const store_name = clean(req.body.store_name, 80);
-    const description = clean(req.body.description, 1000);
-    const contact_phone = clean(req.body.contact_phone, 60);
-    const address = clean(req.body.address, 300);
-    const file = req.file;
+    const store_name = clean(req.body.store_name, 80), description = clean(req.body.description, 1000);
+    const contact_phone = clean(req.body.contact_phone, 60), address = clean(req.body.address, 300), file = req.file;
     if (store_name.length < 2 || contact_phone.length < 6 || address.length < 5) return fail(res, 400, 'Complete store name, contact and address.');
-    const invalidImage = imageUploadError(file); if (invalidImage) return fail(res, 400, 'Upload an ID card or business certificate as a JPG, PNG or WEBP image. '+invalidImage);
+    const invalidImage = file ? imageUploadError(file) : null;
+    if (invalidImage) return fail(res, 400, invalidImage);
     const { data: existing, error: lookupError } = await vendorFor(req.user.id);
-    if (lookupError) return fail(res, 500, 'Could not check existing seller application.');
-    if (existing && !['rejected'].includes(existing.status)) return fail(res, 409, 'Seller application already exists or is awaiting review.');
-    uploaded = await uploadToTelegram(file);
-    const values = {
-      user_id: req.user.id, store_name, description, contact_phone, address,
-      document_path: null, document_file_id: uploaded.fileId,
-      document_message_id: uploaded.messageId, document_mime_type: file.mimetype,
-      document_url: telegramMediaUrl(uploaded.fileId),
-      status: 'pending', reviewed_at: null, review_note: null
-    };
-    const result = existing
-      ? await supabase.from('vendors').update(values).eq('id', existing.id).select().single()
-      : await supabase.from('vendors').insert(values).select().single();
+    if (lookupError) return fail(res, 500, 'Could not check existing seller account.');
+    if (existing?.status === 'blocked') return fail(res, 403, 'This seller account is blocked.');
+    if (existing?.status === 'approved') return fail(res, 409, 'This store is already verified.');
+    if (existing?.status === 'pending' && existing.document_file_id) return fail(res, 409, 'Verification document is already awaiting review.');
+    if (existing && !file) return fail(res, 400, 'Upload a verification document to request verification.');
+    if (file) uploaded = await uploadToTelegram(file);
+    const values = { user_id: req.user.id, store_name, description, contact_phone, address, status: 'pending', reviewed_at: null, review_note: null };
+    if (uploaded) Object.assign(values, { document_path: null, document_file_id: uploaded.fileId, document_message_id: uploaded.messageId, document_mime_type: uploaded.mimeType, document_url: telegramMediaUrl(uploaded.fileId) });
+    const result = existing ? await supabase.from('vendors').update(values).eq('id', existing.id).select().single() : await supabase.from('vendors').insert(values).select().single();
     if (result.error) {
-      await deleteTelegramMessage(uploaded.messageId);
-      console.error('Seller document DB save failed:', result.error.message);
-      return fail(res, 500, 'Document uploaded to Telegram but seller application could not be saved. Apply the Telegram media migration.');
+      if (uploaded?.messageId) await deleteTelegramMessage(uploaded.messageId);
+      console.error('Seller registration save failed:', result.error.message);
+      return fail(res, 500, 'Could not save seller registration.');
     }
-    if (existing?.document_message_id && existing.document_message_id !== uploaded.messageId) {
-      await deleteTelegramMessage(existing.document_message_id);
-    }
+    if (uploaded && existing?.document_message_id && existing.document_message_id !== uploaded.messageId) await deleteTelegramMessage(existing.document_message_id);
     const { document_file_id, document_message_id, ...safeVendor } = result.data;
-    return res.status(existing ? 200 : 201).json({ data: { ...safeVendor, document_url: telegramMediaUrl(document_file_id) } });
+    return res.status(existing ? 200 : 201).json({ data: { ...safeVendor, document_url: document_file_id ? telegramMediaUrl(document_file_id) : null } });
   } catch (error) {
     if (uploaded?.messageId) await deleteTelegramMessage(uploaded.messageId);
-    console.error('Seller document upload failed:', error.message);
-    return fail(res, 502, error.message || 'Could not upload seller verification document.');
+    console.error('Seller registration failed:', error.message);
+    return fail(res, 502, error.message || 'Could not register seller.');
+  }
+});
+app.patch('/api/vendor/profile', authenticate, upload.fields([{ name: 'logo', maxCount: 1 }, { name: 'cover', maxCount: 1 }]), async (req, res) => {
+  const { data: vendor, error: vendorError } = await vendorFor(req.user.id);
+  if (vendorError || !vendor) return fail(res, 404, 'Seller account not found.');
+  if (vendor.status === 'blocked') return fail(res, 403, 'Seller account is blocked.');
+  const store_name = clean(req.body.store_name, 80), store_location = clean(req.body.store_location, 160), description = clean(req.body.description, 1000);
+  if (store_name.length < 2) return fail(res, 400, 'Store name must contain at least 2 characters.');
+  const logo = req.files?.logo?.[0], cover = req.files?.cover?.[0];
+  for (const file of [logo, cover].filter(Boolean)) { const invalid = imageUploadError(file); if (invalid) return fail(res, 400, invalid); }
+  const uploaded = [];
+  try {
+    const logoMedia = logo ? await uploadToTelegram(logo) : null; if (logoMedia) uploaded.push(logoMedia);
+    const coverMedia = cover ? await uploadToTelegram(cover) : null; if (coverMedia) uploaded.push(coverMedia);
+    const patch = { store_name, store_location, description };
+    if (logoMedia) Object.assign(patch, { store_logo_file_id: logoMedia.fileId, store_logo_message_id: logoMedia.messageId });
+    if (coverMedia) Object.assign(patch, { store_cover_file_id: coverMedia.fileId, store_cover_message_id: coverMedia.messageId });
+    const { data, error } = await supabase.from('vendors').update(patch).eq('id', vendor.id).select().single();
+    if (error) throw error;
+    if (logoMedia && vendor.store_logo_message_id) await deleteTelegramMessage(vendor.store_logo_message_id);
+    if (coverMedia && vendor.store_cover_message_id) await deleteTelegramMessage(vendor.store_cover_message_id);
+    return res.json({ data: { ...data, store_logo_url: data.store_logo_file_id ? telegramMediaUrl(data.store_logo_file_id) : null, store_cover_url: data.store_cover_file_id ? telegramMediaUrl(data.store_cover_file_id) : null } });
+  } catch (error) {
+    for (const item of uploaded) await deleteTelegramMessage(item.messageId);
+    console.error('Seller shop profile update failed:', error.message);
+    return fail(res, 500, 'Could not save shop profile.');
   }
 });
 
 // Vendor product management.
 app.get('/api/vendor/products', authenticate, async (req, res) => {
   const { data: vendor } = await vendorFor(req.user.id);
-  if (!vendor) return fail(res, 403, 'Vendor account not found');
+  if (!vendor || vendor.status === 'blocked') return fail(res, 403, 'Active seller account required');
   const { data, error } = await supabase.from('products')
     .select('*,renewed_at,product_images(id,file_id,image_url,telegram_message_id,sort_order)')
     .eq('vendor_id', vendor.id).order('created_at', { ascending: false });
   if (error) return fail(res, 500, 'Could not load vendor products');
-  res.json({ data: (data || []).map(publicProduct), vendor });
+  res.json({ data: (data || []).map(publicProduct), vendor: { ...vendor, store_logo_url: vendor.store_logo_file_id ? telegramMediaUrl(vendor.store_logo_file_id) : null, store_cover_url: vendor.store_cover_file_id ? telegramMediaUrl(vendor.store_cover_file_id) : null } });
 });
 app.post('/api/products', authenticate, async (req, res) => {
   const title = clean(req.body.title, 160);
@@ -1453,11 +1471,11 @@ app.post('/api/products', authenticate, async (req, res) => {
     }
   } else {
     const { data: seller, error } = await vendorFor(req.user.id);
-    if (error || !seller || seller.status !== 'approved') return fail(res, 403, 'Approved vendor account required');
+    if (error || !seller || seller.status === 'blocked') return fail(res, 403, 'Active seller account required');
     vendor = seller;
   }
 
-  const status = 'active'; // Approved vendors can publish immediately; vendor approval remains mandatory.
+  const status = 'active'; // Active sellers may publish, whether verified or not.
   const location = clean(req.body.location, 100);
   const condition = clean(req.body.condition || 'ប្រើរួចស្អាត', 60);
   const { data, error } = await supabase.from('products')
@@ -1470,7 +1488,7 @@ app.patch('/api/products/:id', authenticate, async (req, res) => {
   const admin = await isAdmin(req.user.id);
   const { data: existing } = await supabase.from('products').select('id,vendor_id,status,renewed_at,updated_at,created_at').eq('id', req.params.id).maybeSingle();
   if (!existing) return fail(res, 404, 'Product not found');
-  if (!admin && (!vendor || vendor.status !== 'approved' || vendor.id !== existing.vendor_id)) return fail(res, 403, 'Approved store ownership required');
+  if (!admin && (!vendor || vendor.status === 'blocked' || vendor.id !== existing.vendor_id)) return fail(res, 403, 'Active store ownership required');
   const patch = {};
   const isRenewal=req.body.renew===true;
   if(isRenewal){const renewedAt=Date.parse(existing.renewed_at||existing.updated_at||existing.created_at||'');const age=Number.isFinite(renewedAt)?Date.now()-renewedAt:0;if(existing.status!=='active'||age>PRODUCT_AUTO_DELETE_AGE_MS)return fail(res,410,'This product is no longer eligible for renewal.');patch.renewed_at=new Date().toISOString();patch.status='active';}
@@ -1497,7 +1515,7 @@ app.delete('/api/products/:id', authenticate, async (req, res) => {
   const [{ data: vendor }, admin] = await Promise.all([vendorFor(req.user.id), isAdmin(req.user.id)]);
   const { data: product } = await supabase.from('products').select('id,vendor_id,product_images(id,telegram_message_id)').eq('id', req.params.id).maybeSingle();
   if (!product) return fail(res, 404, 'Product not found');
-  if (!admin && (!vendor || vendor.status !== 'approved' || product.vendor_id !== vendor.id)) return fail(res, 403, 'Approved store ownership required');
+  if (!admin && (!vendor || vendor.status === 'blocked' || product.vendor_id !== vendor.id)) return fail(res, 403, 'Active store ownership required');
   const { count: soldCount } = await supabase.from('order_items').select('id', { count: 'exact', head: true }).eq('product_id', product.id);
   if ((soldCount || 0) > 0) {
     const { error } = await supabase.from('products').update({ status: 'archived', updated_at: new Date().toISOString() }).eq('id', product.id);
@@ -1512,7 +1530,7 @@ app.delete('/api/products/:id', authenticate, async (req, res) => {
 app.post('/api/products/:id/images', authenticate, upload.array('images', 5), async (req, res) => {
   const admin = await isAdmin(req.user.id);
   const { data: vendor } = await vendorFor(req.user.id);
-  if (!admin && (!vendor || vendor.status !== 'approved')) return fail(res, 403, 'Approved vendor account required');
+  if (!admin && (!vendor || vendor.status === 'blocked')) return fail(res, 403, 'Active vendor account required');
   let productQuery = supabase.from('products').select('id').eq('id', req.params.id);
   if (admin) {
     if (vendor) productQuery = productQuery.eq('vendor_id', vendor.id);
@@ -1548,7 +1566,7 @@ app.post('/api/products/:id/images', authenticate, upload.array('images', 5), as
 app.delete('/api/products/:id/images/:imageId', authenticate, async (req, res) => {
   const admin = await isAdmin(req.user.id);
   const { data: vendor } = await vendorFor(req.user.id);
-  if (!admin && (!vendor || vendor.status !== 'approved')) return fail(res, 403, 'Approved vendor account required');
+  if (!admin && (!vendor || vendor.status === 'blocked')) return fail(res, 403, 'Active vendor account required');
   let productQuery = supabase.from('products').select('id').eq('id', req.params.id);
   if (admin) {
     if (vendor) productQuery = productQuery.eq('vendor_id', vendor.id);
@@ -1569,7 +1587,7 @@ app.delete('/api/products/:id/images/:imageId', authenticate, async (req, res) =
 app.get('/api/saved', authenticate, async (req, res) => {
   const { data, error } = await supabase.from('saved_products')
     .select('id,created_at,products!inner(id,title,description,price,stock,category,location,condition,view_count,vendor_id,renewed_at,product_images(id,file_id,image_url,sort_order),vendors!inner(id,store_name,status))')
-    .eq('user_id', req.user.id).eq('products.status', 'active').eq('products.vendors.status', 'approved').gt('products.stock', 0)
+    .eq('user_id', req.user.id).eq('products.status', 'active').in('products.vendors.status', ['approved','pending','rejected']).gt('products.stock', 0)
     .gte('products.renewed_at', new Date(Date.now() - PRODUCT_PUBLIC_MAX_AGE_MS).toISOString())
     .order('created_at', { ascending: false });
   if (error) return fail(res, 500, 'Could not load saved products');
@@ -1581,7 +1599,7 @@ app.get('/api/saved', authenticate, async (req, res) => {
 });
 app.post('/api/saved/:productId', authenticate, async (req, res) => {
   const savedProductCutoff = new Date(Date.now() - PRODUCT_PUBLIC_MAX_AGE_MS).toISOString();
-  const { data: product, error: productError } = await supabase.from('products').select('id,renewed_at').eq('id', req.params.productId).eq('status', 'active').gte('renewed_at', savedProductCutoff).maybeSingle();
+  const { data: product, error: productError } = await supabase.from('products').select('id,renewed_at,vendors!inner(status)').eq('id', req.params.productId).eq('status', 'active').in('vendors.status', ['approved','pending','rejected']).gte('renewed_at', savedProductCutoff).maybeSingle();
   if (productError) return fail(res, 500, 'Could not verify product availability');
   if (!product) return fail(res, 404, 'Product not available');
   const { error } = await supabase.from('saved_products').upsert({ user_id: req.user.id, product_id: product.id }, { onConflict: 'user_id,product_id', ignoreDuplicates: true });
@@ -1597,8 +1615,8 @@ app.delete('/api/saved/:productId', authenticate, async (req, res) => {
 app.get('/api/vendors/:id/ratings', async (req, res) => {
   if (!db(res)) return;
   const { data: vendor, error } = await supabase.from('vendors')
-    .select('id,user_id,store_name,description,status,created_at,profiles(display_name,province,bio,avatar_path)')
-    .eq('id', req.params.id).eq('status', 'approved').maybeSingle();
+    .select('id,user_id,store_name,description,status,address,store_location,store_logo_file_id,store_cover_file_id,created_at,profiles(display_name,province,bio,avatar_path)')
+    .eq('id', req.params.id).in('status', ['approved','pending','rejected']).maybeSingle();
   if (error || !vendor) return fail(res, 404, 'Seller not found');
   const [{ data: reviews, error: reviewError }, { data: products }] = await Promise.all([
     supabase.from('seller_reviews').select('id,buyer_id,order_id,rating,comment,created_at').eq('vendor_id', vendor.id).order('created_at', { ascending: false }).limit(30),
@@ -1615,6 +1633,9 @@ app.get('/api/vendors/:id/ratings', async (req, res) => {
   const profile = vendor.profiles || {};
   res.json({ data: {
     id: vendor.id, store_name: vendor.store_name, description: vendor.description, created_at: vendor.created_at,
+    status: vendor.status, verified: vendor.status === 'approved', store_location: vendor.store_location || vendor.address || null,
+    store_logo_url: vendor.store_logo_file_id ? telegramMediaUrl(vendor.store_logo_file_id) : null,
+    store_cover_url: vendor.store_cover_file_id ? telegramMediaUrl(vendor.store_cover_file_id) : null,
     profile: { display_name: profile.display_name, province: profile.province, bio: profile.bio, avatar_url: publicMediaUrl(profile.avatar_path) },
     rating: trust[vendor.id]?.average ?? null, review_count: trust[vendor.id]?.count ?? 0,
     distribution: trust[vendor.id]?.distribution ?? [0,0,0,0,0],
@@ -1628,7 +1649,7 @@ app.post('/api/vendors/:id/reviews', authenticate, async (req, res) => {
   const orderId = clean(req.body.order_id, 60);
   const comment = clean(req.body.comment, 1200);
   if (!Number.isInteger(rating) || rating < 1 || rating > 5 || !orderId) return fail(res, 400, 'Choose a rating from 1 to 5 and an eligible completed order');
-  const { data: vendor } = await supabase.from('vendors').select('id,status').eq('id', req.params.id).eq('status', 'approved').maybeSingle();
+  const { data: vendor } = await supabase.from('vendors').select('id,status').eq('id', req.params.id).in('status', ['approved','pending','rejected']).maybeSingle();
   if (!vendor) return fail(res, 404, 'Seller not found');
   const { data: order } = await supabase.from('orders').select('id,status').eq('id', orderId).eq('customer_id', req.user.id).eq('status', 'completed').maybeSingle();
   if (!order) return fail(res, 403, 'Only buyers with completed orders can review a seller');
@@ -1645,7 +1666,7 @@ app.get('/api/offers', authenticate, async (req, res) => {
     .order('created_at', { ascending: false }).limit(100);
   if (admin) {
     // Admin can review all offer records.
-  } else if (vendor?.status === 'approved') {
+  } else if (vendor && vendor.status !== 'blocked') {
     query = query.or(`buyer_id.eq.${req.user.id},vendor_id.eq.${vendor.id}`);
   } else {
     query = query.eq('buyer_id', req.user.id);
@@ -1666,7 +1687,7 @@ app.post('/api/products/:id/offers', authenticate, async (req, res) => {
   if (!Number.isFinite(offer_price) || offer_price <= 0) return fail(res, 400, 'Enter a valid offer price');
   const { data: product } = await supabase.from('products')
     .select('id,vendor_id,status,price,vendors!inner(status,user_id)')
-    .eq('id', req.params.id).eq('status', 'active').eq('vendors.status', 'approved').gt('stock', 0).gte('renewed_at',new Date(Date.now()-PRODUCT_PUBLIC_MAX_AGE_MS).toISOString()).maybeSingle();
+    .eq('id', req.params.id).eq('status', 'active').in('vendors.status', ['approved','pending','rejected']).gt('stock', 0).gte('renewed_at',new Date(Date.now()-PRODUCT_PUBLIC_MAX_AGE_MS).toISOString()).maybeSingle();
   if (!product) return fail(res, 404, 'Product not available');
   if (product.vendors.user_id === req.user.id) return fail(res, 400, 'You cannot make an offer on your own product');
   const { data, error } = await supabase.from('offers').insert({
@@ -1679,7 +1700,7 @@ app.patch('/api/offers/:id', authenticate, async (req, res) => {
   const status = clean(req.body.status, 20);
   if (!['accepted','rejected'].includes(status)) return fail(res, 400, 'Invalid offer status');
   const { data: vendor } = await vendorFor(req.user.id);
-  if (!vendor || vendor.status !== 'approved') return fail(res, 403, 'Approved seller account required');
+  if (!vendor || vendor.status === 'blocked') return fail(res, 403, 'Active seller account required');
   const { data: offer } = await supabase.from('offers').select('id,vendor_id,status').eq('id', req.params.id).maybeSingle();
   if (!offer || offer.vendor_id !== vendor.id) return fail(res, 404, 'Offer not found for your store');
   if (offer.status !== 'pending') return fail(res, 409, 'This offer has already been handled');
@@ -1738,7 +1759,7 @@ app.get('/api/orders', authenticate, async (req, res) => {
 // Vendor order queue; vendor can only change fulfilment status for their own orders.
 app.get('/api/vendor/orders', authenticate, async (req, res) => {
   const { data: vendor } = await vendorFor(req.user.id);
-  if (!vendor) return fail(res, 403, 'Vendor account not found');
+  if (!vendor || vendor.status === 'blocked') return fail(res, 403, 'Active seller account required');
   const { data: items, error } = await supabase.from('order_items')
     .select('id,order_id,product_id,quantity,unit_price,fulfillment_status,products(title),orders(id,status,total,customer_name,customer_phone,delivery_address,delivery_note,payment_method,payment_status,created_at)')
     .eq('vendor_id', vendor.id).order('created_at', { ascending: false, referencedTable: 'orders' });
@@ -1747,7 +1768,7 @@ app.get('/api/vendor/orders', authenticate, async (req, res) => {
 });
 app.patch('/api/vendor/orders/:orderId', authenticate, async (req, res) => {
   const { data: vendor } = await vendorFor(req.user.id);
-  if (!vendor || vendor.status !== 'approved') return fail(res, 403, 'Approved vendor required');
+  if (!vendor || vendor.status === 'blocked') return fail(res, 403, 'Active vendor required');
   const status = clean(req.body.status, 30);
   if (!['processing','shipped','completed','cancelled'].includes(status)) return fail(res, 400, 'Invalid order status');
   const { data: items } = await supabase.from('order_items').select('id').eq('order_id', req.params.orderId).eq('vendor_id', vendor.id);
@@ -1805,10 +1826,13 @@ app.get('/api/admin/vendors/:id/document', authenticate, requireAdmin, async (re
 app.patch('/api/admin/vendors/:id', authenticate, requireAdmin, async (req, res) => {
   const status = clean(req.body.status, 20);
   if (!['approved','rejected','blocked','pending'].includes(status)) return fail(res, 400, 'Invalid vendor status');
+  const { data: currentVendor, error: currentVendorError } = await supabase.from('vendors').select('id,user_id,document_file_id').eq('id', req.params.id).maybeSingle();
+  if (currentVendorError || !currentVendor) return fail(res, 404, 'Seller not found');
+  if (status === 'approved' && !currentVendor.document_file_id) return fail(res, 400, 'A verification document is required before approving verification.');
   const { data, error } = await supabase.from('vendors').update({ status, reviewed_at: new Date().toISOString(), review_note: clean(req.body.review_note, 500) || null }).eq('id', req.params.id).select().single();
   if (error) return fail(res, 400, 'Could not update vendor');
   if (status === 'approved') await supabase.from('profiles').update({ role: 'vendor' }).eq('id', data.user_id);
-  if (status === 'rejected' || status === 'blocked') {
+  if (status === 'blocked') {
     const { data: targetProfile } = await supabase.from('profiles').select('role').eq('id', data.user_id).maybeSingle();
     if (targetProfile?.role === 'vendor') await supabase.from('profiles').update({ role: 'customer' }).eq('id', data.user_id);
   }
