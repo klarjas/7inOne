@@ -1430,7 +1430,7 @@ app.patch('/api/vendor/profile', authenticate, upload.fields([{ name: 'logo', ma
 // Vendor product management.
 app.get('/api/vendor/products', authenticate, async (req, res) => {
   const { data: vendor } = await vendorFor(req.user.id);
-  if (!vendor) return fail(res, 403, 'Vendor account not found');
+  if (!vendor || vendor.status === 'blocked') return fail(res, 403, 'Active seller account required');
   const { data, error } = await supabase.from('products')
     .select('*,renewed_at,product_images(id,file_id,image_url,telegram_message_id,sort_order)')
     .eq('vendor_id', vendor.id).order('created_at', { ascending: false });
@@ -1598,7 +1598,7 @@ app.get('/api/saved', authenticate, async (req, res) => {
 });
 app.post('/api/saved/:productId', authenticate, async (req, res) => {
   const savedProductCutoff = new Date(Date.now() - PRODUCT_PUBLIC_MAX_AGE_MS).toISOString();
-  const { data: product, error: productError } = await supabase.from('products').select('id,renewed_at').eq('id', req.params.productId).eq('status', 'active').gte('renewed_at', savedProductCutoff).maybeSingle();
+  const { data: product, error: productError } = await supabase.from('products').select('id,renewed_at,vendors!inner(status)').eq('id', req.params.productId).eq('status', 'active').in('vendors.status', ['approved','pending','rejected']).gte('renewed_at', savedProductCutoff).maybeSingle();
   if (productError) return fail(res, 500, 'Could not verify product availability');
   if (!product) return fail(res, 404, 'Product not available');
   const { error } = await supabase.from('saved_products').upsert({ user_id: req.user.id, product_id: product.id }, { onConflict: 'user_id,product_id', ignoreDuplicates: true });
@@ -1758,7 +1758,7 @@ app.get('/api/orders', authenticate, async (req, res) => {
 // Vendor order queue; vendor can only change fulfilment status for their own orders.
 app.get('/api/vendor/orders', authenticate, async (req, res) => {
   const { data: vendor } = await vendorFor(req.user.id);
-  if (!vendor) return fail(res, 403, 'Vendor account not found');
+  if (!vendor || vendor.status === 'blocked') return fail(res, 403, 'Active seller account required');
   const { data: items, error } = await supabase.from('order_items')
     .select('id,order_id,product_id,quantity,unit_price,fulfillment_status,products(title),orders(id,status,total,customer_name,customer_phone,delivery_address,delivery_note,payment_method,payment_status,created_at)')
     .eq('vendor_id', vendor.id).order('created_at', { ascending: false, referencedTable: 'orders' });
