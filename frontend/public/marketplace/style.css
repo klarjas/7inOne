@@ -2091,3 +2091,37 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
  .storefront-tools{padding:0 16px 16px!important}
 }
 
+
+
+ 
+/* Apple Store redesign — modals, inputs, navigation and final polish */
+.modal{background:rgba(29,29,31,.28)!important;backdrop-filter:blur(8px)!important;-webkit-backdrop-filter:blur(8px)!important}
+.modal-box{border:0!important;border-radius:24px!important;box-shadow:0 18px 60px rgba(0,0,0,.16)!important;transition:transform .26s var(--motion-ease),opacity .24s ease!important}
+.field{border:1px solid var(--line)!important;border-radius:12px!important;background:#F5F5F7!important;color:var(--text)!important;min-height:42px}
+.field:focus{border-color:var(--accent-bright)!important;box-shadow:0 0 0 3px rgba(16,185,129,.14)!important;background:#fff!important}
+.label{color:var(--muted)!important}
+.close-btn{border:0!important;background:#F5F5F7!important;color:var(--text)!important}
+.tab{border:0!important;border-radius:980px!important;color:var(--muted)!important}
+.tab.active{background:#F5F5F7!important;color:var(--text)!important}
+footer{border-color:var(--line)!important;background:#fff!important}
+footer .brand-gradient{background:var(--accent)!important;box-shadow:none!important}
+.mobile-market-nav{background:rgba(255,255,255,.78)!important;border-top:1px solid var(--line)!important;backdrop-filter:saturate(180%) blur(18px)!important;-webkit-backdrop-filter:saturate(180%) blur(18px)!important;box-shadow:0 -3px 18px rgba(0,0,0,.035)!important}
+.mobile-market-item{color:var(--muted)!important}
+.mobile-market-item.active{color:var(--accent)!important}
+.mobile-market-nav .fab,.mobile-market-post span{border-radius:50%!important;background:var(--accent)!important;box-shadow:none!important}
+#sortSelect{border:1px solid var(--line)!important;border-radius:980px!important;background:#fff!important;color:var(--text)!important}
+#emptyHome{border:1px dashed #D2D2D7!important;border-radius:20px!important;background:#fff!important}
+.verified{background:#EAF5EF!important;color:var(--accent)!important;border:0!important}
+.toast{box-shadow:var(--shadow-sm)!important}
+@media(max-width:639px){
+ .modal{padding:0!important;align-items:flex-end!important}
+ .modal-box{width:100%!important;max-width:none!important;max-height:92dvh!important;border-radius:24px 24px 0 0!important;transform:translateY(28px)!important}
+ .modal.open .modal-box{transform:translateY(0)!important}
+ .mobile-market-nav{min-height:68px!important;padding-bottom:calc(7px + env(safe-area-inset-bottom))!important}
+ .mobile-market-item{min-height:44px!important}
+}
+@media(prefers-reduced-motion:reduce){
+ html{scroll-behavior:auto!important}
+ *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}
+}
+
