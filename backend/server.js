@@ -570,12 +570,26 @@ app.get('/api/products', async (req, res) => {
 app.get('/api/products/:id', async (req, res) => {
   if (!db(res)) return;
   let { data, error } = await supabase.from('products')
-    .select('*,product_images(id,file_id,image_url,sort_order),vendors!inner(id,store_name,status,store_logo_file_id)')
+    .select('*,product_images(id,file_id,image_url,sort_order),vendors!inner(id,user_id,store_name,status,store_logo_file_id)')
     .eq('id', req.params.id).eq('status', 'active').in('vendors.status', ['approved','pending','rejected']).gt('stock', 0).gte('renewed_at',new Date(Date.now()-PRODUCT_PUBLIC_MAX_AGE_MS).toISOString()).maybeSingle();
   if (error || !data) return fail(res, 404, 'Product not found');
-  const nextViews = Number(data.view_count || 0) + 1;
-  await supabase.from('products').update({ view_count: nextViews }).eq('id', data.id);
-  data.view_count = nextViews;
+
+  // Store owners may inspect their own products without inflating public view counts.
+  const accessToken = req.headers.authorization?.replace(/^Bearer\\s+/i, '');
+  let isStoreOwner = false;
+  if (accessToken && data.vendors?.user_id) {
+    try {
+      const { data: authData } = await supabase.auth.getUser(accessToken);
+      isStoreOwner = authData?.user?.id === data.vendors.user_id;
+    } catch {
+      // Invalid or expired optional sessions must not prevent public product viewing.
+    }
+  }
+  if (!isStoreOwner) {
+    const nextViews = Number(data.view_count || 0) + 1;
+    await supabase.from('products').update({ view_count: nextViews }).eq('id', data.id);
+    data.view_count = nextViews;
+  }
   const trust = await ratingsFor([data.vendor_id]);
   data.seller_rating = trust[data.vendor_id]?.average ?? null;
   data.seller_review_count = trust[data.vendor_id]?.count ?? 0;
