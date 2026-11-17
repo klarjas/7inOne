@@ -320,7 +320,7 @@ function formatViews(value) {
 function verifiedStoreBadge(vendorId) {
   const id = String(vendorId || '');
   const onlineClass = id && vendorPresenceIds.has(id) ? ' is-online' : '';
-  return `<span class="verified-store-badge${onlineClass}" data-vendor-id="${esc(id)}"><span class="badge-container" tabindex="0" aria-label="Verified Account"><svg class="verified-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1.8 15 3.2l3.3-.1 1.5 3 2.8 1.8-.7 3.2.7 3.2-2.8 1.8-1.5 3-3.3-.1-3 1.4-3-1.4-3.3.1-1.5-3-2.8-1.8.7-3.2-.7-3.2 2.8-1.8 1.5-3 3.3.1L12 1.8Z" fill="currentColor"/><path d="m7.8 12.2 2.7 2.7 5.8-6" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="badge-tooltip" role="tooltip">Verified Account</span></span></span>`;
+  return `<span class="verified-store-badge${onlineClass}" data-vendor-id="${esc(id)}"><span class="badge-container" tabindex="0" aria-label="Verified Account"><svg class="verified-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10.5" fill="currentColor"/><path d="m7.8 12.2 2.7 2.7 5.8-6" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="badge-tooltip" role="tooltip">Verified Account</span></span></span>`;
 }
 function productCard(p, index) {
   const images = (p.product_images || []).filter(item => item.image_url);
