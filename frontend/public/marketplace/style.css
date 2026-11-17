@@ -1688,3 +1688,35 @@ body{background:var(--page)!important;color:var(--ink);font-family:"Kantumruy Pr
 .home-vendor-media-store>span:last-child{display:block;min-width:0;overflow:hidden;color:#334155;font-size:9px;font-weight:700;text-overflow:ellipsis;white-space:nowrap}
 .seller-media-form{display:grid;gap:16px;padding:18px;border:1px solid #E5ECE8;border-radius:16px;background:#FAFCFB}
 @media(max-width:639px){.home-vendor-media{margin:12px 0 18px;padding-top:13px}.home-vendor-media-card{flex-basis:48px}.home-vendor-media-cover{width:48px;border-radius:11px}.home-vendor-media-store>span:last-child{font-size:8px}}
+
+/* 7inOne premium desktop marketplace home */
+.home-desktop-layout{width:min(1680px,calc(100% - 36px));margin:18px auto 48px;display:grid;grid-template-columns:205px minmax(0,1fr);gap:18px}
+.home-sidebar{position:sticky;top:92px;align-self:start;display:flex;flex-direction:column;gap:7px;padding:10px 0;min-height:calc(100vh - 112px);border-right:1px solid #edf0f2}
+.home-side-link{display:flex;align-items:center;gap:13px;padding:12px 14px;border:0;border-radius:12px;background:transparent;text-align:left;color:#46515d;font-size:12px;font-weight:650}
+.home-side-link>span{width:24px;text-align:center;font-size:20px;color:#56616d}
+.home-side-link:hover,.home-side-link.is-active{background:#fff3d8;color:#9b6500}
+.home-sidebar-vip{margin:22px 12px 0;padding:17px 12px;border-radius:16px;background:linear-gradient(145deg,#17212b,#05080d);color:#f8c45a;display:flex;flex-direction:column;gap:7px;text-align:center}
+.home-sidebar-vip>span{font-size:28px}.home-sidebar-vip b{font-size:16px}.home-sidebar-vip small{font-size:9px;line-height:1.6;color:#f4e6c7}
+.home-main-column{min-width:0}.home-main-with-promos{display:grid;grid-template-columns:minmax(0,1fr) 230px;gap:16px;align-items:stretch}
+.home-primary-content{min-width:0}.home-premium-hero{position:relative;min-height:275px;overflow:hidden;display:flex;align-items:center;border-radius:20px;padding:28px 34px;background:radial-gradient(ellipse at 75% 45%,rgba(255,205,106,.65),transparent 38%),linear-gradient(110deg,#101820 0%,#27303a 44%,#b67a25 100%);color:white}
+.home-premium-hero:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(8,13,18,.12),transparent 68%);pointer-events:none}
+.home-premium-hero-copy{position:relative;z-index:2;max-width:52%}.home-hero-eyebrow{font-size:12px;font-weight:800;color:#f4bd55;letter-spacing:.03em}
+.home-premium-hero h1{font-size:clamp(30px,3vw,46px);font-weight:900;line-height:1.12;margin:10px 0;color:#fff;letter-spacing:-.035em}
+.home-premium-hero-copy>p:not(.home-hero-eyebrow){font-size:13px;color:#f6e9d1;line-height:1.8}
+.home-hero-cta{display:inline-flex;align-items:center;gap:16px;margin-top:17px;padding:11px 19px;border-radius:999px;background:linear-gradient(110deg,#f3bd55,#ffdb8b);color:#2c2111;font-size:11px;font-weight:850}
+.home-premium-hero-art{position:absolute;right:3%;top:0;bottom:0;width:48%;display:grid;place-items:center}.home-premium-hero-art img{display:block;width:100%;height:100%;object-fit:contain;mix-blend-mode:screen}
+.home-hero-placeholder{position:absolute;right:15%;font-size:42px;font-weight:900;color:rgba(255,255,255,.18)}
+.home-hero-dots{position:absolute;bottom:13px;left:50%;display:flex;gap:7px}.home-hero-dots i{width:8px;height:8px;border-radius:50%;background:#fff9}
+.home-category-row{display:flex;justify-content:space-between;gap:8px;overflow:auto;padding:16px 5px 18px;scrollbar-width:none}.home-category-row::-webkit-scrollbar{display:none}
+.home-category{min-width:82px;display:flex;flex-direction:column;align-items:center;gap:6px;border:0;background:transparent;color:#3d4853;font-size:10px;font-weight:700}
+.home-category span{display:grid;place-items:center;width:54px;height:54px;border-radius:50%;background:#f2f4f6;color:#b47b1c;font-size:23px;border:1px solid #e9edf0}
+.home-category.is-active span{background:#fff3d8;border-color:#e8bd66}
+.home-promo-rail{display:flex;flex-direction:column;gap:14px;min-width:0}
+.home-promo-card{display:block;overflow:hidden;border-radius:16px;background:#f2f4f6;border:1px solid #edf0f2;box-shadow:0 5px 18px rgba(18,27,38,.05)}.home-promo-card[hidden]{display:none}.home-promo-card img{display:block;width:100%;height:100%;object-fit:cover}
+.home-promo-wide{aspect-ratio:12/5}.home-promo-tall{flex:1;min-height:250px}
+.home-promo-fallback{display:flex;flex:1;flex-direction:column;justify-content:space-around;padding:18px;border-radius:16px;background:#f5f6f8;color:#34404c;font-size:13px;font-weight:800}.home-promo-fallback span{padding:12px;border-radius:12px;background:#fff;border:1px solid #edf0f2;font-size:11px}
+.promo-admin-preview{display:grid;place-items:center;overflow:hidden;border:1px dashed #cbd5e1;border-radius:12px;background:#f8fafc;color:#94a3b8;font-size:11px;font-weight:800}.promo-admin-preview img{display:block;width:100%;height:100%;object-fit:cover}.promo-wide-preview{aspect-ratio:12/5;max-height:160px}.promo-tall-preview{aspect-ratio:1/2;max-height:260px;width:130px}
+@media(min-width:1200px){#productGrid,#skeletonGrid{grid-template-columns:repeat(5,minmax(0,1fr))}}
+@media(max-width:1100px){.home-main-with-promos{grid-template-columns:minmax(0,1fr) 185px}.home-desktop-layout{grid-template-columns:170px minmax(0,1fr)}}
+@media(max-width:800px){.home-desktop-layout{display:block;width:calc(100% - 26px);margin-top:12px}.home-sidebar{position:static;min-height:0;flex-direction:row;overflow:auto;border:0;padding:0 0 12px}.home-side-link{white-space:nowrap;padding:9px 12px}.home-sidebar-vip{display:none}.home-main-with-promos{display:block}.home-promo-rail{display:grid;grid-template-columns:1fr 1fr;margin:12px 0}.home-promo-tall{min-height:100px}.home-promo-fallback{display:none}.home-premium-hero{min-height:220px;padding:22px}.home-premium-hero-copy{max-width:62%}.home-premium-hero h1{font-size:30px}}
+@media(max-width:480px){.home-premium-hero{min-height:190px}.home-premium-hero-copy{max-width:70%}.home-premium-hero h1{font-size:25px}.home-category{min-width:70px}.home-category span{width:46px;height:46px}}
