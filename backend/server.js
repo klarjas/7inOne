@@ -589,6 +589,46 @@ const telegramLinkTokenTable = 'telegram_link_tokens';
 const telegramOtpTable = 'telegram_password_otps';
 const telegramWidgetAuthEventsTable = 'telegram_widget_auth_events';
 
+async function issueTelegramPasswordOtp(userId, telegramUserId) {
+  const now = Date.now();
+  const { data: existing, error: lookupError } = await supabase.from(telegramOtpTable)
+    .select('expires_at,attempts,locked_until').eq('user_id', userId).maybeSingle();
+  if (lookupError) throw lookupError;
+
+  const lockedUntil = existing?.locked_until ? new Date(existing.locked_until).getTime() : 0;
+  if (lockedUntil > now) return { expiresAt: existing.expires_at, alreadyIssued: true };
+
+  if (Number(existing?.attempts || 0) >= 5) {
+    const nextLock = new Date(now + 15 * 60 * 1000).toISOString();
+    const { error: lockError } = await supabase.from(telegramOtpTable)
+      .update({ locked_until: nextLock }).eq('user_id', userId);
+    if (lockError) throw lockError;
+    return { expiresAt: existing.expires_at, alreadyIssued: true };
+  }
+  if (existing && new Date(existing.expires_at).getTime() > now) {
+    return { expiresAt: existing.expires_at, alreadyIssued: true };
+  }
+
+  const code = String(randomInt(100000, 1000000));
+  const expiresAt = new Date(now + 5 * 60 * 1000).toISOString();
+  const { error: saveError } = await supabase.from(telegramOtpTable).upsert({
+    user_id: userId, otp_hash: sha256(code), expires_at: expiresAt,
+    attempts: 0, locked_until: null, created_at: new Date(now).toISOString()
+  }, { onConflict: 'user_id' });
+  if (saveError) throw saveError;
+
+  await sendTelegramMessage(telegramUserId,
+    `7inOne Security\nលេខកូដផ្ទៀងផ្ទាត់ Password របស់អ្នក៖ ${code}\nកូដនេះមានសុពលភាព ៥ នាទី។ កុំចែករំលែកកូដនេះជាមួយអ្នកណា។`);
+  return { expiresAt, alreadyIssued: false };
+}
+
+async function recordTelegramPasswordOtpFailure(userId) {
+  const { error } = await supabase.rpc('record_telegram_password_otp_failure', {
+    p_user_id: userId
+  });
+  if (error) throw error;
+}
+
 function verifyTelegramWidgetPayload(body) {
   if (!process.env.TELEGRAM_BOT_TOKEN) throw new Error('Telegram Bot is not configured.');
   if (!body || typeof body !== 'object' || Array.isArray(body)) throw new Error('Invalid Telegram payload.');
@@ -1185,16 +1225,8 @@ app.post('/api/me/telegram/password-otp', authenticate, telegramOtpLimiter, asyn
       .select('telegram_user_id').eq('user_id', req.user.id).maybeSingle();
     if (linkError) throw linkError;
     if (!link) return fail(res, 400, 'សូម Connect Telegram ជាមុនសិន។');
-    const code = String(randomInt(100000, 1000000));
-    const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
-    const { error: saveError } = await supabase.from(telegramOtpTable).upsert({
-      user_id: req.user.id, otp_hash: sha256(code), expires_at: expiresAt,
-      attempts: 0, created_at: new Date().toISOString()
-    }, { onConflict: 'user_id' });
-    if (saveError) throw saveError;
-    await sendTelegramMessage(link.telegram_user_id,
-      `7inOne Security\nលេខកូដផ្ទៀងផ្ទាត់ Password របស់អ្នក៖ ${code}\nកូដនេះមានសុពលភាព ៥ នាទី។ កុំចែករំលែកកូដនេះជាមួយអ្នកណា។`);
-    return res.json({ data: { sent: true, expiresAt } });
+    const issued = await issueTelegramPasswordOtp(req.user.id, link.telegram_user_id);
+    return res.json({ data: { sent: true, expiresAt: issued.expiresAt } });
   } catch (error) {
     console.error('Telegram password OTP request failed:', error.message);
     return fail(res, 500, 'មិនអាចផ្ញើ OTP បានទេ។ សូមពិនិត្យ Telegram Bot និង Database Migration។');
@@ -1261,17 +1293,7 @@ app.post('/api/auth/telegram/recovery/request', recoveryOtpLimiter, async (req, 
     const { data: link, error } = await supabase.from(telegramLinkTable)
       .select('user_id,telegram_user_id').eq('account_email', email).maybeSingle();
     if (error) throw error;
-    if (link) {
-      const code = String(randomInt(100000, 1000000));
-      const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
-      const { error: saveError } = await supabase.from(telegramOtpTable).upsert({
-        user_id: link.user_id, otp_hash: sha256(code), expires_at: expiresAt,
-        attempts: 0, created_at: new Date().toISOString()
-      }, { onConflict: 'user_id' });
-      if (saveError) throw saveError;
-      await sendTelegramMessage(link.telegram_user_id,
-        `7inOne Account Recovery\nលេខកូដសង្គ្រោះគណនី៖ ${code}\nមានសុពលភាព ៥ នាទី។ កុំចែករំលែកកូដនេះ។`);
-    }
+    if (link) await issueTelegramPasswordOtp(link.user_id, link.telegram_user_id);
     return res.json({ data: { accepted: true }, message: 'ប្រសិនបើគណនីនេះបានភ្ជាប់ Telegram រួច លេខកូដនឹងត្រូវបានផ្ញើទៅ Telegram នោះ។' });
   } catch (error) {
     console.error('Telegram recovery OTP request failed:', error.message);
@@ -1287,17 +1309,19 @@ app.post('/api/auth/telegram/recovery/confirm', recoveryOtpLimiter, async (req, 
   if (password.length < 8 || password.length > 72) return fail(res, 400, 'Password ថ្មីត្រូវមាន ៨–៧២ តួអក្សរ។');
   try {
     const { data: link, error: linkError } = await supabase.from(telegramLinkTable)
-      .select('user_id,telegram_user_id').ilike('account_email', email).maybeSingle();
+      .select('user_id,telegram_user_id').eq('account_email', email).maybeSingle();
     if (linkError) throw linkError;
     if (!link) return fail(res, 400, 'OTP មិនត្រឹមត្រូវ ឬផុតកំណត់។');
     const { data: otp, error: otpError } = await supabase.from(telegramOtpTable)
-      .select('otp_hash,expires_at,attempts').eq('user_id', link.user_id).maybeSingle();
+      .select('otp_hash,expires_at,attempts,locked_until').eq('user_id', link.user_id).maybeSingle();
     if (otpError) throw otpError;
-    if (!otp || new Date(otp.expires_at).getTime() < Date.now() || Number(otp.attempts) >= 5) {
+    if (!otp || new Date(otp.expires_at).getTime() < Date.now() ||
+      Number(otp.attempts) >= 5 ||
+      (otp.locked_until && new Date(otp.locked_until).getTime() > Date.now())) {
       return fail(res, 400, 'OTP មិនត្រឹមត្រូវ ឬផុតកំណត់។');
     }
     if (sha256(code) !== otp.otp_hash) {
-      await supabase.from(telegramOtpTable).update({ attempts: Number(otp.attempts || 0) + 1 }).eq('user_id', link.user_id);
+      await recordTelegramPasswordOtpFailure(link.user_id);
       return fail(res, 400, 'OTP មិនត្រឹមត្រូវ។');
     }
     const { error: updateError } = await supabase.auth.admin.updateUserById(link.user_id, { password });
@@ -1323,13 +1347,15 @@ app.post('/api/me/telegram/change-password', authenticate, telegramOtpLimiter, a
     if (!/^\d{6}$/.test(code)) return fail(res, 400, 'សូមបញ្ចូល OTP ៦ ខ្ទង់។');
     if (password.length < 8 || password.length > 72) return fail(res, 400, 'Password ថ្មីត្រូវមាន ៨–៧២ តួអក្សរ។');
     const { data: otp, error: otpError } = await supabase.from(telegramOtpTable)
-      .select('otp_hash,expires_at,attempts').eq('user_id', req.user.id).maybeSingle();
+      .select('otp_hash,expires_at,attempts,locked_until').eq('user_id', req.user.id).maybeSingle();
     if (otpError) throw otpError;
-    if (!otp || new Date(otp.expires_at).getTime() < Date.now() || Number(otp.attempts) >= 5) {
+    if (!otp || new Date(otp.expires_at).getTime() < Date.now() ||
+      Number(otp.attempts) >= 5 ||
+      (otp.locked_until && new Date(otp.locked_until).getTime() > Date.now())) {
       return fail(res, 400, 'OTP ផុតកំណត់ ឬមិនត្រឹមត្រូវ។ សូមស្នើកូដថ្មី។');
     }
     if (sha256(code) !== otp.otp_hash) {
-      await supabase.from(telegramOtpTable).update({ attempts: Number(otp.attempts || 0) + 1 }).eq('user_id', req.user.id);
+      await recordTelegramPasswordOtpFailure(req.user.id);
       return fail(res, 400, 'OTP មិនត្រឹមត្រូវ។');
     }
     const { error: updateError } = await supabase.auth.admin.updateUserById(req.user.id, { password });
@@ -1812,15 +1838,12 @@ app.patch('/api/vendor/orders/:orderId', authenticate, async (req, res) => {
   if (!['processing','shipped','completed','cancelled'].includes(status)) return fail(res, 400, 'Invalid order status');
   const { data: items } = await supabase.from('order_items').select('id').eq('order_id', req.params.orderId).eq('vendor_id', vendor.id);
   if (!items?.length) return fail(res, 404, 'Order not found for this store');
-  const { error: itemError } = await supabase.from('order_items').update({ fulfillment_status: status }).eq('order_id', req.params.orderId).eq('vendor_id', vendor.id);
-  if (itemError) return fail(res, 400, 'Could not update fulfilment');
-  const { data: allItems } = await supabase.from('order_items').select('fulfillment_status').eq('order_id', req.params.orderId);
-  const states = (allItems || []).map(item => item.fulfillment_status);
-  const aggregate = states.length && states.every(value => value === 'completed') ? 'completed'
-    : states.some(value => value === 'shipped') ? 'shipped'
-    : states.some(value => value === 'processing') ? 'processing'
-    : states.length && states.every(value => value === 'cancelled') ? 'cancelled' : 'pending';
-  await supabase.from('orders').update({ status: aggregate, updated_at: new Date().toISOString() }).eq('id', req.params.orderId);
+  const { data: aggregate, error: fulfillmentError } = await supabase.rpc('update_vendor_order_fulfillment', {
+    p_order_id: req.params.orderId,
+    p_vendor_id: vendor.id,
+    p_status: status
+  });
+  if (fulfillmentError) return fail(res, 400, fulfillmentError.message || 'Could not update fulfilment');
   res.json({ success: true, fulfillment_status: status, order_status: aggregate });
 });
 
@@ -1870,7 +1893,10 @@ app.patch('/api/admin/vendors/:id', authenticate, requireAdmin, async (req, res)
   if (status === 'approved' && !currentVendor.document_file_id) return fail(res, 400, 'A verification document is required before approving verification.');
   const { data, error } = await supabase.from('vendors').update({ status, reviewed_at: new Date().toISOString(), review_note: clean(req.body.review_note, 500) || null }).eq('id', req.params.id).select().single();
   if (error) return fail(res, 400, 'Could not update vendor');
-  if (status === 'approved') await supabase.from('profiles').update({ role: 'vendor' }).eq('id', data.user_id);
+  if (status === 'approved') {
+    await supabase.from('profiles').update({ role: 'vendor' })
+      .eq('id', data.user_id).neq('role', 'admin');
+  }
   if (status === 'blocked') {
     const { data: targetProfile } = await supabase.from('profiles').select('role').eq('id', data.user_id).maybeSingle();
     if (targetProfile?.role === 'vendor') await supabase.from('profiles').update({ role: 'customer' }).eq('id', data.user_id);
@@ -1901,10 +1927,20 @@ app.patch('/api/admin/orders/:id', authenticate, requireAdmin, async (req, res) 
   const payment_status = req.body.payment_status === undefined ? undefined : clean(req.body.payment_status, 30);
   if (!['pending','paid','processing','shipped','completed','cancelled'].includes(status)) return fail(res, 400, 'Invalid order status');
   if (payment_status !== undefined && !['unpaid','pending_verification','paid','refunded'].includes(payment_status)) return fail(res, 400, 'Invalid payment status');
-  const patch = { status, updated_at: new Date().toISOString() };
-  if (payment_status !== undefined) patch.payment_status = payment_status;
-  const { data, error } = await supabase.from('orders').update(patch).eq('id', req.params.id).select().single();
-  if (error) return fail(res, 400, 'Could not update order');
+  if (status === 'cancelled') {
+    const { error: cancelError } = await supabase.rpc('admin_cancel_marketplace_order', {
+      p_order_id: req.params.id,
+      p_payment_status: payment_status ?? null
+    });
+    if (cancelError) return fail(res, 400, cancelError.message || 'Could not cancel order');
+  } else {
+    const patch = { status, updated_at: new Date().toISOString() };
+    if (payment_status !== undefined) patch.payment_status = payment_status;
+    const { error: updateError } = await supabase.from('orders').update(patch).eq('id', req.params.id);
+    if (updateError) return fail(res, 400, 'Could not update order');
+  }
+  const { data, error } = await supabase.from('orders').select('*').eq('id', req.params.id).single();
+  if (error) return fail(res, 400, 'Could not load updated order');
   res.json({ data });
 });
 
