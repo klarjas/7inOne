@@ -59,7 +59,10 @@ declare
   v_product public.products%rowtype;
   v_qty integer;
 begin
-  if p_customer_id is null then raise exception 'Authentication required'; end if;
+  if coalesce(auth.jwt()->>'role', '') <> 'service_role'
+    and (auth.uid() is null or auth.uid() <> p_customer_id) then
+    raise exception 'Authentication required';
+  end if;
   if length(trim(coalesce(p_customer_name,''))) < 2 then raise exception 'Customer name is required'; end if;
   if length(trim(coalesce(p_customer_phone,''))) < 6 then raise exception 'Valid phone number is required'; end if;
   if length(trim(coalesce(p_delivery_address,''))) < 5 then raise exception 'Delivery address is required'; end if;
@@ -103,4 +106,8 @@ begin
   end loop;
   return v_order_id;
 end;
-$$;
+$;
+
+-- Only signed-in customers (for their own user ID) and the trusted server role may execute checkout.
+revoke all on function public.place_marketplace_order(uuid,text,text,text,text,text,jsonb) from public, anon;
+grant execute on function public.place_marketplace_order(uuid,text,text,text,text,text,jsonb) to authenticated, service_role;
