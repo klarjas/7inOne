@@ -238,22 +238,31 @@ const VENDOR_PRESENCE_TTL_MS = 65_000;
 const vendorPresence = new Map();
 function pruneVendorPresence() {
   const cutoff = Date.now() - VENDOR_PRESENCE_TTL_MS;
-  for (const [vendorId, lastSeen] of vendorPresence) {
-    if (lastSeen < cutoff) vendorPresence.delete(vendorId);
+  for (const [presenceKey, lastSeen] of vendorPresence) {
+    if (lastSeen < cutoff) vendorPresence.delete(presenceKey);
   }
+}
+function vendorPresenceTabId(req) {
+  const tabId = clean(req.query.tab_id, 80);
+  return /^[A-Za-z0-9-]{12,80}$/.test(tabId) ? tabId : null;
 }
 app.get('/api/vendors/online', (_req, res) => {
   pruneVendorPresence();
   res.set('Cache-Control', 'no-store');
-  return res.json({ data: { vendor_ids: [...vendorPresence.keys()] } });
+  const vendorIds = [...new Set([...vendorPresence.keys()].map(key => key.split(':', 1)[0]))];
+  return res.json({ data: { vendor_ids: vendorIds } });
 });
 app.post('/api/vendor/presence', authenticate, requireVendor, (req, res) => {
   if (req.vendor.status !== 'approved') return fail(res, 403, 'Only approved vendors can publish online presence');
-  vendorPresence.set(String(req.vendor.id), Date.now());
+  const tabId = vendorPresenceTabId(req);
+  if (!tabId) return fail(res, 400, 'A valid browser tab ID is required');
+  vendorPresence.set(`${req.vendor.id}:${tabId}`, Date.now());
   return res.status(204).end();
 });
 app.delete('/api/vendor/presence', authenticate, requireVendor, (req, res) => {
-  vendorPresence.delete(String(req.vendor.id));
+  const tabId = vendorPresenceTabId(req);
+  if (!tabId) return fail(res, 400, 'A valid browser tab ID is required');
+  vendorPresence.delete(`${req.vendor.id}:${tabId}`);
   return res.status(204).end();
 });
 setInterval(pruneVendorPresence, 20_000).unref?.();
