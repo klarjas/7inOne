@@ -1080,7 +1080,7 @@ body{background:var(--page)!important;color:var(--ink);font-family:"Kantumruy Pr
 @media(hover:hover){.dk:hover{--s:1.38}.dk:hover+.dk,.dk:has(+.dk:hover){--s:1.2}.dk:hover+.dk+.dk,.dk:has(+.dk+.dk:hover){--s:1.08}}
 .market-listing-header{display:flex;justify-content:space-between;align-items:flex-end;padding:12px 0 16px;gap:14px}
 .market-listing-header h2{margin:0;font-size:24px;font-weight:700;color:var(--ink)}
-.cd{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;transition:transform .22s ease,box-shadow .22s ease;min-width:0}
+.cd{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;animation:cardIn .58s cubic-bezier(.22,1,.36,1) both;transition:transform .22s ease,box-shadow .22s ease;min-width:0}
 .cd:hover{transform:translateY(-4px);box-shadow:0 14px 30px rgba(6,78,59,.08)}
 .cd .im{position:relative;aspect-ratio:1.2;background:#E1EDE6;color:#5E7F70;display:grid;place-items:center;overflow:hidden}
 .cd .im .cd-image-wrap{position:absolute;inset:0;display:block;overflow:hidden}
