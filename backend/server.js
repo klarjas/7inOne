@@ -598,7 +598,7 @@ async function issueTelegramPasswordOtp(userId, telegramUserId) {
   const lockedUntil = existing?.locked_until ? new Date(existing.locked_until).getTime() : 0;
   if (lockedUntil > now) return { expiresAt: existing.expires_at, alreadyIssued: true };
 
-  if (Number(existing?.attempts || 0) >= 5) {
+  if (Number(existing?.attempts || 0) >= 5 && !existing?.locked_until) {
     const nextLock = new Date(now + 15 * 60 * 1000).toISOString();
     const { error: lockError } = await supabase.from(telegramOtpTable)
       .update({ locked_until: nextLock }).eq('user_id', userId);
