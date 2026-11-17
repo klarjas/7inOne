@@ -109,5 +109,5 @@ end;
 $;
 
 -- Only signed-in customers (for their own user ID) and the trusted server role may execute checkout.
-revoke all on function public.place_marketplace_order(uuid,text,text,text,text,text,jsonb) from public, anon;
-grant execute on function public.place_marketplace_order(uuid,text,text,text,text,text,jsonb) to authenticated, service_role;
+revoke all on function public.place_marketplace_order(uuid,text,text,text,text,text,jsonb) from public, anon, authenticated;
+grant execute on function public.place_marketplace_order(uuid,text,text,text,text,text,jsonb) to service_role;
