@@ -1113,6 +1113,7 @@ body{background:var(--page)!important;color:var(--ink);font-family:"Kantumruy Pr
 @media(max-width:900px){.market-hero,.product-detail-layout-top{grid-template-columns:1fr}.product-detail-layout-top{gap:18px}}
 @media(min-width:768px){.hero-bento{display:grid}}
 @media(max-width:639px){
+ #mobilePostBtn{display:none!important}
  body{padding-bottom:82px}
  .market-hero .hc{border-radius:22px;padding:20px}
  .market-hero .hc h1{font-size:26px}
