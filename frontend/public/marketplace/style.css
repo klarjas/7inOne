@@ -2141,9 +2141,9 @@ footer .brand-gradient{background:var(--accent)!important;box-shadow:none!import
 small,
 label,
 .label,
-.text-\[9px\],
-.text-\[10px\],
-.text-\[11px\] {
+[class~="text-[9px]"],
+[class~="text-[10px]"],
+[class~="text-[11px]"] {
   font-size: 12px !important;
   line-height: 1.5 !important;
 }
