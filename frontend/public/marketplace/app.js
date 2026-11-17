@@ -449,18 +449,18 @@ function renderProductDetail(){
  const ratingStars=Array.from({length:5},(_,i)=>starIcon(i+1,average)).join('');
  $('productDetail').innerHTML=`<div class="product-detail-page">
   <section class="product-hero-card">
-   <div class="product-hero-grid demo-detail-top">
-    <div class="product-gallery-column demo-gal" aria-label="រូបភាពទំនិញ">${gallery}</div>
-    <div class="product-buybox demo-info">
+   <div class="product-hero-grid product-detail-layout-top">
+    <div class="product-gallery-column product-detail-gallery" aria-label="រូបភាពទំនិញ">${gallery}</div>
+    <div class="product-buybox product-detail-info">
      <div class="product-top-meta"><span class="product-category-badge">${esc(CAT[p.category]||p.category||'ទំនិញ')}</span><span class="product-meta-item">${ic('clock',14)} ${fmtDate(p.created_at)}</span><span class="product-meta-item">${ic('eye',14)} ${Number(p.view_count||0).toLocaleString()} Views</span></div>
      <h1 class="product-detail-title">${esc(p.title)}</h1>
      <div class="product-price-card"><div><small>តម្លៃលក់</small><strong>${money(p.price)}</strong></div><div class="product-price-context"><span>${ic('pin',15)} ${esc(p.location||'មិនបានបញ្ជាក់')}</span><span class="product-stock-badge ${stockKnown&&Number(p.stock)<=0?'is-out':''}">${ic(stockKnown&&Number(p.stock)<=0?'x':'checkcircle',14)} ${stockLabel}</span></div></div>
      ${shortDescription?'<div class="product-short-summary"><p>'+esc(shortDescription)+'</p></div>':''}
-     <div class="product-action-area demo-act">
+     <div class="product-action-area product-detail-actions">
       <div class="product-primary-actions"><button type="button" class="product-buy-primary brand-gradient" data-product-action="buy">${ic('bag',18)} ទិញឥឡូវនេះ</button><button type="button" class="product-chat-primary" data-product-action="chat">${ic('chat',18)} ឆាតជាមួយអ្នកលក់</button></div>
       <div class="product-utility-actions"><button type="button" data-product-action="offer">${ic('tag',16)} តថ្លៃទំនិញ</button><button type="button" data-product-action="save" aria-pressed="${saved?'true':'false'}">${ic('heart',16)} ${saved?'បានរក្សាទុក':'រក្សាទុក'}</button></div>
      </div>
-     <section class="product-seller-card demo-seller">
+     <section class="product-seller-card product-detail-seller">
       <div class="product-seller-heading"><div class="product-seller-avatar">${avatarMarkup(v.store_name,v.profile?.avatar_url)}</div><div class="product-seller-identity"><b>${esc(v.store_name||'ហាងអ្នកលក់')}</b><span class="product-seller-verified">${v.status==='approved'?ic('checkcircle',13)+' អ្នកលក់បានផ្ទៀងផ្ទាត់':'អ្នកលក់'}</span><span class="product-seller-rating">${ratingStars}<strong>${average?average.toFixed(1):'—'}</strong><small>(${reviewTotal})</small></span></div><button type="button" class="product-store-button" data-product-action="store">${ic('store',16)} មើលហាង</button></div>
       <div class="product-seller-metrics"><div><b>${Number(v.active_listings||0)}</b><small>ទំនិញលក់</small></div><div><b>${Number(v.total_views||0).toLocaleString()}</b><small>អ្នកមើល</small></div><div><b>${reviewTotal}</b><small>ការវាយតម្លៃ</small></div></div>
      </section>
@@ -468,8 +468,8 @@ function renderProductDetail(){
    </div>
   </section>
   <section class="product-details-grid">
-   <article class="product-description-card demo-cap"><h2>${ic('file',18)} ព័ត៌មានលម្អិតអំពីទំនិញ</h2><p class="product-full-description">${esc(fullDescription||shortDescription||'មិនទាន់មានការពិពណ៌នាលម្អិតទេ។')}</p><div class="product-spec-grid"><div><small>ប្រភេទ</small><b>${esc(CAT[p.category]||p.category||'មិនបានបញ្ជាក់')}</b></div><div><small>ស្ថានភាព</small><b>${esc(p.condition||'មិនបានបញ្ជាក់')}</b></div><div><small>ទីតាំង</small><b>${ic('pin',13)} ${esc(p.location||'មិនបានបញ្ជាក់')}</b></div><div><small>កាលបរិច្ឆេទបង្ហោះ</small><b>${fmtDate(p.created_at)}</b></div></div></article>
-   <aside class="product-safety-note demo-tip"><h2>${ic('shield',19)} ការណែនាំសុវត្ថិភាពអ្នកទិញ</h2><ul><li>${ic('checkcircle',16)}<span>ពិនិត្យទំនិញដោយផ្ទាល់ មុនពេលទូទាត់ប្រាក់</span></li><li>${ic('checkcircle',16)}<span>ស្នើសុំរូបភាព ឬព័ត៌មានបន្ថែម ប្រសិនបើមិនច្បាស់</span></li><li>${ic('checkcircle',16)}<span>កុំផ្ញើប្រាក់ទៅគណនីដែលមិនអាចផ្ទៀងផ្ទាត់បាន</span></li><li>${ic('checkcircle',16)}<span>ជួបអ្នកលក់នៅទីតាំងសាធារណៈ និងមានសុវត្ថិភាព</span></li><li>${ic('checkcircle',16)}<span>ប្រើប្រព័ន្ធរាយការណ៍ ប្រសិនបើជួបសកម្មភាពគួរឱ្យសង្ស័យ</span></li></ul></aside>
+   <article class="product-description-card product-detail-description"><h2>${ic('file',18)} ព័ត៌មានលម្អិតអំពីទំនិញ</h2><p class="product-full-description">${esc(fullDescription||shortDescription||'មិនទាន់មានការពិពណ៌នាលម្អិតទេ។')}</p><div class="product-spec-grid"><div><small>ប្រភេទ</small><b>${esc(CAT[p.category]||p.category||'មិនបានបញ្ជាក់')}</b></div><div><small>ស្ថានភាព</small><b>${esc(p.condition||'មិនបានបញ្ជាក់')}</b></div><div><small>ទីតាំង</small><b>${ic('pin',13)} ${esc(p.location||'មិនបានបញ្ជាក់')}</b></div><div><small>កាលបរិច្ឆេទបង្ហោះ</small><b>${fmtDate(p.created_at)}</b></div></div></article>
+   <aside class="product-safety-note product-detail-safety"><h2>${ic('shield',19)} ការណែនាំសុវត្ថិភាពអ្នកទិញ</h2><ul><li>${ic('checkcircle',16)}<span>ពិនិត្យទំនិញដោយផ្ទាល់ មុនពេលទូទាត់ប្រាក់</span></li><li>${ic('checkcircle',16)}<span>ស្នើសុំរូបភាព ឬព័ត៌មានបន្ថែម ប្រសិនបើមិនច្បាស់</span></li><li>${ic('checkcircle',16)}<span>កុំផ្ញើប្រាក់ទៅគណនីដែលមិនអាចផ្ទៀងផ្ទាត់បាន</span></li><li>${ic('checkcircle',16)}<span>ជួបអ្នកលក់នៅទីតាំងសាធារណៈ និងមានសុវត្ថិភាព</span></li><li>${ic('checkcircle',16)}<span>ប្រើប្រព័ន្ធរាយការណ៍ ប្រសិនបើជួបសកម្មភាពគួរឱ្យសង្ស័យ</span></li></ul></aside>
   </section>
   <section class="product-reviews product-reviews-full"><div class="product-section-heading"><div><h2>${ic('star',19)} ការវាយតម្លៃពីអ្នកទិញ</h2><p>មតិយោបល់ពីអតិថិជនដែលបានទិញទំនិញ</p></div><span>${reviewTotal} Reviews</span></div>
    <div class="product-reviews-layout"><div class="product-rating-summary"><strong>${average?average.toFixed(1):'—'}</strong><div class="product-rating-stars">${ratingStars}</div><small>ផ្អែកលើការវាយតម្លៃ ${reviewTotal} នាក់</small><div class="product-rating-bars">${reviewBars}</div></div>
