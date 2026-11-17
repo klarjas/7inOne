@@ -1382,6 +1382,7 @@ app.post('/api/vendors/register', authenticate, upload.single('document'), async
     if (existing?.status === 'blocked') return fail(res, 403, 'This seller account is blocked.');
     if (existing?.status === 'approved') return fail(res, 409, 'This store is already verified.');
     if (existing?.status === 'pending' && existing.document_file_id) return fail(res, 409, 'Verification document is already awaiting review.');
+    if (existing && !file) return fail(res, 400, 'Upload a verification document to request verification.');
     if (file) uploaded = await uploadToTelegram(file);
     const values = { user_id: req.user.id, store_name, description, contact_phone, address, status: 'pending', reviewed_at: null, review_note: null };
     if (uploaded) Object.assign(values, { document_path: null, document_file_id: uploaded.fileId, document_message_id: uploaded.messageId, document_mime_type: uploaded.mimeType, document_url: telegramMediaUrl(uploaded.fileId) });
