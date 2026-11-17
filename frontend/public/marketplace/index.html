@@ -71,98 +71,27 @@ html.route-restoring[data-initial-view="store"] #view-store::before{content:"";d
 </header>
 <main class="bottom-pad">
 <!-- HOME VIEW -->
-<section class="view" id="view-home">
-  <div class="shell mx-auto max-w-[1280px] px-4 sm:px-8">
-    <!-- SPLIT HERO + BENTO SHOWCASE -->
-    <section class="market-hero pt-4 sm:pt-8">
-      <div class="hc hero-copy">
-        <p class="live"><i></i><span id="heroBadge">ផ្សារអនឡាញសម្រាប់អ្នកទាំងអស់គ្នា</span></p>
-        <h1 id="heroTitle">ទិញលក់ងាយៗ នៅជិតអ្នក</h1>
-        <p class="sub" id="heroSubtitle">ស្វែងរកទំនិញដែលអ្នកស្រឡាញ់ ឬដាក់លក់របស់ដែលអ្នកមិនប្រើ។ ភ្ជាប់អ្នកទិញ និងអ្នកលក់នៅទូទាំងប្រទេសកម្ពុជា។</p>
-        <div class="tags">
-          <span>ស្វែងរកពេញនិយម</span>
-          <button class="tag-btn" type="button" data-tag="iPhone">iPhone</button>
-          <button class="tag-btn" type="button" data-tag="Toyota">Toyota</button>
-          <button class="tag-btn" type="button" data-tag="ខុនដូ">ខុនដូ</button>
-          <button class="tag-btn" type="button" data-tag="កុំព្យូទ័រ">កុំព្យូទ័រ</button>
-        </div>
-        <div class="hero-trust-points"><span><i id="heroShield"></i> អ្នកលក់បានផ្ទៀងផ្ទាត់</span><span><i id="heroUsers"></i> សហគមន៍អ្នកទិញលក់</span></div>
-        <button class="go" id="heroPostBtn" type="button">ចាប់ផ្តើមទិញលក់</button>
-      </div>
-
-      <div class="hero-bento hidden md:grid">
-        <div class="hero-tile t1" id="heroImageTile1">
-          <img class="hero-image hidden h-full w-full object-cover" id="heroImage1" alt="រូបភាព Hero 1"/>
-          <svg class="hero-placeholder" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="1.8"></circle><path d="M21 16l-5-5-8 8"></path></svg>
-        </div>
-        <div class="hero-tile t2" id="heroImageTile2">
-          <img class="hero-image hidden h-full w-full object-cover" id="heroImage2" alt="រូបភាព Hero 2"/>
-          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="1.8"></circle><path d="M21 16l-5-5-8 8"></path></svg>
-        </div>
-        <div class="hero-tile t3" id="heroImageTile3">
-          <img class="hero-image hidden h-full w-full object-cover" id="heroImage3" alt="រូបភាព Hero 3"/>
-          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="1.8"></circle><path d="M21 16l-5-5-8 8"></path></svg>
-        </div>
-      </div>
-    </section>
-
-    <!-- MACOS-STYLE MAGNIFICATION CATEGORY DOCK -->
-    <nav class="dock" id="categoryStrip" aria-label="ប្រភេទទំនិញ">
-      <button type="button" class="dk active" data-category="all" style="--bg:#064E3B;--fg:#FFFFFF">
-        <span class="ico"><span id="catAll"></span></span>
-        <span class="lb">ទាំងអស់</span>
-      </button>
-      <button type="button" class="dk" data-category="phones" style="--bg:#EFF6FF;--fg:#1D4ED8">
-        <span class="ico"><span id="catPhone"></span></span>
-        <span class="lb">ទូរស័ព្ទ &amp; អេឡិចត្រូនិក</span>
-      </button>
-      <button type="button" class="dk" data-category="vehicles" style="--bg:#FFF1F2;--fg:#BE123C">
-        <span class="ico"><span id="catCar"></span></span>
-        <span class="lb">រថយន្ត &amp; ម៉ូតូ</span>
-      </button>
-      <button type="button" class="dk" data-category="property" style="--bg:#ECFDF5;--fg:#047857">
-        <span class="ico"><span id="catHome"></span></span>
-        <span class="lb">អចលនទ្រព្យ</span>
-      </button>
-      <button type="button" class="dk" data-category="fashion" style="--bg:#F5F3FF;--fg:#6D28D9">
-        <span class="ico"><span id="catFashion"></span></span>
-        <span class="lb">សម្លៀកបំពាក់</span>
-      </button>
-      <button type="button" class="dk" data-category="furniture" style="--bg:#FFFBEB;--fg:#92400E">
-        <span class="ico"><span id="catFurniture"></span></span>
-        <span class="lb">គ្រឿងសង្ហារិម</span>
-      </button>
-    </nav>
-
-    <section id="homeVendorMediaSection" class="home-vendor-media hidden" aria-label="Live និងវីដេអូពីហាង"><div class="home-vendor-media-heading"><div><p class="home-vendor-media-kicker">SHOP LIVE &amp; VIDEO</p><h2>Live / វីដេអូពីហាង</h2></div><span>ពីម្ចាស់ហាង</span></div><div id="homeVendorMediaList" class="home-vendor-media-list"></div></section>
-    <!-- LISTING HEADER -->
-    <div class="lh market-listing-header">
-      <div>
-        <p class="new"><i></i>បានបង្ហោះថ្មីៗ</p>
-        <h2 id="listingTitle">ទំនិញដែលគួរឱ្យចាប់អារម្មណ៍</h2>
-        <p class="mt-0.5 text-[12px] text-[#5B6577]" id="listingSub">រកឃើញទំនិញល្អៗពីអ្នកលក់នៅជិតអ្នក</p>
-      </div>
-      <div class="flex items-center gap-3">
-        <span class="hidden text-[12px] text-[#5B6577] sm:block" id="resultCount"></span>
-        <select class="min-h-[44px] rounded-[12px] border border-[#D5DED9] bg-white px-3 font-semibold text-[#172033] outline-none" id="sortSelect" aria-label="តម្រៀបទំនិញ">
-          <option value="newest">ថ្មីៗមុន</option>
-          <option value="low">តម្លៃទាបមុន</option>
-          <option value="high">តម្លៃខ្ពស់មុន</option>
-        </select>
-      </div>
-    </div>
-
-    <!-- SKELETON & PRODUCT GRID (រក្សា ID ដើមទាំងអស់) -->
-    <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 xl:grid-cols-5" id="skeletonGrid"><div class="rounded-2xl border bg-white p-2.5"><div class="skeleton aspect-[1.2] rounded-xl"></div><div class="p-2 pt-3"><div class="skeleton mb-3 h-3 w-1/3 rounded"></div><div class="skeleton mb-2 h-4 w-4/5 rounded"></div><div class="skeleton mb-4 h-4 w-2/5 rounded"></div><div class="skeleton h-8 rounded-lg"></div></div></div><div class="rounded-2xl border bg-white p-2.5"><div class="skeleton aspect-[1.2] rounded-xl"></div><div class="p-2 pt-3"><div class="skeleton mb-3 h-3 w-1/3 rounded"></div><div class="skeleton mb-2 h-4 w-4/5 rounded"></div><div class="skeleton mb-4 h-4 w-2/5 rounded"></div><div class="skeleton h-8 rounded-lg"></div></div></div><div class="rounded-2xl border bg-white p-2.5"><div class="skeleton aspect-[1.2] rounded-xl"></div><div class="p-2 pt-3"><div class="skeleton mb-3 h-3 w-1/3 rounded"></div><div class="skeleton mb-2 h-4 w-4/5 rounded"></div><div class="skeleton mb-4 h-4 w-2/5 rounded"></div><div class="skeleton h-8 rounded-lg"></div></div></div><div class="rounded-2xl border bg-white p-2.5"><div class="skeleton aspect-[1.2] rounded-xl"></div><div class="p-2 pt-3"><div class="skeleton mb-3 h-3 w-1/3 rounded"></div><div class="skeleton mb-2 h-4 w-4/5 rounded"></div><div class="skeleton mb-4 h-4 w-2/5 rounded"></div><div class="skeleton h-8 rounded-lg"></div></div></div><div class="rounded-2xl border bg-white p-2.5"><div class="skeleton aspect-[1.2] rounded-xl"></div><div class="p-2 pt-3"><div class="skeleton mb-3 h-3 w-1/3 rounded"></div><div class="skeleton mb-2 h-4 w-4/5 rounded"></div><div class="skeleton mb-4 h-4 w-2/5 rounded"></div><div class="skeleton h-8 rounded-lg"></div></div></div><div class="rounded-2xl border bg-white p-2.5"><div class="skeleton aspect-[1.2] rounded-xl"></div><div class="p-2 pt-3"><div class="skeleton mb-3 h-3 w-1/3 rounded"></div><div class="skeleton mb-2 h-4 w-4/5 rounded"></div><div class="skeleton mb-4 h-4 w-2/5 rounded"></div><div class="skeleton h-8 rounded-lg"></div></div></div><div class="rounded-2xl border bg-white p-2.5"><div class="skeleton aspect-[1.2] rounded-xl"></div><div class="p-2 pt-3"><div class="skeleton mb-3 h-3 w-1/3 rounded"></div><div class="skeleton mb-2 h-4 w-4/5 rounded"></div><div class="skeleton mb-4 h-4 w-2/5 rounded"></div><div class="skeleton h-8 rounded-lg"></div></div></div><div class="rounded-2xl border bg-white p-2.5"><div class="skeleton aspect-[1.2] rounded-xl"></div><div class="p-2 pt-3"><div class="skeleton mb-3 h-3 w-1/3 rounded"></div><div class="skeleton mb-2 h-4 w-4/5 rounded"></div><div class="skeleton mb-4 h-4 w-2/5 rounded"></div><div class="skeleton h-8 rounded-lg"></div></div></div><div class="rounded-2xl border bg-white p-2.5"><div class="skeleton aspect-[1.2] rounded-xl"></div><div class="p-2 pt-3"><div class="skeleton mb-3 h-3 w-1/3 rounded"></div><div class="skeleton mb-2 h-4 w-4/5 rounded"></div><div class="skeleton mb-4 h-4 w-2/5 rounded"></div><div class="skeleton h-8 rounded-lg"></div></div></div><div class="rounded-2xl border bg-white p-2.5"><div class="skeleton aspect-[1.2] rounded-xl"></div><div class="p-2 pt-3"><div class="skeleton mb-3 h-3 w-1/3 rounded"></div><div class="skeleton mb-2 h-4 w-4/5 rounded"></div><div class="skeleton mb-4 h-4 w-2/5 rounded"></div><div class="skeleton h-8 rounded-lg"></div></div></div></div>
-    <div class="hidden grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 xl:grid-cols-5 pb-10" id="productGrid"></div>
-    <div class="hidden rounded-3xl border border-dashed border-[#D5DED9] bg-white px-6 py-14 text-center" id="emptyHome">
-      <div class="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-[#E1EDE6] text-[#064E3B]" id="emptyIcon"></div>
-      <h3 class="mt-4 font-bold">រកមិនឃើញទំនិញទេ</h3>
-      <p class="mt-1 text-[12px] text-[#5B6577]">សាកល្បងពាក្យស្វែងរក ឬប្រភេទផ្សេងទៀត។</p>
-      <button class="mt-4 rounded-xl bg-[#ECFDF5] px-4 py-2 text-[12px] font-bold text-[#047857]" id="clearFilters">បង្ហាញទំនិញទាំងអស់</button>
-    </div>
-  </div>
-</section>
+<section class="view" id="view-home"><div class="home-desktop-layout">
+<aside class="home-sidebar" aria-label="ការរុករក Marketplace">
+<button class="home-side-link is-active" data-view="home" type="button"><span>⌂</span>ទំព័រមុខ</button>
+<button class="home-side-link" data-category="all" type="button"><span>▦</span>គ្រប់ប្រភេទ</button>
+<button class="home-side-link" data-category="phones" type="button"><span>▣</span>អេឡិចត្រូនិក</button>
+<button class="home-side-link" data-category="vehicles" type="button"><span>⌁</span>រថយន្ត &amp; ម៉ូតូ</button>
+<button class="home-side-link" data-category="property" type="button"><span>⌂</span>អចលនទ្រព្យ</button>
+<button class="home-side-link" data-view="seller" type="button"><span>▤</span>ហាងរបស់ខ្ញុំ</button>
+<button class="home-side-link" data-action="saved" type="button"><span>♡</span>ចំណូលចិត្ត</button>
+<button class="home-side-link" data-action="orders" type="button"><span>▣</span>ការបញ្ជាទិញ</button>
+<button class="home-side-link" data-view="profile" type="button"><span>♙</span>គណនី</button>
+<div class="home-sidebar-vip"><span>♛</span><b>7inOne VIP</b><small>អត្ថប្រយោជន៍ពិសេសសម្រាប់សមាជិក</small></div></aside>
+<div class="home-main-column"><div class="home-main-with-promos"><div class="home-primary-content">
+<section class="home-premium-hero"><div class="home-premium-hero-copy"><p class="home-hero-eyebrow" id="heroBadge">7inOne Marketplace</p><h1 id="heroTitle">Smart Choice<br/>Better Life</h1><p id="heroSubtitle">ទិញលក់ងាយៗ នៅជិតអ្នក</p><button class="home-hero-cta" id="heroPostBtn" type="button">ចាប់ផ្តើមទិញលក់ <span>→</span></button></div><div class="home-premium-hero-art"><img id="heroImage1" class="hero-image" alt=""/><div class="home-hero-placeholder">7inOne</div></div><div class="home-hero-dots"><i></i><i></i><i></i></div></section>
+<nav class="home-category-row" id="categoryStrip" aria-label="ប្រភេទទំនិញ"><button type="button" class="home-category is-active" data-category="all"><span>▦</span>ទាំងអស់</button><button type="button" class="home-category" data-category="phones"><span>▣</span>អេឡិចត្រូនិក</button><button type="button" class="home-category" data-category="vehicles"><span>⌁</span>រថយន្ត</button><button type="button" class="home-category" data-category="property"><span>⌂</span>ផ្ទះ &amp; ដី</button><button type="button" class="home-category" data-category="fashion"><span>♧</span>ម៉ូដ</button><button type="button" class="home-category" data-category="furniture"><span>▤</span>គ្រឿងសង្ហារិម</button></nav>
+</div><aside class="home-promo-rail" aria-label="ការផ្សព្វផ្សាយ"><a class="home-promo-card home-promo-wide" id="homePromoWide" href="#" target="_blank" rel="noopener noreferrer" hidden><img id="homePromoWideImage" alt="Poster ផ្សព្វផ្សាយ"/></a><a class="home-promo-card home-promo-tall" id="homePromoTall" href="#" target="_blank" rel="noopener noreferrer" hidden><img id="homePromoTallImage" alt="Poster ផ្សព្វផ្សាយ"/></a><div class="home-promo-fallback" id="homePromoFallback"><b>Free Delivery</b><span>Secure Payment</span><span>24/7 Support</span></div></aside></div>
+<section id="homeVendorMediaSection" class="home-vendor-media hidden" aria-label="Live និងវីដេអូពីហាង"><div class="home-vendor-media-heading"><div><p class="home-vendor-media-kicker">SHOP LIVE &amp; VIDEO</p><h2>Live / វីដេអូពីហាង</h2></div><span>ពីម្ចាស់ហាង</span></div><div id="homeVendorMediaList" class="home-vendor-media-list"></div></section>
+<div class="lh market-listing-header"><div><p class="new"><i></i>បានបង្ហោះថ្មីៗ</p><h2 id="listingTitle">ទំនិញដែលគួរឱ្យចាប់អារម្មណ៍</h2><p class="mt-0.5 text-[12px] text-[#5B6577]" id="listingSub">រកឃើញទំនិញល្អៗពីអ្នកលក់នៅជិតអ្នក</p></div><div class="flex items-center gap-3"><span class="hidden text-[12px] text-[#5B6577] sm:block" id="resultCount"></span><select class="min-h-[44px] rounded-[12px] border border-[#D5DED9] bg-white px-3 font-semibold text-[#172033] outline-none" id="sortSelect" aria-label="តម្រៀបទំនិញ"><option value="newest">ថ្មីៗមុន</option><option value="low">តម្លៃទាបមុន</option><option value="high">តម្លៃខ្ពស់មុន</option></select></div></div>
+<div class="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 xl:grid-cols-5" id="skeletonGrid"><div class="rounded-2xl border bg-white p-2.5"><div class="skeleton aspect-[1.2] rounded-xl"></div><div class="p-2 pt-3"><div class="skeleton mb-3 h-3 w-1/3 rounded"></div><div class="skeleton mb-2 h-4 w-4/5 rounded"></div><div class="skeleton mb-4 h-4 w-2/5 rounded"></div><div class="skeleton h-8 rounded-lg"></div></div></div></div>
+<div class="hidden grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 xl:grid-cols-5 pb-10" id="productGrid"></div>
+<div class="hidden rounded-3xl border border-dashed border-[#D5DED9] bg-white px-6 py-14 text-center" id="emptyHome"><div class="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-[#E1EDE6] text-[#064E3B]" id="emptyIcon"></div><h3 class="mt-4 font-bold">រកមិនឃើញទំនិញទេ</h3><p class="mt-1 text-[12px] text-[#5B6577]">សាកល្បងពាក្យស្វែងរក ឬប្រភេទផ្សេងទៀត។</p><button class="mt-4 rounded-xl bg-[#ECFDF5] px-4 py-2 text-[12px] font-bold text-[#047857]" id="clearFilters">បង្ហាញទំនិញទាំងអស់</button></div></div></div></section>
 <!-- PRODUCT DETAIL VIEW -->
 <section class="view" id="view-product">
   <div class="shell py-5 sm:py-7">
@@ -306,7 +235,7 @@ html.route-restoring[data-initial-view="store"] #view-store::before{content:"";d
   <div class="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4 text-[11px] text-slate-500" id="telegramDiagnosticsResult" aria-live="polite">ចុច «ពិនិត្យស្ថានភាព» ដើម្បីពិនិត្យការភ្ជាប់ Telegram។</div>
 </div>
 
-<div class="mb-6 rounded-2xl border border-sky-100 bg-white p-5 soft-shadow sm:p-6" id="supportAdminPanel">
+<div class="mb-6 rounded-2xl border border-amber-100 bg-white p-5 soft-shadow sm:p-6" id="promoPosterAdminPanel"><div class="mb-4"><p class="text-[10px] font-bold tracking-wide text-amber-700">HOMEPAGE PROMOTIONS</p><h2 class="mt-1 text-lg font-bold">គ្រប់គ្រង Poster ខាងស្ដាំទំព័រមុខ</h2><p class="mt-1 text-[10px] text-slate-500">Upload និងប្ដូរ Poster ដោយផ្ទាល់ មិនចាំបាច់កែ Code។</p></div><div class="grid gap-4 lg:grid-cols-2"><section class="rounded-xl border border-slate-200 p-4"><b class="text-sm">Poster ផ្ដេក</b><div class="promo-admin-preview promo-wide-preview mt-3" id="promoWidePreview"><span>PREVIEW 12:5</span></div><label class="mt-3 block"><span class="label">Upload Poster ផ្ដេក</span><input class="field" id="promoWideUpload" type="file" accept="image/jpeg,image/png,image/webp"/></label><p class="mt-2 text-[10px] leading-5 text-slate-500">ទំហំគោល៖ <b>1200 × 500 px</b> · 12:5 · JPG / PNG / WEBP · មិនលើស 5MB</p><label class="mt-3 block"><span class="label">Link ពេលចុច (ស្រេចចិត្ត)</span><input class="field" id="promoWideLink" type="url" placeholder="https://..."/></label><label class="mt-3 flex items-center gap-2 text-[10px]"><input id="promoWideEnabled" type="checkbox" class="h-4 w-4 accent-amber-600"/> បង្ហាញ Poster នេះ</label></section><section class="rounded-xl border border-slate-200 p-4"><b class="text-sm">Poster បញ្ឈរ</b><div class="promo-admin-preview promo-tall-preview mt-3" id="promoTallPreview"><span>PREVIEW 1:2</span></div><label class="mt-3 block"><span class="label">Upload Poster បញ្ឈរ</span><input class="field" id="promoTallUpload" type="file" accept="image/jpeg,image/png,image/webp"/></label><p class="mt-2 text-[10px] leading-5 text-slate-500">ទំហំគោល៖ <b>800 × 1600 px</b> · 1:2 · JPG / PNG / WEBP · មិនលើស 5MB</p><label class="mt-3 block"><span class="label">Link ពេលចុច (ស្រេចចិត្ត)</span><input class="field" id="promoTallLink" type="url" placeholder="https://..."/></label><label class="mt-3 flex items-center gap-2 text-[10px]"><input id="promoTallEnabled" type="checkbox" class="h-4 w-4 accent-amber-600"/> បង្ហាញ Poster នេះ</label></section></div><div class="mt-4 flex flex-wrap items-center justify-between gap-3"><span class="text-[10px] text-slate-500" id="promoPosterStatus">Poster នឹងបង្ហាញលើ Home ពេលរក្សាទុក។</span><button type="button" id="savePromoPostersBtn" class="rounded-xl bg-amber-600 px-5 py-3 text-[11px] font-bold text-white">រក្សាទុក Poster</button></div></div><div class="mb-6 rounded-2xl border border-sky-100 bg-white p-5 soft-shadow sm:p-6" id="supportAdminPanel">
   <div class="mb-4 flex flex-wrap items-center justify-between gap-3"><div><p class="text-[10px] font-bold tracking-wide text-sky-600">CUSTOMER SUPPORT</p><h2 class="mt-1 text-lg font-bold">Live Chat ជាមួយអតិថិជន</h2><p class="mt-1 text-[10px] text-slate-400">ឆ្លើយតបក្នុង Website។ Telegram ប្រើសម្រាប់ជូនដំណឹងប៉ុណ្ណោះ។</p></div><button id="refreshAdminChats" type="button" class="rounded-xl border border-slate-200 px-3 py-2 text-[10px] font-bold">Refresh</button></div>
   <div class="grid gap-3 md:grid-cols-[minmax(0,0.85fr)_minmax(0,1.4fr)]">
     <div id="adminChatList" class="max-h-[440px] space-y-2 overflow-y-auto rounded-xl border border-slate-100 bg-slate-50 p-2"><p class="p-4 text-center text-xs text-slate-400">កំពុងផ្ទុកសន្ទនា...</p></div>
