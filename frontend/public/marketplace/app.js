@@ -415,8 +415,8 @@ document.querySelectorAll('[data-home-side]').forEach(button=>button.addEventLis
   const action=button.dataset.homeSide;
   if(action==='home'){setCategory('all');$('view-home').scrollIntoView({behavior:'smooth'});return}
   if(action==='live'){$('homeVendorMediaSection')?.scrollIntoView({behavior:'smooth',block:'center'});return}
-  if(action==='saved'){if(!requireLogin())return;void loadSaved().then(()=>showView('profile'));return}
-  if(action==='orders'){if(!requireLogin())return;showView('profile')}
+  if(action==='saved'){if(!requireLogin())return;profileTab='saved';showView('profile');document.querySelector('[data-profile-tab="saved"]')?.click();return}
+  if(action==='orders'){if(!requireLogin())return;profileTab='history';showView('profile');document.querySelector('[data-profile-tab="history"]')?.click();return}
 }));
 function favoriteSpinner(){
   return '<svg class="animate-spin text-indigo-500" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="3" opacity=".2"></circle><path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" stroke-width="3" stroke-linecap="round"></path></svg>';
