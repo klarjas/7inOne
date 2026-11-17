@@ -925,3 +925,123 @@ body {
     font-size: 10.5px !important;
   }
 }
+
+
+/* === 7inOne Clean Chat Upgrade (Product Preview Banner + Smooth Animations) === */
+.seller-chat-draft-product {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 10px 8px;
+  padding: 8px 10px;
+  border: 1px solid #CDEBDD;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #F0FDF4, #FFFFFF);
+  box-shadow: 0 6px 20px rgba(6, 78, 59, .08);
+  animation: chatDraftIn .32s cubic-bezier(.22, 1, .36, 1) both;
+  transition: opacity .24s ease, transform .24s cubic-bezier(.22, 1, .36, 1), max-height .26s ease, margin .26s ease, padding .26s ease;
+  overflow: hidden;
+  max-height: 92px;
+}
+.seller-chat-draft-product.is-closing {
+  opacity: 0;
+  transform: translateY(10px) scale(.97);
+  max-height: 0;
+  margin-top: 0;
+  margin-bottom: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  border-width: 0;
+}
+@keyframes chatDraftIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.seller-chat-draft-thumb {
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #ECFDF5;
+  display: grid;
+  place-items: center;
+  color: #059669;
+  border: 1px solid #D1FAE5;
+}
+.seller-chat-draft-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.seller-chat-draft-meta {
+  min-width: 0;
+  flex: 1;
+}
+.seller-chat-draft-meta small {
+  display: block;
+  font-size: 9.5px;
+  font-weight: 800;
+  color: #059669;
+  letter-spacing: .02em;
+}
+.seller-chat-draft-meta b {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: #102820;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 1px;
+}
+.seller-chat-draft-meta strong {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 800;
+  color: #065F46;
+  margin-top: 1px;
+}
+.seller-chat-draft-close {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  border-radius: 50%;
+  border: 1px solid #E2E8F0;
+  background: #FFFFFF;
+  color: #64748B;
+  transition: background .18s ease, color .18s ease, transform .18s ease;
+}
+.seller-chat-draft-close:hover {
+  background: #FEE2E2;
+  border-color: #FECACA;
+  color: #DC2626;
+  transform: scale(1.06);
+}
+#sellerChatSend {
+  display: grid !important;
+  place-items: center !important;
+  width: 42px !important;
+  height: 42px !important;
+  flex: 0 0 42px !important;
+  border-radius: 50% !important;
+  background: linear-gradient(135deg, #064E3B, #10B981) !important;
+  color: #FFFFFF !important;
+  transition: transform .18s ease, opacity .18s ease, box-shadow .18s ease !important;
+}
+#sellerChatSend:disabled {
+  opacity: .45 !important;
+  cursor: not-allowed !important;
+}
+#sellerChatSend:not(:disabled):hover {
+  transform: translateY(-1px) scale(1.03);
+  box-shadow: 0 6px 16px rgba(6, 78, 59, .24) !important;
+}
