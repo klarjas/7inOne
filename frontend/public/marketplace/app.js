@@ -82,6 +82,36 @@ function setAvatar(target,url,name=''){
   target.classList.add('img-scan-wrap','shimmer-scan');target.classList.remove('is-loaded','is-failed');target.innerHTML='<img src="'+esc(url)+'" alt="" class="h-full w-full object-cover">';
   target.querySelector('img')?.addEventListener('error',fallback,{once:true});
 }
+function syncHomeHeroImagesFromProducts() {
+  const configured = Array.isArray(siteBranding.heroImages) && siteBranding.heroImages.some(item => item?.url || item?.image_url || item?.imageUrl);
+  if (configured) return;
+  const candidates = products.filter(product => product.product_images?.some(image => image.image_url)).slice(0, 3);
+  for (let i = 1; i <= 3; i++) {
+    const target = $('heroImage' + i);
+    const tile = target?.parentElement;
+    const placeholder = tile?.querySelector('.hero-placeholder');
+    const product = candidates[i - 1];
+    const image = product?.product_images?.find(item => item.image_url);
+    if (!target || !tile) continue;
+    if (!image) {
+      target.removeAttribute('src');
+      target.classList.add('hidden');
+      placeholder?.classList.remove('hidden');
+      tile.classList.remove('has-image');
+      continue;
+    }
+    target.alt = 'រូបភាពទំនិញ ' + String(product.title || '');
+    target.onerror = () => {
+      target.classList.add('hidden');
+      placeholder?.classList.remove('hidden');
+      tile.classList.remove('has-image');
+    };
+    target.src = image.image_url;
+    target.classList.remove('hidden');
+    placeholder?.classList.add('hidden');
+    tile.classList.add('has-image');
+  }
+}
 function applySiteBranding(data={}){
   siteBranding={...siteBranding,...data};
   const title=String(siteBranding.siteTitle||'7inOne');
@@ -111,8 +141,8 @@ function applySiteBranding(data={}){
   for(let i=1;i<=3;i++){
     const target=$('heroImage'+i),item=images[i-1],url=item?.url||item?.image_url||item?.imageUrl||'';
     if(!target)continue;
-    if(url){const scan=target.parentElement;scan?.classList.add('img-scan-wrap','shimmer-scan');scan?.classList.remove('is-loaded','is-failed');target.src=url;target.classList.remove('hidden');target.onerror=()=>{scan?.classList.add('is-failed');target.classList.add('hidden')}}
-    else{target.removeAttribute('src');target.classList.add('hidden')}
+    if(url){const scan=target.parentElement;scan?.classList.add('img-scan-wrap','shimmer-scan');scan?.classList.remove('is-loaded','is-failed');scan?.querySelector('.hero-placeholder')?.classList.add('hidden');target.src=url;target.classList.remove('hidden');target.onerror=()=>{scan?.classList.add('is-failed');target.classList.add('hidden');scan?.querySelector('.hero-placeholder')?.classList.remove('hidden')}}
+    else{target.removeAttribute('src');target.classList.add('hidden');target.parentElement?.querySelector('.hero-placeholder')?.classList.remove('hidden')}
   }
 }
 async function refreshSiteBranding(){
@@ -222,9 +252,63 @@ async function refreshSession(){if(!supabaseClient)return;const {data,error}=awa
 function requireLogin(){if(session)return true;openAuth();return false}
 function openAuth(mode='login'){setAuthMode(mode);openModal('authModal');if(!telegramLoginWidgetMounted)telegramLoginWidgetMounted=mountTelegramWidget('telegramLoginWidget','onTelegramAuth')}
 function setAuthMode(mode){$('telegramLoginWidgetWrap')?.classList.toggle('hidden',mode==='verifyPhone');$('telegramRecoveryForm')?.classList.add('hidden');$('authForm')?.classList.remove('hidden');$('forgotPasswordBtn')?.classList.remove('hidden');document.querySelector('#authModal .mb-4.grid')?.classList.remove('hidden');authMode=mode;const register=mode==='register',verify=mode==='verifyPhone';$('authOtp').required=verify;$('authOtpWrap').classList.toggle('hidden',!verify);$('authNameWrap').classList.toggle('hidden',!register);$('authName').required=register;$('authIdentity').readOnly=verify;$('authIdentity').parentElement.classList.remove('hidden');$('authPassword').parentElement.classList.toggle('hidden',verify);document.querySelector('[data-auth-mode="login"]').parentElement.classList.toggle('hidden',verify);$('authTitle').textContent=verify?'ផ្ទៀងផ្ទាត់លេខទូរស័ព្ទ':register?'បង្កើតគណនី 7inOne':'សូមស្វាគមន៍មកកាន់ 7inOne';$('authSubmit').textContent=verify?'ផ្ទៀងផ្ទាត់លេខកូដ':register?'បង្កើតគណនី':'ចូលគណនី';$('authHint').textContent=verify?'សូមបញ្ចូលលេខកូដ SMS ដែលបានផ្ញើទៅលេខទូរស័ព្ទរបស់អ្នក។':'ប្រើលេខទូរស័ព្ទ ឬអ៊ីមែលដែលភ្ជាប់ជាមួយគណនី Supabase របស់អ្នក។';if(!verify)$('authOtp').value='';document.querySelectorAll('[data-auth-mode]').forEach(b=>{const active=b.dataset.authMode===mode;b.classList.toggle('bg-white',active);b.classList.toggle('shadow',active);b.classList.toggle('text-slate-500',!active)})}
-async function loadProducts(){const grid=$('productGrid');grid.setAttribute('aria-busy','true');grid.classList.add('hidden');$('emptyHome').classList.add('hidden');$('skeletonGrid').classList.remove('hidden');const params=new URLSearchParams({page:'1',limit:'50'});if(searchTerm)params.set('q',searchTerm);if(activeCategory!=='all')params.set('category',activeCategory);try{const res=await api('/api/products?'+params.toString());products=res.data||[];renderProducts();}catch(error){products=[];renderProducts();toast('មិនអាចទាញយកទំនិញបានទេ៖ '+error.message,'error')}finally{$('skeletonGrid').classList.add('hidden');grid.classList.remove('hidden');grid.setAttribute('aria-busy','false')}}
+async function loadProducts(){const grid=$('productGrid');grid.setAttribute('aria-busy','true');grid.classList.add('hidden');$('emptyHome').classList.add('hidden');$('skeletonGrid').classList.remove('hidden');const params=new URLSearchParams({page:'1',limit:'50'});if(searchTerm)params.set('q',searchTerm);if(activeCategory!=='all')params.set('category',activeCategory);try{const res=await api('/api/products?'+params.toString());products=res.data||[];renderProducts();syncHomeHeroImagesFromProducts();}catch(error){products=[];renderProducts();toast('មិនអាចទាញយកទំនិញបានទេ៖ '+error.message,'error')}finally{$('skeletonGrid').classList.add('hidden');grid.classList.remove('hidden');grid.setAttribute('aria-busy','false')}}
 function productImage(p){return p.product_images?.find(x=>x.image_url)?.image_url||''}
-function productCard(p,index){const images=(p.product_images||[]).filter(x=>x.image_url),image=images[0]?.image_url||'',second=images[1]?.image_url||'',saved=savedIds.has(p.id),vendorName=p.vendors?.store_name||'ហាងអ្នកលក់',verified=p.vendors?.status==='approved';return `<article class="product-card group overflow-hidden rounded-2xl border border-slate-200 bg-white" style="animation-delay:${Math.min(index,12)*35}ms"><div class="product-card-media relative aspect-[1.18] overflow-hidden bg-slate-100"><button class="absolute inset-0 z-[1] h-full w-full" data-action="view" data-id="${esc(p.id)}" aria-label="មើល ${esc(p.title)}"></button>${image?`<span class="img-scan-wrap shimmer-scan product-img-scan product-img-primary-wrap"><img src="${esc(image)}" alt="${esc(p.title)}" loading="lazy" class="product-img product-img-primary h-full w-full object-cover"></span>${second?`<span class="img-scan-wrap shimmer-scan product-img-scan product-img-secondary-wrap"><img src="${esc(second)}" alt="" loading="lazy" class="product-img product-img-secondary h-full w-full object-cover"></span>`:''}`:`<div class="absolute inset-0 grid place-items-center text-slate-400">${ic('image',36)}</div>`}<span class="product-image-count">${images.length||0} រូប</span><span class="absolute left-2.5 top-2.5 z-[2] rounded-md bg-white/95 px-2 py-1 text-[9px] font-semibold text-slate-700">${esc(p.condition||'ទំនិញ')}</span><button type="button" class="heart ${saved?'saved':''} absolute right-2.5 top-2.5 z-[3] grid h-9 w-9 place-items-center rounded-full bg-white/95 text-slate-600 shadow-sm" data-action="save" data-id="${esc(p.id)}" aria-label="${saved?'ដកចេញពីបញ្ជីដែលបានរក្សាទុក':'រក្សាទុកទំនិញ'}" aria-pressed="${saved?'true':'false'}" aria-busy="false">${ic('heart',17)}</button></div><div class="p-3 sm:p-3.5"><button class="block min-h-[24px] w-full truncate text-left text-[12px] font-bold leading-5 text-slate-900 hover:text-slate-600 sm:text-[13px]" data-action="view" data-id="${esc(p.id)}">${esc(p.title)}</button><p class="product-card-description mt-1.5 text-[10px] leading-5 text-slate-500">${esc(productDescriptionParts(p).short||'មិនទាន់មានការពិពណ៌នាបន្ថែម។')}</p><div class="mt-3 flex flex-wrap items-center justify-between gap-2"><b class="text-[17px] font-bold text-emerald-700">${money(p.price)}</b><span class="flex min-w-0 items-center gap-1 text-[10px] text-slate-500">${ic('pin',12)}<span class="truncate">${esc(p.location||'មិនទាន់កំណត់')}</span></span></div><div class="mt-3 flex items-center gap-2 border-t border-slate-100 pt-3"><span class="grid h-8 w-8 shrink-0 place-items-center overflow-hidden rounded-full bg-slate-100 text-slate-500">${ic('store',14)}</span><button type="button" class="min-w-0 truncate text-left text-[10px] font-semibold text-slate-700 hover:underline" data-action="store" data-vendor-id="${esc(p.vendor_id)}">${esc(vendorName)}</button>${verified?`<span class="verified-mark" title="បានផ្ទៀងផ្ទាត់">${ic('check',11)}</span>`:''}</div></div></article>`}
+function timeAgoKm(dateStr) {
+  if (!dateStr) return 'ថ្មីៗ';
+  const timestamp = new Date(dateStr).getTime();
+  if (!Number.isFinite(timestamp)) return 'ថ្មីៗ';
+  const diff = Math.max(1, Math.floor((Date.now() - timestamp) / 60000));
+  if (diff < 60) return `${diff} នាទីមុន`;
+  const hrs = Math.floor(diff / 60);
+  if (hrs < 24) return `${hrs} ម៉ោងមុន`;
+  const days = Math.floor(hrs / 24);
+  if (days < 7) return `${days} ថ្ងៃមុន`;
+  return `${Math.floor(days / 7)} សប្តាហ៍មុន`;
+}
+function formatViews(value) {
+  const num = Number(value || 0);
+  return num >= 1000 ? (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K' : String(num);
+}
+const verifiedStoreSvg = `<svg class="vb" width="16" height="16" viewBox="0 0 24 24" role="img" aria-label="ហាងបានផ្ទៀងផ្ទាត់" fill="none" stroke="#1D8CD0" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2.8 2.4 1.4 2.8-.1 1.3 2.4 2.5 1.5-.1 2.8 1.1 2.4-1.3 2.4.1 2.8-2.5 1.2-1.3 2.4-2.8-.1L12 21.2l-2.4-1.4-2.8.1-1.3-2.4L3 16l.1-2.8L2 10.8l1.3-2.4-.1-2.8 2.5-1.2L7 2l2.8.1Z"/><path d="m8.2 12.2 2.5 2.5 5.1-5.3"/></svg>`;
+function productCard(p, index) {
+  const images = (p.product_images || []).filter(item => item.image_url);
+  const image = images[0]?.image_url || '';
+  const secondImage = images[1]?.image_url || '';
+  const saved = savedIds.has(p.id);
+  const vendorName = p.vendors?.store_name || 'ហាងអ្នកលក់';
+  const verified = p.vendors?.status === 'approved';
+  const description = productDescriptionParts(p).short;
+  return `
+  <article class="cd" style="animation-delay:${Math.min(index, 12) * 35}ms">
+    <div class="ph im">
+      <button class="absolute inset-0 z-[1] h-full w-full" type="button" data-action="view" data-id="${esc(p.id)}" aria-label="មើល ${esc(p.title)}"></button>
+      ${image
+        ? `<span class="img-scan-wrap shimmer-scan cd-image-wrap cd-main-wrap"><img src="${esc(image)}" alt="${esc(p.title)}" loading="lazy" decoding="async" class="cd-main h-full w-full object-cover"></span>${secondImage ? `<span class="img-scan-wrap shimmer-scan cd-image-wrap cd-secondary-wrap"><img src="${esc(secondImage)}" alt="" loading="lazy" decoding="async" class="cd-secondary h-full w-full object-cover"></span>` : ''}`
+        : ic('image', 36)}
+      <span class="cd-condition">${esc(p.condition || 'ទំនិញ')}</span>
+      <span class="cd-image-count">${images.length || 0} រូប</span>
+      <button class="hv heart ${saved ? 'saved' : ''}" type="button" data-action="save" data-id="${esc(p.id)}" aria-label="រក្សាទុក" aria-pressed="${saved ? 'true' : 'false'}" aria-busy="false">
+        ${ic('heart', 18)}
+      </button>
+    </div>
+    <div class="cb">
+      <h3 class="cursor-pointer truncate hover:text-[#064E3B]" data-action="view" data-id="${esc(p.id)}">${esc(p.title)}</h3>
+      <p class="pr">${money(p.price)}</p>
+      ${description ? `<p class="cd-description">${esc(description)}</p>` : ''}
+      <div class="sh">
+        <span class="sp" role="img" aria-label="រូប Profile ហាង">${ic('user', 16)}</span>
+        <button type="button" class="sn text-left hover:underline" data-action="store" data-vendor-id="${esc(p.vendor_id)}">${esc(vendorName)}</button>
+        ${verified ? verifiedStoreSvg : ''}
+      </div>
+      <p class="mt">
+        <span>${esc(p.location || 'ភ្នំពេញ')}</span>
+        <span>${timeAgoKm(p.created_at)}</span>
+        <span class="vw" title="ចំនួនអ្នកមើល">${ic('eye', 14)}${formatViews(p.view_count)}</span>
+      </p>
+    </div>
+  </article>`;
+}
 function renderProducts(){const list=products;$('productGrid').innerHTML=list.map(productCard).join('');$('resultCount').textContent=`${list.length} មុខ`;$('listingTitle').textContent=activeCategory==='all'?'ទំនិញដែលគួរឱ្យចាប់អារម្មណ៍':CAT[activeCategory]||'ទំនិញ';$('listingSub').textContent=searchTerm?`លទ្ធផលស្វែងរកសម្រាប់ «${esc(searchTerm)}»`:'ទំនិញពិតពីហាងដែលបានចុះឈ្មោះនៅលើ 7inOne';$('emptyHome').classList.toggle('hidden',list.length>0);$('productGrid').classList.toggle('hidden',list.length===0);$('skeletonGrid').classList.add('hidden')}
 function setCategory(category){activeCategory=category;$('searchCategory').value=category;document.querySelectorAll('[data-category]').forEach(b=>b.classList.toggle('active',b.dataset.category===category));void loadProducts()}
 function favoriteSpinner(){
@@ -367,18 +451,18 @@ function renderProductDetail(){
  const ratingStars=Array.from({length:5},(_,i)=>starIcon(i+1,average)).join('');
  $('productDetail').innerHTML=`<div class="product-detail-page">
   <section class="product-hero-card">
-   <div class="product-hero-grid">
-    <div class="product-gallery-column" aria-label="រូបភាពទំនិញ">${gallery}</div>
-    <div class="product-buybox">
+   <div class="product-hero-grid product-detail-layout-top">
+    <div class="product-gallery-column product-detail-gallery" aria-label="រូបភាពទំនិញ">${gallery}</div>
+    <div class="product-buybox product-detail-info">
      <div class="product-top-meta"><span class="product-category-badge">${esc(CAT[p.category]||p.category||'ទំនិញ')}</span><span class="product-meta-item">${ic('clock',14)} ${fmtDate(p.created_at)}</span><span class="product-meta-item">${ic('eye',14)} ${Number(p.view_count||0).toLocaleString()} Views</span></div>
      <h1 class="product-detail-title">${esc(p.title)}</h1>
      <div class="product-price-card"><div><small>តម្លៃលក់</small><strong>${money(p.price)}</strong></div><div class="product-price-context"><span>${ic('pin',15)} ${esc(p.location||'មិនបានបញ្ជាក់')}</span><span class="product-stock-badge ${stockKnown&&Number(p.stock)<=0?'is-out':''}">${ic(stockKnown&&Number(p.stock)<=0?'x':'checkcircle',14)} ${stockLabel}</span></div></div>
      ${shortDescription?'<div class="product-short-summary"><p>'+esc(shortDescription)+'</p></div>':''}
-     <div class="product-action-area">
+     <div class="product-action-area product-detail-actions">
       <div class="product-primary-actions"><button type="button" class="product-buy-primary brand-gradient" data-product-action="buy">${ic('bag',18)} ទិញឥឡូវនេះ</button><button type="button" class="product-chat-primary" data-product-action="chat">${ic('chat',18)} ឆាតជាមួយអ្នកលក់</button></div>
       <div class="product-utility-actions"><button type="button" data-product-action="offer">${ic('tag',16)} តថ្លៃទំនិញ</button><button type="button" data-product-action="save" aria-pressed="${saved?'true':'false'}">${ic('heart',16)} ${saved?'បានរក្សាទុក':'រក្សាទុក'}</button></div>
      </div>
-     <section class="product-seller-card">
+     <section class="product-seller-card product-detail-seller">
       <div class="product-seller-heading"><div class="product-seller-avatar">${avatarMarkup(v.store_name,v.profile?.avatar_url)}</div><div class="product-seller-identity"><b>${esc(v.store_name||'ហាងអ្នកលក់')}</b><span class="product-seller-verified">${v.status==='approved'?ic('checkcircle',13)+' អ្នកលក់បានផ្ទៀងផ្ទាត់':'អ្នកលក់'}</span><span class="product-seller-rating">${ratingStars}<strong>${average?average.toFixed(1):'—'}</strong><small>(${reviewTotal})</small></span></div><button type="button" class="product-store-button" data-product-action="store">${ic('store',16)} មើលហាង</button></div>
       <div class="product-seller-metrics"><div><b>${Number(v.active_listings||0)}</b><small>ទំនិញលក់</small></div><div><b>${Number(v.total_views||0).toLocaleString()}</b><small>អ្នកមើល</small></div><div><b>${reviewTotal}</b><small>ការវាយតម្លៃ</small></div></div>
      </section>
@@ -386,8 +470,8 @@ function renderProductDetail(){
    </div>
   </section>
   <section class="product-details-grid">
-   <article class="product-description-card"><h2>${ic('file',18)} ព័ត៌មានលម្អិតអំពីទំនិញ</h2><p class="product-full-description">${esc(fullDescription||shortDescription||'មិនទាន់មានការពិពណ៌នាលម្អិតទេ។')}</p><div class="product-spec-grid"><div><small>ប្រភេទ</small><b>${esc(CAT[p.category]||p.category||'មិនបានបញ្ជាក់')}</b></div><div><small>ស្ថានភាព</small><b>${esc(p.condition||'មិនបានបញ្ជាក់')}</b></div><div><small>ទីតាំង</small><b>${ic('pin',13)} ${esc(p.location||'មិនបានបញ្ជាក់')}</b></div><div><small>កាលបរិច្ឆេទបង្ហោះ</small><b>${fmtDate(p.created_at)}</b></div></div></article>
-   <aside class="product-safety-note"><h2>${ic('shield',19)} ការណែនាំសុវត្ថិភាពអ្នកទិញ</h2><ul><li>${ic('checkcircle',16)}<span>ពិនិត្យទំនិញដោយផ្ទាល់ មុនពេលទូទាត់ប្រាក់</span></li><li>${ic('checkcircle',16)}<span>ស្នើសុំរូបភាព ឬព័ត៌មានបន្ថែម ប្រសិនបើមិនច្បាស់</span></li><li>${ic('checkcircle',16)}<span>កុំផ្ញើប្រាក់ទៅគណនីដែលមិនអាចផ្ទៀងផ្ទាត់បាន</span></li><li>${ic('checkcircle',16)}<span>ជួបអ្នកលក់នៅទីតាំងសាធារណៈ និងមានសុវត្ថិភាព</span></li><li>${ic('checkcircle',16)}<span>ប្រើប្រព័ន្ធរាយការណ៍ ប្រសិនបើជួបសកម្មភាពគួរឱ្យសង្ស័យ</span></li></ul></aside>
+   <article class="product-description-card product-detail-description"><h2>${ic('file',18)} ព័ត៌មានលម្អិតអំពីទំនិញ</h2><p class="product-full-description">${esc(fullDescription||shortDescription||'មិនទាន់មានការពិពណ៌នាលម្អិតទេ។')}</p><div class="product-spec-grid"><div><small>ប្រភេទ</small><b>${esc(CAT[p.category]||p.category||'មិនបានបញ្ជាក់')}</b></div><div><small>ស្ថានភាព</small><b>${esc(p.condition||'មិនបានបញ្ជាក់')}</b></div><div><small>ទីតាំង</small><b>${ic('pin',13)} ${esc(p.location||'មិនបានបញ្ជាក់')}</b></div><div><small>កាលបរិច្ឆេទបង្ហោះ</small><b>${fmtDate(p.created_at)}</b></div></div></article>
+   <aside class="product-safety-note product-detail-safety"><h2>${ic('shield',19)} ការណែនាំសុវត្ថិភាពអ្នកទិញ</h2><ul><li>${ic('checkcircle',16)}<span>ពិនិត្យទំនិញដោយផ្ទាល់ មុនពេលទូទាត់ប្រាក់</span></li><li>${ic('checkcircle',16)}<span>ស្នើសុំរូបភាព ឬព័ត៌មានបន្ថែម ប្រសិនបើមិនច្បាស់</span></li><li>${ic('checkcircle',16)}<span>កុំផ្ញើប្រាក់ទៅគណនីដែលមិនអាចផ្ទៀងផ្ទាត់បាន</span></li><li>${ic('checkcircle',16)}<span>ជួបអ្នកលក់នៅទីតាំងសាធារណៈ និងមានសុវត្ថិភាព</span></li><li>${ic('checkcircle',16)}<span>ប្រើប្រព័ន្ធរាយការណ៍ ប្រសិនបើជួបសកម្មភាពគួរឱ្យសង្ស័យ</span></li></ul></aside>
   </section>
   <section class="product-reviews product-reviews-full"><div class="product-section-heading"><div><h2>${ic('star',19)} ការវាយតម្លៃពីអ្នកទិញ</h2><p>មតិយោបល់ពីអតិថិជនដែលបានទិញទំនិញ</p></div><span>${reviewTotal} Reviews</span></div>
    <div class="product-reviews-layout"><div class="product-rating-summary"><strong>${average?average.toFixed(1):'—'}</strong><div class="product-rating-stars">${ratingStars}</div><small>ផ្អែកលើការវាយតម្លៃ ${reviewTotal} នាក់</small><div class="product-rating-bars">${reviewBars}</div></div>
@@ -800,10 +884,10 @@ $('sellerDocument').addEventListener('change',e=>{const f=e.target.files?.[0];if
 $('productImage').setAttribute('multiple','multiple');$('productImage').setAttribute('accept','image/jpeg,image/png,image/webp');$('productImage').addEventListener('change',e=>{const files=Array.from(e.target.files||[]);if(files.length>5||files.some(file=>!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>8*1024*1024)){toast('សូមជ្រើសរើសរូប JPG, PNG ឬ WEBP មិនលើស 8MB ក្នុងមួយរូប និងអតិបរមា ៥ រូប។','warning');e.target.value='';selectedProductImages=[];$('productImageName').textContent='ជ្រើសរើសរូបភាពផលិតផល';$('productImageThumb').innerHTML=ic('image',21);return}selectedProductImages=files;$('productImageName').textContent=selectedProductImages.length?`${selectedProductImages.length} រូបបានជ្រើសរើស`:'ជ្រើសរើសរូបភាពផលិតផល';if(selectedProductImages[0]){const url=URL.createObjectURL(selectedProductImages[0]);$('productImageThumb').innerHTML=`<img src="${url}" class="h-full w-full object-cover">`}});
 $('searchForm').addEventListener('submit',e=>{e.preventDefault();searchTerm=$('searchInput').value.trim();activeCategory=$('searchCategory').value;document.querySelectorAll('[data-category]').forEach(b=>b.classList.toggle('active',b.dataset.category===activeCategory));void loadProducts();$('view-home').scrollIntoView({behavior:'smooth'})});$('searchInput').addEventListener('input',e=>{searchTerm=e.target.value.trim();clearTimeout(window.searchWait);window.searchWait=setTimeout(()=>void loadProducts(),350)});$('searchCategory').addEventListener('change',e=>setCategory(e.target.value));$('categoryStrip').addEventListener('click',e=>{const b=e.target.closest('[data-category]');if(b)setCategory(b.dataset.category)});document.querySelectorAll('[data-tag]').forEach(b=>b.addEventListener('click',()=>{searchTerm=b.dataset.tag;$('searchInput').value=searchTerm;void loadProducts()}));$('sortSelect').addEventListener('change',()=>{const sort=$('sortSelect').value;products.sort((a,b)=>sort==='low'?Number(a.price)-Number(b.price):sort==='high'?Number(b.price)-Number(a.price):new Date(b.created_at)-new Date(a.created_at));renderProducts()});$('clearFilters').addEventListener('click',()=>{searchTerm='';activeCategory='all';$('searchInput').value='';$('searchCategory').value='all';setCategory('all')});
 $('productGrid').addEventListener('click',event=>{const heart=event.target.closest('[data-action="save"]');if(heart){event.preventDefault();event.stopPropagation();saveAction(heart.dataset.id,heart);return}const store=event.target.closest('[data-action="store"]');if(store){event.preventDefault();event.stopPropagation();void openStorefront(store.dataset.vendorId);return}const view=event.target.closest('[data-action="view"]');if(view)void openProduct(view.dataset.id)});
-$('mobileMarketPost')?.addEventListener('click',()=>{if(!requireLogin())return;renderProductForm()});
+$('mobileMarketPost')?.addEventListener('click',()=>$('postAdBtn').click());
 $('mobileMarketNav')?.addEventListener('click',event=>{const button=event.target.closest('[data-action="mobile-search"]');if(button){$('searchInput').focus();window.scrollTo({top:0,behavior:'smooth'})}});
 $('postAdBtn').addEventListener('click',()=>{if(!requireLogin())return;if(!isVerifiedSeller()){openSellerModal();return}renderProductForm()});$('mobilePostBtn').addEventListener('click',()=>$('postAdBtn').click());$('heroPostBtn').addEventListener('click',()=>$('postAdBtn').click());$('profileApplyTop').addEventListener('click',()=>{if(me?.vendor) {profileTab='seller';document.querySelector('[data-profile-tab="seller"]').click()} else openSellerModal()});$('sellerGateApply').addEventListener('click',openSellerModal);$('addProductBtn').addEventListener('click',()=>renderProductForm());
-$('notificationBtn').addEventListener('click',e=>{e.stopPropagation();toggleDrop('notificationMenu')});$('profileMenuBtn').addEventListener('click',e=>{e.stopPropagation();toggleDrop('profileMenu')});document.addEventListener('click',e=>{if(!e.target.closest('#profileMenu')&&!e.target.closest('#profileMenuBtn')&&!e.target.closest('#notificationMenu')&&!e.target.closest('#notificationBtn'))closeDropdowns()});document.querySelectorAll('[data-action]').forEach(b=>b.addEventListener('click',()=>{const a=b.dataset.action;if(a==='profile')showView('profile');if(a==='seller-dashboard')showView('seller');if(a==='admin')showView('admin');if(a==='saved'){showView('profile');profileTab='saved';document.querySelector('[data-profile-tab="saved"]').click()}if(a==='login')openAuth();if(a==='logout')void (async()=>{try{const {error}=await supabaseClient.auth.signOut();if(error)throw error;session=null;me=null;savedIds.clear();pendingPhone=null;telegramLoginWidgetMounted=false;if($('telegramLoginWidget'))$('telegramLoginWidget').innerHTML='';$('authForm')?.reset();syncHeader();applyMaintenanceUI();showView('home');openAuth('login');toast('បាន Logout និងសម្អាត Session គណនីចាស់រួចរាល់។ សូម Login តាម Telegram ម្តងទៀត។','success')}catch(error){toast('មិនអាច Logout បានទេ៖ '+error.message,'error')}})()}));document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>showView(b.dataset.view)));
+$('notificationBtn').addEventListener('click',e=>{e.stopPropagation();toggleDrop('notificationMenu')});$('profileMenuBtn').addEventListener('click',e=>{e.stopPropagation();toggleDrop('profileMenu')});document.addEventListener('click',e=>{if(!e.target.closest('#profileMenu')&&!e.target.closest('#profileMenuBtn')&&!e.target.closest('#notificationMenu')&&!e.target.closest('#notificationBtn'))closeDropdowns()});document.querySelectorAll('[data-action]').forEach(b=>b.addEventListener('click',()=>{const a=b.dataset.action;if(a==='profile')showView('profile');if(a==='seller-dashboard')showView('seller');if(a==='admin')showView('admin');if(a==='saved'){showView('profile');profileTab='saved';document.querySelector('[data-profile-tab="saved"]').click()}if(a==='open-chat')void openSellerChatInbox();if(a==='login')openAuth();if(a==='logout')void (async()=>{try{const {error}=await supabaseClient.auth.signOut();if(error)throw error;session=null;me=null;savedIds.clear();pendingPhone=null;telegramLoginWidgetMounted=false;if($('telegramLoginWidget'))$('telegramLoginWidget').innerHTML='';$('authForm')?.reset();syncHeader();applyMaintenanceUI();showView('home');openAuth('login');toast('បាន Logout និងសម្អាត Session គណនីចាស់រួចរាល់។ សូម Login តាម Telegram ម្តងទៀត។','success')}catch(error){toast('មិនអាច Logout បានទេ៖ '+error.message,'error')}})()}));document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>showView(b.dataset.view)));
 document.querySelectorAll('[data-auth-mode]').forEach(b=>b.addEventListener('click',()=>setAuthMode(b.dataset.authMode)));
 $('authForm').addEventListener('submit',async e=>{e.preventDefault();if(!supabaseClient){toast('មិនអាចភ្ជាប់ Supabase បានទេ។ សូមពិនិត្យ Environment Variables។','error');return}const identity=$('authIdentity').value.trim(),password=$('authPassword').value,name=$('authName').value.trim(),isEmail=identity.includes('@');$('authSubmit').disabled=true;try{if(authMode==='verifyPhone'){if(!pendingPhone)throw new Error('សូមចាប់ផ្តើមចុះឈ្មោះតាមលេខទូរស័ព្ទម្តងទៀត។');const verified=await supabaseClient.auth.verifyOtp({phone:pendingPhone,token:$('authOtp').value.trim(),type:'sms'});if(verified.error)throw verified.error;session=verified.data.session;await loadIdentity();syncHeader();pendingPhone=null;setAuthMode('login');closeModal('authModal');toast('បានផ្ទៀងផ្ទាត់លេខទូរស័ព្ទ និងបើកគណនីរួចរាល់។');return}let result;if(authMode==='register'){if(name.length<2)throw new Error('សូមបញ្ចូលឈ្មោះពេញ។');const credentials={password,options:{data:{display_name:name}}};result=isEmail?await supabaseClient.auth.signUp({...credentials,email:identity}):await supabaseClient.auth.signUp({...credentials,phone:identity});}else{const credentials={password};result=isEmail?await supabaseClient.auth.signInWithPassword({...credentials,email:identity}):await supabaseClient.auth.signInWithPassword({...credentials,phone:identity})}if(result.error)throw result.error;if(authMode==='register'&&!result.data.session){if(!isEmail){pendingPhone=identity;setAuthMode('verifyPhone');toast('បានផ្ញើលេខកូដ SMS ទៅ '+identity+'។ សូមបញ្ចូលលេខកូដដើម្បីបញ្ជាក់គណនី។','warning');return}closeModal('authModal');toast('បានចុះឈ្មោះ។ សូមចុចតំណបញ្ជាក់ក្នុងអ៊ីមែលរបស់អ្នក។','warning');return}session=result.data.session;await loadIdentity();syncHeader();closeModal('authModal');toast(authMode==='register'?'បានបង្កើតគណនីរួចរាល់។':'បានចូលគណនីរួចរាល់។');}catch(err){toast(err.message,'error')}finally{$('authSubmit').disabled=false}});
 
