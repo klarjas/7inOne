@@ -32,7 +32,7 @@ app.use(cors({ origin: process.env.FRONTEND_ORIGIN ? process.env.FRONTEND_ORIGIN
 app.use(express.json({ limit: '1mb' }));
 app.use('/api', rateLimit({ windowMs: 60_000, limit: 120, standardHeaders: 'draft-8', legacyHeaders: false }));
 
-const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024, files: 5 } });
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024, files: 8 } });
 const fail = (res, status, message) => res.status(status).json({ error: message });
 const db = res => { if (!supabase) { fail(res, 503, 'Supabase is not configured'); return false; } return true; };
 const clean = (value, max = 500) => String(value ?? '').trim().slice(0, max);
@@ -473,7 +473,7 @@ app.patch('/api/admin/branding', authenticate, requireAdmin, upload.fields([{nam
     for(const slot of ['top','middle','tall']){
       const key=slot[0].toUpperCase()+slot.slice(1),file=posterFiles[slot],old=priorPosters[slot]||{},clear=String(req.body['clearPoster'+key]||'')==='true';
       const image=file?await uploadToTelegram(file):null;if(image)newlyUploaded.push(image);
-      const linkValue=clean(req.body['poster'+key+'Link'],2000)||clean(old.link,2000);
+      const linkValue=Object.prototype.hasOwnProperty.call(req.body,'poster'+key+'Link')?clean(req.body['poster'+key+'Link'],2000):clean(old.link,2000);
       if(linkValue){try{const parsed=new URL(linkValue);if(parsed.protocol!=='https:')throw new Error('HTTPS required')}catch{throw new Error('Poster links must be valid HTTPS URLs')}}
       if(file&&!clear)newSidePosters[slot]={fileId:image.fileId,messageId:image.messageId,mimeType:image.mimeType,link:linkValue,enabled:String(req.body['poster'+key+'Enabled']||'true')==='true',alt:slot==='tall'?'Promotion poster':'Homepage promotion'};
       else if(!clear&&old.fileId)newSidePosters[slot]={...old,link:linkValue,enabled:String(req.body['poster'+key+'Enabled']??(old.enabled!==false))==='true'};
