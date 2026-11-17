@@ -199,6 +199,59 @@ grant execute on function public.admin_cancel_marketplace_order(uuid,text) to se
 alter table public.telegram_password_otps
   add column if not exists locked_until timestamptz;
 
+-- Serialize OTP issuance for each account so simultaneous requests cannot
+-- replace each other's codes or reset the attempt counter.
+create or replace function public.issue_telegram_password_otp(
+  p_user_id uuid,
+  p_otp_hash text,
+  p_expires_at timestamptz,
+  p_created_at timestamptz
+) returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $
+declare
+  v_existing public.telegram_password_otps%rowtype;
+begin
+  perform pg_advisory_xact_lock(hashtextextended(p_user_id::text, 0));
+
+  select * into v_existing
+  from public.telegram_password_otps
+  where user_id = p_user_id
+  for update;
+
+  if found then
+    if v_existing.locked_until is not null and v_existing.locked_until > now() then
+      return false;
+    end if;
+    if coalesce(v_existing.attempts, 0) >= 5 and v_existing.locked_until is null then
+      update public.telegram_password_otps
+      set locked_until = now() + interval '15 minutes'
+      where user_id = p_user_id;
+      return false;
+    end if;
+    if v_existing.expires_at > now() then
+      return false;
+    end if;
+  end if;
+
+  insert into public.telegram_password_otps(user_id, otp_hash, expires_at, attempts, locked_until, created_at)
+  values(p_user_id, p_otp_hash, p_expires_at, 0, null, p_created_at)
+  on conflict (user_id) do update
+    set otp_hash = excluded.otp_hash,
+        expires_at = excluded.expires_at,
+        attempts = 0,
+        locked_until = null,
+        created_at = excluded.created_at;
+
+  return true;
+end;
+$;
+
+revoke all on function public.issue_telegram_password_otp(uuid,text,timestamptz,timestamptz) from public, anon, authenticated;
+grant execute on function public.issue_telegram_password_otp(uuid,text,timestamptz,timestamptz) to service_role;
+
 create or replace function public.record_telegram_password_otp_failure(p_user_id uuid)
 returns integer
 language plpgsql
@@ -208,6 +261,8 @@ as $$
 declare
   v_attempts integer;
 begin
+  perform pg_advisory_xact_lock(hashtextextended(p_user_id::text, 0));
+
   update public.telegram_password_otps
   set attempts = coalesce(attempts, 0) + 1,
       locked_until = case
