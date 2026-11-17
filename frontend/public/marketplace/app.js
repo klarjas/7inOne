@@ -271,8 +271,7 @@ function formatViews(value) {
   const num = Number(value || 0);
   return num >= 1000 ? (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K' : String(num);
 }
-const verifiedStoreSvg = `<svg class="vb" width="16" height="16" viewBox="0 0 24 24" role="img" aria-label="ហាងបានផ្ទៀងផ្ទាត់" fill="none" stroke="#1D8CD0" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2.8 2.4 1.4 2.8-.1 1.3 2.4 2.5 1.5-.1 2.8 1.1 2.4-1.3 2.4.1 2.8-2.5 1.2-1.3 2.4-2.8-.1L12 21.2l-2.4-1.4-2.8.1-1.3-2.4L3 16l.1-2.8L2 10.8l1.3-2.4-.1-2.8 2.5-1.2L7 2l2.8.1Z"/><path d="m8.2 12.2 2.5 2.5 5.1-5.3"/></svg>`;
-const verifiedStoreBadge = `<span class="verified-store-badge">${verifiedStoreSvg}<span>ផ្ទៀងផ្ទាត់</span></span>`;
+const verifiedStoreBadge = `<span class="verified-store-badge"><span class="verified-badge" title="Verified Account" aria-label="Verified Account"></span><span>ផ្ទៀងផ្ទាត់</span></span>`;
 function productCard(p, index) {
   const images = (p.product_images || []).filter(item => item.image_url);
   const image = images[0]?.image_url || '';
