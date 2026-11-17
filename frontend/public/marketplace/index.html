@@ -1,449 +1,1021 @@
 <!DOCTYPE html>
 <html lang="km">
 <head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<meta content="#064E3B" name="theme-color"/>
-<title>7inOne — ផ្សារទិញលក់អនឡាញនៅកម្ពុជា</title>
-<meta content="7inOne — ផ្សារទិញលក់ពិតប្រាកដនៅកម្ពុជា ដំណើរការដោយគណនី និងទិន្នន័យ Supabase។" name="description"/>
-<link href="https://fonts.googleapis.com" rel="preconnect"/>
-<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-<link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
-<script src="https://cdn.tailwindcss.com"></script>
-<script>tailwind.config={theme:{extend:{fontFamily:{khmer:['Kantumruy Pro','sans-serif']},colors:{brand:'#064E3B',emerald:'#10B981',amber:'#F59E0B'}}}};</script>
-<link rel="stylesheet" href="./style.css"/>
-<script>
-(function(){
-  var allowed=['home','profile','seller','admin','product','store'];
-  var rawHash=String(window.location.hash||'').replace(/^#/,'');
-  var parts=rawHash.split('/'),hashView=parts[0]||'',fromStorage='';
-  var decodeRouteId=function(value){try{return decodeURIComponent(value)}catch(e){return value}};
-  var productId=hashView==='product'?decodeRouteId(parts.slice(1).join('/')):'';
-  var storeId=hashView==='store'?decodeRouteId(parts.slice(1).join('/')):'';
-  try{fromStorage=sessionStorage.getItem('ecomstore.activeView')||'';if(!productId&&hashView==='product')productId=sessionStorage.getItem('ecomstore.currentProductId')||'';if(!storeId&&hashView==='store')storeId=sessionStorage.getItem('ecomstore.currentStoreId')||'';if(!productId&&fromStorage==='product')productId=sessionStorage.getItem('ecomstore.currentProductId')||'';if(!storeId&&fromStorage==='store')storeId=sessionStorage.getItem('ecomstore.currentStoreId')||''}catch(e){}
-  var initial=allowed.includes(hashView)?hashView:(allowed.includes(fromStorage)?fromStorage:'home');
-  if(initial==='product'&&!productId)initial='home';if(initial==='store'&&!storeId)initial='home';
-  document.documentElement.dataset.initialView=initial;document.documentElement.dataset.initialProductId=productId;document.documentElement.dataset.initialStoreId=storeId;document.documentElement.classList.add('route-restoring');
-})();
-</script>
-<style>
-html.route-restoring .view{display:none!important}
-html.route-restoring[data-initial-view="home"] #view-home,
-html.route-restoring[data-initial-view="profile"] #view-profile,
-html.route-restoring[data-initial-view="seller"] #view-seller,
-html.route-restoring[data-initial-view="admin"] #view-admin,
-html.route-restoring[data-initial-view="product"] #view-product,
-html.route-restoring[data-initial-view="store"] #view-store{display:block!important;animation:none!important}
-html.route-restoring[data-initial-view="home"] #view-home>*,
-html.route-restoring[data-initial-view="profile"] #view-profile>*,
-html.route-restoring[data-initial-view="seller"] #view-seller>*,
-html.route-restoring[data-initial-view="admin"] #view-admin>*,
-html.route-restoring[data-initial-view="product"] #view-product>*,
-html.route-restoring[data-initial-view="store"] #view-store>*{visibility:hidden!important}
-html.route-restoring[data-initial-view="home"] #view-home::before,
-html.route-restoring[data-initial-view="profile"] #view-profile::before,
-html.route-restoring[data-initial-view="seller"] #view-seller::before,
-html.route-restoring[data-initial-view="admin"] #view-admin::before,
-html.route-restoring[data-initial-view="product"] #view-product::before,
-html.route-restoring[data-initial-view="store"] #view-store::before{content:"";display:block;width:min(1320px,calc(100% - 36px));height:clamp(220px,38vh,360px);margin:24px auto;border:1px solid #e8ecf4;border-radius:26px;background:linear-gradient(110deg,#edf0f6 8%,#f8fafc 18%,#edf0f6 33%);background-size:220% 100%;animation:initialRouteShimmer 1.5s linear infinite}
-@keyframes initialRouteShimmer{to{background-position-x:-220%}}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#064E3B" />
+  <title>7inOne — ផ្សារទិញលក់អនឡាញនៅកម្ពុជា</title>
+  <meta name="description" content="7inOne — ផ្សារទិញលក់ពិតប្រាកដនៅកម្ពុជា ដំណើរការដោយគណនី និងទិន្នន័យ Supabase។" />
 
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { khmer: ['Kantumruy Pro', 'sans-serif'] },
+          colors: { brand: '#064E3B', emerald: '#10B981', amber: '#F59E0B' }
+        }
+      }
+    };
+  </script>
+  <link rel="stylesheet" href="./style.css" />
+
+  <!-- Instant Route Restoration (Prevents Flash of Wrong Page) -->
+  <script>
+    (function () {
+      var allowed = ['home', 'profile', 'seller', 'admin', 'product', 'store'];
+      var rawHash = String(window.location.hash || '').replace(/^#/, '');
+      var parts = rawHash.split('/');
+      var hashView = parts[0] || '';
+      var fromStorage = '';
+      var decodeRouteId = function (val) {
+        try { return decodeURIComponent(val); } catch (e) { return val; }
+      };
+      var productId = hashView === 'product' ? decodeRouteId(parts.slice(1).join('/')) : '';
+      var storeId = hashView === 'store' ? decodeRouteId(parts.slice(1).join('/')) : '';
+
+      try {
+        fromStorage = sessionStorage.getItem('ecomstore.activeView') || '';
+        if (!productId && (hashView === 'product' || fromStorage === 'product')) {
+          productId = sessionStorage.getItem('ecomstore.currentProductId') || '';
+        }
+        if (!storeId && (hashView === 'store' || fromStorage === 'store')) {
+          storeId = sessionStorage.getItem('ecomstore.currentStoreId') || '';
+        }
+      } catch (e) {}
+
+      var initial = allowed.includes(hashView) ? hashView : (allowed.includes(fromStorage) ? fromStorage : 'home');
+      if (initial === 'product' && !productId) initial = 'home';
+      if (initial === 'store' && !storeId) initial = 'home';
+
+      document.documentElement.dataset.initialView = initial;
+      document.documentElement.dataset.initialProductId = productId;
+      document.documentElement.dataset.initialStoreId = storeId;
+      document.documentElement.classList.add('route-restoring');
+    })();
+  </script>
+  <style>
+    html.route-restoring .view { display: none !important; }
+    html.route-restoring[data-initial-view="home"] #view-home,
+    html.route-restoring[data-initial-view="profile"] #view-profile,
+    html.route-restoring[data-initial-view="seller"] #view-seller,
+    html.route-restoring[data-initial-view="admin"] #view-admin,
+    html.route-restoring[data-initial-view="product"] #view-product,
+    html.route-restoring[data-initial-view="store"] #view-store {
+      display: block !important;
+      animation: none !important;
+    }
+    html.route-restoring .view > * { visibility: hidden !important; }
+    html.route-restoring .view::before {
+      content: "";
+      display: block;
+      width: min(1200px, calc(100% - 36px));
+      height: clamp(220px, 38vh, 360px);
+      margin: 24px auto;
+      border-radius: 24px;
+      background: linear-gradient(110deg, #ECEEF2 8%, #F8FAFC 18%, #ECEEF2 33%);
+      background-size: 220% 100%;
+      animation: initialRouteShimmer 1.5s linear infinite;
+    }
+    @keyframes initialRouteShimmer { to { background-position-x: -220%; } }
+  </style>
 </head>
+
 <body class="font-khmer">
-<header class="hd glass sticky top-0 z-50 border-b border-white/70 shadow-[0_3px_18px_rgba(30,41,59,.045)]">
-<div class="shell flex min-h-[74px] flex-wrap items-center gap-3 py-3">
-<button class="site-brand-lockup flex shrink-0 items-center gap-3 text-left" data-view="home" aria-label="7inOne home"><span class="site-logo-mark brand-gradient grid h-11 w-11 place-items-center rounded-2xl text-white shadow-lg" id="siteLogoMark"><span id="logoIcon"></span></span><span class="min-w-0 leading-tight"><b class="site-title block truncate text-[19px] tracking-tight" id="siteTitle">7inOne</b><small class="site-subtitle mt-0.5 block truncate text-[10px] font-medium tracking-wide" id="siteSubtitle">ផ្សារទិញលក់កម្ពុជា</small></span></button>
-<form class="order-3 flex w-full items-center rounded-2xl border border-slate-200 bg-slate-50/90 p-1.5 focus-within:border-indigo-300 focus-within:bg-white focus-within:shadow-[0_0_0_4px_rgba(99,102,241,.08)] md:order-none md:ml-5 md:flex-1 md:max-w-[650px]" id="searchForm">
-<select class="hidden h-10 max-w-[145px] cursor-pointer bg-transparent px-2 text-[11px] font-semibold text-slate-600 outline-none sm:block" id="searchCategory"><option value="all">គ្រប់ប្រភេទ</option><option value="phones">ទូរស័ព្ទ &amp; អេឡិចត្រូនិក</option><option value="vehicles">រថយន្ត &amp; ម៉ូតូ</option><option value="property">អចលនទ្រព្យ</option><option value="fashion">សម្លៀកបំពាក់</option><option value="furniture">គ្រឿងសង្ហារិម</option></select>
-<span class="hidden h-7 w-px bg-slate-200 sm:block"></span><span class="ml-2 text-slate-400" id="searchIcon"></span>
-<input class="h-10 min-w-0 flex-1 bg-transparent px-2.5 text-[12px] outline-none placeholder:text-slate-400" id="searchInput" placeholder="ស្វែងរកទំនិញដែលអ្នកចង់បាន..." type="search"/>
-<button aria-label="ស្វែងរក" class="brand-gradient grid h-10 w-11 shrink-0 place-items-center rounded-xl text-white shadow-md shadow-indigo-200" id="searchBtn"></button>
-</form>
-<div class="ml-auto flex shrink-0 items-center gap-2">
-<button class="post-glow hidden items-center gap-2 rounded-xl brand-gradient px-4 py-3 text-[12px] font-bold text-white sm:flex" id="postAdBtn"><span id="postIcon"></span>ដាក់លក់ទំនិញ</button>
-<button aria-label="ដាក់លក់ទំនិញ" class="post-glow grid h-10 w-10 place-items-center rounded-xl brand-gradient text-white sm:hidden" id="mobilePostBtn"></button>
-<div class="relative"><button aria-label="ការជូនដំណឹង" class="relative grid h-10 w-10 place-items-center rounded-xl border border-slate-200 bg-white text-slate-600 hover:text-emerald-700" id="notificationBtn"><span id="bellIcon"></span><i class="absolute right-2 top-2 h-2 w-2 rounded-full border-2 border-white bg-rose-500"></i></button><div class="dropdown absolute right-0 top-[calc(100%+12px)] z-[70] w-[min(320px,calc(100vw-24px))] rounded-2xl border border-slate-100 bg-white p-4 shadow-2xl" id="notificationMenu"><p class="mb-3 text-sm font-bold">ការជូនដំណឹង</p><div class="space-y-2" id="notificationList"></div></div></div>
-<div class="relative"><button class="flex items-center gap-2 rounded-xl p-1 hover:bg-slate-100" id="profileMenuBtn"><div aria-label="រូបអ្នកប្រើ" class="nav-avatar h-9 w-9 overflow-hidden rounded-full border-2 border-white bg-emerald-50 shadow-sm" id="navAvatar" role="img"></div><span class="hidden text-left leading-tight lg:block"><b class="block text-[11px]" id="navName">ភ្ញៀវ</b><small class="block text-[9px] text-slate-400" id="navRole">មិនទាន់ចូលគណនី</small></span><span class="hidden text-slate-400 lg:block" id="chevronIcon"></span></button><div class="dropdown absolute right-0 top-[calc(100%+12px)] z-[70] w-56 rounded-2xl border border-slate-100 bg-white p-2 shadow-2xl" id="profileMenu"><div class="border-b border-slate-100 px-3 py-3"><b class="text-sm" id="menuUserName">សួស្តី!</b><p class="text-[10px] text-slate-400" id="menuUserStatus">សូមស្វាគមន៍មកកាន់ 7inOne</p></div><button class="menu-action" data-action="profile"><span id="menuUserIcon"></span>គណនីរបស់ខ្ញុំ</button><button class="menu-action" data-action="seller-dashboard"><span id="menuStoreIcon"></span>គ្រប់គ្រងហាង</button><button class="menu-action" data-action="admin"><span id="menuAdminIcon"></span>ផ្ទាំង Admin</button><button class="menu-action" data-action="saved"><span id="menuSaveIcon"></span>ទំនិញដែលបានរក្សាទុក</button><button class="menu-action" data-action="login"><span id="menuLoginIcon"></span>ចូល / ប្តូរគណនី</button></div></div>
-</div>
-</div>
-</header>
-<main class="bottom-pad">
-<!-- HOME VIEW -->
-<section class="view" id="view-home">
-  <div class="home-layout-shell shell mx-auto">
-    <aside class="home-sidebar" aria-label="ការរុករក">
-      <button class="home-side-link active" type="button" data-home-side="home"><span>⌂</span>ទំព័រដើម</button>
-      <button class="home-side-link" type="button" data-category="phones"><span>▦</span>អេឡិចត្រូនិក</button>
-      <button class="home-side-link" type="button" data-category="vehicles"><span>🚗</span>រថយន្ត និង ម៉ូតូ</button>
-      <button class="home-side-link" type="button" data-category="property"><span>⌂</span>អចលនទ្រព្យ</button>
-      <button class="home-side-link" type="button" data-category="fashion"><span>◇</span>ម៉ូដសម្លៀកបំពាក់</button>
-      <button class="home-side-link" type="button" data-home-side="live"><span>▷</span>Live Shop</button>
-      <button class="home-side-link" type="button" data-home-side="saved"><span>♡</span>ចំណូលចិត្ត</button>
-      <button class="home-side-link" type="button" data-home-side="orders"><span>▤</span>ការបញ្ជាទិញ</button>
-      <button class="home-side-link" type="button" data-view="profile"><span>♙</span>គណនី</button>
-      <div class="home-sidebar-vip"><b>♛ 7inOne VIP</b><small>អត្ថប្រយោជន៍ពិសេសសម្រាប់សមាជិក</small></div>
-    </aside>
-    <div class="home-main-content">
-    <!-- SPLIT HERO + BENTO SHOWCASE -->
-    <section class="market-hero pt-4 sm:pt-8">
-      <div class="hc hero-copy">
-        <p class="live"><i></i><span id="heroBadge">ផ្សារអនឡាញសម្រាប់អ្នកទាំងអស់គ្នា</span></p>
-        <h1 id="heroTitle">ទិញលក់ងាយៗ នៅជិតអ្នក</h1>
-        <p class="sub" id="heroSubtitle">ស្វែងរកទំនិញដែលអ្នកស្រឡាញ់ ឬដាក់លក់របស់ដែលអ្នកមិនប្រើ។ ភ្ជាប់អ្នកទិញ និងអ្នកលក់នៅទូទាំងប្រទេសកម្ពុជា។</p>
-        <div class="tags">
-          <span>ស្វែងរកពេញនិយម</span>
-          <button class="tag-btn" type="button" data-tag="iPhone">iPhone</button>
-          <button class="tag-btn" type="button" data-tag="Toyota">Toyota</button>
-          <button class="tag-btn" type="button" data-tag="ខុនដូ">ខុនដូ</button>
-          <button class="tag-btn" type="button" data-tag="កុំព្យូទ័រ">កុំព្យូទ័រ</button>
-        </div>
-        <div class="hero-trust-points"><span><i id="heroShield"></i> អ្នកលក់បានផ្ទៀងផ្ទាត់</span><span><i id="heroUsers"></i> សហគមន៍អ្នកទិញលក់</span></div>
-        <button class="go" id="heroPostBtn" type="button">ចាប់ផ្តើមទិញលក់</button>
-      </div>
+  <!-- ========================================================================
+       HEADER & GLOBAL SEARCH
+       ======================================================================== -->
+  <header class="hd glass sticky top-0 z-50">
+    <div class="shell flex flex-wrap items-center gap-3">
+      <button class="site-brand-lockup flex shrink-0 items-center gap-3 text-left" data-view="home" aria-label="7inOne home">
+        <span class="site-logo-mark brand-gradient grid place-items-center text-white" id="siteLogoMark">
+          <span id="logoIcon"></span>
+        </span>
+        <span class="min-w-0 leading-tight">
+          <b class="site-title block truncate" id="siteTitle">7inOne</b>
+          <small class="site-subtitle block truncate" id="siteSubtitle">ផ្សារទិញលក់កម្ពុជា</small>
+        </span>
+      </button>
 
-      <div class="hero-bento hidden md:grid">
-        <div class="hero-tile t1" id="heroImageTile1">
-          <img class="hero-image hidden h-full w-full object-cover" id="heroImage1" alt="រូបភាព Hero 1"/>
-          <svg class="hero-placeholder" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="1.8"></circle><path d="M21 16l-5-5-8 8"></path></svg>
-        </div>
-        <div class="hero-tile t2" id="heroImageTile2">
-          <img class="hero-image hidden h-full w-full object-cover" id="heroImage2" alt="រូបភាព Hero 2"/>
-          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="1.8"></circle><path d="M21 16l-5-5-8 8"></path></svg>
-        </div>
-        <div class="hero-tile t3" id="heroImageTile3">
-          <img class="hero-image hidden h-full w-full object-cover" id="heroImage3" alt="រូបភាព Hero 3"/>
-          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="1.8"></circle><path d="M21 16l-5-5-8 8"></path></svg>
-        </div>
-      </div>
-    </section>
-
-    <!-- MACOS-STYLE MAGNIFICATION CATEGORY DOCK -->
-    <nav class="dock" id="categoryStrip" aria-label="ប្រភេទទំនិញ">
-      <button type="button" class="dk active" data-category="all" style="--bg:#064E3B;--fg:#FFFFFF">
-        <span class="ico"><span id="catAll"></span></span>
-        <span class="lb">ទាំងអស់</span>
-      </button>
-      <button type="button" class="dk" data-category="phones" style="--bg:#EFF6FF;--fg:#1D4ED8">
-        <span class="ico"><span id="catPhone"></span></span>
-        <span class="lb">ទូរស័ព្ទ &amp; អេឡិចត្រូនិក</span>
-      </button>
-      <button type="button" class="dk" data-category="vehicles" style="--bg:#FFF1F2;--fg:#BE123C">
-        <span class="ico"><span id="catCar"></span></span>
-        <span class="lb">រថយន្ត &amp; ម៉ូតូ</span>
-      </button>
-      <button type="button" class="dk" data-category="property" style="--bg:#ECFDF5;--fg:#047857">
-        <span class="ico"><span id="catHome"></span></span>
-        <span class="lb">អចលនទ្រព្យ</span>
-      </button>
-      <button type="button" class="dk" data-category="fashion" style="--bg:#F5F3FF;--fg:#6D28D9">
-        <span class="ico"><span id="catFashion"></span></span>
-        <span class="lb">សម្លៀកបំពាក់</span>
-      </button>
-      <button type="button" class="dk" data-category="furniture" style="--bg:#FFFBEB;--fg:#92400E">
-        <span class="ico"><span id="catFurniture"></span></span>
-        <span class="lb">គ្រឿងសង្ហារិម</span>
-      </button>
-    </nav>
-
-    <section id="homeVendorMediaSection" class="home-vendor-media hidden" aria-label="Live និងវីដេអូពីហាង"><div class="home-vendor-media-heading"><div><p class="home-vendor-media-kicker">SHOP LIVE &amp; VIDEO</p><h2>Live / វីដេអូពីហាង</h2></div><span>ពីម្ចាស់ហាង</span></div><div id="homeVendorMediaList" class="home-vendor-media-list"></div></section>
-    <!-- LISTING HEADER -->
-    <div class="lh market-listing-header">
-      <div>
-        <p class="new"><i></i>បានបង្ហោះថ្មីៗ</p>
-        <h2 id="listingTitle">ទំនិញដែលគួរឱ្យចាប់អារម្មណ៍</h2>
-        <p class="mt-0.5 text-[12px] text-[#5B6577]" id="listingSub">រកឃើញទំនិញល្អៗពីអ្នកលក់នៅជិតអ្នក</p>
-      </div>
-      <div class="flex items-center gap-3">
-        <span class="hidden text-[12px] text-[#5B6577] sm:block" id="resultCount"></span>
-        <select class="min-h-[44px] rounded-[12px] border border-[#D5DED9] bg-white px-3 font-semibold text-[#172033] outline-none" id="sortSelect" aria-label="តម្រៀបទំនិញ">
-          <option value="newest">ថ្មីៗមុន</option>
-          <option value="low">តម្លៃទាបមុន</option>
-          <option value="high">តម្លៃខ្ពស់មុន</option>
+      <form class="order-3 flex w-full items-center md:order-none md:ml-5 md:flex-1" id="searchForm">
+        <select class="hidden h-9 max-w-[145px] cursor-pointer bg-transparent px-3 text-[11px] font-semibold text-slate-600 outline-none sm:block" id="searchCategory">
+          <option value="all">គ្រប់ប្រភេទ</option>
+          <option value="phones">ទូរស័ព្ទ &amp; អេឡិចត្រូនិក</option>
+          <option value="vehicles">រថយន្ត &amp; ម៉ូតូ</option>
+          <option value="property">អចលនទ្រព្យ</option>
+          <option value="fashion">សម្លៀកបំពាក់</option>
+          <option value="furniture">គ្រឿងសង្ហារិម</option>
         </select>
-      </div>
-    </div>
-
-    <!-- SKELETON & PRODUCT GRID (រក្សា ID ដើមទាំងអស់) -->
-    <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 xl:grid-cols-5" id="skeletonGrid"><div class="rounded-2xl border bg-white p-2.5"><div class="skeleton aspect-[1.2] rounded-xl"></div><div class="p-2 pt-3"><div class="skeleton mb-3 h-3 w-1/3 rounded"></div><div class="skeleton mb-2 h-4 w-4/5 rounded"></div><div class="skeleton mb-4 h-4 w-2/5 rounded"></div><div class="skeleton h-8 rounded-lg"></div></div></div><div class="rounded-2xl border bg-white p-2.5"><div class="skeleton aspect-[1.2] rounded-xl"></div><div class="p-2 pt-3"><div class="skeleton mb-3 h-3 w-1/3 rounded"></div><div class="skeleton mb-2 h-4 w-4/5 rounded"></div><div class="skeleton mb-4 h-4 w-2/5 rounded"></div><div class="skeleton h-8 rounded-lg"></div></div></div><div class="rounded-2xl border bg-white p-2.5"><div class="skeleton aspect-[1.2] rounded-xl"></div><div class="p-2 pt-3"><div class="skeleton mb-3 h-3 w-1/3 rounded"></div><div class="skeleton mb-2 h-4 w-4/5 rounded"></div><div class="skeleton mb-4 h-4 w-2/5 rounded"></div><div class="skeleton h-8 rounded-lg"></div></div></div><div class="rounded-2xl border bg-white p-2.5"><div class="skeleton aspect-[1.2] rounded-xl"></div><div class="p-2 pt-3"><div class="skeleton mb-3 h-3 w-1/3 rounded"></div><div class="skeleton mb-2 h-4 w-4/5 rounded"></div><div class="skeleton mb-4 h-4 w-2/5 rounded"></div><div class="skeleton h-8 rounded-lg"></div></div></div><div class="rounded-2xl border bg-white p-2.5"><div class="skeleton aspect-[1.2] rounded-xl"></div><div class="p-2 pt-3"><div class="skeleton mb-3 h-3 w-1/3 rounded"></div><div class="skeleton mb-2 h-4 w-4/5 rounded"></div><div class="skeleton mb-4 h-4 w-2/5 rounded"></div><div class="skeleton h-8 rounded-lg"></div></div></div><div class="rounded-2xl border bg-white p-2.5"><div class="skeleton aspect-[1.2] rounded-xl"></div><div class="p-2 pt-3"><div class="skeleton mb-3 h-3 w-1/3 rounded"></div><div class="skeleton mb-2 h-4 w-4/5 rounded"></div><div class="skeleton mb-4 h-4 w-2/5 rounded"></div><div class="skeleton h-8 rounded-lg"></div></div></div><div class="rounded-2xl border bg-white p-2.5"><div class="skeleton aspect-[1.2] rounded-xl"></div><div class="p-2 pt-3"><div class="skeleton mb-3 h-3 w-1/3 rounded"></div><div class="skeleton mb-2 h-4 w-4/5 rounded"></div><div class="skeleton mb-4 h-4 w-2/5 rounded"></div><div class="skeleton h-8 rounded-lg"></div></div></div><div class="rounded-2xl border bg-white p-2.5"><div class="skeleton aspect-[1.2] rounded-xl"></div><div class="p-2 pt-3"><div class="skeleton mb-3 h-3 w-1/3 rounded"></div><div class="skeleton mb-2 h-4 w-4/5 rounded"></div><div class="skeleton mb-4 h-4 w-2/5 rounded"></div><div class="skeleton h-8 rounded-lg"></div></div></div><div class="rounded-2xl border bg-white p-2.5"><div class="skeleton aspect-[1.2] rounded-xl"></div><div class="p-2 pt-3"><div class="skeleton mb-3 h-3 w-1/3 rounded"></div><div class="skeleton mb-2 h-4 w-4/5 rounded"></div><div class="skeleton mb-4 h-4 w-2/5 rounded"></div><div class="skeleton h-8 rounded-lg"></div></div></div><div class="rounded-2xl border bg-white p-2.5"><div class="skeleton aspect-[1.2] rounded-xl"></div><div class="p-2 pt-3"><div class="skeleton mb-3 h-3 w-1/3 rounded"></div><div class="skeleton mb-2 h-4 w-4/5 rounded"></div><div class="skeleton mb-4 h-4 w-2/5 rounded"></div><div class="skeleton h-8 rounded-lg"></div></div></div></div>
-    <div class="hidden grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 xl:grid-cols-5 pb-10" id="productGrid"></div>
-    <div class="hidden rounded-3xl border border-dashed border-[#D5DED9] bg-white px-6 py-14 text-center" id="emptyHome">
-      <div class="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-[#E1EDE6] text-[#064E3B]" id="emptyIcon"></div>
-      <h3 class="mt-4 font-bold">រកមិនឃើញទំនិញទេ</h3>
-      <p class="mt-1 text-[12px] text-[#5B6577]">សាកល្បងពាក្យស្វែងរក ឬប្រភេទផ្សេងទៀត។</p>
-      <button class="mt-4 rounded-xl bg-[#ECFDF5] px-4 py-2 text-[12px] font-bold text-[#047857]" id="clearFilters">បង្ហាញទំនិញទាំងអស់</button>
-    </div>
-    </div>
-    <aside class="home-promo-rail" id="homePromoRail" aria-label="ការផ្សព្វផ្សាយ">
-      <div class="home-promo-slot" data-promo-slot="top"><div class="home-promo-placeholder"><b>Free Delivery</b><span>ដឹកជញ្ជូនងាយស្រួល</span></div></div>
-      <div class="home-promo-slot" data-promo-slot="middle"><div class="home-promo-placeholder"><b>Secure Payment</b><span>ការទូទាត់មានសុវត្ថិភាព</span></div></div>
-      <div class="home-promo-slot tall" data-promo-slot="tall"><div class="home-promo-placeholder"><b>7inOne Promotion</b><span>ការផ្តល់ជូនពិសេស</span></div></div>
-    </aside>
-  </div>
-</section>
-<!-- PRODUCT DETAIL VIEW -->
-<section class="view" id="view-product">
-  <div class="shell py-5 sm:py-7">
-    <nav class="mb-4 flex items-center gap-2 text-[11px] text-slate-500"><button type="button" data-view="home" class="font-semibold hover:text-slate-900">ទំព័រដើម</button><span>/</span><span class="font-semibold text-slate-800">ព័ត៌មានទំនិញ</span></nav>
-    <div class="product-detail-page" id="productDetail" aria-live="polite"></div>
-  </div>
-</section>
-<!-- PUBLIC STORE VIEW -->
-<section class="view" id="view-store">
-  <div class="shell py-5 sm:py-7">
-    <nav class="mb-4 flex items-center gap-2 text-[11px] text-slate-500"><button type="button" data-view="home" class="font-semibold hover:text-slate-900">ទំព័រដើម</button><span>/</span><span class="font-semibold text-slate-800">ហាង</span></nav>
-    <div id="storefrontContent"></div>
-  </div>
-</section>
-<!-- PROFILE VIEW -->
-<section class="view" id="view-profile">
-<div class="shell account-shell py-7 sm:py-9">
-  <section class="account-hero overflow-hidden rounded-[28px] border border-slate-200 bg-white">
-    <div class="account-cover cover relative h-44 sm:h-56">
-      <div class="account-cover-shade absolute inset-0"></div>
-      <div class="absolute left-5 top-5 z-10 rounded-full border border-white/30 bg-slate-950/35 px-3 py-1.5 text-[9px] font-bold tracking-wide text-white backdrop-blur">7INONE MEMBER</div>
-      <label class="absolute right-4 top-4 z-10 flex cursor-pointer items-center gap-2 rounded-xl border border-white/50 bg-white/95 px-3 py-2 text-[10px] font-bold text-slate-700 shadow-lg"><span id="coverCam"></span> កែរូប Cover<input accept="image/jpeg,image/png,image/webp" class="hidden" id="coverUpload" type="file"/></label>
-    </div>
-    <div class="account-identity-wrap px-5 pb-5 sm:px-8">
-      <div class="account-identity flex flex-wrap items-end justify-between gap-4">
-        <div class="flex min-w-0 items-end gap-4">
-          <div class="account-avatar-wrap relative shrink-0"><div aria-label="រូប Profile" class="account-avatar h-24 w-24 overflow-hidden rounded-[25px] border-4 border-white bg-emerald-50 shadow-xl sm:h-32 sm:w-32" id="profileAvatar" role="img"></div><label class="absolute bottom-1 right-1 grid h-8 w-8 cursor-pointer place-items-center rounded-xl border-2 border-white bg-indigo-600 text-white shadow" id="avatarCam"><input accept="image/jpeg,image/png,image/webp" class="hidden" id="avatarUpload" type="file"/></label></div>
-          <div class="min-w-0 pb-1"><p class="mb-1 text-[9px] font-bold uppercase tracking-[.14em] text-slate-400">ACCOUNT PROFILE</p><h2 class="truncate text-lg font-bold sm:text-xl" id="profileHeadingName">គណនីអ្នកប្រើប្រាស់</h2><p class="mt-1 truncate text-[10px] text-slate-500" id="profileHeadingMeta">សមាជិក 7inOne</p><div class="mt-2 flex flex-wrap gap-2" id="profileSellerBadge"></div></div>
-        </div>
-        <button class="mb-1 rounded-xl brand-gradient px-4 py-3 text-[10px] font-bold text-white shadow-lg shadow-indigo-100 hover:-translate-y-0.5" id="profileApplyTop">ចុះឈ្មោះក្លាយជាអ្នកលក់</button>
-      </div>
-      <div class="account-shortcuts mt-6 grid grid-cols-1 gap-2 sm:grid-cols-3">
-        <button class="account-shortcut" data-profile-jump="saved"><span class="account-shortcut-icon bg-rose-50 text-rose-600">♡</span><span><b>ទំនិញដែលបានរក្សាទុក</b><small>ផលិតផលដែលអ្នកចាប់អារម្មណ៍</small></span><span class="account-shortcut-arrow">→</span></button>
-        <button class="account-shortcut" data-profile-jump="history"><span class="account-shortcut-icon bg-indigo-50 text-indigo-600">↗</span><span><b>ការទិញ និងសំណើតថ្លៃ</b><small>តាមដានប្រតិបត្តិការរបស់អ្នក</small></span><span class="account-shortcut-arrow">→</span></button>
-        <button class="account-shortcut" data-profile-jump="seller"><span class="account-shortcut-icon bg-emerald-50 text-emerald-600">▣</span><span><b>ស្ថានភាពហាង</b><small>គ្រប់គ្រងការផ្ទៀងផ្ទាត់អ្នកលក់</small></span><span class="account-shortcut-arrow">→</span></button>
-      </div>
-    </div>
-  </section>
-  <div class="account-content-grid mt-5 grid gap-5 lg:grid-cols-[.82fr_1.18fr]">
-    <section class="account-panel rounded-[24px] border border-slate-200 bg-white p-5 sm:p-6">
-      <div class="mb-5 flex items-center justify-between gap-3"><div><p class="text-[9px] font-bold tracking-[.14em] text-indigo-600">PERSONAL INFORMATION</p><h3 class="mt-1 text-base font-bold">ព័ត៌មានផ្ទាល់ខ្លួន</h3><p class="mt-1 text-[10px] text-slate-400">ព័ត៌មាននេះជួយឱ្យអ្នកទិញ និងអ្នកលក់ទាក់ទងគ្នាបានងាយស្រួល</p></div><span class="rounded-full bg-slate-100 px-2.5 py-1 text-[9px] font-semibold text-slate-500">កែប្រែបាន</span></div>
-      <form class="space-y-3" id="profileForm">
-        <label><span class="label">ឈ្មោះពេញ</span><input class="field" id="profileName" maxlength="60" required=""/></label>
-        <label><span class="label">លេខទូរស័ព្ទ</span><input class="field" id="profilePhone" placeholder="012 345 678"/></label>
-        <label><span class="label">ទីតាំង / ខេត្ត</span><select class="field" id="profileLocation"><option>ភ្នំពេញ</option><option>សៀមរាប</option><option>បាត់ដំបង</option><option>ព្រះសីហនុ</option><option>កំពង់ចាម</option><option>កំពត</option><option>តាកែវ</option><option>កណ្តាល</option><option>ផ្សេងៗ</option></select></label>
-        <label><span class="label">អំពីខ្ញុំ</span><textarea class="field min-h-[90px] resize-y" id="profileBio" maxlength="250" placeholder="សរសេរព័ត៌មានខ្លីៗអំពីខ្លួនអ្នក..."></textarea></label>
-
-        <button class="brand-gradient w-full rounded-xl py-3 text-[11px] font-bold text-white shadow-md shadow-indigo-100">រក្សាទុកការកែប្រែ</button>
+        <span class="hidden h-5 w-px bg-slate-200 sm:block"></span>
+        <span class="ml-2 text-slate-400" id="searchIcon"></span>
+        <input class="min-w-0 flex-1 bg-transparent px-2.5 outline-none" id="searchInput" placeholder="ស្វែងរកទំនិញដែលអ្នកចង់បាន..." type="search" />
+        <button aria-label="ស្វែងរក" class="brand-gradient grid shrink-0 place-items-center text-white" id="searchBtn"></button>
       </form>
-      <div class="mt-5 border-t border-slate-100 pt-5">
-        <div class="flex items-start justify-between gap-3"><div><p class="text-[9px] font-bold tracking-[.14em] text-indigo-600">ACCOUNT SECURITY</p><h3 class="mt-1 text-base font-bold">ភ្ជាប់ Telegram និងប្ដូរ Password</h3><p class="mt-1 text-[10px] leading-5 text-slate-400">ប្រើ Telegram របស់អ្នកសម្រាប់ផ្ទៀងផ្ទាត់ និងទទួលសារសុវត្ថិភាព។</p></div><span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-sky-50 text-sky-600">➤</span></div>
-        <div class="mt-4 rounded-2xl border border-indigo-100 bg-indigo-50/60 p-4">
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <div><b class="text-[11px]" id="telegramLoginLinkStatus">Telegram Login មិនទាន់ភ្ជាប់</b><p class="mt-1 text-[9px] text-slate-500" id="telegramLoginLinkHint">ភ្ជាប់ Telegram ID ដើម្បីឱ្យអ្នកអាចចូលគណនី 7inOne ដោយ Telegram នៅពេលក្រោយ។</p></div>
-            <span class="rounded-full bg-white px-2.5 py-1 text-[9px] font-bold text-indigo-700">LOGIN</span>
+
+      <div class="ml-auto flex shrink-0 items-center gap-2">
+        <button class="hidden items-center gap-2 brand-gradient px-4 py-2 text-[12px] font-bold text-white sm:flex" id="postAdBtn">
+          <span id="postIcon"></span>ដាក់លក់ទំនិញ
+        </button>
+        <button aria-label="ដាក់លក់ទំនិញ" class="grid h-10 w-10 place-items-center brand-gradient text-white sm:hidden" id="mobilePostBtn"></button>
+
+        <!-- Notifications -->
+        <div class="relative">
+          <button aria-label="ការជូនដំណឹង" class="relative grid h-10 w-10 place-items-center text-slate-600 hover:text-emerald-700" id="notificationBtn">
+            <span id="bellIcon"></span>
+            <i class="absolute right-2.5 top-2.5 h-2 w-2 rounded-full border-2 border-white bg-rose-500"></i>
+          </button>
+          <div class="dropdown absolute right-0 top-[calc(100%+10px)] z-[70] w-[min(320px,calc(100vw-24px))] bg-white p-4" id="notificationMenu">
+            <p class="mb-3 text-sm font-bold">ការជូនដំណឹង</p>
+            <div class="space-y-2" id="notificationList"></div>
           </div>
-          <div class="telegram-widget-slot mt-3" id="telegramProfileWidgetWrap"><div id="telegramProfileWidget"></div></div>
         </div>
-        <div class="mt-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-          <div class="flex flex-wrap items-center justify-between gap-2"><div><b class="text-[11px]" id="telegramAccountStatus">Telegram Bot មិនទាន់ភ្ជាប់</b><p class="mt-1 text-[9px] text-slate-400" id="telegramAccountHint">ភ្ជាប់ Bot Chat ដើម្បីទទួល OTP និងសារសុវត្ថិភាព។</p></div><button class="rounded-xl bg-sky-500 px-4 py-2.5 text-[10px] font-bold text-white" id="connectTelegramBtn" type="button">Connect Bot Chat</button></div>
-          <a class="mt-3 hidden rounded-xl border border-sky-200 bg-white px-3 py-2.5 text-center text-[10px] font-bold text-sky-700" href="#" id="telegramConnectLink" target="_blank" rel="noopener noreferrer">បើក Telegram Bot ដើម្បីចុច Start</a>
-          <button class="mt-3 hidden text-[10px] font-bold text-indigo-600" id="refreshTelegramStatusBtn" type="button">ពិនិត្យស្ថានភាពឡើងវិញ</button>
-        </div>
-        <form class="mt-4 space-y-3" id="telegramPasswordForm">
-          <button class="w-full rounded-xl border border-emerald-200 bg-indigo-50 py-3 text-[10px] font-bold text-indigo-700" id="sendTelegramOtpBtn" type="button" disabled>ផ្ញើ OTP តាម Telegram</button>
-          <label><span class="label">OTP ៦ ខ្ទង់</span><input class="field" id="telegramPasswordOtp" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" placeholder="បញ្ចូលលេខកូដពី Telegram" required /></label>
-          <label><span class="label">Password ថ្មី</span><input class="field" id="telegramNewPassword" type="password" minlength="8" maxlength="72" autocomplete="new-password" placeholder="យ៉ាងតិច ៨ តួអក្សរ" required /></label>
-          <button class="brand-gradient w-full rounded-xl py-3 text-[11px] font-bold text-white" id="changeTelegramPasswordBtn" type="submit" disabled>ផ្ទៀងផ្ទាត់ និងប្ដូរ Password</button>
-          <p class="text-[9px] leading-5 text-slate-400">OTP មានសុពលភាព ៥ នាទី។ កុំចែករំលែកកូដជាមួយអ្នកដទៃ។</p>
-        </form>
-      </div>
-    </section>
-    <section class="account-panel min-w-0 rounded-[24px] border border-slate-200 bg-white p-5 sm:p-6">
-      <div class="flex flex-wrap items-end justify-between gap-2"><div><p class="text-[9px] font-bold tracking-[.14em] text-indigo-600">ACCOUNT ACTIVITY</p><h3 class="mt-1 text-base font-bold">សកម្មភាព និងការគ្រប់គ្រង</h3><p class="mt-1 text-[10px] text-slate-400">មើលព័ត៌មានសំខាន់ៗដែលពាក់ព័ន្ធនឹងគណនីរបស់អ្នក</p></div><span class="text-[10px] font-semibold text-slate-400" id="profileActivityCount"></span></div>
-      <div class="account-tabs mt-5 flex overflow-x-auto border-b border-slate-100"><button class="tab active" data-profile-tab="saved">បានរក្សាទុក</button><button class="tab" data-profile-tab="history">ប្រវត្តិទិញ/តថ្លៃ</button><button class="tab" data-profile-tab="seller">ហាងរបស់ខ្ញុំ</button></div>
-      <div class="min-h-[330px] py-4" id="profileTabContent"></div>
-    </section>
-  </div>
-</div>
-</section>
-<!-- SELLER DASHBOARD -->
-<section class="view" id="view-seller">
-<div class="shell py-7 sm:py-9">
-<div class="mb-6 flex flex-wrap items-center justify-between gap-3"><div><p class="text-[10px] font-bold text-indigo-600">SELLER CENTER</p><h1 class="mt-1 text-2xl font-bold">គ្រប់គ្រងហាង &amp; ទំនិញ</h1><p class="mt-1 text-[11px] text-slate-400">គ្រប់គ្រងការផ្សាយ និងតាមដានលទ្ធផលហាងរបស់អ្នក</p></div><button class="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[11px] font-bold text-slate-600" data-view="home">មើលផ្សារ</button></div>
-<div class="hidden rounded-3xl border border-amber-200 bg-amber-50 p-7 text-center" id="sellerGate"><div class="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-white text-amber-600" id="sellerGateIcon"></div><h2 class="mt-4 text-lg font-bold">ហាងរបស់អ្នកមិនទាន់បានផ្ទៀងផ្ទាត់ទេ</h2><p class="mx-auto mt-2 max-w-lg text-[11px] leading-6 text-amber-800" id="sellerGateText">សូមដាក់ពាក្យស្នើសុំ ហើយរង់ចាំ Admin ពិនិត្យឯកសារ។</p><button class="mt-4 rounded-xl brand-gradient px-5 py-3 text-[11px] font-bold text-white" id="sellerGateApply">ចុះឈ្មោះអ្នកលក់</button></div>
-<div id="sellerDashboardContent"><div id="sellerVerificationNotice" class="mb-5 hidden items-center justify-between gap-4 rounded-2xl border border-amber-200 bg-amber-50 p-4"><div class="min-w-0"><b class="block text-[12px] text-amber-900">ហាងរបស់អ្នកមិនទាន់បានផ្ទៀងផ្ទាត់</b><p class="mt-1 text-[10px] leading-5 text-amber-800">អ្នកអាចបន្តដាក់លក់ និងគ្រប់គ្រងហាងបានធម្មតា។ ផ្ទៀងផ្ទាត់ដោយស្ម័គ្រចិត្ត ដើម្បីបង្កើនទំនុកចិត្តពីអ្នកទិញ។</p><small id="sellerVerificationStatus" class="mt-1 block text-[9px] text-amber-700"></small></div><button type="button" id="sellerVerifyNow" class="shrink-0 rounded-xl bg-white px-4 py-2.5 text-[10px] font-bold text-amber-800 shadow-sm">ស្នើសុំផ្ទៀងផ្ទាត់</button></div><div class="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4"><div class="rounded-2xl border border-slate-100 bg-white p-4 soft-shadow"><div class="flex items-center justify-between"><span class="text-[10px] font-semibold text-slate-500">ទំនិញកំពុងលក់</span><span class="grid h-8 w-8 place-items-center rounded-xl bg-indigo-50 text-indigo-600" id="kpiListingsIcon"></span></div><p class="mt-4 text-2xl font-bold" id="kpiListings">០</p><p class="mt-1 text-[9px] text-slate-400">Active Listings</p></div><div class="rounded-2xl border border-slate-100 bg-white p-4 soft-shadow"><div class="flex items-center justify-between"><span class="text-[10px] font-semibold text-slate-500">ចំនួនអ្នកមើល</span><span class="grid h-8 w-8 place-items-center rounded-xl bg-sky-50 text-sky-600" id="kpiViewsIcon"></span></div><p class="mt-4 text-2xl font-bold" id="kpiViews">០</p><p class="mt-1 text-[9px] text-slate-400">Total Views</p></div><div class="rounded-2xl border border-slate-100 bg-white p-4 soft-shadow"><div class="flex items-center justify-between"><span class="text-[10px] font-semibold text-slate-500">ពិន្ទុផ្កាយមធ្យម</span><span class="grid h-8 w-8 place-items-center rounded-xl bg-amber-50 text-amber-500" id="kpiRatingIcon"></span></div><p class="mt-4 text-2xl font-bold" id="kpiRating">—</p><p class="mt-1 text-[9px] text-slate-400">Average Rating</p></div><div class="rounded-2xl border border-slate-100 bg-white p-4 soft-shadow"><div class="flex items-center justify-between"><span class="text-[10px] font-semibold text-slate-500">លក់បានជោគជ័យ</span><span class="grid h-8 w-8 place-items-center rounded-xl bg-emerald-50 text-emerald-600" id="kpiSalesIcon"></span></div><p class="mt-4 text-2xl font-bold" id="kpiSales">០</p><p class="mt-1 text-[9px] text-slate-400">Completed Sales</p></div></div>
-<div class="seller-dashboard-shell mt-5 overflow-hidden rounded-2xl border border-slate-200 bg-white soft-shadow">
-  <nav class="seller-tabs" role="tablist" aria-label="Seller sections">
-    <button type="button" class="seller-tab is-active" data-seller-tab="products" role="tab" aria-selected="true"><span data-seller-icon="package"></span>ផលិតផលរបស់ខ្ញុំ <b id="sellerProductsCount" class="seller-tab-count">០</b></button>
-    <button type="button" class="seller-tab" data-seller-tab="orders" role="tab" aria-selected="false"><span data-seller-icon="file"></span>ការបញ្ជាទិញ <b id="sellerOrdersCount" class="seller-tab-count">០</b></button>
-    <button type="button" class="seller-tab" data-seller-tab="offers" role="tab" aria-selected="false"><span data-seller-icon="tag"></span>សំណើតថ្លៃ <b id="sellerOffersCount" class="seller-tab-count">០</b></button><button type="button" class="seller-tab" data-seller-tab="shop" role="tab" aria-selected="false"><span data-seller-icon="store"></span>ព័ត៌មានហាង</button><button type="button" class="seller-tab" data-seller-tab="media" role="tab" aria-selected="false"><span data-seller-icon="play"></span>Live / Video</button>
-  </nav>
-  <section class="seller-tab-panel is-active" id="sellerTabProducts" data-seller-panel="products" role="tabpanel">
-    <div class="seller-toolbar">
-      <label class="seller-search"><span data-seller-icon="search"></span><input id="sellerProductSearch" type="search" placeholder="ស្វែងរកតាមឈ្មោះទំនិញ..." autocomplete="off"/></label>
-      <div class="seller-status-filters" role="group" aria-label="Filter products">
-        <button type="button" class="seller-filter is-active" data-seller-filter="all">ទាំងអស់</button>
-        <button type="button" class="seller-filter" data-seller-filter="active">កំពុងលក់</button>
-        <button type="button" class="seller-filter" data-seller-filter="renew">ត្រូវការ Renew</button>
-        <button type="button" class="seller-filter" data-seller-filter="sold">លក់រួច</button>
-      </div>
-      <button class="seller-add-button" id="addProductBtn" type="button"><span id="addProductIcon"></span>បន្ថែមទំនិញ</button>
-    </div>
-    <div class="seller-table-wrap">
-      <div class="seller-table-head"><span>ទំនិញ</span><span>តម្លៃ</span><span>ស្តុក &amp; អ្នកមើល</span><span>ស្ថានភាព &amp; សុពលភាព</span><span class="text-right">សកម្មភាព</span></div>
-      <div id="sellerProducts" class="seller-products-list" aria-live="polite"></div>
-    </div>
-  </section>
-  <section class="seller-tab-panel" id="sellerTabOrders" data-seller-panel="orders" role="tabpanel" hidden>
-    <div class="seller-list-heading"><h3>ការបញ្ជាទិញ និងការដឹកជញ្ជូន</h3><p>ពិនិត្យអ្នកទិញ តម្លៃ និងស្ថានភាពការបញ្ជាទិញ</p></div>
-    <div id="sellerOrders" class="seller-list-rows"></div>
-  </section>
-  <section class="seller-tab-panel" id="sellerTabOffers" data-seller-panel="offers" role="tabpanel" hidden>
-    <div class="seller-list-heading"><h3>សំណើតថ្លៃពីអ្នកទិញ</h3><p>ពិនិត្យ និងឆ្លើយតបសំណើតថ្លៃ</p></div>
-    <div id="sellerOffers" class="seller-list-rows"></div>
-  </section>
-  <section class="seller-tab-panel" id="sellerTabShop" data-seller-panel="shop" role="tabpanel" hidden><div class="seller-list-heading"><h3>ព័ត៌មានហាងរបស់ខ្ញុំ</h3><p>កែរូប Logo, Cover, ឈ្មោះ និងទីតាំងហាង។ ព័ត៌មាននឹងបង្ហាញលើទំព័រហាងសាធារណៈ។</p></div><form id="sellerShopProfileForm" class="seller-shop-form"><div class="seller-shop-cover-preview" id="sellerShopCoverPreview"><span>រូប Cover ហាង</span></div><label class="block"><span class="label">រូប Cover ហាង (JPG / PNG / WEBP)</span><input id="sellerShopCover" class="field" type="file" accept="image/jpeg,image/png,image/webp"/><small class="mt-1 block text-[9px] text-slate-400">អតិបរមា 8MB</small></label><div class="seller-shop-logo-row"><div class="seller-shop-logo-preview" id="sellerShopLogoPreview"></div><label class="min-w-0 flex-1"><span class="label">Logo ហាង (JPG / PNG / WEBP)</span><input id="sellerShopLogo" class="field" type="file" accept="image/jpeg,image/png,image/webp"/><small class="mt-1 block text-[9px] text-slate-400">អតិបរមា 8MB</small></label></div><div class="grid gap-3 sm:grid-cols-2"><label><span class="label">ឈ្មោះហាង *</span><input id="sellerShopName" class="field" maxlength="80" required/></label><label><span class="label">ទីតាំងហាង</span><input id="sellerShopLocation" class="field" maxlength="160" placeholder="ឧ. បឹងកេងកង ភ្នំពេញ"/></label></div><label class="block"><span class="label">ការពិពណ៌នាហាង</span><textarea id="sellerShopDescription" class="field min-h-24" maxlength="1000"></textarea></label><div class="flex justify-end"><button id="sellerShopSave" type="submit" class="brand-gradient rounded-xl px-5 py-3 text-[11px] font-bold text-white">រក្សាទុកព័ត៌មានហាង</button></div></form></section>
-  <section class="seller-tab-panel" id="sellerTabMedia" data-seller-panel="media" role="tabpanel" hidden><div class="seller-list-heading"><h3>គ្រប់គ្រង Live / Video</h3><p>បិទភ្ជាប់ Link Facebook ឬ YouTube។ បើចុចបិទ Live នោះ Link នឹងត្រូវលុបចេញទាំងស្រុង។</p></div><form id="sellerMediaForm" class="seller-media-form"><label class="block"><span class="label">ប្រភេទមាតិកា</span><select id="sellerMediaType" class="field"><option value="live">Live ផ្សាយផ្ទាល់</option><option value="video">Video ធម្មតា</option></select></label><label class="block"><span class="label">Facebook / YouTube Link</span><input id="sellerMediaUrl" class="field" type="url" inputmode="url" maxlength="1000" placeholder="https://..." required/><small class="mt-1 block text-[10px] text-slate-400">អាចប្រើ Link Facebook Live, Facebook Video, YouTube Live ឬ YouTube Video ជាសាធារណៈ។</small></label><div class="flex flex-wrap items-center justify-between gap-2"><span id="sellerMediaStatus" class="text-[11px] text-slate-500">មិនទាន់មាន Link</span><div class="flex flex-wrap gap-2"><button type="button" id="sellerMediaClose" class="hidden rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-[11px] font-bold text-rose-700">បិទ Live និងលុប Link</button><button id="sellerMediaSave" type="submit" class="brand-gradient rounded-xl px-5 py-2.5 text-[11px] font-bold text-white">រក្សាទុក និងបង្ហាញ</button></div></div></form></section>
-</div>
-</div></div>
-</section>
-<!-- ADMIN VIEW -->
-<section class="view" id="view-admin">
-<div class="shell py-7 sm:py-9"><div class="mb-6 flex flex-wrap items-center justify-between gap-3"><div><p class="text-[10px] font-bold text-rose-600">ADMIN CONTROL CENTER</p><h1 class="mt-1 text-2xl font-bold">ផ្ទាំងផ្ទៀងផ្ទាត់អ្នកលក់</h1><p class="mt-1 text-[11px] text-slate-400">ពិនិត្យឯកសារ និងអនុម័តពាក្យស្នើសុំអ្នកលក់</p></div><span class="rounded-full bg-rose-50 px-3 py-2 text-[10px] font-bold text-rose-600">សិទ្ធិអ្នកគ្រប់គ្រង</span></div>
 
-<div class="mb-6 rounded-2xl border border-indigo-100 bg-white p-5 soft-shadow sm:p-6">
-  <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-    <div><p class="text-[10px] font-bold tracking-wide text-indigo-600">SYSTEM STATUS</p><h2 class="mt-1 text-lg font-bold">ស្ថានភាពប្រព័ន្ធ</h2><p class="mt-1 text-[10px] text-slate-400">គ្រប់គ្រង Under Development Mode និងសារជូនដំណឹង</p></div>
-    <span class="rounded-full bg-indigo-50 px-3 py-2 text-[10px] font-bold text-indigo-700">ADMIN ONLY</span>
-  </div>
-  <label class="maintenance-toggle-row flex cursor-pointer items-center justify-between gap-4 rounded-xl border border-slate-100 bg-slate-50 p-4"><span class="min-w-0"><b class="block text-[12px]">បើកមុខងារកំពុងអភិវឌ្ឍន៍ (Under Development Mode)</b><small class="mt-1 block text-[10px] text-slate-400">ពេលបើក អ្នកទិញ និងអ្នកលក់មិនអាចប្រើ Marketplace បានទេ។</small></span><input class="maintenance-switch" id="maintenanceToggle" type="checkbox" aria-label="បើកមុខងារកំពុងអភិវឌ្ឍន៍"/></label>
-  <label class="mt-4 block"><span class="label">សារបង្ហាញទៅកាន់អ្នកប្រើប្រាស់ (អាចកែប្រែបាន)</span><textarea class="field min-h-[86px] resize-y" id="maintenanceMessageInput" maxlength="1000" placeholder="សរសេរសារជាភាសាខ្មែរ..."></textarea></label>
-  <div class="mt-4 flex flex-wrap items-center justify-between gap-3"><p class="text-[10px] text-slate-400" id="maintenanceStatusHint">ស្ថានភាពបច្ចុប្បន្ន៖ កំពុងដំណើរការ</p><button class="brand-gradient rounded-xl px-5 py-2.5 text-[11px] font-bold text-white" id="saveMaintenanceSettings" type="button">រក្សាទុកស្ថានភាព</button></div>
-</div>
-<div class="admin-branding-card mb-6 rounded-[26px] border border-emerald-100 bg-white p-5 soft-shadow sm:p-7" id="siteBrandingPanel"><div class="mb-6 flex flex-wrap items-start justify-between gap-3"><div><p class="text-[10px] font-bold tracking-[.18em] text-emerald-700">SITE IDENTITY · BRAND STUDIO</p><h2 class="mt-1 text-xl font-bold">ការកំណត់ Brand &amp; Hero Banner</h2><p class="mt-1 text-[11px] text-slate-500">គ្រប់គ្រង Logo, ឈ្មោះ Brand, ពាក្យស្លោក និងរូបភាព Banner សម្រាប់អ្នកប្រើប្រាស់ទាំងអស់។</p></div><span class="rounded-full bg-emerald-50 px-3 py-2 text-[10px] font-bold text-emerald-800">ADMIN ONLY</span></div><div class="grid gap-5 xl:grid-cols-[.85fr_1.15fr]"><section class="rounded-2xl border border-slate-100 bg-slate-50/70 p-4 sm:p-5"><p class="mb-3 text-[10px] font-bold tracking-wide text-emerald-800">01 / BRAND IDENTITY</p><div class="mb-4 flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4"><div class="brand-logo-preview" id="brandLogoPreview"><span>7</span></div><div class="min-w-0"><b class="block text-sm" id="brandPreviewTitle">7inOne</b><small class="block text-[10px] text-slate-500" id="brandPreviewSubtitle">ផ្សារទិញលក់កម្ពុជា</small><small class="mt-1 block text-[9px] text-emerald-700">Header Logo · Footer Logo</small></div></div><label class="mb-4 block"><span class="label">Header Logo (JPG / PNG / WEBP)</span><input id="brandingLogoUpload" class="field bg-white" type="file" accept="image/jpeg,image/png,image/webp"/><small class="mt-1 block text-[9px] text-slate-400">អតិបរមា 2MB · ប្រើតែ Header និង Footer</small></label><div class="mb-4 flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4"><div class="brand-logo-preview" id="brandFaviconPreview"><span>7</span></div><div class="min-w-0"><b class="block text-sm">Browser Favicon</b><small class="block text-[10px] text-slate-500">រូបតំណាងនៅលើ Browser Tab ប៉ុណ្ណោះ</small></div></div><label class="mb-4 block"><span class="label">Browser Favicon (JPG / PNG / WEBP)</span><input id="brandingFaviconUpload" class="field bg-white" type="file" accept="image/jpeg,image/png,image/webp"/><small class="mt-1 block text-[9px] text-slate-400">អតិបរមា 2MB · មិនប៉ះពាល់ Header Logo</small></label><label class="mb-4 block"><span class="label">ឈ្មោះ Brand</span><input id="brandTitleInput" class="field bg-white" maxlength="80" value="7inOne" placeholder="7inOne"/></label><label class="block"><span class="label">អក្សរតូចក្បែរ / ក្រោម Logo</span><input id="brandSubtitleInput" class="field bg-white" maxlength="120" value="ផ្សារទិញលក់កម្ពុជា" placeholder="ផ្សារទិញលក់កម្ពុជា"/></label></section><section class="rounded-2xl border border-slate-100 bg-slate-50/70 p-4 sm:p-5"><p class="mb-3 text-[10px] font-bold tracking-wide text-emerald-800">02 / HERO BANNER CONTENT</p><div class="hero-admin-preview mb-4"><div class="hero-admin-preview-copy"><small id="brandHeroPreviewBadge">ផ្សារអនឡាញសម្រាប់អ្នកទាំងអស់គ្នា</small><b id="brandHeroPreviewTitle">ទិញលក់ងាយៗ នៅជិតអ្នក</b><span id="brandHeroPreviewSubtitle">ស្វែងរកទំនិញដែលអ្នកស្រឡាញ់...</span></div><div id="heroBannerPreviews" class="hero-admin-preview-images"><div class="hero-admin-preview-empty">BENTO 01</div><div class="hero-admin-preview-empty">BENTO 02</div><div class="hero-admin-preview-empty">BENTO 03</div></div></div><label class="mb-3 block"><span class="label">Upload Hero Images (អាចជ្រើសរើស ១–៣ រូប)</span><input id="brandingHeroUpload" class="field bg-white" type="file" accept="image/jpeg,image/png,image/webp" multiple/><small class="mt-1 block text-[9px] text-slate-400">JPG / PNG / WEBP · អតិបរមា 8MB ក្នុងមួយរូប · ដល់ ៣ រូប</small></label><label class="mb-3 block"><span class="label">Hero Badge</span><input id="heroBadgeInput" class="field bg-white" maxlength="100" placeholder="ផ្សារអនឡាញសម្រាប់អ្នកទាំងអស់គ្នា"/></label><label class="mb-3 block"><span class="label">ចំណងជើង Banner</span><input id="heroTitleInput" class="field bg-white" maxlength="160" placeholder="ទិញលក់ងាយៗ នៅជិតអ្នក"/></label><label class="block"><span class="label">អត្ថបទពិពណ៌នា Banner</span><textarea id="heroSubtitleInput" class="field min-h-[86px] resize-y bg-white" maxlength="600" placeholder="សរសេរអត្ថបទពិពណ៌នាអំពី Marketplace..."></textarea></label><label class="mt-3 flex items-center gap-2 text-[10px] font-semibold text-slate-600"><input id="clearHeroImages" type="checkbox" class="h-4 w-4 accent-emerald-700"/> លុបរូប Banner ចាស់ទាំងអស់</label></section></div><div class="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4"><p class="text-[10px] text-slate-500" id="brandingStatus">ការកំណត់ Brand បច្ចុប្បន្ន</p><button class="brand-gradient rounded-xl px-6 py-3 text-[11px] font-bold text-white shadow-lg" id="saveBrandingBtn" type="button">រក្សាទុកការកំណត់ Brand &amp; Banner</button></div></div>
-<div class="mb-6 rounded-2xl border border-amber-100 bg-white p-5 soft-shadow sm:p-6" id="sidePosterAdmin">
-  <div class="mb-4"><p class="text-[10px] font-bold tracking-wide text-amber-700">HOMEPAGE PROMO POSTERS</p><h2 class="mt-1 text-lg font-bold">គ្រប់គ្រង Poster ខាងស្ដាំ</h2><p class="mt-1 text-[10px] text-slate-500">Upload និងប្ដូររូបផ្សព្វផ្សាយដោយផ្ទាល់ មិនចាំបាច់កែ Code។ អាចកំណត់ Link បើកពេលចុច និងបើក/បិទតាម Slot។</p></div>
-  <div class="grid gap-4 lg:grid-cols-3">
-    <section class="rounded-xl border border-slate-200 bg-slate-50 p-3"><b class="text-xs">Poster ផ្ដេក ១ · Free Delivery</b><div class="poster-admin-preview" id="posterPreviewTop">Preview</div><label class="label mt-3">រូបភាព Poster</label><input id="posterUploadTop" class="field bg-white" type="file" accept="image/jpeg,image/png,image/webp"/><small class="poster-tip">ណែនាំ 1200 × 500 px · 12:5 · JPG/PNG/WEBP · ≤5MB</small><label class="label mt-3">Link ពេលចុច</label><input id="posterLinkTop" class="field bg-white" type="url" placeholder="https://..."/><label class="mt-2 flex items-center gap-2 text-[10px]"><input id="posterEnabledTop" type="checkbox" checked/> បង្ហាញ Poster</label><label class="mt-2 flex items-center gap-2 text-[10px]"><input id="posterClearTop" type="checkbox"/> លុប Poster នេះ</label></section>
-    <section class="rounded-xl border border-slate-200 bg-slate-50 p-3"><b class="text-xs">Poster ផ្ដេក ២ · Support / Payment</b><div class="poster-admin-preview" id="posterPreviewMiddle">Preview</div><label class="label mt-3">រូបភាព Poster</label><input id="posterUploadMiddle" class="field bg-white" type="file" accept="image/jpeg,image/png,image/webp"/><small class="poster-tip">ណែនាំ 1200 × 500 px · 12:5 · JPG/PNG/WEBP · ≤5MB</small><label class="label mt-3">Link ពេលចុច</label><input id="posterLinkMiddle" class="field bg-white" type="url" placeholder="https://..."/><label class="mt-2 flex items-center gap-2 text-[10px]"><input id="posterEnabledMiddle" type="checkbox" checked/> បង្ហាញ Poster</label><label class="mt-2 flex items-center gap-2 text-[10px]"><input id="posterClearMiddle" type="checkbox"/> លុប Poster នេះ</label></section>
-    <section class="rounded-xl border border-slate-200 bg-slate-50 p-3"><b class="text-xs">Poster បញ្ឈរ · Promotion</b><div class="poster-admin-preview poster-admin-preview-tall" id="posterPreviewTall">Preview</div><label class="label mt-3">រូបភាព Poster</label><input id="posterUploadTall" class="field bg-white" type="file" accept="image/jpeg,image/png,image/webp"/><small class="poster-tip">ណែនាំ 800 × 1600 px · 1:2 · JPG/PNG/WEBP · ≤5MB</small><label class="label mt-3">Link ពេលចុច</label><input id="posterLinkTall" class="field bg-white" type="url" placeholder="https://..."/><label class="mt-2 flex items-center gap-2 text-[10px]"><input id="posterEnabledTall" type="checkbox" checked/> បង្ហាញ Poster</label><label class="mt-2 flex items-center gap-2 text-[10px]"><input id="posterClearTall" type="checkbox"/> លុប Poster នេះ</label></section>
-  </div>
-  <p class="mt-3 text-[10px] text-slate-500" id="posterAdminTip">Tip: រក្សាអក្សរ និង Logo នៅកណ្ដាល Poster ដើម្បីកុំឱ្យបាត់ពេលបង្ហាញលើអេក្រង់តូច។</p>
-</div>
-<div class="mb-6 rounded-2xl border border-slate-100 bg-white p-5 soft-shadow sm:p-6">
-  <div class="flex flex-wrap items-center justify-between gap-3">
-    <div><p class="text-[10px] font-bold tracking-wide text-sky-600">TELEGRAM BOT STATUS</p><h2 class="mt-1 text-lg font-bold">ស្ថានភាព Telegram Bot</h2><p class="mt-1 text-[10px] text-slate-400">ពិនិត្យ Bot, Private Channel, សិទ្ធិ និងការផ្ទុករូបភាព។ មិនបង្ហាញ Token ទេ។</p></div>
-    <button class="rounded-xl bg-slate-900 px-4 py-2.5 text-[11px] font-bold text-white hover:bg-slate-700" id="telegramDiagnosticsBtn" type="button">ពិនិត្យស្ថានភាព</button>
-  </div>
-  <div class="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4 text-[11px] text-slate-500" id="telegramDiagnosticsResult" aria-live="polite">ចុច «ពិនិត្យស្ថានភាព» ដើម្បីពិនិត្យការភ្ជាប់ Telegram។</div>
-</div>
-
-<div class="mb-6 rounded-2xl border border-sky-100 bg-white p-5 soft-shadow sm:p-6" id="supportAdminPanel">
-  <div class="mb-4 flex flex-wrap items-center justify-between gap-3"><div><p class="text-[10px] font-bold tracking-wide text-sky-600">CUSTOMER SUPPORT</p><h2 class="mt-1 text-lg font-bold">Live Chat ជាមួយអតិថិជន</h2><p class="mt-1 text-[10px] text-slate-400">ឆ្លើយតបក្នុង Website។ Telegram ប្រើសម្រាប់ជូនដំណឹងប៉ុណ្ណោះ។</p></div><button id="refreshAdminChats" type="button" class="rounded-xl border border-slate-200 px-3 py-2 text-[10px] font-bold">Refresh</button></div>
-  <div class="grid gap-3 md:grid-cols-[minmax(0,0.85fr)_minmax(0,1.4fr)]">
-    <div id="adminChatList" class="max-h-[440px] space-y-2 overflow-y-auto rounded-xl border border-slate-100 bg-slate-50 p-2"><p class="p-4 text-center text-xs text-slate-400">កំពុងផ្ទុកសន្ទនា...</p></div>
-    <div class="min-w-0 overflow-hidden rounded-xl border border-slate-100">
-      <div class="flex items-center justify-between gap-2 border-b border-slate-100 px-3 py-3"><div class="min-w-0"><b id="adminChatTitle" class="block truncate text-xs">ជ្រើសរើសសន្ទនា</b><span id="adminChatStatus" class="text-[9px] text-slate-400">មិនទាន់ជ្រើសរើស</span></div><button id="adminChatCloseConversation" type="button" class="hidden rounded-lg border border-slate-200 px-2 py-1.5 text-[9px] font-bold">បិទសន្ទនា</button></div>
-      <div id="adminChatMessages" class="support-chat-messages space-y-3 bg-slate-50 p-3"><p class="py-8 text-center text-xs text-slate-400">សូមជ្រើសរើស Chat ពីបញ្ជីខាងឆ្វេង។</p></div>
-      <div id="adminChatArchives" class="max-h-24 space-y-1 overflow-y-auto border-t border-slate-100 bg-white px-3 py-2"></div>
-      <form id="adminChatForm" class="flex items-end gap-2 border-t border-slate-100 bg-white p-3"><textarea id="adminChatInput" class="field min-h-[42px] max-h-24 flex-1 resize-y text-xs" rows="1" maxlength="4000" placeholder="សរសេរឆ្លើយតប..." required></textarea><button class="brand-gradient rounded-xl px-4 py-3 text-[11px] font-bold text-white" type="submit">ផ្ញើ</button></form>
-    </div>
-  </div>
-</div>
-<div class="mb-5 grid grid-cols-2 gap-3 md:grid-cols-3"><div class="rounded-2xl border border-slate-100 bg-white p-4 soft-shadow"><p class="text-[10px] text-slate-500">កំពុងរង់ចាំ</p><b class="mt-2 block text-2xl" id="adminPendingCount">០</b></div><div class="rounded-2xl border border-slate-100 bg-white p-4 soft-shadow"><p class="text-[10px] text-slate-500">បានអនុម័ត</p><b class="mt-2 block text-2xl text-emerald-600" id="adminApprovedCount">០</b></div><div class="rounded-2xl border border-slate-100 bg-white p-4 soft-shadow col-span-2 md:col-span-1"><p class="text-[10px] text-slate-500">បានបដិសេធ</p><b class="mt-2 block text-2xl text-rose-600" id="adminRejectedCount">០</b></div></div>
-<div class="rounded-2xl border border-slate-100 bg-white p-5 soft-shadow sm:p-6"><div class="mb-4 flex flex-wrap items-center justify-between gap-2"><h2 class="font-bold">ពាក្យស្នើសុំអ្នកលក់</h2><span class="text-[10px] text-slate-400">ចុចលើឯកសារដើម្បីពិនិត្យ</span></div><div class="space-y-3" id="adminApplications"></div></div>
-</div>
-</section>
-</main>
-<footer class="border-t border-slate-200 bg-white"><div class="shell flex flex-col gap-3 py-7 sm:flex-row sm:items-center sm:justify-between"><div class="flex items-center gap-2"><span class="brand-gradient grid h-8 w-8 place-items-center rounded-xl text-[11px] font-bold text-white" id="footerLogoMark">7</span><div class="min-w-0"><b class="block truncate text-[12px]" id="footerSiteTitle">7inOne</b><p class="truncate text-[9px] text-slate-400" id="footerSiteSubtitle">ផ្សារទិញលក់កម្ពុជា</p></div></div><p class="text-[9px] text-slate-400">© <span id="year"></span> 7inOne · ទីផ្សារទិញលក់អនឡាញទំនុកចិត្តខ្ពស់នៅកម្ពុជា</p><div class="flex gap-4 text-[10px] font-semibold text-slate-500"><button data-view="home">ទំព័រដើម</button><button data-view="profile">គណនី</button><button data-view="seller">ហាងខ្ញុំ</button></div></div></footer>
-<nav class="mobile-market-nav" id="mobileMarketNav" aria-label="ម៉ឺនុយ">
-  <button type="button" data-view="home" class="mobile-market-item active"><span data-nav-icon="home"></span><small>ទំព័រដើម</small></button>
-  <button type="button" data-action="saved" class="mobile-market-item"><span data-nav-icon="heart"></span><small>រក្សាទុក</small></button>
-  <button type="button" id="mobileMarketPost" class="fab" aria-label="ដាក់លក់ទំនិញ"><span data-nav-icon="plus"></span></button>
-  <button type="button" data-action="open-chat" class="mobile-market-item"><span data-nav-icon="chat"></span><small>សារ</small></button>
-  <button type="button" data-view="profile" class="mobile-market-item"><span data-nav-icon="user"></span><small>គណនី</small></button>
-</nav>
-<!-- AUTH MODAL -->
-<div aria-hidden="true" class="modal" id="authModal"><section class="modal-box max-w-[450px] p-6 sm:p-7"><div class="mb-5 flex items-start justify-between"><div><p class="text-[10px] font-bold text-indigo-600">7INONE ACCOUNT</p><h2 class="mt-1 text-xl font-bold" id="authTitle">សូមស្វាគមន៍មកកាន់ 7inOne</h2><p class="mt-1 text-[10px] text-slate-400">ចូលគណនី ដើម្បីប្រើមុខងារទាំងអស់</p></div><button class="close-btn" data-close="authModal"></button></div><div class="mb-4 grid grid-cols-2 rounded-xl bg-slate-100 p-1"><button class="auth-tab rounded-lg bg-white py-2 text-[11px] font-bold shadow" data-auth-mode="login">ចូលគណនី</button><button class="auth-tab rounded-lg py-2 text-[11px] font-bold text-slate-500" data-auth-mode="register">បង្កើតគណនី</button></div><form class="space-y-3" id="authForm"><label class="hidden" id="authNameWrap"><span class="label">ឈ្មោះពេញ</span><input class="field" id="authName" placeholder="ឈ្មោះរបស់អ្នក"/></label><label><span class="label">លេខទូរស័ព្ទ ឬ អ៊ីមែល</span><input class="field" id="authIdentity" placeholder="012 345 678 ឬ name@email.com" required=""/></label><label><span class="label">ពាក្យសម្ងាត់</span><input class="field" id="authPassword" minlength="6" placeholder="បញ្ចូលពាក្យសម្ងាត់" required="" type="password"/></label><label class="hidden" id="authOtpWrap"><span class="label">លេខកូដផ្ទៀងផ្ទាត់ SMS</span><input autocomplete="one-time-code" class="field" id="authOtp" inputmode="numeric" maxlength="8" placeholder="បញ្ចូលលេខកូដ SMS" required="required" type="text"/></label><button class="brand-gradient w-full rounded-xl py-3 text-[11px] font-bold text-white" id="authSubmit">ចូលគណនី</button>
-<div class="telegram-widget-panel rounded-2xl border border-sky-100 bg-sky-50/60 px-4 py-3" id="telegramLoginWidgetWrap">
-  <p class="mb-2 text-center text-[10px] font-bold text-slate-700">ឬ ចូលគណនីតាម Telegram</p>
-  <div class="telegram-widget-slot" id="telegramLoginWidget"></div>
-  <p class="mt-2 text-center text-[9px] text-slate-400" id="telegramLoginWidgetHint">ចូលដោយប្រើ Telegram ផ្ទាល់ខ្លួនរបស់អ្នក។</p>
-</div>
- <p class="text-center text-[10px] text-slate-400" id="authHint">ប្រើលេខទូរស័ព្ទ ឬអ៊ីមែលដែលភ្ជាប់ជាមួយគណនី 7inOne របស់អ្នក។</p></form>
-<div class="mt-4 text-center"><button class="text-[10px] font-bold text-indigo-600" id="forgotPasswordBtn" type="button">ភ្លេច Password? សង្គ្រោះតាម Telegram</button></div>
-<form class="hidden mt-4 space-y-3" id="telegramRecoveryForm">
-  <p class="text-[10px] leading-5 text-slate-500">បញ្ចូល Email របស់គណនីដែលបានភ្ជាប់ Telegram រួច ដើម្បីទទួល OTP សង្គ្រោះ Password។</p>
-  <label><span class="label">Email គណនី 7inOne</span><input class="field" id="recoveryEmail" type="email" autocomplete="email" required placeholder="name@email.com"/></label>
-  <div class="rounded-xl border border-amber-200 bg-amber-50 p-3">
-    <b class="block text-[10px] text-amber-800">Admin មិនទាន់ភ្ជាប់ Telegram?</b>
-    <p class="mt-1 text-[9px] leading-5 text-amber-700">ដាក់ Temporary Recovery Key ពី Render ម្តង ដើម្បីភ្ជាប់ Telegram ទៅ Admin ដំបូង។</p>
-    <input class="field mt-2" id="adminBootstrapKey" type="password" autocomplete="off" placeholder="Admin Recovery Key"/>
-    <button class="mt-2 w-full rounded-xl border border-amber-300 bg-white py-2.5 text-[10px] font-bold text-amber-800" id="bootstrapAdminTelegramBtn" type="button">ភ្ជាប់ Telegram ទៅ Admin</button>
-    <a class="mt-2 hidden block rounded-lg bg-white px-3 py-2.5 text-center text-[10px] font-bold text-sky-700" id="adminTelegramStartLink" href="#" target="_blank" rel="noopener noreferrer">បើក Telegram Bot ហើយចុច Start</a>
-  </div>
-  <button class="w-full rounded-xl border border-sky-200 bg-sky-50 py-3 text-[10px] font-bold text-sky-700" id="requestRecoveryOtpBtn" type="button">ផ្ញើ OTP ទៅ Telegram</button>
-  <label><span class="label">OTP ៦ ខ្ទង់</span><input class="field" id="recoveryOtp" inputmode="numeric" maxlength="6" autocomplete="one-time-code" required placeholder="បញ្ចូលលេខកូដ Telegram"/></label>
-  <label><span class="label">Password ថ្មី</span><input class="field" id="recoveryNewPassword" type="password" minlength="8" maxlength="72" autocomplete="new-password" required placeholder="យ៉ាងតិច ៨ តួអក្សរ"/></label>
-  <button class="brand-gradient w-full rounded-xl py-3 text-[11px] font-bold text-white" id="confirmRecoveryBtn" type="submit">ផ្ទៀងផ្ទាត់ និងសង្គ្រោះគណនី</button>
-  <button class="w-full py-2 text-[10px] font-bold text-slate-500" id="backToLoginBtn" type="button">ត្រឡប់ទៅចូលគណនី</button>
-</form>
-</section></div>
-<!-- SELLER APPLY MODAL -->
-<div aria-hidden="true" class="modal" id="sellerModal"><section class="modal-box max-w-[600px] p-5 sm:p-7"><div class="mb-5 flex items-start justify-between"><div><p class="text-[10px] font-bold text-indigo-600">SELLER REGISTRATION · OPTIONAL VERIFICATION</p><h2 class="mt-1 text-xl font-bold" id="sellerModalTitle">ចុះឈ្មោះក្លាយជាអ្នកលក់</h2><p class="mt-1 text-[10px] leading-5 text-slate-400">បង្កើតហាង និងដាក់លក់បានភ្លាមៗដោយមិនចាំបាច់ផ្ទៀងផ្ទាត់។ ឯកសារគឺជាជម្រើសសម្រាប់ស្នើសុំសញ្ញាទំនុកចិត្ត។</p></div><button class="close-btn" data-close="sellerModal"></button></div><form class="space-y-3" id="sellerApplyForm"><div class="grid gap-3 sm:grid-cols-2"><label><span class="label">ឈ្មោះហាង / ឈ្មោះអ្នកលក់ *</span><input class="field" id="shopName" maxlength="70" placeholder="ឧ. ហាងទូរស័ព្ទ សុភា" required=""/></label><label><span class="label">លេខទូរស័ព្ទ / Telegram *</span><input class="field" id="shopContact" placeholder="012 345 678 / @username" required=""/></label><label class="sm:col-span-2"><span class="label">អាសយដ្ឋានហាង *</span><input class="field" id="shopAddress" placeholder="ផ្ទះលេខ... ផ្លូវ... ខណ្ឌ... រាជធានី/ខេត្ត" required=""/></label></div><div><span class="label" id="sellerDocumentLabel">ឯកសារផ្ទៀងផ្ទាត់ (ជាជម្រើសសម្រាប់អ្នកចុះឈ្មោះថ្មី)</span><label class="file-preview flex cursor-pointer items-center gap-3 rounded-2xl border border-dashed border-indigo-200 p-3 hover:bg-indigo-50" for="sellerDocument"><span class="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-xl bg-white text-indigo-600" id="sellerDocThumb"></span><span class="min-w-0 flex-1"><b class="block truncate text-[11px]" id="sellerDocName">ចុចដើម្បី Upload ឯកសារ</b><small class="mt-1 block text-[9px] text-slate-400">JPG, PNG ឬ WEBP · ទំហំអតិបរមា 8MB</small></span><span class="rounded-lg bg-white px-3 py-2 text-[9px] font-bold text-indigo-600 shadow-sm">ជ្រើសរើស</span></label><input accept="image/jpeg,image/png,image/webp" class="hidden" id="sellerDocument" type="file"/><div class="mt-2 hidden overflow-hidden rounded-xl border border-slate-100" id="sellerDocPreview"></div></div><div class="rounded-xl bg-emerald-50 p-3 text-[10px] leading-5 text-emerald-800">មិនចាំបាច់ផ្ទៀងផ្ទាត់ក៏អាចប្រើប្រាស់ហាង និងដាក់លក់បាន។ បើចង់ទទួលសញ្ញា <b>ផ្ទៀងផ្ទាត់</b> សូមភ្ជាប់ឯកសារដើម្បីឱ្យ Admin ពិនិត្យ។</div><button class="brand-gradient w-full rounded-xl py-3 text-[11px] font-bold text-white">បង្កើតហាង / ដាក់ស្នើផ្ទៀងផ្ទាត់</button></form></section></div>
-<!-- PRODUCT DETAIL MODAL -->
-<div aria-hidden="true" class="modal" id="productModal"><section class="modal-box relative max-w-[800px]"><button class="close-btn absolute right-4 top-4 z-20 bg-white/95 shadow" data-close="productModal"></button><div id="productDetailModal"></div></section></div>
-<!-- ADD/EDIT PRODUCT MODAL -->
-<div aria-hidden="true" class="modal" id="productFormModal"><section class="modal-box max-w-[620px] p-5 sm:p-7"><div class="mb-5 flex items-start justify-between"><div><p class="text-[10px] font-bold text-indigo-600">SELLER STUDIO</p><h2 class="mt-1 text-xl font-bold" id="productFormTitle">បន្ថែមទំនិញថ្មី</h2></div><button class="close-btn" data-close="productFormModal"></button></div><form class="space-y-3" id="productForm"><input id="editProductId" type="hidden"/><div class="grid gap-3 sm:grid-cols-2"><label class="sm:col-span-2"><span class="label">ឈ្មោះទំនិញ *</span><input class="field" id="productTitle" maxlength="90" placeholder="ឧ. iPhone 14 Pro Max 256GB" required=""/></label><label><span class="label">តម្លៃ (USD) *</span><div class="relative"><span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">$</span><input class="field pl-8" id="productPrice" min="0.01" placeholder="0.00" required="" step="0.01" type="number"/></div></label><label><span class="label">ប្រភេទ *</span><select class="field" id="productCategory" required=""><option value="">ជ្រើសរើសប្រភេទ</option><option value="phones">ទូរស័ព្ទ &amp; អេឡិចត្រូនិក</option><option value="vehicles">រថយន្ត &amp; ម៉ូតូ</option><option value="property">អចលនទ្រព្យ</option><option value="fashion">សម្លៀកបំពាក់</option><option value="furniture">គ្រឿងសង្ហារិម</option></select></label><label><span class="label">ទីតាំង *</span><select class="field" id="productLocation" required=""><option>ភ្នំពេញ</option><option>សៀមរាប</option><option>បាត់ដំបង</option><option>ព្រះសីហនុ</option><option>កំពង់ចាម</option><option>កំពត</option><option>តាកែវ</option><option>កណ្តាល</option></select></label><label><span class="label">ស្ថានភាព</span><select class="field" id="productCondition"><option>ប្រើរួចស្អាត</option><option>ថ្មី ១០០%</option><option>ល្អដូចថ្មី</option></select></label><label class="sm:col-span-2"><span class="label">ការពិពណ៌នាសង្ខេប <span class="text-emerald-700">(Short Description · បង្ហាញលើកាតទំនិញ)</span> *</span><textarea class="field product-short-desc-field" id="productShortDesc" rows="3" maxlength="140" placeholder="សរសេរចំណុចសំខាន់ៗខ្លីៗ (អតិបរមា ៣ ជួរ)..." required></textarea><small class="product-desc-counter" id="productShortDescCount" aria-live="polite">0/140 · 1/3 ជួរ</small></label><label class="sm:col-span-2"><span class="label">ការពិពណ៌នាលម្អិត <span class="text-emerald-700">(Full Caption · បង្ហាញក្នុងទំព័រលម្អិត)</span></span><textarea class="field product-full-desc-field" id="productDescription" rows="5" maxlength="2000" placeholder="សរសេរព័ត៌មានលម្អិតពេញលេញអំពីទំនិញ..."></textarea></label></div><div><span class="label">រូបភាពទំនិញ (អាចបញ្ចូលរហូតដល់ ៥ រូប)</span><label class="flex cursor-pointer items-center gap-3 rounded-2xl border border-dashed border-indigo-200 bg-emerald-50/40 p-3" for="productImage"><span class="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-xl bg-white text-indigo-500" id="productImageThumb"></span><span class="min-w-0 flex-1"><b class="block truncate text-[10px]" id="productImageName">ជ្រើសរើសរូបភាពផលិតផល</b><small class="text-[9px] text-slate-400">JPG / PNG / WEBP · រហូតដល់ ៥ រូប</small></span><span class="rounded-lg bg-white px-3 py-2 text-[9px] font-bold text-indigo-600">Upload</span></label><input accept="image/jpeg,image/png,image/webp" class="hidden" id="productImage" multiple="" type="file"/></div><div class="flex flex-col-reverse gap-2 border-t border-slate-100 pt-4 sm:flex-row sm:justify-end"><button class="rounded-xl border border-slate-200 px-5 py-3 text-[11px] font-bold text-slate-600" data-close="productFormModal" type="button">បោះបង់</button><button class="brand-gradient rounded-xl px-6 py-3 text-[11px] font-bold text-white">រក្សាទុកទំនិញ</button></div></form></section></div>
-<!-- OFFER MODAL -->
-<div aria-hidden="true" class="modal" id="offerModal"><section class="modal-box max-w-[430px] p-6"><div class="mb-5 flex items-start justify-between"><div><p class="text-[10px] font-bold text-indigo-600">PRICE OFFER</p><h2 class="mt-1 text-xl font-bold">ស្នើសុំតម្លៃរបស់អ្នក</h2><p class="mt-1 text-[10px] text-slate-400" id="offerProductName"></p></div><button class="close-btn" data-close="offerModal"></button></div><form class="space-y-3" id="offerForm"><label><span class="label">តម្លៃដែលអ្នកចង់ទិញ (USD)</span><div class="relative"><span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">$</span><input class="field pl-8" id="offerAmount" min=".01" required="" step=".01" type="number"/></div></label><label><span class="label">សារជូនអ្នកលក់</span><textarea class="field min-h-[80px]" id="offerMessage" placeholder="សួស្តី ខ្ញុំចាប់អារម្មណ៍លើទំនិញនេះ..."></textarea></label><button class="brand-gradient w-full rounded-xl py-3 text-[11px] font-bold text-white">ផ្ញើសំណើតម្លៃ</button></form></section></div>
-<!-- UNIFIED BUYER / SELLER CHAT -->
-<div aria-hidden="true" class="modal" id="sellerChatModal">
-  <section class="modal-box seller-chat-shell relative flex flex-col overflow-hidden rounded-2xl bg-white">
-    <header class="flex items-center justify-between border-b border-slate-100 bg-white px-4 py-3">
-      <div class="min-w-0"><b class="block text-sm">ឆាតអ្នកទិញ និងអ្នកលក់</b><span class="mt-1 block text-[9px] text-slate-400">សន្ទនាទាំងអស់នៅទីនេះ · 1 អ្នកទិញ · 2 អ្នកលក់</span></div>
-      <div class="flex items-center gap-2">
-        <button id="sellerChatMute" type="button" class="seller-chat-header-icon" aria-pressed="false" aria-label="បិទសំឡេង" title="បិទសំឡេង"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7m3-10a9 9 0 0 1 0 13"/></svg><span>បិទសំឡេង</span></button>
-        <button id="sellerChatClose" type="button" class="seller-chat-header-icon" aria-label="បង្រួមឆាត" title="បង្រួមឆាត"><svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 12h14"/></svg></button>
-      </div>
-    </header>
-    <div class="seller-chat-layout flex min-h-0 flex-1">
-      <aside id="sellerChatInboxPane" class="seller-chat-inbox-pane w-[270px] shrink-0 overflow-y-auto border-r border-slate-100 bg-white p-3">
-        <div class="mb-3 flex items-center justify-between"><b class="text-[11px]">ប្រអប់សារ</b><button id="sellerChatInboxRefresh" class="text-[9px] font-bold text-emerald-700" type="button">ធ្វើបច្ចុប្បន្នភាព</button></div>
-        <div id="sellerChatInboxList"><p class="py-8 text-center text-[10px] text-slate-400">កំពុងផ្ទុកសារ...</p></div>
-      </aside>
-      <main id="sellerChatThread" class="seller-chat-thread flex min-w-0 flex-1 flex-col">
-        <div id="sellerChatProductContext" class="flex items-center gap-3 border-b border-slate-100 bg-white px-3 py-2">
-          <button id="sellerChatBack" class="hidden rounded-lg border border-slate-200 px-2 py-1 text-[10px]" type="button" aria-label="ត្រឡប់ទៅប្រអប់សារ"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
-          <div id="sellerChatProductImage" class="h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-slate-100"></div>
-          <div class="min-w-0 flex-1"><b id="sellerChatTitle" class="block truncate text-[11px]">ជ្រើសរើសសន្ទនា</b><span id="sellerChatSubtitle" class="mt-1 block truncate text-[9px] text-slate-400">ព័ត៌មានផលិតផលនឹងបង្ហាញនៅទីនេះ</span></div>
+        <!-- Account Menu -->
+        <div class="relative">
+          <button class="flex items-center gap-2 p-1" id="profileMenuBtn">
+            <div aria-label="រូបអ្នកប្រើ" class="nav-avatar h-9 w-9 overflow-hidden rounded-full border-2 border-white bg-emerald-50 shadow-sm" id="navAvatar" role="img"></div>
+            <span class="hidden text-left leading-tight lg:block">
+              <b class="block text-[11px]" id="navName">ភ្ញៀវ</b>
+              <small class="block text-[9px] text-slate-400" id="navRole">មិនទាន់ចូលគណនី</small>
+            </span>
+            <span class="hidden text-slate-400 lg:block" id="chevronIcon"></span>
+          </button>
+          <div class="dropdown absolute right-0 top-[calc(100%+10px)] z-[70] w-56 bg-white p-2" id="profileMenu">
+            <div class="border-b border-slate-100 px-3 py-3">
+              <b class="text-sm" id="menuUserName">សួស្តី!</b>
+              <p class="text-[10px] text-slate-400" id="menuUserStatus">សូមស្វាគមន៍មកកាន់ 7inOne</p>
+            </div>
+            <button class="menu-action" data-action="profile"><span id="menuUserIcon"></span>គណនីរបស់ខ្ញុំ</button>
+            <button class="menu-action" data-action="seller-dashboard"><span id="menuStoreIcon"></span>គ្រប់គ្រងហាង</button>
+            <button class="menu-action" data-action="admin"><span id="menuAdminIcon"></span>ផ្ទាំង Admin</button>
+            <button class="menu-action" data-action="saved"><span id="menuSaveIcon"></span>ទំនិញដែលបានរក្សាទុក</button>
+            <button class="menu-action" data-action="login"><span id="menuLoginIcon"></span>ចូល / ប្តូរគណនី</button>
+          </div>
         </div>
-        <div id="sellerChatMessages" class="support-chat-messages min-h-0 flex-1 space-y-3 overflow-y-auto bg-slate-50 p-3" aria-live="polite"><p class="py-8 text-center text-xs text-slate-400">ជ្រើសរើសសន្ទនាមួយ ដើម្បីចាប់ផ្ដើម។</p></div>
-        <div id="sellerChatProductBanner" class="seller-chat-draft-product hidden" aria-live="polite"></div>
-        <form id="sellerChatForm" class="seller-chat-composer flex items-end gap-2 border-t border-slate-100 bg-white p-3">
-          <input id="sellerChatImageInput" type="file" accept="image/jpeg,image/png,image/webp" class="hidden"/>
-          <button id="sellerChatChooseImage" type="button" class="seller-chat-attach" title="ផ្ញើរូបភាព" aria-label="ផ្ញើរូបភាព"><svg aria-hidden="true" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg></button>
-          <textarea id="sellerChatInput" class="field min-h-[42px] max-h-24 min-w-0 flex-1 resize-none text-xs" rows="1" maxlength="4000" placeholder="សរសេរសារ…"></textarea>
-          <button id="sellerChatSend" class="seller-chat-send brand-gradient grid h-11 w-11 shrink-0 place-items-center rounded-full text-white shadow-sm" type="submit" aria-label="ផ្ញើសារ" title="ផ្ញើសារ"><svg aria-hidden="true" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg></button>
-        </form>
-      </main>
+      </div>
     </div>
-  </section>
-</div>
-<!-- ADMIN SUPPORT IS TEMPORARILY HIDDEN; backend and history are preserved. -->
-<button id="supportChatLauncher" type="button" class="hidden fixed bottom-6 right-5 z-[120] grid h-14 w-14 place-items-center rounded-full bg-emerald-700 text-xl text-white shadow-xl" aria-label="ឆាតអ្នកទិញ និងអ្នកលក់"><span data-nav-icon="chat"></span><span id="sellerChatUnreadBadge" class="absolute -right-1 -top-1 hidden min-w-5 rounded-full bg-rose-600 px-1.5 py-0.5 text-[9px] font-bold text-white"></span></button>
-<section id="supportChatPanel" class="support-chat-panel hidden fixed bottom-24 right-5 z-[120] w-[min(92vw,370px)] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl" aria-label="ឆាតជាមួយ Admin">
-  <header class="flex items-center justify-between bg-slate-900 px-4 py-3 text-white">
-    <div><b class="block text-sm">ជំនួយ 7inOne</b><span class="text-[10px] text-slate-300">ឆាតផ្ទាល់ជាមួយ Admin</span></div>
-    <button id="supportChatClose" type="button" class="rounded-lg px-2 py-1 text-lg" aria-label="បិទ">×</button>
   </header>
-  <div id="supportChatMessages" class="support-chat-messages space-y-3 bg-slate-50 p-3" aria-live="polite"><p class="text-center text-xs text-slate-400">កំពុងផ្ទុកសារ...</p></div>
-  <div id="supportChatArchives" class="max-h-24 space-y-1 overflow-y-auto border-t border-slate-100 bg-white px-3 py-2"></div>
-  <form id="supportChatForm" class="flex items-end gap-2 border-t border-slate-100 bg-white p-3">
-    <textarea id="supportChatInput" class="field min-h-[42px] max-h-24 flex-1 resize-y text-xs" rows="1" maxlength="4000" placeholder="សរសេរសាររបស់អ្នក..." required></textarea>
-    <button class="brand-gradient rounded-xl px-4 py-3 text-[11px] font-bold text-white" type="submit">ផ្ញើ</button>
-  </form>
-</section>
-<div class="product-lightbox" id="productLightbox" aria-hidden="true" role="dialog" aria-modal="true" aria-label="រូបភាពទំនិញ"><button type="button" class="product-lightbox-close" id="productLightboxClose" aria-label="បិទរូបភាព">×</button><button type="button" class="product-lightbox-nav prev" id="productLightboxPrev" aria-label="រូបមុន">‹</button><img id="productLightboxImage" alt="រូបភាពទំនិញពង្រីក"><button type="button" class="product-lightbox-nav next" id="productLightboxNext" aria-label="រូបបន្ទាប់">›</button><span class="product-lightbox-count" id="productLightboxCount"></span></div>
-<div aria-hidden="true" class="maintenance-overlay hidden" id="maintenanceOverlay"><div class="maintenance-glass-card"><div class="maintenance-gear-wrap"><span class="maintenance-gear">⚙</span><span class="maintenance-spark">✦</span></div><p class="maintenance-eyebrow">7INONE · SYSTEM UPDATE</p><h1>ប្រព័ន្ធកំពុងអភិវឌ្ឍន៍</h1><p class="maintenance-english">Under Development</p><p class="maintenance-message" id="maintenanceOverlayMessage"></p><div class="maintenance-progress"><span></span></div><a href="#" id="maintenanceAdminLogin">Admin Login</a></div></div><div class="maintenance-admin-pill hidden" id="maintenanceAdminPill">🛠 កំពុងស្ថិតក្នុងទម្រង់អភិវឌ្ឍន៍ (Admin Preview)</div>
-<div class="fixed bottom-5 right-5 z-[150] flex w-[min(92vw,360px)] flex-col gap-2" id="toastArea"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="./app.js" defer></script>
+  <!-- ========================================================================
+       MAIN VIEWS
+       ======================================================================== -->
+  <main class="bottom-pad">
+    <!-- 1. HOME VIEW -->
+    <section class="view" id="view-home">
+      <div class="home-layout-shell shell">
+        <!-- Left Sidebar Navigation -->
+        <aside class="home-sidebar" aria-label="ការរុករក">
+          <button class="home-side-link active" type="button" data-home-side="home"><span>⌂</span>ទំព័រដើម</button>
+          <button class="home-side-link" type="button" data-category="phones"><span>▦</span>អេឡិចត្រូនិក</button>
+          <button class="home-side-link" type="button" data-category="vehicles"><span>🚗</span>រថយន្ត និង ម៉ូតូ</button>
+          <button class="home-side-link" type="button" data-category="property"><span>⌂</span>អចលនទ្រព្យ</button>
+          <button class="home-side-link" type="button" data-category="fashion"><span>◇</span>ម៉ូដសម្លៀកបំពាក់</button>
+          <button class="home-side-link" type="button" data-home-side="live"><span>▷</span>Live Shop</button>
+          <button class="home-side-link" type="button" data-home-side="saved"><span>♡</span>ចំណូលចិត្ត</button>
+          <button class="home-side-link" type="button" data-home-side="orders"><span>▤</span>ការបញ្ជាទិញ</button>
+          <button class="home-side-link" type="button" data-view="profile"><span>♙</span>គណនី</button>
+          <div class="home-sidebar-vip">
+            <b>♛ 7inOne VIP</b>
+            <small>អត្ថប្រយោជន៍ពិសេសសម្រាប់សមាជិក</small>
+          </div>
+        </aside>
+
+        <!-- Center Content -->
+        <div class="home-main-content">
+          <!-- Hero & Bento Showcase -->
+          <section class="market-hero">
+            <div class="hc hero-copy">
+              <p class="live"><i></i><span id="heroBadge">ផ្សារអនឡាញសម្រាប់អ្នកទាំងអស់គ្នា</span></p>
+              <h1 id="heroTitle">ទិញលក់ងាយៗ នៅជិតអ្នក</h1>
+              <p class="sub" id="heroSubtitle">ស្វែងរកទំនិញដែលអ្នកស្រឡាញ់ ឬដាក់លក់របស់ដែលអ្នកមិនប្រើ។ ភ្ជាប់អ្នកទិញ និងអ្នកលក់នៅទូទាំងប្រទេសកម្ពុជា។</p>
+              <div class="tags">
+                <span>ស្វែងរកពេញនិយម</span>
+                <button class="tag-btn" type="button" data-tag="iPhone">iPhone</button>
+                <button class="tag-btn" type="button" data-tag="Toyota">Toyota</button>
+                <button class="tag-btn" type="button" data-tag="ខុនដូ">ខុនដូ</button>
+                <button class="tag-btn" type="button" data-tag="កុំព្យូទ័រ">កុំព្យូទ័រ</button>
+              </div>
+              <div class="hero-trust-points">
+                <span><i id="heroShield"></i> អ្នកលក់បានផ្ទៀងផ្ទាត់</span>
+                <span><i id="heroUsers"></i> សហគមន៍អ្នកទិញលក់</span>
+              </div>
+              <button class="go" id="heroPostBtn" type="button">ចាប់ផ្តើមទិញលក់</button>
+            </div>
+
+            <div class="hero-bento hidden md:grid">
+              <div class="hero-tile t1" id="heroImageTile1">
+                <img class="hero-image hidden" id="heroImage1" alt="រូបភាព Hero 1" />
+                <svg class="hero-placeholder" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="1.8"></circle><path d="M21 16l-5-5-8 8"></path></svg>
+              </div>
+              <div class="hero-tile t2" id="heroImageTile2">
+                <img class="hero-image hidden" id="heroImage2" alt="រូបភាព Hero 2" />
+                <svg class="hero-placeholder" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="1.8"></circle><path d="M21 16l-5-5-8 8"></path></svg>
+              </div>
+              <div class="hero-tile t3" id="heroImageTile3">
+                <img class="hero-image hidden" id="heroImage3" alt="រូបភាព Hero 3" />
+                <svg class="hero-placeholder" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="1.8"></circle><path d="M21 16l-5-5-8 8"></path></svg>
+              </div>
+            </div>
+          </section>
+
+          <!-- Category Dock -->
+          <nav class="dock" id="categoryStrip" aria-label="ប្រភេទទំនិញ">
+            <button type="button" class="dk active" data-category="all">
+              <span class="ico"><span id="catAll"></span></span>
+              <span class="lb">ទាំងអស់</span>
+            </button>
+            <button type="button" class="dk" data-category="phones">
+              <span class="ico"><span id="catPhone"></span></span>
+              <span class="lb">ទូរស័ព្ទ &amp; អេឡិចត្រូនិក</span>
+            </button>
+            <button type="button" class="dk" data-category="vehicles">
+              <span class="ico"><span id="catCar"></span></span>
+              <span class="lb">រថយន្ត &amp; ម៉ូតូ</span>
+            </button>
+            <button type="button" class="dk" data-category="property">
+              <span class="ico"><span id="catHome"></span></span>
+              <span class="lb">អចលនទ្រព្យ</span>
+            </button>
+            <button type="button" class="dk" data-category="fashion">
+              <span class="ico"><span id="catFashion"></span></span>
+              <span class="lb">សម្លៀកបំពាក់</span>
+            </button>
+            <button type="button" class="dk" data-category="furniture">
+              <span class="ico"><span id="catFurniture"></span></span>
+              <span class="lb">គ្រឿងសង្ហារិម</span>
+            </button>
+          </nav>
+
+          <!-- Live & Video Strip -->
+          <section id="homeVendorMediaSection" class="home-vendor-media hidden" aria-label="Live និងវីដេអូពីហាង">
+            <div class="home-vendor-media-heading">
+              <div>
+                <p class="home-vendor-media-kicker">SHOP LIVE &amp; VIDEO</p>
+                <h2>Live / វីដេអូពីហាង</h2>
+              </div>
+              <span>ពីម្ចាស់ហាង</span>
+            </div>
+            <div id="homeVendorMediaList" class="home-vendor-media-list"></div>
+          </section>
+
+          <!-- Listing Header -->
+          <div class="market-listing-header">
+            <div>
+              <p class="new"><i></i>បានបង្ហោះថ្មីៗ</p>
+              <h2 id="listingTitle">ទំនិញដែលគួរឱ្យចាប់អារម្មណ៍</h2>
+              <p class="mt-0.5 text-[12px]" id="listingSub">រកឃើញទំនិញល្អៗពីអ្នកលក់នៅជិតអ្នក</p>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="hidden text-[12px] text-slate-500 sm:block" id="resultCount"></span>
+              <select class="min-h-[40px] px-3.5 text-[12px] font-semibold outline-none" id="sortSelect" aria-label="តម្រៀបទំនិញ">
+                <option value="newest">ថ្មីៗមុន</option>
+                <option value="low">តម្លៃទាបមុន</option>
+                <option value="high">តម្លៃខ្ពស់មុន</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Skeleton & Product Grid -->
+          <div id="skeletonGrid">
+            <div class="rounded-3xl bg-white p-2.5"><div class="skeleton aspect-square rounded-2xl"></div><div class="p-2 pt-3"><div class="skeleton mb-2 h-4 w-4/5 rounded"></div><div class="skeleton mb-3 h-4 w-2/5 rounded"></div><div class="skeleton h-6 rounded-lg"></div></div></div>
+            <div class="rounded-3xl bg-white p-2.5"><div class="skeleton aspect-square rounded-2xl"></div><div class="p-2 pt-3"><div class="skeleton mb-2 h-4 w-4/5 rounded"></div><div class="skeleton mb-3 h-4 w-2/5 rounded"></div><div class="skeleton h-6 rounded-lg"></div></div></div>
+            <div class="rounded-3xl bg-white p-2.5"><div class="skeleton aspect-square rounded-2xl"></div><div class="p-2 pt-3"><div class="skeleton mb-2 h-4 w-4/5 rounded"></div><div class="skeleton mb-3 h-4 w-2/5 rounded"></div><div class="skeleton h-6 rounded-lg"></div></div></div>
+            <div class="rounded-3xl bg-white p-2.5"><div class="skeleton aspect-square rounded-2xl"></div><div class="p-2 pt-3"><div class="skeleton mb-2 h-4 w-4/5 rounded"></div><div class="skeleton mb-3 h-4 w-2/5 rounded"></div><div class="skeleton h-6 rounded-lg"></div></div></div>
+            <div class="rounded-3xl bg-white p-2.5"><div class="skeleton aspect-square rounded-2xl"></div><div class="p-2 pt-3"><div class="skeleton mb-2 h-4 w-4/5 rounded"></div><div class="skeleton mb-3 h-4 w-2/5 rounded"></div><div class="skeleton h-6 rounded-lg"></div></div></div>
+            <div class="rounded-3xl bg-white p-2.5"><div class="skeleton aspect-square rounded-2xl"></div><div class="p-2 pt-3"><div class="skeleton mb-2 h-4 w-4/5 rounded"></div><div class="skeleton mb-3 h-4 w-2/5 rounded"></div><div class="skeleton h-6 rounded-lg"></div></div></div>
+            <div class="rounded-3xl bg-white p-2.5"><div class="skeleton aspect-square rounded-2xl"></div><div class="p-2 pt-3"><div class="skeleton mb-2 h-4 w-4/5 rounded"></div><div class="skeleton mb-3 h-4 w-2/5 rounded"></div><div class="skeleton h-6 rounded-lg"></div></div></div>
+            <div class="rounded-3xl bg-white p-2.5"><div class="skeleton aspect-square rounded-2xl"></div><div class="p-2 pt-3"><div class="skeleton mb-2 h-4 w-4/5 rounded"></div><div class="skeleton mb-3 h-4 w-2/5 rounded"></div><div class="skeleton h-6 rounded-lg"></div></div></div>
+          </div>
+          <div class="hidden pb-10" id="productGrid"></div>
+
+          <!-- Empty State -->
+          <div class="hidden rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center" id="emptyHome">
+            <div class="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-emerald-50 text-emerald-800" id="emptyIcon"></div>
+            <h3 class="mt-4 font-bold">រកមិនឃើញទំនិញទេ</h3>
+            <p class="mt-1 text-[12px] text-slate-500">សាកល្បងពាក្យស្វែងរក ឬប្រភេទផ្សេងទៀត។</p>
+            <button class="mt-4 rounded-full bg-emerald-50 px-5 py-2 text-[12px] font-bold text-emerald-800" id="clearFilters">បង្ហាញទំនិញទាំងអស់</button>
+          </div>
+        </div>
+
+        <!-- Right Promo Rail -->
+        <aside class="home-promo-rail" id="homePromoRail" aria-label="ការផ្សព្វផ្សាយ">
+          <div class="home-promo-slot" data-promo-slot="top">
+            <div class="home-promo-placeholder"><b>Free Delivery</b><span>ដឹកជញ្ជូនងាយស្រួល</span></div>
+          </div>
+          <div class="home-promo-slot" data-promo-slot="middle">
+            <div class="home-promo-placeholder"><b>Secure Payment</b><span>ការទូទាត់មានសុវត្ថិភាព</span></div>
+          </div>
+          <div class="home-promo-slot tall" data-promo-slot="tall">
+            <div class="home-promo-placeholder"><b>7inOne Promotion</b><span>ការផ្តល់ជូនពិសេស</span></div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- 2. PRODUCT DETAIL VIEW -->
+    <section class="view" id="view-product">
+      <div class="shell py-5 sm:py-7">
+        <nav class="mb-4 flex items-center gap-2 text-[11px] text-slate-500">
+          <button type="button" data-view="home" class="font-semibold hover:text-slate-900">ទំព័រដើម</button>
+          <span>/</span>
+          <span class="font-semibold text-slate-800">ព័ត៌មានទំនិញ</span>
+        </nav>
+        <div class="product-detail-page" id="productDetail" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <!-- 3. PUBLIC STORE VIEW -->
+    <section class="view" id="view-store">
+      <div class="shell py-5 sm:py-7">
+        <nav class="mb-4 flex items-center gap-2 text-[11px] text-slate-500">
+          <button type="button" data-view="home" class="font-semibold hover:text-slate-900">ទំព័រដើម</button>
+          <span>/</span>
+          <span class="font-semibold text-slate-800">ហាង</span>
+        </nav>
+        <div id="storefrontContent"></div>
+      </div>
+    </section>
+
+    <!-- 4. PROFILE VIEW -->
+    <section class="view" id="view-profile">
+      <div class="shell account-shell py-7 sm:py-9">
+        <section class="account-hero overflow-hidden bg-white">
+          <div class="cover relative h-44 sm:h-56">
+            <div class="absolute left-5 top-5 z-10 rounded-full border border-white/30 bg-slate-950/35 px-3 py-1.5 text-[9px] font-bold tracking-wide text-white backdrop-blur">7INONE MEMBER</div>
+            <label class="absolute right-4 top-4 z-10 flex cursor-pointer items-center gap-2 rounded-xl bg-white/95 px-3 py-2 text-[10px] font-bold text-slate-700 shadow">
+              <span id="coverCam"></span> កែរូប Cover
+              <input accept="image/jpeg,image/png,image/webp" class="hidden" id="coverUpload" type="file" />
+            </label>
+          </div>
+          <div class="px-5 pb-5 sm:px-8">
+            <div class="account-identity flex flex-wrap items-end justify-between gap-4">
+              <div class="flex min-w-0 items-end gap-4">
+                <div class="relative shrink-0">
+                  <div aria-label="រូប Profile" class="account-avatar h-24 w-24 overflow-hidden border-4 border-white bg-emerald-50 shadow-xl sm:h-32 sm:w-32" id="profileAvatar" role="img"></div>
+                  <label class="absolute bottom-1 right-1 grid h-8 w-8 cursor-pointer place-items-center rounded-full border-2 border-white bg-emerald-700 text-white shadow" id="avatarCam">
+                    <input accept="image/jpeg,image/png,image/webp" class="hidden" id="avatarUpload" type="file" />
+                  </label>
+                </div>
+                <div class="min-w-0 pb-1">
+                  <p class="mb-1 text-[9px] font-bold uppercase tracking-wider text-slate-400">ACCOUNT PROFILE</p>
+                  <h2 class="truncate text-lg font-bold sm:text-xl" id="profileHeadingName">គណនីអ្នកប្រើប្រាស់</h2>
+                  <p class="mt-1 truncate text-[10px] text-slate-500" id="profileHeadingMeta">សមាជិក 7inOne</p>
+                  <div class="mt-2 flex flex-wrap gap-2" id="profileSellerBadge"></div>
+                </div>
+              </div>
+              <button class="mb-1 rounded-full brand-gradient px-5 py-2.5 text-[11px] font-bold text-white" id="profileApplyTop">ចុះឈ្មោះក្លាយជាអ្នកលក់</button>
+            </div>
+
+            <div class="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-3">
+              <button class="account-shortcut" data-profile-jump="saved">
+                <span class="account-shortcut-icon bg-rose-50 text-rose-600">♡</span>
+                <span><b>ទំនិញដែលបានរក្សាទុក</b><small>ផលិតផលដែលអ្នកចាប់អារម្មណ៍</small></span>
+                <span class="account-shortcut-arrow">→</span>
+              </button>
+              <button class="account-shortcut" data-profile-jump="history">
+                <span class="account-shortcut-icon bg-emerald-50 text-emerald-700">↗</span>
+                <span><b>ការទិញ និងសំណើតថ្លៃ</b><small>តាមដានប្រតិបត្តិការរបស់អ្នក</small></span>
+                <span class="account-shortcut-arrow">→</span>
+              </button>
+              <button class="account-shortcut" data-profile-jump="seller">
+                <span class="account-shortcut-icon bg-amber-50 text-amber-700">▣</span>
+                <span><b>ស្ថានភាពហាង</b><small>គ្រប់គ្រងការផ្ទៀងផ្ទាត់អ្នកលក់</small></span>
+                <span class="account-shortcut-arrow">→</span>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <div class="mt-5 grid gap-5 lg:grid-cols-[.85fr_1.15fr]">
+          <!-- Left Column: Info & Security -->
+          <section class="account-panel bg-white p-5 sm:p-6">
+            <div class="mb-5 flex items-center justify-between gap-3">
+              <div>
+                <p class="text-[9px] font-bold tracking-wider text-emerald-700">PERSONAL INFORMATION</p>
+                <h3 class="mt-1 text-base font-bold">ព័ត៌មានផ្ទាល់ខ្លួន</h3>
+              </div>
+              <span class="rounded-full bg-slate-100 px-2.5 py-1 text-[9px] font-semibold text-slate-500">កែប្រែបាន</span>
+            </div>
+            <form class="space-y-3" id="profileForm">
+              <label class="block"><span class="label">ឈ្មោះពេញ</span><input class="field" id="profileName" maxlength="60" required /></label>
+              <label class="block"><span class="label">លេខទូរស័ព្ទ</span><input class="field" id="profilePhone" placeholder="012 345 678" /></label>
+              <label class="block"><span class="label">ទីតាំង / ខេត្ត</span>
+                <select class="field" id="profileLocation">
+                  <option>ភ្នំពេញ</option><option>សៀមរាប</option><option>បាត់ដំបង</option><option>ព្រះសីហនុ</option>
+                  <option>កំពង់ចាម</option><option>កំពត</option><option>តាកែវ</option><option>កណ្តាល</option><option>ផ្សេងៗ</option>
+                </select>
+              </label>
+              <label class="block"><span class="label">អំពីខ្ញុំ</span><textarea class="field min-h-[90px]" id="profileBio" maxlength="250" placeholder="សរសេរព័ត៌មានខ្លីៗអំពីខ្លួនអ្នក..."></textarea></label>
+              <button class="brand-gradient w-full rounded-full py-3 text-[11px] font-bold text-white">រក្សាទុកការកែប្រែ</button>
+            </form>
+
+            <!-- Telegram Account Security -->
+            <div class="mt-6 border-t border-slate-100 pt-5">
+              <p class="text-[9px] font-bold tracking-wider text-emerald-700">ACCOUNT SECURITY</p>
+              <h3 class="mt-1 text-base font-bold">ភ្ជាប់ Telegram និងប្ដូរ Password</h3>
+
+              <div class="mt-4 rounded-2xl border border-emerald-100 bg-emerald-50/50 p-4">
+                <div class="flex items-center justify-between gap-2">
+                  <div>
+                    <b class="text-[11px]" id="telegramLoginLinkStatus">Telegram Login មិនទាន់ភ្ជាប់</b>
+                    <p class="mt-1 text-[9px] text-slate-500" id="telegramLoginLinkHint">ភ្ជាប់ Telegram ID ដើម្បីចូលគណនី 7inOne នៅពេលក្រោយ។</p>
+                  </div>
+                  <span class="rounded-full bg-white px-2.5 py-1 text-[9px] font-bold text-emerald-700">LOGIN</span>
+                </div>
+                <div class="mt-3 flex justify-center" id="telegramProfileWidgetWrap"><div id="telegramProfileWidget"></div></div>
+              </div>
+
+              <div class="mt-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <div class="flex items-center justify-between gap-2">
+                  <div>
+                    <b class="text-[11px]" id="telegramAccountStatus">Telegram Bot មិនទាន់ភ្ជាប់</b>
+                    <p class="mt-1 text-[9px] text-slate-400" id="telegramAccountHint">ភ្ជាប់ Bot Chat ដើម្បីទទួល OTP និងសារសុវត្ថិភាព។</p>
+                  </div>
+                  <button class="rounded-full bg-sky-600 px-4 py-2 text-[10px] font-bold text-white" id="connectTelegramBtn" type="button">Connect Bot</button>
+                </div>
+                <a class="mt-3 hidden block rounded-xl border border-sky-200 bg-white px-3 py-2 text-center text-[10px] font-bold text-sky-700" href="#" id="telegramConnectLink" target="_blank" rel="noopener noreferrer">បើក Telegram Bot ដើម្បីចុច Start</a>
+                <button class="mt-2 hidden text-[10px] font-bold text-emerald-700" id="refreshTelegramStatusBtn" type="button">ពិនិត្យស្ថានភាពឡើងវិញ</button>
+              </div>
+
+              <form class="mt-4 space-y-3" id="telegramPasswordForm">
+                <button class="w-full rounded-full border border-emerald-200 bg-emerald-50 py-2.5 text-[10px] font-bold text-emerald-800" id="sendTelegramOtpBtn" type="button" disabled>ផ្ញើ OTP តាម Telegram</button>
+                <label class="block"><span class="label">OTP ៦ ខ្ទង់</span><input class="field" id="telegramPasswordOtp" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" placeholder="បញ្ចូលលេខកូដពី Telegram" required /></label>
+                <label class="block"><span class="label">Password ថ្មី</span><input class="field" id="telegramNewPassword" type="password" minlength="8" maxlength="72" placeholder="យ៉ាងតិច ៨ តួអក្សរ" required /></label>
+                <button class="brand-gradient w-full rounded-full py-3 text-[11px] font-bold text-white" id="changeTelegramPasswordBtn" type="submit" disabled>ផ្ទៀងផ្ទាត់ និងប្ដូរ Password</button>
+              </form>
+            </div>
+          </section>
+
+          <!-- Right Column: Activity Tabs -->
+          <section class="account-panel min-w-0 bg-white p-5 sm:p-6">
+            <div class="flex flex-wrap items-end justify-between gap-2">
+              <div>
+                <p class="text-[9px] font-bold tracking-wider text-emerald-700">ACCOUNT ACTIVITY</p>
+                <h3 class="mt-1 text-base font-bold">សកម្មភាព និងការគ្រប់គ្រង</h3>
+              </div>
+              <span class="text-[10px] font-semibold text-slate-400" id="profileActivityCount"></span>
+            </div>
+            <div class="mt-5 flex gap-2 overflow-x-auto border-b border-slate-100 pb-2">
+              <button class="tab active" data-profile-tab="saved">បានរក្សាទុក</button>
+              <button class="tab" data-profile-tab="history">ប្រវត្តិទិញ/តថ្លៃ</button>
+              <button class="tab" data-profile-tab="seller">ហាងរបស់ខ្ញុំ</button>
+            </div>
+            <div class="min-h-[330px] py-4" id="profileTabContent"></div>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. SELLER DASHBOARD VIEW -->
+    <section class="view" id="view-seller">
+      <div class="shell py-7 sm:py-9">
+        <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p class="text-[10px] font-bold text-emerald-700">SELLER CENTER</p>
+            <h1 class="mt-1 text-2xl font-bold">គ្រប់គ្រងហាង &amp; ទំនិញ</h1>
+            <p class="mt-1 text-[11px] text-slate-500">គ្រប់គ្រងការផ្សាយ និងតាមដានលទ្ធផលហាងរបស់អ្នក</p>
+          </div>
+          <button class="rounded-full border border-slate-200 bg-white px-4 py-2 text-[11px] font-bold text-slate-700" data-view="home">មើលផ្សារ</button>
+        </div>
+
+        <div class="hidden rounded-3xl border border-amber-200 bg-amber-50 p-7 text-center" id="sellerGate">
+          <div class="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-white text-amber-600" id="sellerGateIcon"></div>
+          <h2 class="mt-4 text-lg font-bold">ហាងរបស់អ្នកមិនទាន់បានផ្ទៀងផ្ទាត់ទេ</h2>
+          <p class="mx-auto mt-2 max-w-lg text-[11px] leading-6 text-amber-800" id="sellerGateText">សូមដាក់ពាក្យស្នើសុំ ហើយរង់ចាំ Admin ពិនិត្យឯកសារ។</p>
+          <button class="mt-4 rounded-full brand-gradient px-6 py-3 text-[11px] font-bold text-white" id="sellerGateApply">ចុះឈ្មោះអ្នកលក់</button>
+        </div>
+
+        <div id="sellerDashboardContent">
+          <div id="sellerVerificationNotice" class="mb-5 hidden items-center justify-between gap-4 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+            <div class="min-w-0">
+              <b class="block text-[12px] text-amber-900">ហាងរបស់អ្នកមិនទាន់បានផ្ទៀងផ្ទាត់</b>
+              <p class="mt-1 text-[10px] text-amber-800">អ្នកអាចបន្តដាក់លក់បានធម្មតា។ ផ្ទៀងផ្ទាត់ដោយស្ម័គ្រចិត្ត ដើម្បីបង្កើនទំនុកចិត្ត។</p>
+              <small id="sellerVerificationStatus" class="mt-1 block text-[9px] text-amber-700"></small>
+            </div>
+            <button type="button" id="sellerVerifyNow" class="shrink-0 rounded-full bg-white px-4 py-2 text-[10px] font-bold text-amber-800 shadow-sm">ស្នើសុំផ្ទៀងផ្ទាត់</button>
+          </div>
+
+          <!-- KPI Cards -->
+          <div class="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <div class="rounded-2xl bg-white p-4 soft-shadow">
+              <div class="flex items-center justify-between"><span class="text-[10px] font-semibold text-slate-500">ទំនិញកំពុងលក់</span><span class="grid h-8 w-8 place-items-center rounded-xl bg-emerald-50 text-emerald-700" id="kpiListingsIcon"></span></div>
+              <p class="mt-3 text-2xl font-bold" id="kpiListings">0</p>
+            </div>
+            <div class="rounded-2xl bg-white p-4 soft-shadow">
+              <div class="flex items-center justify-between"><span class="text-[10px] font-semibold text-slate-500">ចំនួនអ្នកមើល</span><span class="grid h-8 w-8 place-items-center rounded-xl bg-sky-50 text-sky-600" id="kpiViewsIcon"></span></div>
+              <p class="mt-3 text-2xl font-bold" id="kpiViews">0</p>
+            </div>
+            <div class="rounded-2xl bg-white p-4 soft-shadow">
+              <div class="flex items-center justify-between"><span class="text-[10px] font-semibold text-slate-500">ពិន្ទុផ្កាយមធ្យម</span><span class="grid h-8 w-8 place-items-center rounded-xl bg-amber-50 text-amber-500" id="kpiRatingIcon"></span></div>
+              <p class="mt-3 text-2xl font-bold" id="kpiRating">—</p>
+            </div>
+            <div class="rounded-2xl bg-white p-4 soft-shadow">
+              <div class="flex items-center justify-between"><span class="text-[10px] font-semibold text-slate-500">លក់បានជោគជ័យ</span><span class="grid h-8 w-8 place-items-center rounded-xl bg-emerald-50 text-emerald-600" id="kpiSalesIcon"></span></div>
+              <p class="mt-3 text-2xl font-bold" id="kpiSales">0</p>
+            </div>
+          </div>
+
+          <!-- Seller Tabs -->
+          <div class="overflow-hidden rounded-3xl bg-white soft-shadow">
+            <nav class="seller-tabs" role="tablist">
+              <button type="button" class="seller-tab is-active" data-seller-tab="products"><span data-seller-icon="package"></span>ផលិតផលរបស់ខ្ញុំ <b id="sellerProductsCount" class="seller-tab-count">0</b></button>
+              <button type="button" class="seller-tab" data-seller-tab="orders"><span data-seller-icon="file"></span>ការបញ្ជាទិញ <b id="sellerOrdersCount" class="seller-tab-count">0</b></button>
+              <button type="button" class="seller-tab" data-seller-tab="offers"><span data-seller-icon="tag"></span>សំណើតថ្លៃ <b id="sellerOffersCount" class="seller-tab-count">0</b></button>
+              <button type="button" class="seller-tab" data-seller-tab="shop"><span data-seller-icon="store"></span>ព័ត៌មានហាង</button>
+              <button type="button" class="seller-tab" data-seller-tab="media"><span data-seller-icon="play"></span>Live / Video</button>
+            </nav>
+
+            <!-- Products Tab -->
+            <section class="seller-tab-panel is-active" id="sellerTabProducts" data-seller-panel="products">
+              <div class="seller-toolbar">
+                <label class="seller-search"><span data-seller-icon="search"></span><input id="sellerProductSearch" type="search" placeholder="ស្វែងរកតាមឈ្មោះទំនិញ..." /></label>
+                <div class="seller-status-filters">
+                  <button type="button" class="seller-filter is-active" data-seller-filter="all">ទាំងអស់</button>
+                  <button type="button" class="seller-filter" data-seller-filter="active">កំពុងលក់</button>
+                  <button type="button" class="seller-filter" data-seller-filter="renew">ត្រូវការ Renew</button>
+                  <button type="button" class="seller-filter" data-seller-filter="sold">លក់រួច</button>
+                </div>
+                <button class="seller-add-button" id="addProductBtn" type="button"><span id="addProductIcon"></span>បន្ថែមទំនិញ</button>
+              </div>
+              <div class="seller-table-wrap">
+                <div class="seller-table-head"><span>ទំនិញ</span><span>តម្លៃ</span><span>ស្តុក &amp; អ្នកមើល</span><span>ស្ថានភាព &amp; សុពលភាព</span><span class="text-right">សកម្មភាព</span></div>
+                <div id="sellerProducts"></div>
+              </div>
+            </section>
+
+            <!-- Orders Tab -->
+            <section class="seller-tab-panel" id="sellerTabOrders" data-seller-panel="orders" hidden>
+              <div class="mb-4"><h3 class="text-sm font-bold">ការបញ្ជាទិញ និងការដឹកជញ្ជូន</h3></div>
+              <div id="sellerOrders" class="seller-list-rows"></div>
+            </section>
+
+            <!-- Offers Tab -->
+            <section class="seller-tab-panel" id="sellerTabOffers" data-seller-panel="offers" hidden>
+              <div class="mb-4"><h3 class="text-sm font-bold">សំណើតថ្លៃពីអ្នកទិញ</h3></div>
+              <div id="sellerOffers" class="seller-list-rows"></div>
+            </section>
+
+            <!-- Shop Profile Tab -->
+            <section class="seller-tab-panel" id="sellerTabShop" data-seller-panel="shop" hidden>
+              <form id="sellerShopProfileForm" class="seller-shop-form">
+                <div class="seller-shop-cover-preview" id="sellerShopCoverPreview"><span>រូប Cover ហាង</span></div>
+                <label class="block"><span class="label">រូប Cover ហាង (JPG / PNG / WEBP)</span><input id="sellerShopCover" class="field" type="file" accept="image/jpeg,image/png,image/webp" /></label>
+                <div class="seller-shop-logo-row">
+                  <div class="seller-shop-logo-preview" id="sellerShopLogoPreview"></div>
+                  <label class="min-w-0 flex-1"><span class="label">Logo ហាង (JPG / PNG / WEBP)</span><input id="sellerShopLogo" class="field" type="file" accept="image/jpeg,image/png,image/webp" /></label>
+                </div>
+                <div class="grid gap-3 sm:grid-cols-2">
+                  <label><span class="label">ឈ្មោះហាង *</span><input id="sellerShopName" class="field" maxlength="80" required /></label>
+                  <label><span class="label">ទីតាំងហាង</span><input id="sellerShopLocation" class="field" maxlength="160" placeholder="ឧ. បឹងកេងកង ភ្នំពេញ" /></label>
+                </div>
+                <label class="block"><span class="label">ការពិពណ៌នាហាង</span><textarea id="sellerShopDescription" class="field min-h-24" maxlength="1000"></textarea></label>
+                <div class="flex justify-end"><button id="sellerShopSave" type="submit" class="brand-gradient rounded-full px-6 py-3 text-[11px] font-bold text-white">រក្សាទុកព័ត៌មានហាង</button></div>
+              </form>
+            </section>
+
+            <!-- Live / Video Media Tab -->
+            <section class="seller-tab-panel" id="sellerTabMedia" data-seller-panel="media" hidden>
+              <form id="sellerMediaForm" class="seller-media-form">
+                <label class="block"><span class="label">ប្រភេទមាតិកា</span>
+                  <select id="sellerMediaType" class="field">
+                    <option value="live">Live ផ្សាយផ្ទាល់</option>
+                    <option value="video">Video ធម្មតា</option>
+                  </select>
+                </label>
+                <label class="block"><span class="label">Facebook / YouTube Link</span><input id="sellerMediaUrl" class="field" type="url" maxlength="1000" placeholder="https://..." required /></label>
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                  <span id="sellerMediaStatus" class="text-[11px] text-slate-500">មិនទាន់មាន Link</span>
+                  <div class="flex gap-2">
+                    <button type="button" id="sellerMediaClose" class="hidden rounded-full border border-rose-200 bg-rose-50 px-4 py-2 text-[11px] font-bold text-rose-700">បិទ Live និងលុប Link</button>
+                    <button id="sellerMediaSave" type="submit" class="brand-gradient rounded-full px-5 py-2 text-[11px] font-bold text-white">រក្សាទុក និងបង្ហាញ</button>
+                  </div>
+                </div>
+              </form>
+            </section>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. ADMIN VIEW -->
+    <section class="view" id="view-admin">
+      <div class="shell py-7 sm:py-9">
+        <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p class="text-[10px] font-bold text-rose-600">ADMIN CONTROL CENTER</p>
+            <h1 class="mt-1 text-2xl font-bold">ផ្ទាំងគ្រប់គ្រងប្រព័ន្ធ &amp; អ្នកលក់</h1>
+          </div>
+          <span class="rounded-full bg-rose-50 px-3 py-1.5 text-[10px] font-bold text-rose-600">សិទ្ធិអ្នកគ្រប់គ្រង</span>
+        </div>
+
+        <!-- Maintenance Mode -->
+        <div class="mb-6 rounded-3xl bg-white p-5 soft-shadow sm:p-6">
+          <h2 class="text-lg font-bold">ស្ថានភាពប្រព័ន្ធ (Maintenance Mode)</h2>
+          <label class="mt-4 flex cursor-pointer items-center justify-between gap-4 rounded-2xl border border-slate-100 bg-slate-50 p-4">
+            <span><b class="block text-[12px]">បើកមុខងារកំពុងអភិវឌ្ឍន៍</b><small class="text-[10px] text-slate-500">ពេលបើក អ្នកទិញ និងអ្នកលក់មិនអាចប្រើ Marketplace បានទេ។</small></span>
+            <input class="maintenance-switch" id="maintenanceToggle" type="checkbox" />
+          </label>
+          <label class="mt-4 block"><span class="label">សារជូនដំណឹង</span><textarea class="field min-h-[80px]" id="maintenanceMessageInput" maxlength="1000"></textarea></label>
+          <div class="mt-4 flex items-center justify-between">
+            <p class="text-[10px] text-slate-400" id="maintenanceStatusHint">ស្ថានភាពបច្ចុប្បន្ន៖ កំពុងដំណើរការ</p>
+            <button class="brand-gradient rounded-full px-5 py-2.5 text-[11px] font-bold text-white" id="saveMaintenanceSettings" type="button">រក្សាទុកស្ថានភាព</button>
+          </div>
+        </div>
+
+        <!-- Branding & Hero Banner -->
+        <div class="mb-6 rounded-3xl bg-white p-5 soft-shadow sm:p-7" id="siteBrandingPanel">
+          <h2 class="mb-5 text-xl font-bold">ការកំណត់ Brand &amp; Hero Banner</h2>
+          <div class="grid gap-5 xl:grid-cols-2">
+            <section class="rounded-2xl bg-slate-50 p-4">
+              <div class="mb-4 flex items-center gap-4 rounded-2xl bg-white p-4">
+                <div class="brand-logo-preview" id="brandLogoPreview"><span>7</span></div>
+                <div><b class="block text-sm" id="brandPreviewTitle">7inOne</b><small class="text-[10px] text-slate-500" id="brandPreviewSubtitle">ផ្សារទិញលក់កម្ពុជា</small></div>
+              </div>
+              <label class="mb-3 block"><span class="label">Header Logo</span><input id="brandingLogoUpload" class="field bg-white" type="file" accept="image/jpeg,image/png,image/webp" /></label>
+              <div class="mb-3 flex items-center gap-4 rounded-2xl bg-white p-3">
+                <div class="brand-logo-preview" id="brandFaviconPreview"><span>7</span></div>
+                <div><b class="block text-xs">Browser Favicon</b></div>
+              </div>
+              <label class="mb-3 block"><span class="label">Browser Favicon</span><input id="brandingFaviconUpload" class="field bg-white" type="file" accept="image/jpeg,image/png,image/webp" /></label>
+              <label class="mb-3 block"><span class="label">ឈ្មោះ Brand</span><input id="brandTitleInput" class="field bg-white" maxlength="80" value="7inOne" /></label>
+              <label class="block"><span class="label">អក្សរតូចក្រោម Logo</span><input id="brandSubtitleInput" class="field bg-white" maxlength="120" value="ផ្សារទិញលក់កម្ពុជា" /></label>
+            </section>
+
+            <section class="rounded-2xl bg-slate-50 p-4">
+              <div class="hero-admin-preview mb-4">
+                <div>
+                  <small class="text-amber-200" id="brandHeroPreviewBadge">ផ្សារអនឡាញ</small>
+                  <b class="mt-1 block text-sm" id="brandHeroPreviewTitle">ទិញលក់ងាយៗ នៅជិតអ្នក</b>
+                  <span class="mt-1 block text-[10px] opacity-80" id="brandHeroPreviewSubtitle">ស្វែងរកទំនិញ...</span>
+                </div>
+                <div id="heroBannerPreviews" class="hero-admin-preview-images">
+                  <div class="hero-admin-preview-empty">01</div>
+                  <div class="hero-admin-preview-empty">02</div>
+                  <div class="hero-admin-preview-empty">03</div>
+                </div>
+              </div>
+              <label class="mb-3 block"><span class="label">Hero Images (1-3 រូប)</span><input id="brandingHeroUpload" class="field bg-white" type="file" accept="image/jpeg,image/png,image/webp" multiple /></label>
+              <label class="mb-3 block"><span class="label">Hero Badge</span><input id="heroBadgeInput" class="field bg-white" maxlength="100" /></label>
+              <label class="mb-3 block"><span class="label">ចំណងជើង Banner</span><input id="heroTitleInput" class="field bg-white" maxlength="160" /></label>
+              <label class="block"><span class="label">អត្ថបទពិពណ៌នា Banner</span><textarea id="heroSubtitleInput" class="field min-h-[80px] bg-white" maxlength="600"></textarea></label>
+              <label class="mt-3 flex items-center gap-2 text-[10px]"><input id="clearHeroImages" type="checkbox" /> លុបរូប Banner ចាស់ទាំងអស់</label>
+            </section>
+          </div>
+
+          <!-- Side Promo Posters -->
+          <div class="mt-6 border-t border-slate-100 pt-5" id="sidePosterAdmin">
+            <h3 class="mb-3 text-base font-bold">គ្រប់គ្រង Poster ខាងស្ដាំ</h3>
+            <div class="grid gap-4 lg:grid-cols-3">
+              <section class="rounded-2xl bg-slate-50 p-3">
+                <b class="text-xs">Poster ផ្ដេក ១</b>
+                <div class="poster-admin-preview" id="posterPreviewTop">Preview</div>
+                <input id="posterUploadTop" class="field mt-2 bg-white" type="file" accept="image/jpeg,image/png,image/webp" />
+                <input id="posterLinkTop" class="field mt-2 bg-white" type="url" placeholder="Link ពេលចុច https://..." />
+                <label class="mt-2 flex items-center gap-2 text-[10px]"><input id="posterEnabledTop" type="checkbox" checked /> បង្ហាញ Poster</label>
+                <label class="mt-1 flex items-center gap-2 text-[10px]"><input id="posterClearTop" type="checkbox" /> លុប Poster</label>
+              </section>
+              <section class="rounded-2xl bg-slate-50 p-3">
+                <b class="text-xs">Poster ផ្ដេក ២</b>
+                <div class="poster-admin-preview" id="posterPreviewMiddle">Preview</div>
+                <input id="posterUploadMiddle" class="field mt-2 bg-white" type="file" accept="image/jpeg,image/png,image/webp" />
+                <input id="posterLinkMiddle" class="field mt-2 bg-white" type="url" placeholder="Link ពេលចុច https://..." />
+                <label class="mt-2 flex items-center gap-2 text-[10px]"><input id="posterEnabledMiddle" type="checkbox" checked /> បង្ហាញ Poster</label>
+                <label class="mt-1 flex items-center gap-2 text-[10px]"><input id="posterClearMiddle" type="checkbox" /> លុប Poster</label>
+              </section>
+              <section class="rounded-2xl bg-slate-50 p-3">
+                <b class="text-xs">Poster បញ្ឈរ</b>
+                <div class="poster-admin-preview poster-admin-preview-tall" id="posterPreviewTall">Preview</div>
+                <input id="posterUploadTall" class="field mt-2 bg-white" type="file" accept="image/jpeg,image/png,image/webp" />
+                <input id="posterLinkTall" class="field mt-2 bg-white" type="url" placeholder="Link ពេលចុច https://..." />
+                <label class="mt-2 flex items-center gap-2 text-[10px]"><input id="posterEnabledTall" type="checkbox" checked /> បង្ហាញ Poster</label>
+                <label class="mt-1 flex items-center gap-2 text-[10px]"><input id="posterClearTall" type="checkbox" /> លុប Poster</label>
+              </section>
+            </div>
+          </div>
+
+          <div class="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4">
+            <p class="text-[10px] text-slate-500" id="brandingStatus">ការកំណត់ Brand បច្ចុប្បន្ន</p>
+            <button class="brand-gradient rounded-full px-6 py-3 text-[11px] font-bold text-white" id="saveBrandingBtn" type="button">រក្សាទុកការកំណត់ Brand &amp; Banner</button>
+          </div>
+        </div>
+
+        <!-- Telegram Diagnostics -->
+        <div class="mb-6 rounded-3xl bg-white p-5 soft-shadow sm:p-6">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 class="text-lg font-bold">ស្ថានភាព Telegram Bot</h2>
+              <p class="text-[10px] text-slate-400">ពិនិត្យ Bot, Channel និងសិទ្ធិផ្ទុករូបភាព។</p>
+            </div>
+            <button class="rounded-full bg-slate-900 px-5 py-2.5 text-[11px] font-bold text-white" id="telegramDiagnosticsBtn" type="button">ពិនិត្យស្ថានភាព</button>
+          </div>
+          <div class="mt-4 rounded-2xl bg-slate-50 p-4 text-[11px] text-slate-500" id="telegramDiagnosticsResult">ចុច «ពិនិត្យស្ថានភាព» ដើម្បីពិនិត្យការភ្ជាប់ Telegram។</div>
+        </div>
+
+        <!-- Vendor Verification Applications -->
+        <div class="mb-5 grid grid-cols-3 gap-3">
+          <div class="rounded-2xl bg-white p-4 soft-shadow"><p class="text-[10px] text-slate-500">កំពុងរង់ចាំ</p><b class="mt-1 block text-2xl" id="adminPendingCount">0</b></div>
+          <div class="rounded-2xl bg-white p-4 soft-shadow"><p class="text-[10px] text-slate-500">បានអនុម័ត</p><b class="mt-1 block text-2xl text-emerald-700" id="adminApprovedCount">0</b></div>
+          <div class="rounded-2xl bg-white p-4 soft-shadow"><p class="text-[10px] text-slate-500">បានបដិសេធ</p><b class="mt-1 block text-2xl text-rose-600" id="adminRejectedCount">0</b></div>
+        </div>
+
+        <div class="rounded-3xl bg-white p-5 soft-shadow sm:p-6">
+          <h2 class="mb-4 font-bold">ពាក្យស្នើសុំអ្នកលក់</h2>
+          <div class="space-y-3" id="adminApplications"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ========================================================================
+       FOOTER & MOBILE BOTTOM NAV
+       ======================================================================== -->
+  <footer class="border-t">
+    <div class="shell flex flex-col gap-3 py-7 sm:flex-row sm:items-center sm:justify-between">
+      <div class="flex items-center gap-2.5">
+        <span class="brand-gradient grid h-8 w-8 place-items-center rounded-xl text-[11px] font-bold text-white" id="footerLogoMark">7</span>
+        <div>
+          <b class="block text-[12px]" id="footerSiteTitle">7inOne</b>
+          <p class="text-[9.5px] text-slate-400" id="footerSiteSubtitle">ផ្សារទិញលក់កម្ពុជា</p>
+        </div>
+      </div>
+      <p class="text-[10px] text-slate-400">© <span id="year"></span> 7inOne · ទីផ្សារទិញលក់អនឡាញទំនុកចិត្តខ្ពស់នៅកម្ពុជា</p>
+      <div class="flex gap-4 text-[11px] font-semibold text-slate-500">
+        <button data-view="home">ទំព័រដើម</button>
+        <button data-view="profile">គណនី</button>
+        <button data-view="seller">ហាងខ្ញុំ</button>
+      </div>
+    </div>
+  </footer>
+
+  <nav class="mobile-market-nav" id="mobileMarketNav" aria-label="ម៉ឺនុយ">
+    <button type="button" data-view="home" class="mobile-market-item active"><span data-nav-icon="home"></span><small>ទំព័រដើម</small></button>
+    <button type="button" data-action="saved" class="mobile-market-item"><span data-nav-icon="heart"></span><small>រក្សាទុក</small></button>
+    <button type="button" id="mobileMarketPost" class="fab" aria-label="ដាក់លក់ទំនិញ"><span data-nav-icon="plus"></span></button>
+    <button type="button" data-action="open-chat" class="mobile-market-item"><span data-nav-icon="chat"></span><small>សារ</small></button>
+    <button type="button" data-view="profile" class="mobile-market-item"><span data-nav-icon="user"></span><small>គណនី</small></button>
+  </nav>
+
+  <!-- ========================================================================
+       MODALS & FLOATING CHAT
+       ======================================================================== -->
+  <!-- 1. Auth Modal -->
+  <div aria-hidden="true" class="modal" id="authModal">
+    <section class="modal-box max-w-[440px] p-6 sm:p-7">
+      <div class="mb-5 flex items-start justify-between">
+        <div>
+          <p class="text-[10px] font-bold text-emerald-700">7INONE ACCOUNT</p>
+          <h2 class="mt-1 text-xl font-bold" id="authTitle">សូមស្វាគមន៍មកកាន់ 7inOne</h2>
+        </div>
+        <button class="close-btn" data-close="authModal"></button>
+      </div>
+
+      <div class="mb-4 grid grid-cols-2 rounded-full bg-slate-100 p-1">
+        <button class="auth-tab rounded-full bg-white py-2 text-[11px] font-bold shadow-sm" data-auth-mode="login">ចូលគណនី</button>
+        <button class="auth-tab rounded-full py-2 text-[11px] font-bold text-slate-500" data-auth-mode="register">បង្កើតគណនី</button>
+      </div>
+
+      <form class="space-y-3" id="authForm">
+        <label class="hidden block" id="authNameWrap"><span class="label">ឈ្មោះពេញ</span><input class="field" id="authName" placeholder="ឈ្មោះរបស់អ្នក" /></label>
+        <label class="block"><span class="label">លេខទូរស័ព្ទ ឬ អ៊ីមែល</span><input class="field" id="authIdentity" placeholder="012 345 678 ឬ name@email.com" required /></label>
+        <label class="block"><span class="label">ពាក្យសម្ងាត់</span><input class="field" id="authPassword" minlength="6" placeholder="បញ្ចូលពាក្យសម្ងាត់" required type="password" /></label>
+        <label class="hidden block" id="authOtpWrap"><span class="label">លេខកូដផ្ទៀងផ្ទាត់ SMS</span><input class="field" id="authOtp" inputmode="numeric" maxlength="8" placeholder="បញ្ចូលលេខកូដ SMS" type="text" /></label>
+        <button class="brand-gradient w-full rounded-full py-3 text-[12px] font-bold text-white" id="authSubmit">ចូលគណនី</button>
+
+        <div class="rounded-2xl bg-slate-50 px-4 py-3 text-center" id="telegramLoginWidgetWrap">
+          <p class="mb-2 text-[10px] font-bold text-slate-600">ឬ ចូលគណនីតាម Telegram</p>
+          <div class="flex justify-center" id="telegramLoginWidget"></div>
+        </div>
+        <p class="text-center text-[10px] text-slate-400" id="authHint">ប្រើលេខទូរស័ព្ទ ឬអ៊ីមែលដែលភ្ជាប់ជាមួយគណនី 7inOne របស់អ្នក។</p>
+      </form>
+
+      <div class="mt-4 text-center"><button class="text-[10px] font-bold text-emerald-700" id="forgotPasswordBtn" type="button">ភ្លេច Password? សង្គ្រោះតាម Telegram</button></div>
+
+      <!-- Telegram Password Recovery -->
+      <form class="hidden mt-4 space-y-3" id="telegramRecoveryForm">
+        <label class="block"><span class="label">Email គណនី 7inOne</span><input class="field" id="recoveryEmail" type="email" required placeholder="name@email.com" /></label>
+        <div class="rounded-xl border border-amber-200 bg-amber-50 p-3">
+          <b class="block text-[10px] text-amber-800">Admin មិនទាន់ភ្ជាប់ Telegram?</b>
+          <input class="field mt-2 bg-white" id="adminBootstrapKey" type="password" placeholder="Admin Recovery Key" />
+          <button class="mt-2 w-full rounded-full border border-amber-300 bg-white py-2 text-[10px] font-bold text-amber-800" id="bootstrapAdminTelegramBtn" type="button">ភ្ជាប់ Telegram ទៅ Admin</button>
+          <a class="mt-2 hidden block rounded-lg bg-white px-3 py-2 text-center text-[10px] font-bold text-sky-700" id="adminTelegramStartLink" href="#" target="_blank" rel="noopener noreferrer">បើក Telegram Bot ហើយចុច Start</a>
+        </div>
+        <button class="w-full rounded-full border border-sky-200 bg-sky-50 py-2.5 text-[10px] font-bold text-sky-700" id="requestRecoveryOtpBtn" type="button">ផ្ញើ OTP ទៅ Telegram</button>
+        <label class="block"><span class="label">OTP ៦ ខ្ទង់</span><input class="field" id="recoveryOtp" inputmode="numeric" maxlength="6" required placeholder="បញ្ចូលលេខកូដ Telegram" /></label>
+        <label class="block"><span class="label">Password ថ្មី</span><input class="field" id="recoveryNewPassword" type="password" minlength="8" maxlength="72" required placeholder="យ៉ាងតិច ៨ តួអក្សរ" /></label>
+        <button class="brand-gradient w-full rounded-full py-3 text-[11px] font-bold text-white" id="confirmRecoveryBtn" type="submit">ផ្ទៀងផ្ទាត់ និងសង្គ្រោះគណនី</button>
+        <button class="w-full py-1.5 text-[10px] font-bold text-slate-500" id="backToLoginBtn" type="button">ត្រឡប់ទៅចូលគណនី</button>
+      </form>
+    </section>
+  </div>
+
+  <!-- 2. Seller Registration Modal -->
+  <div aria-hidden="true" class="modal" id="sellerModal">
+    <section class="modal-box max-w-[560px] p-6 sm:p-7">
+      <div class="mb-5 flex items-start justify-between">
+        <div>
+          <p class="text-[10px] font-bold text-emerald-700">SELLER REGISTRATION</p>
+          <h2 class="mt-1 text-xl font-bold" id="sellerModalTitle">ចុះឈ្មោះក្លាយជាអ្នកលក់</h2>
+        </div>
+        <button class="close-btn" data-close="sellerModal"></button>
+      </div>
+      <form class="space-y-3" id="sellerApplyForm">
+        <div class="grid gap-3 sm:grid-cols-2">
+          <label><span class="label">ឈ្មោះហាង *</span><input class="field" id="shopName" maxlength="70" placeholder="ឧ. ហាងទូរស័ព្ទ សុភា" required /></label>
+          <label><span class="label">លេខទូរស័ព្ទ / Telegram *</span><input class="field" id="shopContact" placeholder="012 345 678 / @username" required /></label>
+          <label class="sm:col-span-2"><span class="label">អាសយដ្ឋានហាង *</span><input class="field" id="shopAddress" placeholder="ផ្ទះលេខ... ផ្លូវ... ខណ្ឌ... រាជធានី/ខេត្ត" required /></label>
+        </div>
+        <div>
+          <span class="label" id="sellerDocumentLabel">ឯកសារផ្ទៀងផ្ទាត់ (ជាជម្រើសសម្រាប់អ្នកចុះឈ្មោះថ្មី)</span>
+          <label class="flex cursor-pointer items-center gap-3 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-3" for="sellerDocument">
+            <span class="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-white text-emerald-700" id="sellerDocThumb"></span>
+            <span class="min-w-0 flex-1"><b class="block truncate text-[11px]" id="sellerDocName">ចុចដើម្បី Upload ឯកសារ</b><small class="text-[9px] text-slate-400">JPG, PNG ឬ WEBP · ទំហំអតិបរមា 8MB</small></span>
+          </label>
+          <input accept="image/jpeg,image/png,image/webp" class="hidden" id="sellerDocument" type="file" />
+          <div class="mt-2 hidden overflow-hidden rounded-xl border border-slate-100" id="sellerDocPreview"></div>
+        </div>
+        <button class="brand-gradient w-full rounded-full py-3 text-[12px] font-bold text-white">បង្កើតហាង / ដាក់ស្នើផ្ទៀងផ្ទាត់</button>
+      </form>
+    </section>
+  </div>
+
+  <!-- 3. Add/Edit Product Modal -->
+  <div aria-hidden="true" class="modal" id="productFormModal">
+    <section class="modal-box max-w-[600px] p-6 sm:p-7">
+      <div class="mb-5 flex items-start justify-between">
+        <div>
+          <p class="text-[10px] font-bold text-emerald-700">SELLER STUDIO</p>
+          <h2 class="mt-1 text-xl font-bold" id="productFormTitle">បន្ថែមទំនិញថ្មី</h2>
+        </div>
+        <button class="close-btn" data-close="productFormModal"></button>
+      </div>
+      <form class="space-y-3" id="productForm">
+        <input id="editProductId" type="hidden" />
+        <div class="grid gap-3 sm:grid-cols-2">
+          <label class="sm:col-span-2"><span class="label">ឈ្មោះទំនិញ *</span><input class="field" id="productTitle" maxlength="90" placeholder="ឧ. iPhone 14 Pro Max 256GB" required /></label>
+          <label><span class="label">តម្លៃ (USD) *</span><input class="field" id="productPrice" min="0.01" placeholder="0.00" required step="0.01" type="number" /></label>
+          <label><span class="label">ប្រភេទ *</span>
+            <select class="field" id="productCategory" required>
+              <option value="">ជ្រើសរើសប្រភេទ</option>
+              <option value="phones">ទូរស័ព្ទ &amp; អេឡិចត្រូនិក</option>
+              <option value="vehicles">រថយន្ត &amp; ម៉ូតូ</option>
+              <option value="property">អចលនទ្រព្យ</option>
+              <option value="fashion">សម្លៀកបំពាក់</option>
+              <option value="furniture">គ្រឿងសង្ហារិម</option>
+            </select>
+          </label>
+          <label><span class="label">ទីតាំង *</span>
+            <select class="field" id="productLocation" required>
+              <option>ភ្នំពេញ</option><option>សៀមរាប</option><option>បាត់ដំបង</option><option>ព្រះសីហនុ</option>
+              <option>កំពង់ចាម</option><option>កំពត</option><option>តាកែវ</option><option>កណ្តាល</option>
+            </select>
+          </label>
+          <label><span class="label">ស្ថានភាព</span>
+            <select class="field" id="productCondition">
+              <option>ប្រើរួចស្អាត</option><option>ថ្មី ១០០%</option><option>ល្អដូចថ្មី</option>
+            </select>
+          </label>
+          <label class="sm:col-span-2">
+            <span class="label">ការពិពណ៌នាសង្ខេប (បង្ហាញលើកាតទំនិញ) *</span>
+            <textarea class="field min-h-[72px]" id="productShortDesc" rows="3" maxlength="140" placeholder="សរសេរចំណុចសំខាន់ៗខ្លីៗ (អតិបរមា ៣ ជួរ)..." required></textarea>
+            <small class="mt-1 block text-right text-[10px] text-slate-400" id="productShortDescCount">0/140 · 1/3 ជួរ</small>
+          </label>
+          <label class="sm:col-span-2">
+            <span class="label">ការពិពណ៌នាលម្អិត</span>
+            <textarea class="field min-h-[110px]" id="productDescription" rows="5" maxlength="2000" placeholder="សរសេរព័ត៌មានលម្អិតពេញលេញអំពីទំនិញ..."></textarea>
+          </label>
+        </div>
+        <div>
+          <span class="label">រូបភាពទំនិញ (អតិបរមា ៥ រូប)</span>
+          <label class="flex cursor-pointer items-center gap-3 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-3" for="productImage">
+            <span class="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-xl bg-white text-emerald-700" id="productImageThumb"></span>
+            <span class="min-w-0 flex-1"><b class="block truncate text-[10px]" id="productImageName">ជ្រើសរើសរូបភាពផលិតផល</b><small class="text-[9px] text-slate-400">JPG / PNG / WEBP · រហូតដល់ ៥ រូប</small></span>
+          </label>
+          <input accept="image/jpeg,image/png,image/webp" class="hidden" id="productImage" multiple type="file" />
+        </div>
+        <div class="flex justify-end gap-2 pt-3">
+          <button class="rounded-full border border-slate-200 px-5 py-2.5 text-[11px] font-bold text-slate-600" data-close="productFormModal" type="button">បោះបង់</button>
+          <button class="brand-gradient rounded-full px-6 py-2.5 text-[11px] font-bold text-white">រក្សាទុកទំនិញ</button>
+        </div>
+      </form>
+    </section>
+  </div>
+
+  <!-- 4. Offer Modal -->
+  <div aria-hidden="true" class="modal" id="offerModal">
+    <section class="modal-box max-w-[420px] p-6">
+      <div class="mb-5 flex items-start justify-between">
+        <div>
+          <p class="text-[10px] font-bold text-emerald-700">PRICE OFFER</p>
+          <h2 class="mt-1 text-xl font-bold">ស្នើសុំតម្លៃរបស់អ្នក</h2>
+          <p class="mt-1 text-[10px] text-slate-400" id="offerProductName"></p>
+        </div>
+        <button class="close-btn" data-close="offerModal"></button>
+      </div>
+      <form class="space-y-3" id="offerForm">
+        <label class="block"><span class="label">តម្លៃដែលអ្នកចង់ទិញ (USD)</span><input class="field" id="offerAmount" min="0.01" required step="0.01" type="number" /></label>
+        <label class="block"><span class="label">សារជូនអ្នកលក់</span><textarea class="field min-h-[80px]" id="offerMessage" placeholder="សួស្តី ខ្ញុំចាប់អារម្មណ៍លើទំនិញនេះ..."></textarea></label>
+        <button class="brand-gradient w-full rounded-full py-3 text-[12px] font-bold text-white">ផ្ញើសំណើតម្លៃ</button>
+      </form>
+    </section>
+  </div>
+
+  <!-- 5. Unified Buyer / Seller Chat Modal -->
+  <div aria-hidden="true" class="modal" id="sellerChatModal">
+    <section class="modal-box seller-chat-shell relative flex flex-col overflow-hidden bg-white">
+      <header class="flex items-center justify-between border-b border-slate-100 bg-white px-4 py-3">
+        <div class="min-w-0">
+          <b class="block text-sm">ឆាតអ្នកទិញ និងអ្នកលក់</b>
+          <span class="block text-[9.5px] text-slate-400">សន្ទនាផ្ទាល់ជាមួយអ្នកលក់ និងអ្នកទិញ</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="sellerChatMute" type="button" class="seller-chat-header-icon" aria-pressed="false" title="បិទសំឡេង">បិទសំឡេង</button>
+          <button id="sellerChatClose" type="button" class="seller-chat-header-icon" title="បង្រួមឆាត">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14" /></svg>
+          </button>
+        </div>
+      </header>
+
+      <div class="seller-chat-layout flex min-h-0 flex-1">
+        <!-- Conversation Inbox List -->
+        <aside id="sellerChatInboxPane" class="seller-chat-inbox-pane overflow-y-auto bg-white p-3">
+          <div class="mb-2 flex items-center justify-between px-1">
+            <b class="text-[11px]">ប្រអប់សារ</b>
+            <button id="sellerChatInboxRefresh" class="text-[10px] font-bold text-emerald-700" type="button">ធ្វើបច្ចុប្បន្នភាព</button>
+          </div>
+          <div id="sellerChatInboxList"><p class="py-8 text-center text-[10px] text-slate-400">កំពុងផ្ទុកសារ...</p></div>
+        </aside>
+
+        <!-- Active Thread -->
+        <main id="sellerChatThread" class="seller-chat-thread flex min-w-0 flex-1 flex-col">
+          <div id="sellerChatProductContext" class="flex items-center gap-3 border-b border-slate-100 bg-white px-3 py-2">
+            <button id="sellerChatBack" class="hidden rounded-lg border border-slate-200 p-1.5" type="button" aria-label="ត្រឡប់ទៅប្រអប់សារ">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6" /></svg>
+            </button>
+            <div id="sellerChatProductImage" class="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-slate-100"></div>
+            <div class="min-w-0 flex-1">
+              <b id="sellerChatTitle" class="block truncate text-[12px]">ជ្រើសរើសសន្ទនា</b>
+              <span id="sellerChatSubtitle" class="block truncate text-[9.5px] text-slate-400">ព័ត៌មានផលិតផលនឹងបង្ហាញនៅទីនេះ</span>
+            </div>
+          </div>
+
+          <div id="sellerChatMessages" class="flex-1 space-y-3 overflow-y-auto" aria-live="polite">
+            <p class="py-8 text-center text-xs text-slate-400">ជ្រើសរើសសន្ទនាមួយ ដើម្បីចាប់ផ្ដើម។</p>
+          </div>
+
+          <!-- Dismissible Product Inquiry Draft Banner -->
+          <div id="sellerChatProductBanner" class="seller-chat-draft-product hidden" aria-live="polite"></div>
+
+          <form id="sellerChatForm" class="flex items-center gap-2 border-t border-slate-100 bg-white p-3">
+            <input id="sellerChatImageInput" type="file" accept="image/jpeg,image/png,image/webp" class="hidden" />
+            <button id="sellerChatChooseImage" type="button" class="seller-chat-attach" title="ផ្ញើរូបភាព" aria-label="ផ្ញើរូបភាព">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="m21 15-5-5L5 21" /></svg>
+            </button>
+            <textarea id="sellerChatInput" class="field min-h-[40px] max-h-24 min-w-0 flex-1 resize-none rounded-full py-2.5 text-xs" rows="1" maxlength="4000" placeholder="សរសេរសារ…"></textarea>
+            <button id="sellerChatSend" class="seller-chat-send" type="submit" aria-label="ផ្ញើសារ" title="ផ្ញើសារ">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m22 2-7 20-4-9-9-4Z" /><path d="M22 2 11 13" /></svg>
+            </button>
+          </form>
+        </main>
+      </div>
+    </section>
+  </div>
+
+  <!-- Floating Chat Launcher -->
+  <button id="supportChatLauncher" type="button" class="hidden" aria-label="ឆាតអ្នកទិញ និងអ្នកលក់">
+    <span data-nav-icon="chat"></span>
+    <span id="sellerChatUnreadBadge" class="absolute -right-1 -top-1 hidden min-w-5 rounded-full bg-rose-600 px-1.5 py-0.5 text-[9px] font-bold text-white"></span>
+  </button>
+
+  <!-- Image Lightbox -->
+  <div class="product-lightbox" id="productLightbox" aria-hidden="true" role="dialog" aria-modal="true">
+    <button type="button" class="product-lightbox-close" id="productLightboxClose" aria-label="បិទរូបភាព">×</button>
+    <button type="button" class="product-lightbox-nav prev" id="productLightboxPrev" aria-label="រូបមុន">‹</button>
+    <img id="productLightboxImage" alt="រូបភាពទំនិញពង្រីក" />
+    <button type="button" class="product-lightbox-nav next" id="productLightboxNext" aria-label="រូបបន្ទាប់">›</button>
+    <span class="product-lightbox-count" id="productLightboxCount"></span>
+  </div>
+
+  <!-- Maintenance Mode Overlay -->
+  <div aria-hidden="true" class="maintenance-overlay hidden" id="maintenanceOverlay">
+    <div class="maintenance-glass-card">
+      <div class="maintenance-gear-wrap">⚙</div>
+      <p class="text-[10px] font-bold tracking-widest text-emerald-300">7INONE · SYSTEM UPDATE</p>
+      <h1 class="mt-2 text-2xl font-bold">ប្រព័ន្ធកំពុងអភិវឌ្ឍន៍</h1>
+      <p class="mt-3 text-xs leading-6 text-white/80" id="maintenanceOverlayMessage"></p>
+      <a class="mt-6 inline-block text-[10px] text-white/60 underline" href="#" id="maintenanceAdminLogin">Admin Login</a>
+    </div>
+  </div>
+  <div class="maintenance-admin-pill hidden" id="maintenanceAdminPill">🛠 កំពុងស្ថិតក្នុងទម្រង់អភិវឌ្ឍន៍ (Admin Preview)</div>
+
+  <!-- Toast Area -->
+  <div class="fixed bottom-5 right-5 z-[150] flex w-[min(92vw,360px)] flex-col gap-2 pointer-events-none" id="toastArea"></div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./app.js" defer></script>
 </body>
 </html>
