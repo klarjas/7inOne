@@ -346,7 +346,6 @@ function productCard(p, index) {
       ${image
         ? `<span class="img-scan-wrap shimmer-scan cd-image-wrap cd-main-wrap"><img src="${esc(image)}" alt="${esc(p.title)}" loading="lazy" decoding="async" class="cd-main h-full w-full object-cover"></span>${secondImage ? `<span class="img-scan-wrap shimmer-scan cd-image-wrap cd-secondary-wrap"><img src="${esc(secondImage)}" alt="" loading="lazy" decoding="async" class="cd-secondary h-full w-full object-cover"></span>` : ''}`
         : ic('image', 36)}
-      <span class="cd-image-count">${images.length || 0} រូប</span>
       <button class="hv heart ${saved ? 'saved' : ''}" type="button" data-action="save" data-id="${esc(p.id)}" aria-label="រក្សាទុក" aria-pressed="${saved ? 'true' : 'false'}" aria-busy="false">
         ${ic('heart', 18)}
       </button>
