@@ -187,16 +187,17 @@ function publicMediaUrl(path) {
   if (!path || !supabase) return null;
   return supabase.storage.from('profile-media').getPublicUrl(path).data.publicUrl;
 }
+function publicVendor(vendor) {
+  if (!vendor) return vendor;
+  const { store_logo_file_id: logoFileId, ...safeVendor } = vendor;
+  return { ...safeVendor, store_logo_url: logoFileId ? telegramMediaUrl(logoFileId) : null };
+}
 function publicProduct(product) {
   return {
     ...product,
     seller_rating: product.seller_rating ?? null,
     seller_review_count: product.seller_review_count ?? 0,
-    vendors: Array.isArray(product.vendors)
-      ? product.vendors.map(vendor => ({ ...vendor, store_logo_url: vendor.store_logo_file_id ? telegramMediaUrl(vendor.store_logo_file_id) : null }))
-      : product.vendors
-        ? { ...product.vendors, store_logo_url: product.vendors.store_logo_file_id ? telegramMediaUrl(product.vendors.store_logo_file_id) : null }
-        : product.vendors,
+    vendors: Array.isArray(product.vendors) ? product.vendors.map(publicVendor) : publicVendor(product.vendors),
     product_images: (product.product_images || []).map(image => ({
       id: image.id, sort_order: image.sort_order,
       image_url: image.image_url || telegramMediaUrl(image.file_id)
