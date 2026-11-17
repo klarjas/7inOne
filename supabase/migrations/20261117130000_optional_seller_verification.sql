@@ -106,7 +106,7 @@ begin
   end loop;
   return v_order_id;
 end;
-$;
+$$;
 
 -- Only signed-in customers (for their own user ID) and the trusted server role may execute checkout.
 revoke all on function public.place_marketplace_order(uuid,text,text,text,text,text,jsonb) from public, anon, authenticated;
