@@ -295,7 +295,7 @@ function productCard(p, index) {
     </div>
     <div class="cb">
       <h3 class="cursor-pointer truncate hover:text-[#064E3B]" data-action="view" data-id="${esc(p.id)}">${esc(p.title)}</h3>
-      <p class="pr">${money(p.price)}</p>
+      <p class="pr"><span>${money(p.price)}</span><span class="cd-condition-meta">${esc(p.condition || 'ទំនិញ')}</span></p>
       ${description ? `<p class="cd-description">${esc(description)}</p>` : ''}
       <div class="sh">
         <span class="sp" role="img" aria-label="រូប Profile ហាង">${ic('user', 16)}</span>
@@ -306,7 +306,6 @@ function productCard(p, index) {
         <span>${esc(p.location || 'ភ្នំពេញ')}</span>
         <span>${timeAgoKm(p.created_at)}</span>
         <span class="vw" title="ចំនួនអ្នកមើល">${ic('eye', 14)}${formatViews(p.view_count)}</span>
-        <span class="cd-condition-meta">${esc(p.condition || 'ទំនិញ')}</span>
       </p>
     </div>
   </article>`;

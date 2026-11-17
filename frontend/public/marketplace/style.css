@@ -1091,7 +1091,7 @@ body{background:var(--page)!important;color:var(--ink);font-family:"Kantumruy Pr
 .cd .im .cd-secondary-wrap{opacity:0;transition:opacity .2s ease}
 .cd:hover .im .cd-main{transform:scale(1.035)}
 .cd:hover .im .cd-secondary-wrap{opacity:1}
-.cd .cd-condition-meta{display:inline-flex;align-items:center;flex:none;border:1px solid #DCE8E0;border-radius:999px;background:#F3F8F5;padding:2px 7px;font-size:10px;font-weight:700;line-height:1.5;color:#35634B;white-space:nowrap}
+.cd .pr{display:flex;align-items:center;flex-wrap:wrap;gap:7px}.cd .cd-condition-meta{display:inline-flex;align-items:center;flex:none;padding:0;border:0;border-radius:0;background:transparent;font-size:10px;font-weight:600;line-height:1.5;color:#64748b;white-space:nowrap}
 .cd .cd-image-count{position:absolute;bottom:8px;left:8px;z-index:2;border-radius:6px;background:rgba(15,23,42,.72);padding:4px 8px;font-size:10px;font-weight:600;color:#fff}
 .cd .hv{position:absolute;top:8px;right:8px;z-index:3;width:40px;height:40px;border-radius:50%;border:0;background:#fff;color:#BE123C;display:grid;place-items:center;box-shadow:0 2px 8px rgba(15,23,42,.12)}
 .cd .hv.saved svg{fill:#BE123C}
