@@ -139,6 +139,7 @@ function applySiteBranding(data={}){
   if(favicon)applyFavicon(favicon);
   const textMap=[['heroBadge','heroBadge'],['heroTitle','heroTitle'],['heroSubtitle','heroSubtitle']];
   for(const [id,key] of textMap)if($(id))$(id).textContent=String(siteBranding[key]||'');
+  renderHomeSidePosters();
   const images=Array.isArray(siteBranding.heroImages)?siteBranding.heroImages.slice(0,3):[];
   for(let i=1;i<=3;i++){
     const target=$('heroImage'+i),item=images[i-1],url=item?.url||item?.image_url||item?.imageUrl||'';
@@ -180,6 +181,7 @@ function renderBrandingAdmin(){
   brandingPreviewLogo(b.siteLogoUrl||'');
   brandingPreviewFavicon(b.faviconUrl||'');
   renderBrandingHeroPreviews();
+  renderSidePosterAdmin();
   $('brandingStatus').textContent=b.siteLogoUrl?'Logo និង Brand បច្ចុប្បន្នបានផ្ទុកពី Database។':'កំពុងប្រើ Brand Logo លំនាំដើម។';
 }
 function renderBrandingHeroPreviews(){
@@ -188,6 +190,32 @@ function renderBrandingHeroPreviews(){
   target.innerHTML=Array.from({length:3},(_,i)=>selected[i]
     ?'<img src="'+esc(selected[i])+'" alt="Banner preview '+(i+1)+'">'
     :'<div class="hero-admin-preview-empty">BENTO 0'+(i+1)+'</div>').join('');
+}
+function renderSidePosterAdmin(){
+  const posters=siteBranding.sidePosters||{};
+  for(const slot of ['top','middle','tall']){
+    const item=posters[slot]||{},preview=$('posterPreview'+slot[0].toUpperCase()+slot.slice(1));
+    if(preview)preview.innerHTML=item.url?'<img src="'+esc(item.url)+'" alt="Poster '+slot+'"/>':'<span>មិនទាន់មាន Poster</span>';
+    const link=$('posterLink'+slot[0].toUpperCase()+slot.slice(1)),enabled=$('posterEnabled'+slot[0].toUpperCase()+slot.slice(1));
+    if(link)link.value=item.link||'';
+    if(enabled)enabled.checked=item.enabled!==false;
+  }
+}
+function renderHomeSidePosters(){
+  const rail=$('homePromoRail');if(!rail)return;
+  const posters=siteBranding.sidePosters||{};
+  for(const slot of ['top','middle','tall']){
+    const item=posters[slot],target=rail.querySelector('[data-promo-slot="'+slot+'"]');
+    if(!target)continue;
+    if(item?.url&&item.enabled!==false){
+      const content='<img src="'+esc(item.url)+'" alt="'+esc(item.alt||'7inOne promotion')+'" loading="lazy"/>';
+      target.innerHTML=item.link?'<a href="'+esc(item.link)+'" target="_blank" rel="noopener noreferrer" aria-label="មើលការផ្សព្វផ្សាយ">'+content+'</a>':content;
+      target.classList.remove('is-empty');
+    }else{
+      target.innerHTML='<div class="home-promo-placeholder"><b>'+({top:'Free Delivery',middle:'Secure Payment',tall:'7inOne Promotion'}[slot])+'</b><span>អាចកំណត់ដោយ Admin</span></div>';
+      target.classList.add('is-empty');
+    }
+  }
 }
 function updateBrandingTextPreview(){
   $('brandPreviewTitle').textContent=$('brandTitleInput').value.trim()||'7inOne';
@@ -383,6 +411,17 @@ function productCard(p, index) {
 }
 function renderProducts(){const list=products;$('productGrid').innerHTML=list.map(productCard).join('');$('resultCount').textContent=`${list.length} មុខ`;$('listingTitle').textContent=activeCategory==='all'?'ទំនិញដែលគួរឱ្យចាប់អារម្មណ៍':CAT[activeCategory]||'ទំនិញ';$('listingSub').textContent=searchTerm?`លទ្ធផលស្វែងរកសម្រាប់ «${esc(searchTerm)}»`:'ទំនិញពិតពីហាងដែលបានចុះឈ្មោះនៅលើ 7inOne';$('emptyHome').classList.toggle('hidden',list.length>0);$('productGrid').classList.toggle('hidden',list.length===0);$('skeletonGrid').classList.add('hidden')}
 function setCategory(category){activeCategory=category;$('searchCategory').value=category;document.querySelectorAll('[data-category]').forEach(b=>b.classList.toggle('active',b.dataset.category===category));void loadProducts()}
+document.querySelectorAll('.home-sidebar [data-category]').forEach(button=>button.addEventListener('click',()=>{
+  setCategory(button.dataset.category);
+  document.querySelectorAll('.home-sidebar .home-side-link').forEach(item=>item.classList.toggle('active',item===button));
+}));
+document.querySelectorAll('[data-home-side]').forEach(button=>button.addEventListener('click',()=>{
+  const action=button.dataset.homeSide;
+  if(action==='home'){setCategory('all');$('view-home').scrollIntoView({behavior:'smooth'});return}
+  if(action==='live'){$('homeVendorMediaSection')?.scrollIntoView({behavior:'smooth',block:'center'});return}
+  if(action==='saved'){if(!requireLogin())return;profileTab='saved';showView('profile');document.querySelector('[data-profile-tab="saved"]')?.click();return}
+  if(action==='orders'){if(!requireLogin())return;profileTab='history';showView('profile');document.querySelector('[data-profile-tab="history"]')?.click();return}
+}));
 function favoriteSpinner(){
   return '<svg class="animate-spin text-indigo-500" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="3" opacity=".2"></circle><path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" stroke-width="3" stroke-linecap="round"></path></svg>';
 }
@@ -1016,33 +1055,39 @@ $('brandingHeroUpload').addEventListener('change',event=>{
   brandingHeroPreviewUrls.forEach(url=>URL.revokeObjectURL(url));
   brandingHeroPreviewUrls=files.map(file=>URL.createObjectURL(file));renderBrandingHeroPreviews();
 });
+['top','middle','tall'].forEach(slot=>{
+  const id='posterUpload'+slot[0].toUpperCase()+slot.slice(1);
+  $(id)?.addEventListener('change',event=>{
+    const file=event.target.files?.[0],preview=$('posterPreview'+slot[0].toUpperCase()+slot.slice(1));
+    if(!file||!preview)return;
+    if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>5*1024*1024){toast('Poster ត្រូវជា JPG, PNG ឬ WEBP និងមិនលើស 5MB។','warning');event.target.value='';return}
+    preview.innerHTML='<img src="'+URL.createObjectURL(file)+'" alt="Poster preview"/>';
+  });
+});
 ['brandTitleInput','brandSubtitleInput','heroBadgeInput','heroTitleInput','heroSubtitleInput'].forEach(id=>$(id).addEventListener('input',updateBrandingTextPreview));
 $('saveBrandingBtn').addEventListener('click',async()=>{
   if(!isAdmin()){toast('មុខងារនេះសម្រាប់ Admin ប៉ុណ្ណោះ។','error');return}
   const button=$('saveBrandingBtn'),logo=$('brandingLogoUpload').files?.[0],favicon=$('brandingFaviconUpload').files?.[0],heroFiles=Array.from($('brandingHeroUpload').files||[]);
+  const slots=['top','middle','tall'],posterFiles={};
+  for(const slot of slots){const key=slot[0].toUpperCase()+slot.slice(1);posterFiles[slot]=$('posterUpload'+key)?.files?.[0]||null;const file=posterFiles[slot];if(file&&(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>5*1024*1024)){toast('Poster ត្រូវជា JPG, PNG ឬ WEBP និងមិនលើស 5MB។','warning');return}}
   if(logo&&(!['image/jpeg','image/png','image/webp'].includes(logo.type)||logo.size>2*1024*1024)){toast('Logo ត្រូវជា JPG, PNG ឬ WEBP និងមិនលើស 2MB។','warning');return}
   if(favicon&&(!['image/jpeg','image/png','image/webp'].includes(favicon.type)||favicon.size>2*1024*1024)){toast('Favicon ត្រូវជា JPG, PNG ឬ WEBP និងមិនលើស 2MB។','warning');return}
   if(heroFiles.length>3||heroFiles.some(file=>!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>8*1024*1024)){toast('Banner អាច Upload JPG, PNG ឬ WEBP ចំនួនមិនលើស ៣ រូប និង 8MB ក្នុងមួយរូប។','warning');return}
   const form=new FormData();
-  form.append('siteTitle',$('brandTitleInput').value.trim());
-  form.append('siteSubtitle',$('brandSubtitleInput').value.trim());
-  form.append('heroBadge',$('heroBadgeInput').value.trim());
-  form.append('heroTitle',$('heroTitleInput').value.trim());
-  form.append('heroSubtitle',$('heroSubtitleInput').value.trim());
+  for(const [key,id] of [['siteTitle','brandTitleInput'],['siteSubtitle','brandSubtitleInput'],['heroBadge','heroBadgeInput'],['heroTitle','heroTitleInput'],['heroSubtitle','heroSubtitleInput']])form.append(key,$(id).value.trim());
   form.append('clearHeroImages',$('clearHeroImages').checked?'true':'false');
-  if(logo)form.append('logo',logo);
-  if(favicon)form.append('favicon',favicon);
-  heroFiles.forEach(file=>form.append('heroImages',file));
+  if(logo)form.append('logo',logo);if(favicon)form.append('favicon',favicon);heroFiles.forEach(file=>form.append('heroImages',file));
+  for(const slot of slots){const key=slot[0].toUpperCase()+slot.slice(1);if(posterFiles[slot])form.append('poster'+key,posterFiles[slot]);form.append('poster'+key+'Link',$('posterLink'+key).value.trim());form.append('poster'+key+'Enabled',$('posterEnabled'+key).checked?'true':'false');form.append('clearPoster'+key,$('posterClear'+key).checked?'true':'false')}
   button.disabled=true;button.textContent='កំពុងរក្សាទុក...';
   try{
-    const result=await api('/api/admin/branding',{method:'PATCH',body:form});
-    applySiteBranding(result.data||{});
-    $('brandingStatus').textContent='បានរក្សាទុក Brand & Banner ទៅ Database រួចរាល់។';
-    $('brandingLogoUpload').value='';$('brandingFaviconUpload').value='';$('brandingHeroUpload').value='';$('clearHeroImages').checked=false;
+    const result=await api('/api/admin/branding',{method:'PATCH',body:form});applySiteBranding(result.data||{});
+    $('brandingStatus').textContent='បានរក្សាទុក Brand, Hero និង Poster ទៅ Database រួចរាល់។';
+    for(const id of ['brandingLogoUpload','brandingFaviconUpload','brandingHeroUpload','posterUploadTop','posterUploadMiddle','posterUploadTall'])$(id).value='';
+    $('clearHeroImages').checked=false;for(const slot of slots)$('posterClear'+slot[0].toUpperCase()+slot.slice(1)).checked=false;
     if(brandingLogoPreviewUrl){URL.revokeObjectURL(brandingLogoPreviewUrl);brandingLogoPreviewUrl=null}
     if(brandingFaviconPreviewUrl){URL.revokeObjectURL(brandingFaviconPreviewUrl);brandingFaviconPreviewUrl=null}
     brandingHeroPreviewUrls.forEach(url=>URL.revokeObjectURL(url));brandingHeroPreviewUrls=[];
-    renderBrandingAdmin();toast('បានរក្សាទុក Brand & Hero Banner ជោគជ័យ។','success');
+    renderBrandingAdmin();toast('បានរក្សាទុក Brand, Hero និង Poster ជោគជ័យ។','success');
   }catch(error){toast(error.message,'error')}
   finally{button.disabled=false;button.textContent='រក្សាទុកការកំណត់ Brand & Banner'}
 });
