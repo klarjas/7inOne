@@ -1062,6 +1062,9 @@ body{background:var(--page)!important;color:var(--ink);font-family:"Kantumruy Pr
 .market-hero .tags{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:14px;color:#A7F3D0}
 .market-hero .tags button{min-height:40px;padding:0 16px;border-radius:99px;border:1px solid #34D399;background:transparent;color:#fff;transition:background .18s}
 .market-hero .tags button:hover{background:rgba(52,211,153,.18)}
+.market-hero .hero-trust-points{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;color:#A7F3D0;font-size:12px}
+.market-hero .hero-trust-points span{display:inline-flex;align-items:center;gap:6px}
+.market-hero .hero-trust-points svg{width:15px;height:15px;flex:none}
 .market-hero .go{min-height:48px;padding:0 24px;border:0;border-radius:14px;background:var(--amber);color:#3B2A04;font-weight:700;font-size:16px;align-self:flex-start;margin-top:4px;transition:transform .15s,filter .15s}
 .market-hero .go:hover{filter:brightness(1.05);transform:translateY(-1px)}
 .hero-bento{display:none;grid-template-columns:1.2fr 1fr;grid-template-rows:1fr 1fr;gap:12px;min-width:0}
