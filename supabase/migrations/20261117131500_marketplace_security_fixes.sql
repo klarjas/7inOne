@@ -210,7 +210,7 @@ create or replace function public.issue_telegram_password_otp(
 language plpgsql
 security definer
 set search_path = public
-as $
+as $$
 declare
   v_existing public.telegram_password_otps%rowtype;
 begin
@@ -247,7 +247,7 @@ begin
 
   return true;
 end;
-$;
+$$;
 
 revoke all on function public.issue_telegram_password_otp(uuid,text,timestamptz,timestamptz) from public, anon, authenticated;
 grant execute on function public.issue_telegram_password_otp(uuid,text,timestamptz,timestamptz) to service_role;
