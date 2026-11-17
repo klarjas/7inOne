@@ -610,15 +610,58 @@ app.get('/api/products', async (req, res) => {
   const limit = Math.min(50, Math.max(1, Number.parseInt(req.query.limit, 10) || 24));
   const q = clean(req.query.q, 100);
   const category = clean(req.query.category, 80);
-  let query = supabase.from('products').select('id,title,description,price,stock,category,location,condition,view_count,created_at,updated_at,renewed_at,vendor_id,product_images(id,file_id,image_url,sort_order),vendors!inner(id,store_name,status,store_logo_file_id)', { count: 'exact' })
-    .eq('status', 'active').in('vendors.status', ['approved','pending','rejected']).gt('stock', 0).gte('renewed_at',new Date(Date.now()-PRODUCT_PUBLIC_MAX_AGE_MS).toISOString()).order('created_at', { ascending: false })
-    .range((page - 1) * limit, page * limit - 1);
-  if (q) { const term = q.replace(/[%_,()]/g, '').trim(); if (term) query = query.or(`title.ilike.%${term}%,description.ilike.%${term}%,location.ilike.%${term}%`); }
-  if (category) query = query.eq('category', category);
-  const { data, error, count } = await query;
-  if (error) { console.error(error); return fail(res, 500, 'Could not load products'); }
+  const cutoff = new Date(Date.now() - PRODUCT_PUBLIC_MAX_AGE_MS).toISOString();
+
+  const runProductsQuery = async (legacyRenewal = false) => {
+    const fields = legacyRenewal
+      ? 'id,title,description,price,stock,category,location,condition,view_count,created_at,updated_at,vendor_id,product_images(id,file_id,image_url,sort_order),vendors!inner(id,store_name,status,store_logo_file_id)'
+      : 'id,title,description,price,stock,category,location,condition,view_count,created_at,updated_at,renewed_at,vendor_id,product_images(id,file_id,image_url,sort_order),vendors!inner(id,store_name,status,store_logo_file_id)';
+    let query = supabase.from('products').select(fields, { count: 'exact' })
+      .eq('status', 'active')
+      .in('vendors.status', ['approved','pending','rejected'])
+      .gt('stock', 0)
+      .gte(legacyRenewal ? 'created_at' : 'renewed_at', cutoff)
+      .order('created_at', { ascending: false })
+      .range((page - 1) * limit, page * limit - 1);
+    if (q) {
+      const term = q.replace(/[%_,()]/g, '').trim();
+      if (term) query = query.or(`title.ilike.%${term}%,description.ilike.%${term}%,location.ilike.%${term}%`);
+    }
+    if (category) query = query.eq('category', category);
+    return query;
+  };
+
+  let { data, error, count } = await runProductsQuery(false);
+  const missingRenewalColumn = error && (
+    error.code === '42703'
+    || /renewed_at.*(does not exist|schema cache)|column .*renewed_at/i.test(error.message || '')
+  );
+
+  // Older Supabase databases may not yet have the renewal migration, or may still
+  // contain recently-created rows with a NULL renewed_at. Use created_at as a safe
+  // seven-day fallback so public listings do not disappear while the schema catches up.
+  if (missingRenewalColumn || (!error && !(data || []).length)) {
+    const fallback = await runProductsQuery(true);
+    if (!fallback.error && (fallback.data || []).length) {
+      ({ data, error, count } = fallback);
+      data = data.map(row => ({ ...row, renewed_at: row.created_at }));
+    } else if (missingRenewalColumn) {
+      ({ data, error, count } = fallback);
+    }
+  }
+
+  if (error) {
+    console.error('Could not load marketplace products:', error);
+    return fail(res, 500, 'Could not load products');
+  }
+
   const trust = await ratingsFor((data || []).map(row => row.vendor_id));
-  const enriched = (data || []).map(row => ({ ...row, seller_rating: trust[row.vendor_id]?.average ?? null, seller_review_count: trust[row.vendor_id]?.count ?? 0 }));
+  const enriched = (data || []).map(row => ({
+    ...row,
+    seller_rating: trust[row.vendor_id]?.average ?? null,
+    seller_review_count: trust[row.vendor_id]?.count ?? 0
+  }));
+  res.set('Cache-Control', 'no-store');
   res.json({ data: enriched.map(publicProduct), page, limit, total: count || 0 });
 });
 app.get('/api/products/:id', async (req, res) => {

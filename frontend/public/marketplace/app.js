@@ -311,15 +311,52 @@ async function loadIdentity() {
 }
 
 async function refreshSession() {
-  if (!state.supabase) return;
-  const { data, error } = await state.supabase.auth.getSession();
-  if (error) throw error;
-  state.session = data.session;
-  if (state.session) await loadIdentity();
-  else state.me = null;
+  if (!state.supabase) {
+    state.session = null;
+    state.me = null;
+    syncHeader();
+    applyMaintenanceUI();
+    return false;
+  }
+
+  try {
+    const { data, error } = await state.supabase.auth.getSession();
+    if (error) throw error;
+    state.session = data.session || null;
+  } catch (error) {
+    console.warn('Could not restore Supabase session:', error.message);
+    state.session = null;
+  }
+
+  if (state.session) {
+    try {
+      await loadIdentity();
+    } catch (error) {
+      // A profile/API hiccup must not invalidate a valid Supabase login or block the storefront.
+      console.warn('Could not load account profile:', error.message);
+      state.me = {
+        user: {
+          id: state.session.user?.id,
+          email: state.session.user?.email || null,
+          phone: state.session.user?.phone || null
+        },
+        profile: {
+          display_name: state.session.user?.user_metadata?.display_name
+            || state.session.user?.email?.split('@')[0]
+            || 'គណនីអ្នកប្រើប្រាស់'
+        },
+        vendor: null,
+        isAdmin: false
+      };
+    }
+  } else {
+    state.me = null;
+  }
+
   syncHeader();
   applyMaintenanceUI();
-  void syncVendorPresence();
+  if (state.session) void syncVendorPresence();
+  return Boolean(state.session);
 }
 
 /* --------------------------------------------------------------------------
@@ -595,7 +632,7 @@ function productCard(p, index) {
     <div class="ph im">
       <button class="absolute inset-0 z-[1] h-full w-full" type="button" data-action="view" data-id="${esc(p.id)}" aria-label="មើល ${esc(p.title)}"></button>
       ${image
-        ? `<span class="img-scan-wrap shimmer-scan cd-image-wrap cd-main-wrap"><img src="${esc(image)}" alt="${esc(p.title)}" loading="lazy" decoding="async" class="cd-main"></span>${secondImage ? `<span class="img-scan-wrap shimmer-scan cd-image-wrap cd-secondary-wrap"><img src="${esc(secondImage)}" alt="" loading="lazy" decoding="async" class="cd-secondary"></span>` : ''}`
+        ? `<span class="img-scan-wrap shimmer-scan cd-image-wrap cd-main-wrap"><img src="${esc(image)}" alt="${esc(p.title)}" loading="lazy" decoding="async" class="cd-main" onerror="this.parentElement.classList.add(&#39;image-failed&#39;)"></span>${secondImage ? `<span class="img-scan-wrap shimmer-scan cd-image-wrap cd-secondary-wrap"><img src="${esc(secondImage)}" alt="" loading="lazy" decoding="async" class="cd-secondary" onerror="this.parentElement.classList.add(&#39;image-failed&#39;)"></span>` : ''}`
         : ic('image', 36)}
       <button class="hv heart ${saved ? 'saved' : ''}" type="button" data-action="save" data-id="${esc(p.id)}" aria-label="រក្សាទុក" aria-pressed="${saved ? 'true' : 'false'}">
         ${ic('heart', 17)}
@@ -1658,17 +1695,63 @@ function bindEvents() {
     const isEmail = identity.includes('@');
     $('authSubmit').disabled = true;
     try {
-      const res = state.authMode === 'register'
-        ? await state.supabase.auth.signUp(isEmail ? { email: identity, password, options: { data: { display_name: $('authName').value.trim() } } } : { phone: identity, password })
-        : await state.supabase.auth.signInWithPassword(isEmail ? { email: identity, password } : { phone: identity, password });
+      if (!state.supabase) {
+        throw new Error('ប្រព័ន្ធ Login មិនទាន់ភ្ជាប់ Supabase ទេ។ សូមទាក់ទង Admin។');
+      }
+
+      const isRegister = state.authMode === 'register';
+      const res = isRegister
+        ? await state.supabase.auth.signUp(isEmail
+            ? { email: identity, password, options: { data: { display_name: $('authName').value.trim() } } }
+            : { phone: identity, password })
+        : await state.supabase.auth.signInWithPassword(isEmail
+            ? { email: identity, password }
+            : { phone: identity, password });
+
       if (res.error) throw res.error;
-      state.session = res.data.session;
-      await loadIdentity();
+
+      state.session = res.data.session || null;
+      if (!state.session) {
+        if (isRegister) {
+          toast('បានបង្កើតគណនី។ សូមពិនិត្យ Email ឬ SMS ដើម្បីផ្ទៀងផ្ទាត់ មុនចូលប្រើ។');
+          return;
+        }
+        throw new Error('ការផ្ទៀងផ្ទាត់មិនបានបង្កើត Session ទេ។ សូមពិនិត្យគណនី ឬការកំណត់ Supabase។');
+      }
+
+      let profileLoaded = true;
+      try {
+        await loadIdentity();
+      } catch (profileError) {
+        // Authentication already succeeded; keep the valid session and let profile data retry later.
+        profileLoaded = false;
+        console.warn('Login succeeded but profile loading failed:', profileError.message);
+        state.me = {
+          user: {
+            id: state.session.user?.id,
+            email: state.session.user?.email || null,
+            phone: state.session.user?.phone || null
+          },
+          profile: {
+            display_name: state.session.user?.user_metadata?.display_name
+              || state.session.user?.email?.split('@')[0]
+              || 'គណនីអ្នកប្រើប្រាស់'
+          },
+          vendor: null,
+          isAdmin: false
+        };
+      }
+
       syncHeader();
       closeModal('authModal');
-      toast('បានចូលគណនីជោគជ័យ!');
-    } catch (err) { toast(err.message, 'error'); }
-    finally { $('authSubmit').disabled = false; }
+      if (profileLoaded) toast('បានចូលគណនីជោគជ័យ!');
+      else toast('បានចូលគណនី ប៉ុន្តែព័ត៌មាន Profile មិនទាន់អាចទាញបានទេ។', 'warning');
+      void syncVendorPresence();
+    } catch (err) {
+      toast(err.message || 'មិនអាចចូលគណនីបានទេ។', 'error');
+    } finally {
+      $('authSubmit').disabled = false;
+    }
   });
 
   // Seller Dashboard & Forms
@@ -1808,34 +1891,68 @@ async function boot() {
   void showView(initialView, { optimistic: true, deferLoad: true, preserveScroll: true });
 
   try {
-    const cfg = await fetch('/api/config', { cache: 'no-store' }).then((r) => r.json());
-    state.maintenanceMode = cfg.maintenanceMode === true;
-    state.maintenanceMessage = String(cfg.maintenanceMessage || DEFAULT_MAINTENANCE_MSG);
-    applySiteBranding(cfg);
+    let cfg = {};
+    try {
+      const configResponse = await fetch('/api/config', { cache: 'no-store' });
+      if (!configResponse.ok) throw new Error(`Config request failed (${configResponse.status})`);
+      cfg = await configResponse.json();
+      state.maintenanceMode = cfg.maintenanceMode === true;
+      state.maintenanceMessage = String(cfg.maintenanceMessage || DEFAULT_MAINTENANCE_MSG);
+      applySiteBranding(cfg);
+    } catch (configError) {
+      console.error('Could not load marketplace config:', configError);
+      toast('មិនអាចទាញការកំណត់ប្រព័ន្ធបានទេ៖ ' + configError.message, 'warning');
+    }
 
     if (cfg.supabaseUrl && cfg.supabaseAnonKey && window.supabase?.createClient) {
       state.supabase = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
+      state.supabase.auth.onAuthStateChange((event, session) => {
+        state.session = session || null;
+        if (!state.session) {
+          state.me = null;
+          syncHeader();
+          return;
+        }
+
+        // Do not await Supabase auth callbacks; profile/API work runs after the callback returns.
+        Promise.resolve().then(async () => {
+          try {
+            await loadIdentity();
+          } catch (error) {
+            console.warn('Auth state changed but profile could not be loaded:', error.message);
+          }
+          syncHeader();
+          void syncVendorPresence();
+        });
+      });
+    } else {
+      console.warn('Supabase public configuration is missing; account login is unavailable.');
     }
 
     await refreshSession();
     state.routeAccessReady = true;
 
+    // Always load the public storefront even if session restoration or profile lookup fails.
     const tasks = [loadProducts()];
     if (initialView === 'product' && initialProductId) tasks.push(openProduct(initialProductId, { preserveScroll: true }));
     else if (initialView === 'store' && initialStoreId) tasks.push(openStorefront(initialStoreId, { preserveScroll: true }));
     else tasks.push(showView(initialView, { preserveScroll: true }));
 
     if (state.session) {
-      tasks.push(Promise.all([loadSaved(), loadOrders(), loadUnifiedSellerChatInbox()]).catch(() => {}));
+      tasks.push(Promise.all([loadSaved(), loadOrders(), loadUnifiedSellerChatInbox()]).catch((error) => {
+        console.warn('Could not restore some account data:', error.message);
+      }));
     }
 
-    await Promise.all(tasks);
+    await Promise.allSettled(tasks);
     document.documentElement.classList.remove('route-restoring');
   } catch (err) {
     console.error('Boot error:', err);
     document.documentElement.classList.remove('route-restoring');
     applyMaintenanceUI();
     toast('មិនអាចភ្ជាប់ប្រព័ន្ធបានទេ៖ ' + err.message, 'error');
+    // Last-resort public product load: do not leave the homepage empty after a session error.
+    void loadProducts();
   }
 }
 
