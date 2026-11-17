@@ -117,7 +117,7 @@ begin
       raise exception 'A completed item cannot move to an earlier status';
     end if;
     if p_status = 'cancelled' and v_item.fulfillment_status in ('shipped','completed') then
-      raise exception 'Shipped or completed items cannot be cancelled';
+      continue;
     end if;
     if p_status = 'cancelled' and v_item.fulfillment_status <> 'cancelled' then
       update public.products
