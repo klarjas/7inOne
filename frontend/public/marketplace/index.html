@@ -86,6 +86,7 @@ html.route-restoring[data-initial-view="store"] #view-store::before{content:"";d
           <button class="tag-btn" type="button" data-tag="ខុនដូ">ខុនដូ</button>
           <button class="tag-btn" type="button" data-tag="កុំព្យូទ័រ">កុំព្យូទ័រ</button>
         </div>
+        <div class="hero-trust-points"><span><i id="heroShield"></i> អ្នកលក់បានផ្ទៀងផ្ទាត់</span><span><i id="heroUsers"></i> សហគមន៍អ្នកទិញលក់</span></div>
         <button class="go" id="heroPostBtn" type="button">ចាប់ផ្តើមទិញលក់</button>
       </div>
 
@@ -108,27 +109,27 @@ html.route-restoring[data-initial-view="store"] #view-store::before{content:"";d
     <!-- MACOS-STYLE MAGNIFICATION CATEGORY DOCK -->
     <nav class="dock" id="categoryStrip" aria-label="ប្រភេទទំនិញ">
       <button type="button" class="dk active" data-category="all" style="--bg:#064E3B;--fg:#FFFFFF">
-        <span class="ico"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="6" height="6" rx="1.2"></rect><rect x="14" y="4" width="6" height="6" rx="1.2"></rect><rect x="4" y="14" width="6" height="6" rx="1.2"></rect><rect x="14" y="14" width="6" height="6" rx="1.2"></rect></svg></span>
+        <span class="ico"><span id="catAll"></span></span>
         <span class="lb">ទាំងអស់</span>
       </button>
       <button type="button" class="dk" data-category="phones" style="--bg:#EFF6FF;--fg:#1D4ED8">
-        <span class="ico"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2.5" width="10" height="19" rx="2.2"></rect><path d="M11 18h2"></path></svg></span>
+        <span class="ico"><span id="catPhone"></span></span>
         <span class="lb">ទូរស័ព្ទ &amp; អេឡិចត្រូនិក</span>
       </button>
       <button type="button" class="dk" data-category="vehicles" style="--bg:#FFF1F2;--fg:#BE123C">
-        <span class="ico"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15l2-6a2 2 0 0 1 2-1h8a2 2 0 0 1 2 1l2 6v3H4z"></path><circle cx="8" cy="18" r="1.4"></circle><circle cx="16" cy="18" r="1.4"></circle></svg></span>
+        <span class="ico"><span id="catCar"></span></span>
         <span class="lb">រថយន្ត &amp; ម៉ូតូ</span>
       </button>
       <button type="button" class="dk" data-category="property" style="--bg:#ECFDF5;--fg:#047857">
-        <span class="ico"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"></path><path d="M5 10v10h14V10"></path><path d="M10 20v-6h4v6"></path></svg></span>
+        <span class="ico"><span id="catHome"></span></span>
         <span class="lb">អចលនទ្រព្យ</span>
       </button>
       <button type="button" class="dk" data-category="fashion" style="--bg:#F5F3FF;--fg:#6D28D9">
-        <span class="ico"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3L3 7l3 3 2-1v12h8V9l2 1 3-3-5-4a4 4 0 0 1-8 0z"></path></svg></span>
+        <span class="ico"><span id="catFashion"></span></span>
         <span class="lb">សម្លៀកបំពាក់</span>
       </button>
       <button type="button" class="dk" data-category="furniture" style="--bg:#FFFBEB;--fg:#92400E">
-        <span class="ico"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 11V8a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v3"></path><path d="M3 13a2 2 0 0 1 4 0v2h10v-2a2 2 0 0 1 4 0v5H3z"></path></svg></span>
+        <span class="ico"><span id="catFurniture"></span></span>
         <span class="lb">គ្រឿងសង្ហារិម</span>
       </button>
     </nav>
