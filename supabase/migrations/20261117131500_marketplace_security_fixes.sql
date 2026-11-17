@@ -110,6 +110,12 @@ begin
     if v_item.fulfillment_status = 'cancelled' and p_status <> 'cancelled' then
       raise exception 'A cancelled item cannot be reopened';
     end if;
+    if v_item.fulfillment_status = 'shipped' and p_status = 'processing' then
+      raise exception 'A shipped item cannot move back to processing';
+    end if;
+    if v_item.fulfillment_status = 'completed' and p_status <> 'completed' then
+      raise exception 'A completed item cannot move to an earlier status';
+    end if;
     if p_status = 'cancelled' and v_item.fulfillment_status in ('shipped','completed') then
       raise exception 'Shipped or completed items cannot be cancelled';
     end if;
