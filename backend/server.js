@@ -575,7 +575,7 @@ app.get('/api/products/:id', async (req, res) => {
   if (error || !data) return fail(res, 404, 'Product not found');
 
   // Store owners may inspect their own products without inflating public view counts.
-  const accessToken = req.headers.authorization?.replace(/^Bearer\\s+/i, '');
+  const accessToken = req.headers.authorization?.replace(/^Bearer\s+/i, '');
   let isStoreOwner = false;
   if (accessToken && data.vendors?.user_id) {
     try {
