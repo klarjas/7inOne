@@ -1719,10 +1719,12 @@ function bindEvents() {
         throw new Error('ការផ្ទៀងផ្ទាត់មិនបានបង្កើត Session ទេ។ សូមពិនិត្យគណនី ឬការកំណត់ Supabase។');
       }
 
+      let profileLoaded = true;
       try {
         await loadIdentity();
       } catch (profileError) {
         // Authentication already succeeded; keep the valid session and let profile data retry later.
+        profileLoaded = false;
         console.warn('Login succeeded but profile loading failed:', profileError.message);
         state.me = {
           user: {
@@ -1738,12 +1740,12 @@ function bindEvents() {
           vendor: null,
           isAdmin: false
         };
-        toast('បានចូលគណនី ប៉ុន្តែព័ត៌មាន Profile មិនទាន់អាចទាញបានទេ។', 'warning');
       }
 
       syncHeader();
       closeModal('authModal');
-      if (state.me) toast('បានចូលគណនីជោគជ័យ!');
+      if (profileLoaded) toast('បានចូលគណនីជោគជ័យ!');
+      else toast('បានចូលគណនី ប៉ុន្តែព័ត៌មាន Profile មិនទាន់អាចទាញបានទេ។', 'warning');
       void syncVendorPresence();
     } catch (err) {
       toast(err.message || 'មិនអាចចូលគណនីបានទេ។', 'error');
