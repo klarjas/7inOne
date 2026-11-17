@@ -6,6 +6,11 @@ Object.assign(iconPaths,{calendar:'<rect x="3" y="4" width="18" height="17" rx="
 const $=id=>document.getElementById(id);
 const ic=(name,size=17,extra='')=>`<svg aria-hidden="true" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="${extra}">${iconPaths[name]||iconPaths.spark}</svg>`;
 document.querySelectorAll('[data-seller-icon]').forEach(node=>{node.innerHTML=ic(node.dataset.sellerIcon,16)});
+document.querySelectorAll('[data-nav-icon]').forEach(node=>{
+  const name=node.dataset.navIcon;
+  node.innerHTML=ic(name, name==='chat'?22:19);
+});
+
 if($('addProductIcon'))$('addProductIcon').innerHTML=ic('plus',15);
 const CAT={phones:'ទូរស័ព្ទ & អេឡិចត្រូនិក',vehicles:'រថយន្ត & ម៉ូតូ',property:'អចលនទ្រព្យ',fashion:'សម្លៀកបំពាក់',furniture:'គ្រឿងសង្ហារិម'};
 const CATICON={all:'grid',phones:'phone',vehicles:'car',property:'home',fashion:'shirt',furniture:'sofa'};
@@ -33,7 +38,7 @@ function showView(name,options={}){
     if(name==='seller'&&me?.vendor?.status!=='approved'){if(options.fromHistory){name='home'}else{toast(me?.vendor?.status==='pending'?'ពាក្យអ្នកលក់កំពុងរង់ចាំការអនុម័ត។':'សូមចុះឈ្មោះក្លាយជាអ្នកលក់ជាមុនសិន។','warning');if(!me?.vendor)openSellerModal();return Promise.resolve(false)}}
   }
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-  $('view-'+name)?.classList.add('active');
+  $('view-'+name)?.classList.add('active');document.querySelectorAll('#mobileMarketNav [data-view]').forEach(btn=>btn.classList.toggle('active',btn.dataset.view===name));
   document.documentElement.dataset.initialView=name;
   try{sessionStorage.setItem('ecomstore.activeView',name)}catch(error){console.warn('Could not save active page:',error)}
   const routeHash=name==='product'?(currentProduct?.id?'product/'+encodeURIComponent(currentProduct.id):(options.optimistic?String(window.location.hash||'#product').replace(/^#/,''):'product')):name==='store'?(currentStoreId?'store/'+encodeURIComponent(currentStoreId):(options.optimistic?String(window.location.hash||'#store').replace(/^#/,''):'store')):name;
@@ -367,7 +372,7 @@ function renderProductDetail(){
     <div class="product-buybox">
      <div class="product-top-meta"><span class="product-category-badge">${esc(CAT[p.category]||p.category||'ទំនិញ')}</span><span class="product-meta-item">${ic('clock',14)} ${fmtDate(p.created_at)}</span><span class="product-meta-item">${ic('eye',14)} ${Number(p.view_count||0).toLocaleString()} Views</span></div>
      <h1 class="product-detail-title">${esc(p.title)}</h1>
-     <div class="product-price-card"><div><small>តម្លៃលក់</small><strong>${money(p.price)}</strong></div><div class="product-price-context"><span>${ic('pin',15)} ${esc(p.location||'មិនបានបញ្ជាក់')}</span><span class="product-stock-badge ${stockKnown&&Number(p.stock_quantity)===0?'is-out':''}">${ic(stockKnown&&Number(p.stock_quantity)===0?'x':'checkcircle',14)} ${stockLabel}</span></div></div>
+     <div class="product-price-card"><div><small>តម្លៃលក់</small><strong>${money(p.price)}</strong></div><div class="product-price-context"><span>${ic('pin',15)} ${esc(p.location||'មិនបានបញ្ជាក់')}</span><span class="product-stock-badge ${stockKnown&&Number(p.stock)<=0?'is-out':''}">${ic(stockKnown&&Number(p.stock)<=0?'x':'checkcircle',14)} ${stockLabel}</span></div></div>
      ${shortDescription?'<div class="product-short-summary"><p>'+esc(shortDescription)+'</p></div>':''}
      <div class="product-action-area">
       <div class="product-primary-actions"><button type="button" class="product-buy-primary brand-gradient" data-product-action="buy">${ic('bag',18)} ទិញឥឡូវនេះ</button><button type="button" class="product-chat-primary" data-product-action="chat">${ic('chat',18)} ឆាតជាមួយអ្នកលក់</button></div>
@@ -751,7 +756,7 @@ function setupEditorialInteractions(){
       const rect=target.getBoundingClientRect();if(!rect.width||!rect.height)return;
       const x=(point.x-rect.left)/rect.width,y=(point.y-rect.top)/rect.height;
       target.style.setProperty('--mouse-x',(x*100).toFixed(1)+'%');target.style.setProperty('--mouse-y',(y*100).toFixed(1)+'%');target.style.setProperty('--spotlight-opacity','1');
-      if(target.classList.contains('product-card')){const rx=((.5-y)*5).toFixed(2),ry=((x-.5)*6).toFixed(2);target.style.transform='perspective(950px) rotateX('+rx+'deg) rotateY('+ry+'deg) translateY(-3px)'}
+      /* 3D tilt disabled for clean card UX */
     });
   },{passive:true});
   document.addEventListener('pointerout',event=>{const target=event.target.closest('.product-card,.editorial-glow');if(!target||(event.relatedTarget&&target.contains(event.relatedTarget)))return;target.style.setProperty('--spotlight-opacity','0');if(target.classList.contains('product-card'))target.style.transform=''});
