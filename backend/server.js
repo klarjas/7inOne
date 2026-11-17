@@ -1648,7 +1648,7 @@ app.post('/api/vendors/:id/reviews', authenticate, async (req, res) => {
   const orderId = clean(req.body.order_id, 60);
   const comment = clean(req.body.comment, 1200);
   if (!Number.isInteger(rating) || rating < 1 || rating > 5 || !orderId) return fail(res, 400, 'Choose a rating from 1 to 5 and an eligible completed order');
-  const { data: vendor } = await supabase.from('vendors').select('id,status').eq('id', req.params.id).eq('status', 'approved').maybeSingle();
+  const { data: vendor } = await supabase.from('vendors').select('id,status').eq('id', req.params.id).in('status', ['approved','pending','rejected']).maybeSingle();
   if (!vendor) return fail(res, 404, 'Seller not found');
   const { data: order } = await supabase.from('orders').select('id,status').eq('id', orderId).eq('customer_id', req.user.id).eq('status', 'completed').maybeSingle();
   if (!order) return fail(res, 403, 'Only buyers with completed orders can review a seller');
