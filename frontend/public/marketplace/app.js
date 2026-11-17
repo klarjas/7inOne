@@ -411,6 +411,10 @@ function productCard(p, index) {
 }
 function renderProducts(){const list=products;$('productGrid').innerHTML=list.map(productCard).join('');$('resultCount').textContent=`${list.length} មុខ`;$('listingTitle').textContent=activeCategory==='all'?'ទំនិញដែលគួរឱ្យចាប់អារម្មណ៍':CAT[activeCategory]||'ទំនិញ';$('listingSub').textContent=searchTerm?`លទ្ធផលស្វែងរកសម្រាប់ «${esc(searchTerm)}»`:'ទំនិញពិតពីហាងដែលបានចុះឈ្មោះនៅលើ 7inOne';$('emptyHome').classList.toggle('hidden',list.length>0);$('productGrid').classList.toggle('hidden',list.length===0);$('skeletonGrid').classList.add('hidden')}
 function setCategory(category){activeCategory=category;$('searchCategory').value=category;document.querySelectorAll('[data-category]').forEach(b=>b.classList.toggle('active',b.dataset.category===category));void loadProducts()}
+document.querySelectorAll('.home-sidebar [data-category]').forEach(button=>button.addEventListener('click',()=>{
+  setCategory(button.dataset.category);
+  document.querySelectorAll('.home-sidebar .home-side-link').forEach(item=>item.classList.toggle('active',item===button));
+}));
 document.querySelectorAll('[data-home-side]').forEach(button=>button.addEventListener('click',()=>{
   const action=button.dataset.homeSide;
   if(action==='home'){setCategory('all');$('view-home').scrollIntoView({behavior:'smooth'});return}
