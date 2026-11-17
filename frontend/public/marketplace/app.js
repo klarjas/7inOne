@@ -35,7 +35,7 @@ function showView(name,options={}){
   if(!options.optimistic){
     if(['profile','seller'].includes(name)&&!session){openAuth();return Promise.resolve(false)}
     if(name==='admin'&&!me?.isAdmin){if(options.fromHistory){name='home'}else{toast('មុខងារនេះសម្រាប់ Admin ប៉ុណ្ណោះ។','error');return Promise.resolve(false)}}
-    if(name==='seller'&&me?.vendor?.status!=='approved'){if(options.fromHistory){name='home'}else{toast(me?.vendor?.status==='pending'?'ពាក្យអ្នកលក់កំពុងរង់ចាំការអនុម័ត។':'សូមចុះឈ្មោះក្លាយជាអ្នកលក់ជាមុនសិន។','warning');if(!me?.vendor)openSellerModal();return Promise.resolve(false)}}
+    if(name==='seller'&&!isSellerAccount()){if(options.fromHistory){name='home'}else{toast(me?.vendor?.status==='blocked'?'ហាងនេះត្រូវបានបិទដោយ Admin។':'សូមចុះឈ្មោះបង្កើតហាងជាមុនសិន។','warning');if(!me?.vendor)openSellerModal();return Promise.resolve(false)}}
   }
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   $('view-'+name)?.classList.add('active');document.querySelectorAll('#mobileMarketNav [data-view]').forEach(btn=>btn.classList.toggle('active',btn.dataset.view===name));
