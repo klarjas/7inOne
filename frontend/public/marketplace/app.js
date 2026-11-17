@@ -18,6 +18,8 @@ let currentStoreId=null,currentStoreData=null,currentStoreProducts=[],currentSto
 let productGalleryIndex=0,productLightboxOpen=false,scrollSaveTimer=null,routeSyncGuardKey='',routeSyncGuardTimer=null,routeSyncNavigationId=0;
 let sellerProductCache=[],sellerActiveFilter='all',sellerActiveTab='products';
 let siteBranding={siteTitle:'7inOne',siteSubtitle:'ផ្សារទិញលក់កម្ពុជា',heroBadge:'ផ្សារអនឡាញសម្រាប់អ្នកទាំងអស់គ្នា',heroTitle:'ទិញលក់ងាយៗ នៅជិតអ្នក',heroSubtitle:'ស្វែងរកទំនិញដែលអ្នកស្រឡាញ់ ឬដាក់លក់របស់ដែលអ្នកមិនប្រើ។ ភ្ជាប់អ្នកទិញ និងអ្នកលក់នៅទូទាំងប្រទេសកម្ពុជា។',siteLogoUrl:'',faviconUrl:'',heroImages:[]},brandingLogoPreviewUrl=null,brandingFaviconPreviewUrl=null,brandingHeroPreviewUrls=[],siteBrandingRefreshTimer=null;
+let vendorPresenceIds=new Set(),vendorPresenceAnnouncedId=null,vendorPresencePollTimer=null,vendorPresenceHeartbeatTimer=null,vendorPresenceStarted=false;
+const vendorPresenceTabId=(()=>{try{return crypto.randomUUID()}catch{return Date.now().toString(36)+'-'+Math.random().toString(36).slice(2)}})();
 let supabaseClient=null,session=null,sessionRefreshPromise=null,me=null,routeAccessReady=false,supportChatPollTimer=null,adminChatPollTimer=null,activeAdminChatId=null,restoredUserChatArchives={},restoredAdminChatArchives={},pendingPhone=null,products=[],savedIds=new Set(),favoritePending=new Set(),activeCategory='all',searchTerm='',currentProduct=null,currentVendor=null,profileTab='saved',authMode='login',currentOfferProduct=null,selectedProductImages=[],sellerDocPreviewUrl=null,telegramBotUsername='',telegramLoginWidgetMounted=false,telegramProfileWidgetMounted=false,productRealtimeChannel=null,productRealtimeRefreshTimer=null,productRealtimeFallbackTimer=null,productRealtimePendingRefresh=false,sellerChatChannel=null,sellerChatPollTimer=null,sellerInboxPollTimer=null,sellerChatConversationId=null,sellerChatInboxPollTimer=null,sellerChatMode='buyer',sellerChatInbox=[],sellerChatMuted=false,sellerChatLastMessageId=null,sellerChatInboxUnreadSnapshot={},sellerChatInboxInitialized=false,sellerChatInboxUserId=null,sellerChatLoadedMessages=[],sellerChatPendingMedia=[],sellerChatDraftProduct=null;
 const DEFAULT_MAINTENANCE_MESSAGE='ប្រព័ន្ធកំពុងធ្វើការអភិវឌ្ឍន៍ និងបន្ថែមមុខងារថ្មីៗ សូមអធ្យាស្រ័យចំពោះការរំខាន!';let maintenanceMode=false,maintenanceMessage=DEFAULT_MAINTENANCE_MESSAGE,faviconUrl='';
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -249,7 +251,51 @@ async function api(path,options={}){
   return payload;
 }
 async function loadIdentity(){if(!session){me=null;return}try{const res=await api('/api/me');me=res.data}catch(error){me=null;throw error}}
-async function refreshSession(){if(!supabaseClient)return;const {data,error}=await supabaseClient.auth.getSession();if(error)throw error;session=data.session;if(session)await loadIdentity();else me=null;syncHeader();applyMaintenanceUI()}
+async function refreshVendorPresence(){
+  try{
+    const response=await fetch('/api/vendors/online',{cache:'no-store'});
+    if(!response.ok)return;
+    const payload=await response.json();
+    vendorPresenceIds=new Set((payload.data?.vendor_ids||[]).map(String));
+    document.querySelectorAll('.verified-store-badge[data-vendor-id]').forEach(badge=>{
+      badge.classList.toggle('is-online',vendorPresenceIds.has(badge.dataset.vendorId));
+    });
+  }catch(error){console.warn('Could not refresh vendor online status:',error.message)}
+}
+async function sendVendorPresence(method,keepalive=false,accessToken=session?.access_token){
+  if(!accessToken)return;
+  try{
+    await fetch('/api/vendor/presence?tab_id='+encodeURIComponent(vendorPresenceTabId),{method,headers:{Authorization:'Bearer '+accessToken},keepalive,cache:'no-store'});
+  }catch(error){if(!keepalive)console.warn('Could not update vendor online status:',error.message)}
+}
+async function syncVendorPresence(){
+  const nextId=session&&!document.hidden&&me?.vendor?.status==='approved'?String(me.vendor.id||''):'';
+  if(vendorPresenceAnnouncedId&&vendorPresenceAnnouncedId!==nextId){
+    await sendVendorPresence('DELETE');
+    vendorPresenceAnnouncedId=null;
+  }
+  if(nextId){
+    await sendVendorPresence('POST');
+    vendorPresenceAnnouncedId=nextId;
+  }
+}
+function startVendorPresence(){
+  if(vendorPresenceStarted)return;
+  vendorPresenceStarted=true;
+  void refreshVendorPresence();
+  vendorPresencePollTimer=setInterval(()=>{if(!document.hidden)void refreshVendorPresence()},20000);
+  vendorPresenceHeartbeatTimer=setInterval(()=>{if(!document.hidden)void syncVendorPresence()},20000);
+  document.addEventListener('visibilitychange',()=>{
+    if(document.hidden){
+      void syncVendorPresence();
+    }else{
+      void syncVendorPresence();
+      void refreshVendorPresence();
+    }
+  });
+  window.addEventListener('pagehide',()=>{if(vendorPresenceAnnouncedId)void sendVendorPresence('DELETE',true)});
+}
+async function refreshSession(){if(!supabaseClient)return;const {data,error}=await supabaseClient.auth.getSession();if(error)throw error;session=data.session;if(session)await loadIdentity();else me=null;syncHeader();applyMaintenanceUI();void syncVendorPresence()}
 function requireLogin(){if(session)return true;openAuth();return false}
 function openAuth(mode='login'){setAuthMode(mode);openModal('authModal');if(!telegramLoginWidgetMounted)telegramLoginWidgetMounted=mountTelegramWidget('telegramLoginWidget','onTelegramAuth')}
 function setAuthMode(mode){$('telegramLoginWidgetWrap')?.classList.toggle('hidden',mode==='verifyPhone');$('telegramRecoveryForm')?.classList.add('hidden');$('authForm')?.classList.remove('hidden');$('forgotPasswordBtn')?.classList.remove('hidden');document.querySelector('#authModal .mb-4.grid')?.classList.remove('hidden');authMode=mode;const register=mode==='register',verify=mode==='verifyPhone';$('authOtp').required=verify;$('authOtpWrap').classList.toggle('hidden',!verify);$('authNameWrap').classList.toggle('hidden',!register);$('authName').required=register;$('authIdentity').readOnly=verify;$('authIdentity').parentElement.classList.remove('hidden');$('authPassword').parentElement.classList.toggle('hidden',verify);document.querySelector('[data-auth-mode="login"]').parentElement.classList.toggle('hidden',verify);$('authTitle').textContent=verify?'ផ្ទៀងផ្ទាត់លេខទូរស័ព្ទ':register?'បង្កើតគណនី 7inOne':'សូមស្វាគមន៍មកកាន់ 7inOne';$('authSubmit').textContent=verify?'ផ្ទៀងផ្ទាត់លេខកូដ':register?'បង្កើតគណនី':'ចូលគណនី';$('authHint').textContent=verify?'សូមបញ្ចូលលេខកូដ SMS ដែលបានផ្ញើទៅលេខទូរស័ព្ទរបស់អ្នក។':'ប្រើលេខទូរស័ព្ទ ឬអ៊ីមែលដែលភ្ជាប់ជាមួយគណនី Supabase របស់អ្នក។';if(!verify)$('authOtp').value='';document.querySelectorAll('[data-auth-mode]').forEach(b=>{const active=b.dataset.authMode===mode;b.classList.toggle('bg-white',active);b.classList.toggle('shadow',active);b.classList.toggle('text-slate-500',!active)})}
@@ -271,14 +317,18 @@ function formatViews(value) {
   const num = Number(value || 0);
   return num >= 1000 ? (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K' : String(num);
 }
-const verifiedStoreSvg = `<svg class="vb" width="16" height="16" viewBox="0 0 24 24" role="img" aria-label="ហាងបានផ្ទៀងផ្ទាត់" fill="none" stroke="#1D8CD0" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2.8 2.4 1.4 2.8-.1 1.3 2.4 2.5 1.5-.1 2.8 1.1 2.4-1.3 2.4.1 2.8-2.5 1.2-1.3 2.4-2.8-.1L12 21.2l-2.4-1.4-2.8.1-1.3-2.4L3 16l.1-2.8L2 10.8l1.3-2.4-.1-2.8 2.5-1.2L7 2l2.8.1Z"/><path d="m8.2 12.2 2.5 2.5 5.1-5.3"/></svg>`;
-const verifiedStoreBadge = `<span class="verified-store-badge">${verifiedStoreSvg}<span>ផ្ទៀងផ្ទាត់</span></span>`;
+function verifiedStoreBadge(vendorId) {
+  const id = String(vendorId || '');
+  const onlineClass = id && vendorPresenceIds.has(id) ? ' is-online' : '';
+  return `<span class="verified-store-badge${onlineClass}" data-vendor-id="${esc(id)}"><span class="badge-container" tabindex="0" aria-label="Verified Account"><svg class="verified-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1.8 15 3.2l3.3-.1 1.5 3 2.8 1.8-.7 3.2.7 3.2-2.8 1.8-1.5 3-3.3-.1-3 1.4-3-1.4-3.3.1-1.5-3-2.8-1.8.7-3.2-.7-3.2 2.8-1.8 1.5-3 3.3.1L12 1.8Z" fill="currentColor"/><path d="m7.8 12.2 2.7 2.7 5.8-6" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="badge-tooltip" role="tooltip">Verified Account</span></span></span>`;
+}
 function productCard(p, index) {
   const images = (p.product_images || []).filter(item => item.image_url);
   const image = images[0]?.image_url || '';
   const secondImage = images[1]?.image_url || '';
   const saved = savedIds.has(p.id);
   const vendorName = p.vendors?.store_name || 'ហាងអ្នកលក់';
+  const vendorLogo = p.vendors?.store_logo_url || '';
   const verified = p.vendors?.status === 'approved';
   const description = productDescriptionParts(p).short;
   return `
@@ -298,9 +348,12 @@ function productCard(p, index) {
       <p class="pr"><span>${money(p.price)}</span><span class="cd-condition-meta">${esc(p.condition || 'ទំនិញ')}</span></p>
       ${description ? `<p class="cd-description">${esc(description)}</p>` : ''}
       <div class="sh">
-        <span class="sp" role="img" aria-label="រូប Profile ហាង">${ic('user', 16)}</span>
+        <span class="sp" role="img" aria-label="រូប Profile ហាង">
+          <span class="sp-fallback">${ic('user', 16)}</span>
+          ${vendorLogo ? `<img src="${esc(vendorLogo)}" alt="${esc(vendorName)}" loading="lazy" decoding="async">` : ''}
+        </span>
         <button type="button" class="sn text-left hover:underline" data-action="store" data-vendor-id="${esc(p.vendor_id)}">${esc(vendorName)}</button>
-        ${verified ? verifiedStoreBadge : ''}
+        ${verified ? verifiedStoreBadge(p.vendor_id) : ''}
       </div>
       <p class="mt">
         <span>${esc(p.location || 'ភ្នំពេញ')}</span>
@@ -522,7 +575,7 @@ function renderStorefront(){
   const query=currentStoreSearch.trim().toLocaleLowerCase();
   const visible=sellerProducts.filter(p=>(currentStoreCategory==='all'||p.category===currentStoreCategory)&&(!query||String(p.title+' '+(p.description||'')).toLocaleLowerCase().includes(query)));
   const profile=data.profile||{};
-  $('storefrontContent').innerHTML=`<section class="storefront-public"><div class="storefront-cover">${data.store_cover_url?'<img src="'+esc(data.store_cover_url)+'" alt="Cover ហាង">':''}</div><div class="storefront-profile"><div class="storefront-avatar">${avatarMarkup(data.store_name,data.store_logo_url)}</div><div class="min-w-0 flex-1"><div class="flex flex-wrap items-center gap-2"><h1 class="text-xl font-bold text-slate-900">${esc(data.store_name||'ហាងអ្នកលក់')}</h1>${data.verified?verifiedStoreBadge:''}</div><p class="mt-1 text-[11px] text-slate-500">${esc(data.store_location||profile.province||'កម្ពុជា')} · ${Number(data.active_listings||0)} មុខទំនិញ</p><p class="mt-2 text-[11px] text-slate-600">${esc(data.description||profile.bio||'')}</p><div class="mt-2 flex items-center gap-2 text-[11px] text-slate-600">${renderStars(data.rating)} <b>${data.rating??'—'}</b><span>· ${Number(data.review_count||0)} ការវាយតម្លៃ</span></div></div></section><div class="storefront-tools"><input id="storeSearchInput" type="search" placeholder="ស្វែងរកក្នុងហាងនេះ..." value="${esc(currentStoreSearch)}" class="field min-w-0 flex-1"><div class="flex flex-wrap gap-2" id="storeCategoryFilters">${[['all','ទាំងអស់'],...Object.entries(CAT)].map(([key,label])=>`<button type="button" data-store-category="${key}" class="store-filter ${currentStoreCategory===key?'active':''}">${label}</button>`).join('')}</div></div><div class="mb-4 flex items-center justify-between"><h2 class="font-bold">ទំនិញក្នុងហាង</h2><span class="text-[10px] text-slate-500">${visible.length} មុខ</span></div><div class="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 xl:grid-cols-5" id="storeProductGrid">${visible.map(productCard).join('')}</div>${visible.length?'':'<p class="rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center text-[11px] text-slate-500">មិនមានទំនិញត្រូវនឹងការស្វែងរកទេ។</p>'}`;
+  $('storefrontContent').innerHTML=`<section class="storefront-public"><div class="storefront-cover">${data.store_cover_url?'<img src="'+esc(data.store_cover_url)+'" alt="Cover ហាង">':''}</div><div class="storefront-profile"><div class="storefront-avatar">${avatarMarkup(data.store_name,data.store_logo_url)}</div><div class="min-w-0 flex-1"><div class="flex flex-wrap items-center gap-2"><h1 class="text-xl font-bold text-slate-900">${esc(data.store_name||'ហាងអ្នកលក់')}</h1>${data.verified?verifiedStoreBadge(data.id):''}</div><p class="mt-1 text-[11px] text-slate-500">${esc(data.store_location||profile.province||'កម្ពុជា')} · ${Number(data.active_listings||0)} មុខទំនិញ</p><p class="mt-2 text-[11px] text-slate-600">${esc(data.description||profile.bio||'')}</p><div class="mt-2 flex items-center gap-2 text-[11px] text-slate-600">${renderStars(data.rating)} <b>${data.rating??'—'}</b><span>· ${Number(data.review_count||0)} ការវាយតម្លៃ</span></div></div></section><div class="storefront-tools"><input id="storeSearchInput" type="search" placeholder="ស្វែងរកក្នុងហាងនេះ..." value="${esc(currentStoreSearch)}" class="field min-w-0 flex-1"><div class="flex flex-wrap gap-2" id="storeCategoryFilters">${[['all','ទាំងអស់'],...Object.entries(CAT)].map(([key,label])=>`<button type="button" data-store-category="${key}" class="store-filter ${currentStoreCategory===key?'active':''}">${label}</button>`).join('')}</div></div><div class="mb-4 flex items-center justify-between"><h2 class="font-bold">ទំនិញក្នុងហាង</h2><span class="text-[10px] text-slate-500">${visible.length} មុខ</span></div><div class="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 xl:grid-cols-5" id="storeProductGrid">${visible.map(productCard).join('')}</div>${visible.length?'':'<p class="rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center text-[11px] text-slate-500">មិនមានទំនិញត្រូវនឹងការស្វែងរកទេ។</p>'}`;
   $('storefrontContent').removeAttribute('aria-busy');markLoadedImages($('storefrontContent'));
   $('storeSearchInput').addEventListener('input',event=>{currentStoreSearch=event.target.value;const cursor=event.target.selectionStart;renderStorefront();const next=$('storeSearchInput');next.focus();next.setSelectionRange(cursor,cursor)});
   $('storeCategoryFilters').addEventListener('click',event=>{const button=event.target.closest('[data-store-category]');if(button){currentStoreCategory=button.dataset.storeCategory;renderStorefront()}});
@@ -1254,17 +1307,20 @@ async function boot(){
     if(!window.supabase?.createClient)throw new Error('Supabase browser library failed to load');
     supabaseClient=window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseAnonKey);
     startMarketplaceRealtime();
+    startVendorPresence();
     telegramBotUsername=String(cfg.telegramBotUsername||'').replace(/^@/,'');
     if($('authModal')?.classList.contains('open')&&!telegramLoginWidgetMounted)telegramLoginWidgetMounted=mountTelegramWidget('telegramLoginWidget','onTelegramAuth');
     // Subscribe before reading the stored session so INITIAL_SESSION and token events are not missed.
     supabaseClient.auth.onAuthStateChange((event,newSession)=>{
+      const previousSession=session;
+      if(event==='SIGNED_OUT'&&vendorPresenceAnnouncedId&&previousSession?.access_token)void sendVendorPresence('DELETE',true,previousSession.access_token);
       session=newSession;
       if(event==='INITIAL_SESSION')return;
       Promise.resolve().then(async()=>{
         try{
           if(session){await loadIdentity();try{await loadSaved();await loadOrders()}catch(e){console.warn(e)}}
           else me=null;
-          syncHeader();applyMaintenanceUI();
+          syncHeader();applyMaintenanceUI();void syncVendorPresence();
           const current=document.querySelector('.view.active')?.id?.replace('view-','')||'home';
           if((['profile','seller'].includes(current)&&!session)||(current==='admin'&&!me?.isAdmin)||(current==='seller'&&me?.vendor?.status!=='approved'))showView('home',{preserveScroll:true});
         }catch(e){console.warn('Auth state update failed:',e.message);toast(e.message,'error')}
