@@ -589,7 +589,7 @@ const telegramLinkTokenTable = 'telegram_link_tokens';
 const telegramOtpTable = 'telegram_password_otps';
 const telegramWidgetAuthEventsTable = 'telegram_widget_auth_events';
 
-async function issueTelegramPasswordOtp(userId, telegramUserId) {
+async function issueTelegramPasswordOtp(userId, telegramUserId, purpose = 'security') {
   const code = String(randomInt(100000, 1000000));
   const otpHash = sha256(code);
   const now = new Date();
@@ -609,8 +609,10 @@ async function issueTelegramPasswordOtp(userId, telegramUserId) {
 
   if (issued) {
     try {
-      await sendTelegramMessage(telegramUserId,
-        `7inOne Security\nលេខកូដផ្ទៀងផ្ទាត់ Password របស់អ្នក៖ ${code}\nកូដនេះមានសុពលភាព ៥ នាទី។ កុំចែករំលែកកូដនេះជាមួយអ្នកណា។`);
+      const message = purpose === 'recovery'
+        ? `7inOne Account Recovery\nលេខកូដសង្គ្រោះគណនី៖ ${code}\nមានសុពលភាព ៥ នាទី។ កុំចែករំលែកកូដនេះ។`
+        : `7inOne Security\nលេខកូដផ្ទៀងផ្ទាត់ Password របស់អ្នក៖ ${code}\nកូដនេះមានសុពលភាព ៥ នាទី។ កុំចែករំលែកកូដនេះជាមួយអ្នកណា។`;
+      await sendTelegramMessage(telegramUserId, message);
     } catch (error) {
       await supabase.from(telegramOtpTable).delete().eq('user_id', userId).eq('otp_hash', otpHash);
       throw error;
@@ -1225,7 +1227,7 @@ app.post('/api/me/telegram/password-otp', authenticate, telegramOtpLimiter, asyn
     if (linkError) throw linkError;
     if (!link) return fail(res, 400, 'សូម Connect Telegram ជាមុនសិន។');
     const issued = await issueTelegramPasswordOtp(req.user.id, link.telegram_user_id);
-    return res.json({ data: { sent: true, expiresAt: issued.expiresAt } });
+    return res.json({ data: { sent: !issued.locked, expiresAt: issued.expiresAt } });
   } catch (error) {
     console.error('Telegram password OTP request failed:', error.message);
     return fail(res, 500, 'មិនអាចផ្ញើ OTP បានទេ។ សូមពិនិត្យ Telegram Bot និង Database Migration។');
@@ -1292,7 +1294,7 @@ app.post('/api/auth/telegram/recovery/request', recoveryOtpLimiter, async (req, 
     const { data: link, error } = await supabase.from(telegramLinkTable)
       .select('user_id,telegram_user_id').eq('account_email', email).maybeSingle();
     if (error) throw error;
-    if (link) await issueTelegramPasswordOtp(link.user_id, link.telegram_user_id);
+    if (link) await issueTelegramPasswordOtp(link.user_id, link.telegram_user_id, 'recovery');
     return res.json({ data: { accepted: true }, message: 'ប្រសិនបើគណនីនេះបានភ្ជាប់ Telegram រួច លេខកូដនឹងត្រូវបានផ្ញើទៅ Telegram នោះ។' });
   } catch (error) {
     console.error('Telegram recovery OTP request failed:', error.message);
