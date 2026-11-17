@@ -410,14 +410,14 @@ function productCard(p, index) {
   </article>`;
 }
 function renderProducts(){const list=products;$('productGrid').innerHTML=list.map(productCard).join('');$('resultCount').textContent=`${list.length} មុខ`;$('listingTitle').textContent=activeCategory==='all'?'ទំនិញដែលគួរឱ្យចាប់អារម្មណ៍':CAT[activeCategory]||'ទំនិញ';$('listingSub').textContent=searchTerm?`លទ្ធផលស្វែងរកសម្រាប់ «${esc(searchTerm)}»`:'ទំនិញពិតពីហាងដែលបានចុះឈ្មោះនៅលើ 7inOne';$('emptyHome').classList.toggle('hidden',list.length>0);$('productGrid').classList.toggle('hidden',list.length===0);$('skeletonGrid').classList.add('hidden')}
-function setCategory(category){activeCategory=category;$('searchCategory').value=category;document.querySelectorAll('[data-home-side]').forEach(button=>button.addEventListener('click',()=>{
+function setCategory(category){activeCategory=category;$('searchCategory').value=category;document.querySelectorAll('[data-category]').forEach(b=>b.classList.toggle('active',b.dataset.category===category));void loadProducts()}
+document.querySelectorAll('[data-home-side]').forEach(button=>button.addEventListener('click',()=>{
   const action=button.dataset.homeSide;
   if(action==='home'){setCategory('all');$('view-home').scrollIntoView({behavior:'smooth'});return}
   if(action==='live'){$('homeVendorMediaSection')?.scrollIntoView({behavior:'smooth',block:'center'});return}
   if(action==='saved'){if(!requireLogin())return;void loadSaved().then(()=>showView('profile'));return}
   if(action==='orders'){if(!requireLogin())return;showView('profile')}
 }));
-document.querySelectorAll('[data-category]').forEach(b=>b.classList.toggle('active',b.dataset.category===category));void loadProducts()}
 function favoriteSpinner(){
   return '<svg class="animate-spin text-indigo-500" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="3" opacity=".2"></circle><path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" stroke-width="3" stroke-linecap="round"></path></svg>';
 }
