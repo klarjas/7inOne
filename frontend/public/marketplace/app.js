@@ -19,6 +19,7 @@ let productGalleryIndex=0,productLightboxOpen=false,scrollSaveTimer=null,routeSy
 let sellerProductCache=[],sellerActiveFilter='all',sellerActiveTab='products';
 let siteBranding={siteTitle:'7inOne',siteSubtitle:'ផ្សារទិញលក់កម្ពុជា',heroBadge:'ផ្សារអនឡាញសម្រាប់អ្នកទាំងអស់គ្នា',heroTitle:'ទិញលក់ងាយៗ នៅជិតអ្នក',heroSubtitle:'ស្វែងរកទំនិញដែលអ្នកស្រឡាញ់ ឬដាក់លក់របស់ដែលអ្នកមិនប្រើ។ ភ្ជាប់អ្នកទិញ និងអ្នកលក់នៅទូទាំងប្រទេសកម្ពុជា។',siteLogoUrl:'',faviconUrl:'',heroImages:[]},brandingLogoPreviewUrl=null,brandingFaviconPreviewUrl=null,brandingHeroPreviewUrls=[],siteBrandingRefreshTimer=null;
 let vendorPresenceIds=new Set(),vendorPresenceAnnouncedId=null,vendorPresencePollTimer=null,vendorPresenceHeartbeatTimer=null,vendorPresenceStarted=false;
+const vendorPresenceTabId=(()=>{try{return crypto.randomUUID()}catch{return Date.now().toString(36)+'-'+Math.random().toString(36).slice(2)}})();
 let supabaseClient=null,session=null,sessionRefreshPromise=null,me=null,routeAccessReady=false,supportChatPollTimer=null,adminChatPollTimer=null,activeAdminChatId=null,restoredUserChatArchives={},restoredAdminChatArchives={},pendingPhone=null,products=[],savedIds=new Set(),favoritePending=new Set(),activeCategory='all',searchTerm='',currentProduct=null,currentVendor=null,profileTab='saved',authMode='login',currentOfferProduct=null,selectedProductImages=[],sellerDocPreviewUrl=null,telegramBotUsername='',telegramLoginWidgetMounted=false,telegramProfileWidgetMounted=false,productRealtimeChannel=null,productRealtimeRefreshTimer=null,productRealtimeFallbackTimer=null,productRealtimePendingRefresh=false,sellerChatChannel=null,sellerChatPollTimer=null,sellerInboxPollTimer=null,sellerChatConversationId=null,sellerChatInboxPollTimer=null,sellerChatMode='buyer',sellerChatInbox=[],sellerChatMuted=false,sellerChatLastMessageId=null,sellerChatInboxUnreadSnapshot={},sellerChatInboxInitialized=false,sellerChatInboxUserId=null,sellerChatLoadedMessages=[],sellerChatPendingMedia=[],sellerChatDraftProduct=null;
 const DEFAULT_MAINTENANCE_MESSAGE='ប្រព័ន្ធកំពុងធ្វើការអភិវឌ្ឍន៍ និងបន្ថែមមុខងារថ្មីៗ សូមអធ្យាស្រ័យចំពោះការរំខាន!';let maintenanceMode=false,maintenanceMessage=DEFAULT_MAINTENANCE_MESSAGE,faviconUrl='';
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -261,10 +262,10 @@ async function refreshVendorPresence(){
     });
   }catch(error){console.warn('Could not refresh vendor online status:',error.message)}
 }
-async function sendVendorPresence(method,keepalive=false){
-  if(!session?.access_token)return;
+async function sendVendorPresence(method,keepalive=false,accessToken=session?.access_token){
+  if(!accessToken)return;
   try{
-    await fetch('/api/vendor/presence',{method,headers:{Authorization:'Bearer '+session.access_token},keepalive,cache:'no-store'});
+    await fetch('/api/vendor/presence?tab_id='+encodeURIComponent(vendorPresenceTabId),{method,headers:{Authorization:'Bearer '+accessToken},keepalive,cache:'no-store'});
   }catch(error){if(!keepalive)console.warn('Could not update vendor online status:',error.message)}
 }
 async function syncVendorPresence(){
@@ -1311,6 +1312,8 @@ async function boot(){
     if($('authModal')?.classList.contains('open')&&!telegramLoginWidgetMounted)telegramLoginWidgetMounted=mountTelegramWidget('telegramLoginWidget','onTelegramAuth');
     // Subscribe before reading the stored session so INITIAL_SESSION and token events are not missed.
     supabaseClient.auth.onAuthStateChange((event,newSession)=>{
+      const previousSession=session;
+      if(event==='SIGNED_OUT'&&vendorPresenceAnnouncedId&&previousSession?.access_token)void sendVendorPresence('DELETE',true,previousSession.access_token);
       session=newSession;
       if(event==='INITIAL_SESSION')return;
       Promise.resolve().then(async()=>{
