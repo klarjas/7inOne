@@ -1586,7 +1586,7 @@ app.delete('/api/products/:id/images/:imageId', authenticate, async (req, res) =
 app.get('/api/saved', authenticate, async (req, res) => {
   const { data, error } = await supabase.from('saved_products')
     .select('id,created_at,products!inner(id,title,description,price,stock,category,location,condition,view_count,vendor_id,renewed_at,product_images(id,file_id,image_url,sort_order),vendors!inner(id,store_name,status))')
-    .eq('user_id', req.user.id).eq('products.status', 'active').eq('products.vendors.status', 'approved').gt('products.stock', 0)
+    .eq('user_id', req.user.id).eq('products.status', 'active').in('products.vendors.status', ['approved','pending','rejected']).gt('products.stock', 0)
     .gte('products.renewed_at', new Date(Date.now() - PRODUCT_PUBLIC_MAX_AGE_MS).toISOString())
     .order('created_at', { ascending: false });
   if (error) return fail(res, 500, 'Could not load saved products');
