@@ -1,0 +1,1 @@
+alter table public.vendors add column if not exists store_location text,add column if not exists store_logo_file_id text,add column if not exists store_logo_message_id text,add column if not exists store_cover_file_id text,add column if not exists store_cover_message_id text;
