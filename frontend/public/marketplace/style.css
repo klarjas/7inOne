@@ -2103,7 +2103,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .tab.active{background:#F5F5F7!important;color:var(--text)!important}
 footer{border-color:var(--line)!important;background:#fff!important}
 footer .brand-gradient{background:var(--accent)!important;box-shadow:none!important}
-.mobile-market-nav{background:rgba(255,255,255,.78)!important;border-top:1px solid var(--line)!important;backdrop-filter:saturate(180%) blur(18px)!important;-webkit-backdrop-filter:saturate(180%) blur(18px)!important;box-shadow:0 -3px 18px rgba(0,0,0,.035)!important}
+.mobile-market-nav{grid-template-columns:repeat(5,minmax(0,1fr))!important;background:rgba(255,255,255,.78)!important;border-top:1px solid var(--line)!important;backdrop-filter:saturate(180%) blur(18px)!important;-webkit-backdrop-filter:saturate(180%) blur(18px)!important;box-shadow:0 -3px 18px rgba(0,0,0,.035)!important}
 .mobile-market-item{color:var(--muted)!important}
 .mobile-market-item.active{color:var(--accent)!important}
 .mobile-market-nav .fab,.mobile-market-post span{border-radius:50%!important;background:var(--accent)!important;box-shadow:none!important}
