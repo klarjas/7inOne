@@ -1614,7 +1614,7 @@ app.delete('/api/saved/:productId', authenticate, async (req, res) => {
 app.get('/api/vendors/:id/ratings', async (req, res) => {
   if (!db(res)) return;
   const { data: vendor, error } = await supabase.from('vendors')
-    .select('id,user_id,store_name,description,status,store_location,store_logo_file_id,store_cover_file_id,created_at,profiles(display_name,province,bio,avatar_path)')
+    .select('id,user_id,store_name,description,status,address,store_location,store_logo_file_id,store_cover_file_id,created_at,profiles(display_name,province,bio,avatar_path)')
     .eq('id', req.params.id).in('status', ['approved','pending','rejected']).maybeSingle();
   if (error || !vendor) return fail(res, 404, 'Seller not found');
   const [{ data: reviews, error: reviewError }, { data: products }] = await Promise.all([
@@ -1632,7 +1632,7 @@ app.get('/api/vendors/:id/ratings', async (req, res) => {
   const profile = vendor.profiles || {};
   res.json({ data: {
     id: vendor.id, store_name: vendor.store_name, description: vendor.description, created_at: vendor.created_at,
-    status: vendor.status, verified: vendor.status === 'approved', store_location: vendor.store_location || null,
+    status: vendor.status, verified: vendor.status === 'approved', store_location: vendor.store_location || vendor.address || null,
     store_logo_url: vendor.store_logo_file_id ? telegramMediaUrl(vendor.store_logo_file_id) : null,
     store_cover_url: vendor.store_cover_file_id ? telegramMediaUrl(vendor.store_cover_file_id) : null,
     profile: { display_name: profile.display_name, province: profile.province, bio: profile.bio, avatar_url: publicMediaUrl(profile.avatar_path) },
