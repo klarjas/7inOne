@@ -1507,7 +1507,8 @@ body{background:var(--page)!important;color:var(--ink);font-family:"Kantumruy Pr
 
 .verified-store-badge{display:inline-flex;align-items:center;vertical-align:middle}
 .badge-container{position:relative;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;outline:none}
-.verified-icon{display:block;width:20px;height:20px;flex:none;color:#1d9bf0;transform-origin:center;transition:transform .2s ease;animation:verifiedGlow 4s ease-in-out infinite}
+.verified-icon{display:block;width:20px;height:20px;flex:none;color:#1d9bf0;transform-origin:center;transition:transform .2s ease;animation:none}
+.verified-store-badge.is-online .verified-icon{animation:verifiedGlow 4s ease-in-out infinite}
 .badge-container:hover .verified-icon,.badge-container:focus-visible .verified-icon{transform:scale(1.1)}
 .badge-tooltip{position:absolute;z-index:20;bottom:135%;left:50%;transform:translate(-50%,4px);padding:5px 10px;border-radius:6px;background:#1e293b;color:#fff;font-size:12px;font-weight:500;line-height:1.4;white-space:nowrap;opacity:0;visibility:hidden;pointer-events:none;box-shadow:0 4px 8px rgba(15,23,42,.16);transition:opacity .2s ease,transform .2s ease,visibility .2s ease}
 .badge-tooltip::after{content:"";position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:#1e293b}
