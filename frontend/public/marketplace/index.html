@@ -51,29 +51,45 @@
   <style>
     html.route-restoring,
     html.route-restoring body {
-      background: #1B2838 !important;
+      background: radial-gradient(circle at 50% 0%, #2A475E 0%, #1B2838 55%, #171A21 100%);
+      margin: 0;
     }
-    html.route-restoring .view {
-      display: none !important;
-    }
+    html.route-restoring .view,
     html.route-restoring footer,
     html.route-restoring .mobile-market-nav {
-      display: none !important;
+      display: none;
     }
-    html.route-restoring::after {
+    html.route-restoring::before {
       content: "";
       position: fixed;
       top: 50%;
       left: 50%;
-      width: 32px;
-      height: 32px;
-      margin: -16px 0 0 -16px;
-      --_g: no-repeat radial-gradient(farthest-side,#000 90%,#0000);
-      background: var(--_g), var(--_g), var(--_g), var(--_g);
-      background-size: 40% 40%;
+      width: 54px;
+      height: 54px;
+      margin: -38px 0 0 -27px;
+      border-radius: 50%;
+      background: conic-gradient(from 0deg, transparent 15%, rgba(102, 192, 244, 0.35) 55%, #66C0F4 100%);
+      -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 5px), #000 calc(100% - 4px));
+      mask: radial-gradient(farthest-side, transparent calc(100% - 5px), #000 calc(100% - 4px));
       z-index: 99999;
       pointer-events: none;
-      animation: l46 1s infinite;
+      animation: steamGradientSpin 0.85s linear infinite;
+    }
+    html.route-restoring::after {
+      content: "កំពុងផ្ទុកទំនិញ...";
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, 26px);
+      color: #9FB2C3;
+      font-family: 'Kantumruy Pro', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      z-index: 99999;
+      pointer-events: none;
+    }
+    @keyframes steamGradientSpin {
+      to { transform: rotate(360deg); }
     }
   </style>
 </head>
