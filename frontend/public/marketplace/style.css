@@ -3221,3 +3221,346 @@ body{
 :is(#view-home,#view-product,#view-store,#view-profile,#view-seller,#view-admin) img{
   filter:none!important;
 }
+
+
+/* ======================================================================
+   7inOne GLOBAL STEAM DARK THEME — final application-wide override layer
+   Covers Tailwind utility surfaces and every user/admin view without
+   changing DOM structure, IDs, API behavior, or upload handling.
+   ====================================================================== */
+:root{
+  --page:#1B2838!important;
+  --bg:#1B2838!important;
+  --ink:#C7D5E0!important;
+  --muted:#8F98A0!important;
+  --line:#2A475E!important;
+  --brand:#66C0F4!important;
+  --brand2:#326082!important;
+  --green:#75B022!important;
+  color-scheme:dark;
+}
+html,body{
+  min-height:100%;
+  background:radial-gradient(circle at top center,#2A475E 0%,#1B2838 45%,#171A21 100%)!important;
+  background-attachment:fixed!important;
+  color:#C7D5E0!important;
+}
+
+/* Tailwind light utility classes used by dynamically rendered templates. */
+.bg-white{
+  background-color:#16202D!important;
+  color:#C7D5E0!important;
+}
+.bg-slate-50,.bg-slate-100,.bg-emerald-50{
+  background-color:#203244!important;
+  color:#C7D5E0!important;
+}
+.text-slate-900,.text-slate-800,.text-slate-700,.text-ink{
+  color:#FFFFFF!important;
+}
+.text-slate-600,.text-slate-500,.text-slate-400{
+  color:#8F98A0!important;
+}
+.border-slate-100,.border-slate-200,.border-slate-300,
+.border-emerald-100,.border-emerald-200{
+  border-color:#2A475E!important;
+}
+
+/* Shared top header, search, sub-navigation and global dropdowns. */
+.hd.glass{
+  background:#171A21!important;
+  color:#FFFFFF!important;
+  border-bottom:1px solid #2A475E!important;
+  box-shadow:none!important;
+}
+.hd #siteTitle,.hd #navName,.hd #bellIcon,
+.hd #notificationBtn,.hd #profileMenuBtn{color:#FFFFFF!important}
+.hd #siteSubtitle,.hd #navRole{color:#8F98A0!important}
+#searchForm{
+  background:#316282!important;
+  border:1px solid #4B8BB8!important;
+}
+#searchCategory{
+  background:#223A4C!important;
+  color:#E5F3FC!important;
+  border-color:#2A475E!important;
+}
+#searchForm #searchInput,#searchInput{
+  background:transparent!important;
+  color:#FFFFFF!important;
+  border-color:transparent!important;
+}
+#searchForm #searchInput::placeholder,#searchInput::placeholder{
+  color:#90B4CE!important;
+}
+#searchBtn{
+  background:#66C0F4!important;
+  color:#171A21!important;
+}
+#searchBtn svg{color:#171A21!important;stroke:#171A21!important}
+#postAdBtn{
+  background:linear-gradient(135deg,#66C0F4 0%,#2B74B8 100%)!important;
+  color:#FFFFFF!important;
+  border-color:transparent!important;
+}
+.amazon-nav-row{
+  position:static!important;
+  top:auto!important;
+  background:linear-gradient(90deg,#326082 0%,#244763 100%)!important;
+  color:#E5F3FC!important;
+  border-color:#2A475E!important;
+}
+.amazon-nav-row a,.amazon-nav-row button,.amazon-nav-row span{
+  color:#E5F3FC!important;
+}
+.amazon-nav-row .active,.amazon-nav-row [aria-current="page"]{
+  color:#FFFFFF!important;
+  border-bottom:2px solid #66C0F4!important;
+}
+#profileMenu,#notificationMenu{
+  background:#171A21!important;
+  color:#C7D5E0!important;
+  border:1px solid #2A475E!important;
+  box-shadow:0 12px 32px rgba(0,0,0,.5)!important;
+}
+.menu-action{color:#C7D5E0!important}
+.menu-action:hover{
+  background:#2A475E!important;
+  color:#66C0F4!important;
+}
+footer{
+  background:#171A21!important;
+  border-top:1px solid #2A475E!important;
+  color:#8F98A0!important;
+}
+footer :is(p,a,span,small){color:#8F98A0!important}
+
+/* Shared surfaces and typography across every application view. */
+:is(#view-home,#view-product,#view-store,#view-profile,#view-seller,#view-admin)
+:is(.panel,.section-card,.content-card,.surface,.card,.modal-card,.dialog-card,
+.drawer-panel,.bottom-sheet,.account-hero,.account-panel,.account-shortcut,
+.seller-panel,.seller-card,.admin-panel,.admin-card,.admin-section,
+.product-detail-info,.product-seller-card,.product-detail-description,
+.product-safety-note,.product-reviews,.product-mobile-actions,
+.storefront-public,.storefront-profile,.storefront-toolbar,
+.storefront-review-list,.storefront-review,.seller-kpi-card,
+.seller-tabs,.seller-table,.seller-transaction-row){
+  background:#16202D!important;
+  color:#C7D5E0!important;
+  border-color:#2A475E!important;
+}
+:is(#view-home,#view-product,#view-store,#view-profile,#view-seller,#view-admin)
+:is(h1,h2,h3,h4,h5,h6,.product-title,.storefront-name,.profile-name,
+.seller-name,.account-title,.panel-title){
+  color:#FFFFFF!important;
+}
+:is(#view-home,#view-product,#view-store,#view-profile,#view-seller,#view-admin)
+:is(p,small,.muted,.text-muted,.subtext,.product-meta,.profile-meta,
+.seller-meta,.storefront-description){
+  color:#8F98A0!important;
+}
+
+/* Home storefront: filters, categories and product cards. */
+#view-home .amazon-filter-sidebar{
+  background:#16202D!important;
+  border:1px solid #2A475E!important;
+  color:#C7D5E0!important;
+}
+#view-home .amazon-filter-sidebar :is(h2,h3,h4,strong){
+  color:#FFFFFF!important;
+}
+#view-home .amazon-filter-sidebar :is(a,button,[data-category]){
+  color:#C7D5E0!important;
+}
+#view-home .amazon-filter-sidebar :is(a,button,[data-category]):hover,
+#view-home .amazon-filter-sidebar :is(.active,[aria-current="page"]){
+  color:#66C0F4!important;
+}
+#categoryStrip .dk{
+  background:#203244!important;
+  border:1px solid #2A475E!important;
+  color:#C7D5E0!important;
+}
+#categoryStrip .dk.active{
+  background:#2A475E!important;
+  border-color:#66C0F4!important;
+  color:#FFFFFF!important;
+}
+:is(#view-home,#view-store,#view-product) .cd{
+  background:#16202D!important;
+  border:1px solid #2A475E!important;
+  color:#C7D5E0!important;
+}
+:is(#view-home,#view-store,#view-product) .cd:hover{
+  background:#203244!important;
+  border-color:#66C0F4!important;
+  box-shadow:0 8px 24px rgba(0,0,0,.35)!important;
+}
+:is(#view-home,#view-store,#view-product) .cd .im,
+:is(#view-home,#view-store,#view-product) .cd .im .cd-image-wrap{
+  background:#101822!important;
+  border-color:#2A475E!important;
+}
+:is(#view-home,#view-store,#view-product) .cd .cb{
+  background:transparent!important;
+  color:#C7D5E0!important;
+}
+:is(#view-home,#view-store,#view-product) .cd .cb h3{
+  color:#FFFFFF!important;
+}
+:is(#view-home,#view-store,#view-product) .cd .pr{
+  color:#ACDBF5!important;
+}
+:is(#view-home,#view-store,#view-product) .cd .cd-condition-meta{
+  background:#4C6B22!important;
+  color:#BEEE11!important;
+  border-radius:3px!important;
+  font-weight:800!important;
+}
+:is(#view-home,#view-store,#view-product) .cd .cd-quick-add{
+  background:#66C0F4!important;
+  border-color:#47BFFF!important;
+  color:#171A21!important;
+}
+
+/* Product detail gallery, facts, seller, description, reviews and actions. */
+#view-product .product-gallery-stage{
+  background:#101822!important;
+  border:1px solid #2A475E!important;
+}
+#view-product :is(.product-detail-info,.product-facts-list li,
+.product-seller-card,.product-detail-description,.product-safety-note,
+.product-reviews,.product-mobile-actions){
+  background:#16202D!important;
+  border:1px solid #2A475E!important;
+  color:#C7D5E0!important;
+}
+#view-product .product-facts-price{color:#BEEE11!important}
+#view-product .product-buy-primary{
+  background:linear-gradient(135deg,#75B022 0%,#588A1B 100%)!important;
+  color:#FFFFFF!important;
+  border-color:transparent!important;
+}
+#view-product :is(.product-chat-primary,.product-utility-actions button){
+  background:#2A475E!important;
+  border:1px solid #3D6687!important;
+  color:#66C0F4!important;
+}
+
+/* Public seller storefront and reviews. */
+#view-store :is(.storefront-public,.storefront-profile,.storefront-toolbar,
+.storefront-review-list,.storefront-review){
+  background:#16202D!important;
+  border-color:#2A475E!important;
+  color:#C7D5E0!important;
+}
+#view-store .storefront-profile strong,
+#view-store .storefront-stats strong{color:#66C0F4!important}
+#view-store .store-filter{
+  background:#203244!important;
+  border-color:#2A475E!important;
+  color:#C7D5E0!important;
+}
+#view-store .store-filter.active{
+  background:#66C0F4!important;
+  color:#171A21!important;
+  border-color:#66C0F4!important;
+}
+
+/* Account/profile, saved items, seller center and admin workspace. */
+:is(#view-profile,#view-seller,#view-admin)
+:is(.account-hero,.account-panel,.account-shortcut){
+  background:#16202D!important;
+  border:1px solid #2A475E!important;
+  color:#C7D5E0!important;
+}
+#view-profile .account-shortcut:hover{background:#203244!important}
+#view-profile [data-saved-card]{
+  background:#203244!important;
+  border:1px solid #2A475E!important;
+  color:#C7D5E0!important;
+}
+#view-seller :is(.seller-kpi-card,.seller-tabs,.seller-product-row,
+.seller-transaction-row){
+  background:#16202D!important;
+  border-color:#2A475E!important;
+  color:#C7D5E0!important;
+}
+#view-seller .seller-table-head{
+  background:#101822!important;
+  color:#8F98A0!important;
+}
+#view-seller .seller-product-row:hover,
+#view-seller .seller-transaction-row:hover{background:#203244!important}
+#view-seller .seller-tab.is-active{
+  color:#66C0F4!important;
+  border-bottom-color:#66C0F4!important;
+}
+#view-admin :is(.maintenance-panel,.branding-panel,.telegram-diagnostics,
+#telegramDiagnosticsResult,.vendor-application-card,.admin-panel,.admin-card){
+  background:#16202D!important;
+  border:1px solid #2A475E!important;
+  color:#C7D5E0!important;
+}
+#view-admin :is(.admin-subpanel,.diagnostics-box,.vendor-card){
+  background:#203244!important;
+  border-color:#2A475E!important;
+  color:#C7D5E0!important;
+}
+
+/* Modals, forms and dropdown surfaces throughout the app. */
+.modal-box,.modal-card,.dialog-card{
+  background:#16202D!important;
+  border:1px solid #2A475E!important;
+  color:#C7D5E0!important;
+}
+:is(#view-home,#view-product,#view-store,#view-profile,#view-seller,#view-admin,
+#sellerChatModal)
+:is(.field,input,select,textarea){
+  background:#101822!important;
+  border:1px solid #2A475E!important;
+  color:#FFFFFF!important;
+}
+:is(#view-home,#view-product,#view-store,#view-profile,#view-seller,#view-admin,
+#sellerChatModal)
+:is(.field,input,select,textarea):focus{
+  border-color:#66C0F4!important;
+  outline-color:#66C0F4!important;
+}
+:is(#view-home,#view-product,#view-store,#view-profile,#view-seller,#view-admin,
+#sellerChatModal)
+:is(input,textarea)::placeholder{color:#90B4CE!important}
+
+/* Unified buyer/seller chat and support controls. */
+#sellerChatModal,#sellerChatInboxPane{
+  background:#16202D!important;
+  border-color:#2A475E!important;
+  color:#C7D5E0!important;
+}
+#sellerChatMessages{
+  background-color:#101822!important;
+  background-image:radial-gradient(rgba(102,192,244,.08) 1px,transparent 1px)!important;
+  color:#C7D5E0!important;
+}
+.seller-chat-bubble.own{
+  background:#2A475E!important;
+  color:#FFFFFF!important;
+}
+.seller-chat-bubble.other{
+  background:#1E2C3D!important;
+  color:#C7D5E0!important;
+  border:1px solid #2A475E!important;
+}
+#sellerChatForm{
+  background:#171A21!important;
+  border-top:1px solid #2A475E!important;
+}
+#supportChatLauncher,.mobile-market-nav{
+  background:#171A21!important;
+  border-color:#2A475E!important;
+  color:#C7D5E0!important;
+}
+
+/* Preserve source imagery exactly; theme applies to surfaces, not image pixels. */
+:is(#view-home,#view-product,#view-store,#view-profile,#view-seller,#view-admin,
+#sellerChatModal) img{filter:none!important}
