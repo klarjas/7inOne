@@ -3902,3 +3902,13 @@ html, body, body > main {
   background: #101822 !important;
   border-radius: 12px !important;
 }
+
+/* Match home layout wrapper surfaces to the Steam page background */
+#view-home .home-layout-shell,
+#view-home .amazon-store-body,
+#view-home .shell {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
