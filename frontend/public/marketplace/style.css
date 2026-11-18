@@ -2802,14 +2802,14 @@ textarea,
 }
 
 
-/* Keep the listing banner sticky at the same scroll offset as the sidebar categories. */
+/* Keep the banner aligned to the storefront shell in normal page flow; do not float it while scrolling. */
 #view-home .market-listing-header{
-  position:sticky!important;
-  top:118px!important;
-  inset-block-start:118px!important;
+  position:relative!important;
+  top:auto!important;
+  inset-block-start:auto!important;
   align-self:start!important;
   transform:none!important;
-  z-index:20!important;
+  z-index:auto!important;
 }
 
 
