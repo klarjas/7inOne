@@ -50,36 +50,26 @@
     })();
   </script>
   <style>
+    html.route-restoring,
     html.route-restoring body {
       background: #1B2838 !important;
     }
     html.route-restoring .view {
       display: none !important;
     }
-    html.route-restoring[data-initial-view="home"] #view-home,
-    html.route-restoring[data-initial-view="profile"] #view-profile,
-    html.route-restoring[data-initial-view="seller"] #view-seller,
-    html.route-restoring[data-initial-view="admin"] #view-admin,
-    html.route-restoring[data-initial-view="product"] #view-product,
-    html.route-restoring[data-initial-view="store"] #view-store {
-      display: flex !important;
-      align-items: center;
-      justify-content: center;
-      min-height: 60vh;
-      animation: none !important;
-    }
-    html.route-restoring .view > * {
-      display: none !important;
-    }
-    html.route-restoring .view::before {
+    html.route-restoring::after {
       content: "";
-      display: block;
+      position: fixed;
+      top: 50%;
+      left: 50%;
       width: 46px;
       height: 46px;
-      margin: 0 auto;
-      border: 3.5px solid rgba(102, 192, 244, 0.2);
+      margin: -23px 0 0 -23px;
+      border: 4px solid rgba(102, 192, 244, 0.22);
       border-top-color: #66C0F4;
       border-radius: 50%;
+      z-index: 99999;
+      pointer-events: none;
       animation: initialRouteSpin 0.75s linear infinite;
     }
     @keyframes initialRouteSpin {
