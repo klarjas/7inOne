@@ -163,13 +163,13 @@ function friendlyTelegramUploadError(error) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   const message = token ? rawMessage.split(token).join('[redacted]') : rawMessage;
 
-  if (/\\b401\\b|unauthorized|invalid bot token/i.test(message)) {
+  if (/\b401\b|unauthorized|invalid bot token/i.test(message)) {
     return 'Telegram bot token is invalid. Check TELEGRAM_BOT_TOKEN.';
   }
   if (/chat not found/i.test(message)) {
     return 'Telegram storage channel not found. Check TELEGRAM_STORAGE_CHAT_ID (must look like -100...) and that the bot was added to the channel.';
   }
-  if (/\\b403\\b|not enough rights|forbidden/i.test(message)) {
+  if (/\b403\b|not enough rights|forbidden/i.test(message)) {
     return 'The bot must be an Administrator of the channel with permission to post messages.';
   }
   if (/PHOTO_INVALID_DIMENSIONS|invalid photo dimensions|photo.*dimensions|dimensions.*photo|aspect ratio/i.test(message)) {
