@@ -4162,3 +4162,42 @@ body > footer {
 .mobile-market-item[data-action="open-chat"] [data-nav-icon="chat"] {
   color: #66C0F4;
 }
+
+/* Support chat launcher: center its icon and add a subtle Steam-blue glow. */
+#supportChatLauncher {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  line-height: 1;
+  isolation: isolate;
+}
+
+#supportChatLauncher::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  z-index: -1;
+  border: 1px solid rgba(102, 192, 244, .38);
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+  animation: supportChatLauncherGlow 3s ease-out infinite;
+}
+
+@keyframes supportChatLauncherGlow {
+  0% {
+    transform: scale(.92);
+    opacity: .55;
+  }
+  70%, 100% {
+    transform: scale(1.24);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #supportChatLauncher::after {
+    animation: none;
+  }
+}
+
