@@ -1289,7 +1289,7 @@ async function renderProfile() {
 
   const badges = [];
   if (isAdmin()) badges.push(`<span class="account-role-chip bg-violet-50 text-violet-700">${ic('shield', 12)} អ្នកគ្រប់គ្រង</span>`);
-  if (isVerifiedSeller()) badges.push(`<span class="account-role-chip bg-emerald-50 text-emerald-700">${ic('checkcircle', 12)} អ្នកលក់បានផ្ទៀងផ្ទាត់</span>`);
+  if (isVerifiedSeller()) badges.push(`<span class="account-role-chip bg-sky-50 text-sky-700">${ic('checkcircle', 12)} អ្នកលក់បានផ្ទៀងផ្ទាត់</span>`);
   else if (isSellerAccount()) badges.push(`<span class="account-role-chip bg-amber-50 text-amber-700">${ic('store', 12)} អ្នកលក់ទូទៅ</span>`);
   $('profileSellerBadge').innerHTML = badges.join('');
 
