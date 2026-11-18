@@ -383,10 +383,9 @@ body{background:var(--market-bg);color:var(--market-ink)}.shell{width:min(1440px
 #sellerChatProductContext{min-height:62px;padding:9px 16px;background:#171A21;border-bottom:1px solid #2A475E;color:#C7D5E0}
 #sellerChatProductContext b{font-size:13px}
 #sellerChatProductContext span{font-size:10px}
-#sellerChatMessages{height:auto;max-height:none;flex:1;padding:18px clamp(12px,4vw,52px);gap:9px;background-color:#101822;background-image:none;scrollbar-width:thin}
-#sellerChatMessages>div{width:100%;margin:0}
-#sellerChatMessages{gap:12px}
-.seller-chat-message-row{display:flex;align-items:flex-end;gap:8px;width:100%;margin:0}
+#sellerChatMessages{display:flex;flex-direction:column;height:auto;max-height:none;flex:1;gap:14px;padding:18px 20px;background-color:#101822;background-image:none;scrollbar-width:thin}
+#sellerChatMessages>div{width:100%;margin-bottom:4px}
+.seller-chat-message-row{display:flex;align-items:flex-end;gap:10px;width:100%;margin:0}
 .seller-chat-message-row.own{justify-content:flex-end}
 .seller-chat-message-row.other{justify-content:flex-start}
 .seller-chat-message-avatar{width:30px;height:30px;flex:0 0 30px;display:grid;place-items:center;object-fit:cover;border-radius:50%;border:1px solid #2A475E;background:#203244;color:#8F98A0}
@@ -394,11 +393,11 @@ body{background:var(--market-bg);color:var(--market-ink)}.shell{width:min(1440px
 .seller-chat-bubble{position:relative;max-width:min(76%,560px);padding:11px 14px 9px;border-radius:14px;font-size:13px;line-height:1.7;box-shadow:0 1px 1px rgba(35,55,70,.08);overflow-wrap:anywhere}
 .seller-chat-bubble p{margin:0;white-space:pre-wrap;line-height:1.7}
 .seller-chat-bubble small{display:block;margin-top:7px;line-height:1.2}
-.seller-chat-bubble.own{background:#2B74B8;color:#FFFFFF;border-bottom-right-radius:4px}
-.seller-chat-bubble.other{background:#16202D;color:#C7D5E0;border:1px solid #2A475E;border-bottom-left-radius:4px}
+.seller-chat-bubble.own{background:#2A475E;border:1px solid #3D6687;color:#E5F3FC;border-bottom-right-radius:4px}
+.seller-chat-bubble.other{background:#1B2838;color:#C7D5E0;border:1px solid #2A475E;border-bottom-left-radius:4px}
 .seller-chat-bubble>div:first-child{font-size:9px!important;color:inherit;opacity:.58}
 .seller-chat-bubble small{font-size:9px;color:#8F98A0;text-align:right}
-.seller-chat-bubble.own small{color:#D6EAF8}
+.seller-chat-bubble.own small{color:#9FB2C3}
 .seller-chat-product-card{max-width:min(100%,400px);border:1px solid #2A475E;border-radius:12px;padding:8px;background:#16202D;color:#C7D5E0}
 .seller-chat-product-link{cursor:pointer;outline-offset:3px}
 .seller-chat-product-link:hover,.seller-chat-product-link:focus-visible{border-color:#3390ec;box-shadow:0 2px 12px rgba(51,144,236,.18)}
@@ -417,7 +416,7 @@ body{background:var(--market-bg);color:var(--market-ink)}.shell{width:min(1440px
  #sellerChatModal .seller-chat-shell{width:100vw;height:100dvh;max-width:none;max-height:none;border:0;border-radius:0}
  .seller-chat-layout{height:calc(100dvh - 64px)}
  .seller-chat-inbox-pane{width:100%;padding:8px}
- #sellerChatMessages{padding:14px 10px;gap:12px}
+ #sellerChatMessages{padding:18px 20px;gap:14px}
  .seller-chat-bubble{max-width:88%;font-size:13px}
  .seller-chat-message-avatar{width:26px;height:26px;flex-basis:26px}
  #sellerChatProductContext{padding:8px 10px}
