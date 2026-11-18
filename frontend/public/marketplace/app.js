@@ -435,7 +435,7 @@ function showView(name, options = {}) {
     if (name === 'store' && state.currentStoreId) sessionStorage.setItem('ecomstore.currentStoreId', String(state.currentStoreId));
   } catch {}
 
-  if (window.location.hash !== '#' + routeHash) {
+  if (!options.fromHistory && window.location.hash !== '#' + routeHash) {
     try { window.location.hash = '#' + routeHash; } catch {}
   }
 
