@@ -2687,3 +2687,21 @@ textarea,
   border-radius:50%!important;
   overflow:hidden!important;
 }
+
+
+/* Remove the home category dock visually while preserving its existing JS hooks. */
+#view-home #categoryStrip{display:none!important}
+#view-home .amazon-filter-sidebar{grid-row:1 / span 5!important}
+#view-home #homeVendorMediaSection{grid-row:1!important}
+#view-home .market-listing-header{grid-row:2!important}
+#view-home #skeletonGrid:not(.hidden),
+#view-home #productGrid:not(.hidden),
+#view-home #emptyHome{grid-row:3!important}
+@media(max-width:900px){
+  #view-home #categoryStrip{display:none!important}
+  #view-home #homeVendorMediaSection,
+  #view-home .market-listing-header,
+  #view-home #skeletonGrid,
+  #view-home #productGrid,
+  #view-home #emptyHome{grid-row:auto!important}
+}
