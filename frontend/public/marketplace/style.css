@@ -4252,3 +4252,19 @@ body > footer {
   margin-top: auto !important;
   width: 100% !important;
 }
+
+/* Typography: titles use Kantumruy Pro Regular; subtitles use Hanuman Light. */
+:is(h1,h2,h3,h4,h5,h6,.site-title,.hero-title,.product-title,
+.product-detail-title,.storefront-name,.storefront-title-line h1,
+.profile-name,.seller-name,.account-title,.panel-title,#listingTitle,
+.cd .cb h3) {
+  font-family: "Kantumruy Pro", sans-serif;
+  font-weight: 400;
+}
+
+:is(.site-subtitle,.hero-subtitle,.hero-copy .sub,#listingSub,
+.subtitle,.section-subtitle,.storefront-description,.profile-meta,
+.seller-meta) {
+  font-family: "Hanuman", serif;
+  font-weight: 300;
+}
