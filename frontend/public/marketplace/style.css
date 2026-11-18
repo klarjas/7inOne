@@ -4083,3 +4083,57 @@ body > footer {
   #view-seller .seller-product-actions{border-color:#2A475E}
   #view-seller .seller-transaction-actions{border-color:#2A475E}
 }
+
+/* Seller shop profile form — Steam Dark refinements */
+#view-seller #sellerShopProfileForm{
+  background:#16202D;
+  border:1px solid #2A475E;
+  border-radius:16px;
+  color:#C7D5E0;
+}
+#view-seller #sellerShopProfileForm .label{
+  color:#C7D5E0;
+}
+#view-seller #sellerShopProfileForm .field{
+  border:1px solid #2A475E;
+  border-radius:10px;
+  background:#101822;
+  color:#C7D5E0;
+}
+#view-seller #sellerShopProfileForm .field::placeholder{
+  color:#8F98A0;
+}
+#view-seller #sellerShopProfileForm .field:focus{
+  border-color:#66C0F4;
+  outline:none;
+  box-shadow:0 0 0 2px rgba(102,192,244,.14);
+}
+#view-seller #sellerShopProfileForm input[type="file"]::file-selector-button{
+  margin-right:10px;
+  padding:7px 12px;
+  border:1px solid #3D6687;
+  border-radius:8px;
+  background:#203244;
+  color:#C7D5E0;
+  cursor:pointer;
+}
+#view-seller #sellerShopProfileForm input[type="file"]::file-selector-button:hover{
+  background:#2A475E;
+  color:#FFFFFF;
+}
+#view-seller #sellerShopCoverPreview,
+#view-seller #sellerShopLogoPreview{
+  border-color:#2A475E;
+  background:#101822;
+  color:#8F98A0;
+}
+#view-seller #sellerShopSave{
+  border:1px solid #3D8BC5;
+  background:#2B74B8;
+  color:#FFFFFF;
+  box-shadow:none;
+}
+#view-seller #sellerShopSave:hover{
+  background:#3689CE;
+  border-color:#66C0F4;
+}
