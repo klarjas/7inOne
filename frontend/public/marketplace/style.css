@@ -4009,6 +4009,25 @@ html, body, body > main {
   background: #101822 !important;
 }
 
+/* Product hover image: reveal the alternate photo only after it has loaded.
+   If the second photo is missing or still loading, keep the primary photo visible. */
+.cd .im .cd-secondary-wrap,
+.cd:hover .im .cd-secondary-wrap:not(.is-loaded),
+.cd:hover .im .cd-secondary-wrap.is-failed {
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+.cd:hover .im .cd-secondary-wrap.is-loaded:not(.is-failed) {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.cd .im .cd-main-wrap {
+  opacity: 1;
+  visibility: visible;
+}
+
 /* Keep the full-card view overlay transparent over product photos */
 :is(#view-home,#view-store,#view-product) .cd .im > button[data-action="view"],
 :is(#view-home,#view-store,#view-product) .cd .im > button[data-action="view"]:hover,
