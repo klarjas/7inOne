@@ -2809,3 +2809,21 @@ textarea,
   inset-block-start:auto!important;
   transform:none!important;
 }
+
+
+/* Match the reference screenshot: banner starts level with the sidebar's category heading. */
+@media(min-width:901px){
+  #view-home .amazon-filter-sidebar{
+    grid-row:1 / span 5!important;
+  }
+  #view-home .market-listing-header{
+    grid-row:1!important;
+    margin-top:0!important;
+    align-self:start!important;
+  }
+  #view-home #skeletonGrid:not(.hidden),
+  #view-home #productGrid:not(.hidden),
+  #view-home #emptyHome{
+    grid-row:2!important;
+  }
+}
