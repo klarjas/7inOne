@@ -2309,3 +2309,7 @@ textarea,
  #view-store .storefront-section-heading h2{font-size:15px}
  #view-store .storefront-skeleton-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
 }
+
+/* Product image fallback also applies to marketplace cards outside the store view. */
+.cd-image-wrap.image-failed{display:grid!important;place-items:center;min-height:70px;background:#F1F7F3!important}
+.cd-image-wrap.image-failed:after{content:"▧";display:grid;place-items:center;width:42px;height:42px;border-radius:50%;background:#E4F2E9;color:#0B7655;font-size:24px}
