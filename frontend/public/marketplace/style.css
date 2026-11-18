@@ -379,18 +379,18 @@ body{background:var(--market-bg);color:var(--market-ink)}.shell{width:min(1440px
 .seller-chat-inbox-item b{font-size:12px}
 .seller-chat-inbox-item span span{font-size:11px}
 .seller-chat-inbox-item small{font-size:10px}
-.seller-chat-thread{background:#dfe8ed}
-#sellerChatProductContext{min-height:62px;padding:9px 16px;background:#fff;border-bottom:1px solid #e5ebf0}
+.seller-chat-thread{background:#16202D}
+#sellerChatProductContext{min-height:62px;padding:9px 16px;background:#171A21;border-bottom:1px solid #2A475E;color:#C7D5E0}
 #sellerChatProductContext b{font-size:13px}
 #sellerChatProductContext span{font-size:10px}
-#sellerChatMessages{height:auto;max-height:none;flex:1;padding:18px clamp(12px,4vw,52px);gap:9px!important;background-color:#dfe8ed;background-image:radial-gradient(rgba(255,255,255,.48) 1px,transparent 1px);background-size:18px 18px;scrollbar-width:thin}
+#sellerChatMessages{height:auto;max-height:none;flex:1;padding:18px clamp(12px,4vw,52px);gap:9px;background-color:#101822;background-image:none;scrollbar-width:thin}
 #sellerChatMessages>div{width:100%;margin:0}
 .seller-chat-bubble{position:relative;max-width:min(76%,560px);padding:8px 11px 7px;border-radius:14px;font-size:13px;line-height:1.5;box-shadow:0 1px 1px rgba(35,55,70,.08)}
-.seller-chat-bubble.own{background:#d9fdd3;color:#172b20;border-bottom-right-radius:4px}
-.seller-chat-bubble.other{background:#fff;color:#18232d;border:0;border-bottom-left-radius:4px}
+.seller-chat-bubble.own{background:#2B74B8;color:#FFFFFF;border-bottom-right-radius:4px}
+.seller-chat-bubble.other{background:#16202D;color:#C7D5E0;border:1px solid #2A475E;border-bottom-left-radius:4px}
 .seller-chat-bubble>div:first-child{font-size:9px!important;color:inherit;opacity:.58}
-.seller-chat-bubble small{font-size:9px;color:#71808a;text-align:right}
-.seller-chat-bubble.own small{color:#5c7d68}
+.seller-chat-bubble small{font-size:9px;color:#8F98A0;text-align:right}
+.seller-chat-bubble.own small{color:#D6EAF8}
 .seller-chat-product-card{max-width:min(100%,400px);border:1px solid #dbe5eb;border-radius:12px;padding:8px;background:#fff;color:#17212b}
 .seller-chat-product-link{cursor:pointer;outline-offset:3px}
 .seller-chat-product-link:hover,.seller-chat-product-link:focus-visible{border-color:#3390ec;box-shadow:0 2px 12px rgba(51,144,236,.18)}
