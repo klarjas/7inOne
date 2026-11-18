@@ -2955,7 +2955,7 @@ body > header.hd.glass{
 
 /* ==========================================================
    7inOne user area — Steam Dark theme tokens
-   Scoped to public/customer pages; admin view is intentionally untouched.
+   Applied consistently to customer and admin views.
    ========================================================== */
 :root{
   --gpt-bg:#1B2838;
@@ -2968,13 +2968,13 @@ body > header.hd.glass{
   --gpt-accent:#66C0F4;
 }
 :is(#view-home,#view-product,#view-store,#view-profile,#view-seller,#view-admin){
-  color:var(--gpt-text)!important;
+  color:var(--gpt-text);
   color-scheme:dark;
 }
 body:has(#view-home) {
-  background:var(--gpt-bg)!important;
+  background:var(--gpt-bg);
 }
-:is(#view-home,#view-product,#view-store,#view-profile,#view-seller) :is(
+:is(#view-home,#view-product,#view-store,#view-profile,#view-seller,#view-admin) :is(
   h1,h2,h3,h4,h5,h6,p,label,small,strong,span,li,dt,dd
 ):not(.badge):not(.status-badge){
   --user-text-color:inherit;
@@ -3001,17 +3001,17 @@ body:has(#view-home) {
   background:var(--gpt-panel);
   border-color:var(--gpt-border);
 }
-:is(#view-home,#view-product,#view-store,#view-profile,#view-seller) :is(
+:is(#view-home,#view-product,#view-store,#view-profile,#view-seller,#view-admin) :is(
   h1,h2,h3,h4,h5,h6,.product-title,.storefront-name,.profile-name,
   .seller-name,#listingTitle
 ){
   color:var(--gpt-text);
 }
-:is(#view-home,#view-product,#view-store,#view-profile,#view-seller) :is(
+:is(#view-home,#view-product,#view-store,#view-profile,#view-seller,#view-admin) :is(
   p,.muted,.text-muted,.subtext,.product-meta,.storefront-description,
   .profile-meta,.seller-meta,#listingSub
 ){
-  color:var(--gpt-muted)!important;
+  color:var(--gpt-muted);
 }
 :is(#view-home,#view-product,#view-store,#view-profile,#view-seller,#view-admin) :is(
   input,select,textarea,.search-input,.form-control
@@ -3020,10 +3020,10 @@ body:has(#view-home) {
   background:var(--gpt-input);
   border-color:var(--gpt-border);
 }
-:is(#view-home,#view-product,#view-store,#view-profile,#view-seller) :is(
+:is(#view-home,#view-product,#view-store,#view-profile,#view-seller,#view-admin) :is(
   input,select,textarea
-)::placeholder{color:#92939F!important}
-:is(#view-home,#view-product,#view-store,#view-profile,#view-seller) :is(
+)::placeholder{color:#92939F}
+:is(#view-home,#view-product,#view-store,#view-profile,#view-seller,#view-admin) :is(
   button,.btn,.tab-button,[role="button"]
 ):not(.primary):not(.btn-primary):not([class*="brand"]){
   border-color:var(--gpt-border);
@@ -3051,17 +3051,17 @@ body:has(#view-home) {
 :is(#view-home,#view-product,#view-store,#view-profile,#view-seller) :is(
   .cd .sh .sp,.storefront-avatar,.product-seller-logo
 ){
-  border-color:var(--gpt-border)!important;
+  border-color:var(--gpt-border);
 }
 /* Keep product photos unchanged; only their surrounding surfaces become dark. */
 :is(#view-home,#view-product,#view-store,#view-profile,#view-seller) img{
-  filter:none!important;
+  filter:none;
 }
 /* Keep the listing banner's existing green identity, with readable controls. */
 #view-home .market-listing-header{
-  background:linear-gradient(112deg,#202123 0%,#343541 100%)!important;
-  border-color:var(--gpt-border)!important;
-  box-shadow:none!important;
+  background:linear-gradient(112deg,#202123 0%,#343541 100%);
+  border-color:var(--gpt-border);
+  box-shadow:none;
 }
 #view-home #sortSelect{
   color:var(--gpt-text);
