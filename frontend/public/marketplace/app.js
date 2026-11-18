@@ -2004,6 +2004,26 @@ function bindEvents() {
   $('productForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const id = $('editProductId').value;
+    const files = Array.from($('productImage').files || []);
+    const existingProduct = id
+      ? state.sellerProductCache.find((product) => String(product.id) === String(id))
+      : null;
+    const existingImageCount = existingProduct?.product_images?.length || 0;
+
+    if (existingImageCount + files.length > 5) {
+      toast(`អាចបញ្ចូលរូបភាពបានអតិបរមា ៥ រូបក្នុងទំនិញមួយ។ ទំនិញនេះមានរូបភាពរួចហើយ ${existingImageCount} រូប។`, 'error');
+      return;
+    }
+    const allowedImageTypes = new Set(['image/jpeg', 'image/png', 'image/webp']);
+    if (files.some((file) => !allowedImageTypes.has(file.type))) {
+      toast('ប្រភេទរូបភាពមិនត្រឹមត្រូវទេ។ សូមប្រើ JPG, PNG ឬ WEBP ប៉ុណ្ណោះ។', 'error');
+      return;
+    }
+    if (files.some((file) => file.size > 8 * 1024 * 1024)) {
+      toast('រូបភាពនីមួយៗមិនអាចធំជាង ៨MB បានទេ។ សូមជ្រើសរើសរូបភាពតូចជាងនេះ។', 'error');
+      return;
+    }
+
     const shortDesc = $('productShortDesc').value.trim();
     const fullDesc = $('productDescription').value.trim();
     const payload = {
@@ -2020,11 +2040,21 @@ function bindEvents() {
       const r = id
         ? await api('/api/products/' + encodeURIComponent(id), { method: 'PATCH', body: JSON.stringify(payload) })
         : await api('/api/products', { method: 'POST', body: JSON.stringify(payload) });
-      const files = Array.from($('productImage').files || []);
       if (files.length) {
         const form = new FormData();
         files.forEach((f) => form.append('images', f));
-        await api(`/api/products/${r.data.id}/images`, { method: 'POST', body: form });
+        try {
+          await api(`/api/products/${r.data.id}/images`, { method: 'POST', body: form });
+        } catch (uploadError) {
+          if (!id) {
+            $('editProductId').value = r.data.id;
+            $('productFormTitle').textContent = 'កែប្រែព័ត៌មានទំនិញ';
+            toast(`ទំនិញត្រូវបានរក្សាទុកហើយ ប៉ុន្តែរូបភាព upload មិនបានទេ៖ ${uploadError.message || 'មិនស្គាល់មូលហេតុ'}។ សូមព្យាយាមម្តងទៀត។`, 'error');
+            await Promise.allSettled([renderSeller(), loadProducts()]);
+            return;
+          }
+          throw uploadError;
+        }
       }
       closeModal('productFormModal');
       toast('បានរក្សាទុកទំនិញជោគជ័យ!');
@@ -2188,7 +2218,7 @@ function bindEvents() {
   $('maintenanceAdminLogin')?.addEventListener('click', () => openAuth());
   $('saveMaintenanceSettings')?.addEventListener('click', async () => { try { const payload = { maintenanceMode: Boolean($('maintenanceToggle')?.checked), maintenanceMessage: $('maintenanceMessageInput')?.value || '' }; const res = await api('/api/admin/maintenance', { method: 'POST', body: JSON.stringify(payload) }); state.maintenanceMode = payload.maintenanceMode; state.maintenanceMessage = payload.maintenanceMessage; applyMaintenanceUI(); if ($('maintenanceStatusHint')) $('maintenanceStatusHint').textContent = state.maintenanceMode ? 'ស្ថានភាពបច្ចុប្បន្ន៖ Maintenance' : 'ស្ថានភាពបច្ចុប្បន្ន៖ កំពុងដំណើរការ'; toast(res.message || 'បានរក្សាទុក Maintenance Settings។'); } catch (err) { toast(err.message || 'មិនអាចរក្សាទុក Maintenance Settings បានទេ។', 'error'); } });
   $('saveBrandingBtn')?.addEventListener('click', async () => { const form = new FormData(); form.append('siteTitle', $('brandTitleInput')?.value || ''); form.append('siteSubtitle', $('brandSubtitleInput')?.value || ''); form.append('heroBadge', $('heroBadgeInput')?.value || ''); form.append('heroTitle', $('heroTitleInput')?.value || ''); form.append('heroSubtitle', $('heroSubtitleInput')?.value || ''); form.append('clearHeroImages', String(Boolean($('clearHeroImages')?.checked))); const logo = $('brandingLogoUpload')?.files?.[0], favicon = $('brandingFaviconUpload')?.files?.[0]; if (logo) form.append('logo', logo); if (favicon) form.append('favicon', favicon); Array.from($('brandingHeroUpload')?.files || []).slice(0, 3).forEach((f) => form.append('heroImages', f)); try { const res = await api('/api/admin/branding', { method: 'PATCH', body: form }); applySiteBranding(res.data || {}); if ($('brandingStatus')) $('brandingStatus').textContent = 'បានរក្សាទុក Brand និង Banner ជោគជ័យ'; toast('បានរក្សាទុក Brand ជោគជ័យ!'); } catch (err) { toast(err.message || 'មិនអាចរក្សាទុក Brand បានទេ។', 'error'); } });
-  $('telegramDiagnosticsBtn')?.addEventListener('click', async () => { const target = $('telegramDiagnosticsResult'); try { const res = await api('/api/admin/telegram-diagnostics'); if (target) target.textContent = JSON.stringify(res.data ?? res, null, 2); } catch (err) { if (target) target.textContent = JSON.stringify({ error: err.message }, null, 2); } });
+  $('telegramDiagnosticsBtn')?.addEventListener('click', async () => { const target = $('telegramDiagnosticsResult'); try { const res = await api('/api/admin/telegram/diagnostics'); if (target) target.textContent = JSON.stringify(res.data ?? res, null, 2); } catch (err) { if (target) target.textContent = JSON.stringify({ error: err.message }, null, 2); } });
   $('adminApplications')?.addEventListener('click', async (e) => { const b = e.target.closest('[data-admin-review]'); if (!b) return; try { await api('/api/admin/vendors/' + encodeURIComponent(b.dataset.id), { method: 'PATCH', body: JSON.stringify({ status: b.dataset.adminReview }) }); await renderAdmin(); toast('បានធ្វើបច្ចុប្បន្នភាពពាក្យស្នើសុំ។'); } catch (err) { toast(err.message || 'មិនអាចពិនិត្យពាក្យស្នើសុំបានទេ។', 'error'); } });
 
   $('sellerChatChooseImage')?.addEventListener('click', () => $('sellerChatImageInput')?.click());
