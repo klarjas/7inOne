@@ -3433,22 +3433,35 @@ button:hover:not(:disabled):not(.product-buy-primary):not(.hero-primary-action):
 }
 
 .loader {
-  display: block;
-  width: 32px;
-  min-height: 0;
+  height: 80px;
+  width: 80px;
   aspect-ratio: 1;
-  --_g: no-repeat radial-gradient(farthest-side,#66C0F4 90%,#0000);
-  background: var(--_g), var(--_g), var(--_g), var(--_g);
-  background-size: 40% 40%;
-  animation: l46 1s infinite;
+  padding: 10px;
+  border-radius: 50%;
+  box-sizing: border-box;
+  position: relative;
+  mask: conic-gradient(#000 0 0) content-box exclude, conic-gradient(#000 0 0);
+  filter: blur(12px);
 }
 
-@keyframes l46 {
-  0%  {background-position: 0 0,100% 0,100% 100%,0 100%}
-  40%,
-  50% {background-position: 100% 100%,100% 0,0 0,0 100%}
-  90%,
-  100%{background-position: 100% 100%,0 100%,0 0,100% 0}
+.loader:before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-conic-gradient(#0000 0 5%, #C02942, #0000 20% 50%);
+  animation: l2 1.5s linear infinite;
+}
+
+@keyframes l2 {
+  to { rotate: 1turn; }
+}
+
+/* Keep the inline load-more indicator compact while using the same loader style. */
+#view-store .storefront-load-more .loader {
+  width: 22px;
+  height: 22px;
+  padding: 3px;
+  filter: blur(4px);
 }
 
 .global-loading {
