@@ -259,7 +259,7 @@ body>footer{flex:0 0 auto;margin-top:auto;background:#16202D;color:#C7D5E0;borde
 input:focus,select:focus,textarea:focus{--tw-ring-color:rgba(16,185,129,.18)}
 .field:focus{border-color:#6EE7B7!important;box-shadow:0 0 0 4px rgba(16,185,129,.09)!important}
 button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid rgba(16,185,129,.32);outline-offset:2px}
-#supportChatLauncher{background:linear-gradient(135deg,#064E3B,#10B981)!important;box-shadow:0 12px 28px rgba(6,78,59,.22)!important}
+#supportChatLauncher{background:#2B74B8;box-shadow:0 8px 28px rgba(43,116,184,.35)}
 .support-chat-panel>header{background:#171A21;color:#FFFFFF;border-bottom:1px solid #2A475E}
 .maintenance-admin-pill{border-color:#A7D8BC!important;background:rgba(236,253,245,.95)!important;color:#065F46!important}
 .maintenance-progress span{background:linear-gradient(90deg,#10B981,#F59E0B)!important}
@@ -464,9 +464,9 @@ body{background:var(--market-bg);color:var(--market-ink)}.shell{width:min(1440px
 #sellerChatModal .seller-chat-thread{display:none}
 #sellerChatModal .seller-chat-thread.mobile-active{display:flex}
 #sellerChatModal #sellerChatMessages{height:auto;max-height:none;flex:1}
-#supportChatLauncher{display:grid!important;position:fixed;right:24px;bottom:20px;z-index:130;width:58px;height:58px;border-radius:50%;background:#059669;color:#fff;box-shadow:0 8px 28px rgba(5,150,105,.35);font-size:23px;transition:transform .18s,box-shadow .18s}
+#supportChatLauncher{display:grid;position:fixed;right:24px;bottom:20px;z-index:130;width:58px;height:58px;border-radius:50%;background:#2B74B8;color:#fff;box-shadow:0 8px 28px rgba(43,116,184,.35);font-size:23px;transition:transform .18s,box-shadow .18s}
 #supportChatLauncher.hidden{display:none!important}
-#supportChatLauncher:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(5,150,105,.4)}
+#supportChatLauncher:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(43,116,184,.45)}
 .seller-chat-attach{display:grid;width:38px;height:42px;flex:0 0 38px;place-items:center;border:1px solid #2A475E;border-radius:50%;background:#203244;color:#C7D5E0;font-size:18px;transition:background .15s,transform .15s}
 .seller-chat-attach:hover{background:#2A475E;transform:translateY(-1px)}
 .seller-chat-attach:disabled{opacity:.5;cursor:wait}
