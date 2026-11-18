@@ -1697,13 +1697,13 @@ body{background:var(--page)!important;color:var(--ink);font-family:"Kantumruy Pr
 
 /* Premium desktop marketplace refresh */
 .home-layout-shell{display:grid;grid-template-columns:184px minmax(0,1fr) 228px;gap:18px;align-items:start;width:min(1600px,calc(100% - 36px));padding:16px 0 36px}
-.home-sidebar{position:sticky;top:92px;display:flex;flex-direction:column;gap:7px;min-width:0;padding:10px 8px;border:1px solid #edf0f3;border-radius:18px;background:#fff;box-shadow:0 8px 24px rgba(20,30,45,.045)}
+.home-sidebar{position:sticky;top:92px;display:flex;flex-direction:column;gap:7px;min-width:0;padding:10px 8px;border:1px solid #2A475E;border-radius:18px;background:#16202D;color:#C7D5E0;box-shadow:none}
 .home-side-link{display:flex;align-items:center;gap:12px;min-height:43px;padding:0 12px;border:0;border-radius:11px;background:transparent;color:#394454;text-align:left;font-size:12px;font-weight:650;transition:background .18s,color .18s}
 .home-side-link>span{display:grid;place-items:center;width:22px;font-size:17px;color:#6b7280}
-.home-side-link:hover,.home-side-link.active{background:linear-gradient(100deg,#fff5df,#ffedc4);color:#8a5a08}
-.home-side-link.active>span{color:#b77910}
-.home-sidebar-vip{display:flex;flex-direction:column;gap:7px;margin-top:16px;padding:17px 13px;border-radius:15px;background:linear-gradient(145deg,#18212b,#37404b);color:#f8d47b}
-.home-sidebar-vip b{font-size:15px}.home-sidebar-vip small{font-size:10px;line-height:1.6;color:#f4e8c8}
+.home-side-link:hover,.home-side-link.active{background:#203244;color:#66C0F4}
+.home-side-link.active>span{color:#66C0F4}
+.home-sidebar-vip{display:flex;flex-direction:column;gap:7px;margin-top:16px;padding:17px 13px;border:1px solid #2A475E;border-radius:15px;background:linear-gradient(145deg,#171A21,#203244);color:#66C0F4}
+.home-sidebar-vip b{font-size:15px}.home-sidebar-vip small{font-size:10px;line-height:1.6;color:#C7D5E0}
 .home-main-content{min-width:0}
 .home-main-content .market-hero{padding-top:0;grid-template-columns:1.1fr 1fr;gap:12px}
 .home-main-content .market-hero .hc{border-radius:18px;background:radial-gradient(circle at 82% 22%,rgba(255,210,119,.22),transparent 36%),linear-gradient(112deg,#111820,#29313a 54%,#b57a19);padding:clamp(20px,2.1vw,30px)}
@@ -2182,10 +2182,10 @@ textarea,
 
 /* 7inOne storefront refinement: balanced layout and functional product grid */
 .home-layout-shell{width:min(1460px,calc(100% - 44px))!important;grid-template-columns:184px minmax(0,1fr) 220px!important;gap:20px!important;padding:22px 0 54px!important}
-.home-sidebar{top:82px!important;padding:12px 10px!important;border:1px solid #e8eee9!important;border-radius:20px!important;box-shadow:0 10px 30px rgba(16,40,32,.045)!important}
+.home-sidebar{top:82px!important;padding:12px 10px!important;border:1px solid #2A475E!important;border-radius:20px!important;background:#16202D!important;color:#C7D5E0!important;box-shadow:none!important}
 .home-side-link{min-height:44px!important;border-radius:12px!important;font-size:12px!important}
-.home-side-link.active{background:#eaf5ee!important;color:#075c43!important}
-.home-sidebar-vip{margin-top:12px!important;border-radius:16px!important;background:linear-gradient(145deg,#073b2d,#0b6046)!important}
+.home-side-link.active{background:#203244!important;color:#66C0F4!important}
+.home-sidebar-vip{margin-top:12px!important;border:1px solid #2A475E!important;border-radius:16px!important;background:linear-gradient(145deg,#171A21,#203244)!important;color:#C7D5E0!important}
 .home-main-content{min-width:0!important}
 .home-main-content .market-hero{grid-template-columns:minmax(0,1.04fr) minmax(0,.96fr)!important;gap:16px!important}
 .home-main-content .market-hero .hc{min-height:360px!important;justify-content:center!important;padding:clamp(24px,2.6vw,38px)!important;border:1px solid #e5eee8!important;border-radius:24px!important;background:radial-gradient(circle at 92% 8%,rgba(16,185,129,.09),transparent 34%),linear-gradient(145deg,#fff,#f8fbf9)!important;color:#172b24!important;box-shadow:0 14px 38px rgba(16,40,32,.055)!important}
@@ -2512,8 +2512,8 @@ textarea,
   min-width:0!important;
   position:sticky;
   top:118px;
-  background:#fff!important;
-  border:1px solid #E3E6E6!important;
+  background:#16202D!important;
+  border:1px solid #2A475E!important;
   border-radius:8px!important;
   padding:14px!important;
   box-shadow:none!important;
