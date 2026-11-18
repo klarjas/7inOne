@@ -3984,3 +3984,64 @@ html, body, body > main {
     border-radius: 18px !important;
   }
 }
+
+/* Steam theme: remove remaining white empty-state and filtered product surfaces */
+#view-home #emptyHome {
+  background: #16202D !important;
+  border: 1px dashed #2A475E !important;
+  color: #C7D5E0 !important;
+  box-shadow: none !important;
+}
+#view-home #emptyHome #emptyIcon {
+  background: #203244 !important;
+  color: #66C0F4 !important;
+}
+#view-home #emptyHome h3 { color: #FFFFFF !important; }
+#view-home #emptyHome p { color: #9FB2C3 !important; }
+#view-home #emptyHome #clearFilters {
+  background: #2A475E !important;
+  color: #66C0F4 !important;
+  border: 1px solid #3D6687 !important;
+}
+#view-home #emptyHome #clearFilters:hover {
+  background: #365B78 !important;
+  color: #FFFFFF !important;
+}
+
+/* Keep product cards dark after every condition/category filter render */
+#view-home #productGrid .cd,
+#view-home #productGrid .cd:focus-within {
+  background: #16202D !important;
+  border: 1px solid #2A475E !important;
+  color: #C7D5E0 !important;
+  box-shadow: none !important;
+}
+#view-home #productGrid .cd:hover {
+  background: #203244 !important;
+  border-color: #66C0F4 !important;
+}
+#view-home #productGrid .cd .ph {
+  background: #101822 !important;
+}
+#view-home #productGrid .cd .cb,
+#view-home #productGrid .cd .cb * {
+  background-color: transparent !important;
+}
+#view-home #productGrid .cd .cb h3 { color: #FFFFFF !important; }
+#view-home #productGrid .cd .pr { color: #BEEE11 !important; }
+#view-home #productGrid .cd .sn,
+#view-home #productGrid .cd .mt { color: #9FB2C3 !important; }
+
+/* Dark surfaces for the filter controls */
+#view-home .store-filter-radio,
+#view-home .store-filter-link {
+  background: #16202D !important;
+  border-color: #2A475E !important;
+  color: #C7D5E0 !important;
+}
+#view-home .store-filter-radio:has(input:checked),
+#view-home .store-filter-link:hover {
+  background: #203244 !important;
+  border-color: #66C0F4 !important;
+  color: #66C0F4 !important;
+}
