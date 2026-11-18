@@ -135,9 +135,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 @media(max-width:640px){.support-chat-panel{right:10px;bottom:88px;width:calc(100vw - 20px);height:min(570px,calc(100dvh - 110px))}#supportChatLauncher{right:14px;bottom:18px}.support-chat-messages{height:280px}}
 
 
-/* Initial route skeleton keeps the main/footer layout stable while auth restores. */
-html.route-restoring body>main{min-height:58vh}
-html.route-restoring .view{min-height:58vh}
+/* Initial route loader is rendered by html.route-restoring::after in index.html. */
 
 /* --------------------------------------------------------------------------
    7inOne · Luxury Emerald & Bento Editorial design system
