@@ -342,7 +342,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 
 /* 7inOne clean marketplace refresh · Emerald & Warm Gold */
 :root{--market-bg:#F8FAFC;--market-border:#E2EDE7;--market-ink:#102820;--market-emerald:#064E3B;--market-emerald-mid:#065F46;--market-green:#10B981;--market-gold:#F59E0B}
-body{background:var(--market-bg);color:var(--market-ink)}.shell{width:min(1440px,calc(100% - 32px));max-width:1440px}.glass{background:rgba(255,255,255,.94)!important;border-color:var(--market-border)!important;backdrop-filter:blur(14px)}
+body{background:var(--market-bg);color:var(--market-ink)}.shell{width:min(1440px,calc(100% - 32px));max-width:1440px}.glass{background:rgba(23,26,33,.94)!important;border-color:#2A475E!important;backdrop-filter:blur(14px)}
 .product-card{border-color:var(--market-border)!important;box-shadow:0 4px 18px rgba(6,78,59,.055)!important;transition:transform .34s cubic-bezier(.22,1,.36,1),box-shadow .34s cubic-bezier(.22,1,.36,1),border-color .28s ease}.product-card:hover{transform:translate3d(0,-5px,0);box-shadow:0 18px 38px rgba(6,78,59,.12)!important;border-color:#A7D8C1!important}
 .product-card-media .product-img{transition:opacity .3s ease,transform .55s cubic-bezier(.22,1,.36,1)}.product-img-secondary{position:absolute;inset:0;opacity:0}.product-card:hover .product-img-primary:has(~.product-img-secondary){opacity:0}.product-card:hover .product-img-secondary{opacity:1}.product-image-count{position:absolute;bottom:9px;right:9px;z-index:2;border-radius:7px;background:rgba(6,46,37,.78);padding:4px 7px;color:#fff;font-size:9px;font-weight:700}.product-card-description{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;min-height:60px}
 .heart.saved,.heart[aria-pressed="true"]{color:#064E3B!important}.heart.saved svg,.heart[aria-pressed="true"] svg{fill:#064E3B;stroke:#064E3B}.verified,.verified-mark{color:#064E3B!important}.verified{background:#ECFDF5!important;border-color:#CDEBDD!important}.verified-mark{display:inline-grid;width:17px;height:17px;place-items:center;border-radius:50%;background:#ECFDF5}
@@ -1049,7 +1049,7 @@ body {
 /* 7inOne live marketplace home and product UI */
 :root{--brand:#2B74B8;--brand2:#316282;--green:#66C0F4;--amber:#BEEE11;--ink:#C7D5E0;--muted:#8F98A0;--line:#2A475E;--page:#1B2838}
 body{background:var(--page)!important;color:var(--ink);font-family:"Kantumruy Pro",system-ui,sans-serif;line-height:1.6}
-.hd{background:#fff!important;border-bottom:1px solid var(--line)!important}
+.hd{background:#171A21!important;border-bottom:1px solid #2A475E!important;color:#FFFFFF}
 .market-hero{display:grid;grid-template-columns:1.1fr 1fr;gap:20px;padding-top:16px}
 .market-hero .hc{background:var(--brand);color:#fff;border-radius:28px;padding:24px 32px;display:flex;flex-direction:column;gap:10px;min-width:0}
 .market-hero .live,.market-listing-header .new{margin:0;display:flex;align-items:center;gap:8px;font-size:14px;color:#A7F3D0}
