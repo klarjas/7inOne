@@ -3770,3 +3770,36 @@ body > footer {
   color:#F08A9A;
   outline:none;
 }
+
+/* Steam Dark styling for the unified seller chat inbox */
+#sellerChatInboxList .seller-chat-inbox-item {
+  background: #16202D;
+  border: 1px solid #2A475E;
+  border-radius: 12px;
+  color: #C7D5E0;
+  transition: background-color .18s ease, border-color .18s ease;
+}
+#sellerChatInboxList .seller-chat-inbox-item:hover {
+  background: #203244;
+  border-color: #66C0F4;
+}
+#sellerChatInboxList .seller-chat-inbox-item.active {
+  background: #203244;
+  border-color: #66C0F4;
+  box-shadow: inset 3px 0 0 #66C0F4;
+}
+#sellerChatInboxList .seller-chat-inbox-item.unread {
+  background: #1B2B3B;
+  border-color: #326082;
+}
+#sellerChatInboxList .seller-chat-inbox-item b {
+  color: #FFFFFF;
+}
+#sellerChatInboxList .seller-chat-inbox-item small {
+  color: #8F98A0;
+}
+#sellerChatInboxList .seller-chat-inbox-item img {
+  border-radius: 50%;
+  object-fit: cover;
+}
+
