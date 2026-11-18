@@ -107,6 +107,7 @@ const state = {
   telegramBotUsername: '',
   telegramLoginWidgetMounted: false,
   telegramProfileWidgetMounted: false,
+  telegramAuthPending: false,
   myOrders: [],
 
   // Seller
@@ -271,7 +272,8 @@ async function api(path, options = {}) {
   let payload = {};
   try { payload = await response.json(); } catch {}
 
-  if (response.status === 401 && state.session?.refresh_token && state.supabase) {
+  if (response.status === 401 && state.session?.refresh_token && state.supabase &&
+      (authToken === undefined || authToken === state.session.access_token)) {
     try {
       if (!state.sessionRefreshPromise) {
         state.sessionRefreshPromise = state.supabase.auth.refreshSession()
@@ -1547,7 +1549,99 @@ function openCheckout(p) {
 function openAuth(mode = 'login') {
   setAuthMode(mode);
   openModal('authModal');
+  mountTelegramLoginWidget();
 }
+
+function mountTelegramLoginWidget() {
+  return mountTelegramWidget('telegramLoginWidget', 'on7inOneTelegramLogin', 'telegramLoginWidgetMounted');
+}
+
+function mountTelegramWidget(containerId, callbackName, mountedKey) {
+  const container = $(containerId);
+  const username = String(state.telegramBotUsername || '').replace(/^@/, '').trim();
+  if (!container || !/^[A-Za-z0-9_]{5,32}$/.test(username)) return false;
+  if (state[mountedKey]) return true;
+
+  container.replaceChildren();
+  const script = document.createElement('script');
+  script.async = true;
+  script.src = 'https://telegram.org/js/telegram-widget.js?22';
+  script.dataset.telegramLogin = username;
+  script.dataset.size = 'large';
+  script.dataset.userpic = 'false';
+  script.dataset.onauth = callbackName + '(user)';
+  container.appendChild(script);
+  state[mountedKey] = true;
+  return true;
+}
+
+async function completeTelegramLogin(identity) {
+  if (state.telegramAuthPending) return;
+  state.telegramAuthPending = true;
+  try {
+    if (!state.supabase) throw new Error('ប្រព័ន្ធ Supabase មិនទាន់ភ្ជាប់ទេ។');
+    const response = await fetch('/api/auth/telegram', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(identity),
+      cache: 'no-store'
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(payload.error || 'មិនអាចចូលតាម Telegram បានទេ។');
+
+    const session = payload.data?.session;
+    if (!session?.access_token || !session?.refresh_token) {
+      throw new Error('Telegram មិនបានផ្ដល់ Session ត្រឹមត្រូវទេ។');
+    }
+
+    const { data, error } = await state.supabase.auth.setSession({
+      access_token: session.access_token,
+      refresh_token: session.refresh_token
+    });
+    if (error) throw error;
+    state.session = data.session || session;
+    await refreshSession();
+    if (!state.session) throw new Error('មិនអាចរក្សាទុក Session របស់ Telegram បានទេ។');
+
+    syncHeader();
+    closeModal('authModal');
+    toast(payload.data?.isNewUser
+      ? 'បានបង្កើតគណនី និងចូលតាម Telegram ជោគជ័យ!'
+      : 'បានចូលគណនីតាម Telegram ជោគជ័យ!');
+    void Promise.all([loadSaved(), loadOrders(), loadUnifiedSellerChatInbox()])
+      .catch(error => console.warn('Could not load Telegram account data:', error.message));
+  } catch (error) {
+    toast(error.message || 'មិនអាចចូលតាម Telegram បានទេ។', 'error');
+  } finally {
+    state.telegramAuthPending = false;
+  }
+}
+
+async function completeTelegramLink(identity) {
+  if (state.telegramAuthPending) return;
+  if (!state.session) {
+    toast('សូមចូលគណនី 7inOne ជាមុនសិន។', 'warning');
+    return;
+  }
+  state.telegramAuthPending = true;
+  try {
+    await api('/api/me/telegram', {
+      method: 'POST',
+      body: JSON.stringify(identity)
+    });
+    state.telegramProfileWidgetMounted = false;
+    $('telegramProfileWidget')?.replaceChildren();
+    await renderTelegramSecurity();
+    toast('បានភ្ជាប់ Telegram Login ជាមួយគណនីនេះរួចរាល់។');
+  } catch (error) {
+    toast(error.message || 'មិនអាចភ្ជាប់ Telegram បានទេ។', 'error');
+  } finally {
+    state.telegramAuthPending = false;
+  }
+}
+
+window.on7inOneTelegramLogin = identity => { void completeTelegramLogin(identity); };
+window.on7inOneTelegramLink = identity => { void completeTelegramLink(identity); }
 
 function setAuthMode(mode) {
   state.authMode = mode;
@@ -1565,6 +1659,7 @@ function setAuthMode(mode) {
 
 async function renderTelegramSecurity() {
   if (!state.session) return;
+  mountTelegramWidget('telegramProfileWidget', 'on7inOneTelegramLink', 'telegramProfileWidgetMounted');
   try {
     const res = await api('/api/me/telegram');
     const connected = Boolean(res.data?.connected);
@@ -1923,7 +2018,9 @@ async function boot() {
       cfg = await configResponse.json();
       state.maintenanceMode = cfg.maintenanceMode === true;
       state.maintenanceMessage = String(cfg.maintenanceMessage || DEFAULT_MAINTENANCE_MSG);
+      state.telegramBotUsername = String(cfg.telegramBotUsername || '').replace(/^@/, '').trim();
       applySiteBranding(cfg);
+      mountTelegramLoginWidget();
     } catch (configError) {
       console.error('Could not load marketplace config:', configError);
       toast('មិនអាចទាញការកំណត់ប្រព័ន្ធបានទេ៖ ' + configError.message, 'warning');
