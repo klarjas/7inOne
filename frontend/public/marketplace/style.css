@@ -4137,3 +4137,7 @@ body > footer {
   background:#3689CE;
   border-color:#66C0F4;
 }
+/* Mobile chat navigation icon — Steam Blue */
+.mobile-market-item[data-action="open-chat"] [data-nav-icon="chat"] {
+  color: #66C0F4;
+}
