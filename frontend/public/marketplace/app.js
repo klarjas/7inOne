@@ -99,6 +99,13 @@ const state = {
   currentStoreProducts: [],
   currentStoreCategory: 'all',
   currentStoreSearch: '',
+  currentStorePage: 1,
+  currentStoreLimit: 50,
+  currentStoreTotal: 0,
+  currentStoreLoading: false,
+  currentStoreLoadError: false,
+  currentStoreMoreLoading: false,
+  currentStoreMoreError: false,
 
   // Profile & Auth
   profileTab: 'saved',
@@ -655,7 +662,7 @@ function productCard(p, index) {
     <div class="ph im">
       <button class="absolute inset-0 z-[1] h-full w-full" type="button" data-action="view" data-id="${esc(p.id)}" aria-label="មើល ${esc(p.title)}"></button>
       ${image
-        ? `<span class="img-scan-wrap shimmer-scan cd-image-wrap cd-main-wrap"><img src="${esc(image)}" alt="${esc(p.title)}" loading="lazy" decoding="async" class="cd-main" onerror="this.parentElement.classList.add(&#39;image-failed&#39;)"></span>${secondImage ? `<span class="img-scan-wrap shimmer-scan cd-image-wrap cd-secondary-wrap"><img src="${esc(secondImage)}" alt="" loading="lazy" decoding="async" class="cd-secondary" onerror="this.parentElement.classList.add(&#39;image-failed&#39;)"></span>` : ''}`
+        ? `<span class="img-scan-wrap shimmer-scan cd-image-wrap cd-main-wrap"><img src="${esc(image)}" alt="${esc(p.title)}" loading="lazy" decoding="async" class="cd-main" onerror="if(this.dataset.retryAttempted!==&#39;1&#39;){this.dataset.retryAttempted=&#39;1&#39;;const image=this;setTimeout(()=>{image.src=image.src+(image.src.includes(&#39;?&#39;)?&#39;&amp;r=1&#39;:&#39;?r=1&#39;)},1500)}else{this.parentElement.classList.add(&#39;image-failed&#39;);this.style.display=&#39;none&#39;}"></span>${secondImage ? `<span class="img-scan-wrap shimmer-scan cd-image-wrap cd-secondary-wrap"><img src="${esc(secondImage)}" alt="" loading="lazy" decoding="async" class="cd-secondary" onerror="if(this.dataset.retryAttempted!==&#39;1&#39;){this.dataset.retryAttempted=&#39;1&#39;;const image=this;setTimeout(()=>{image.src=image.src+(image.src.includes(&#39;?&#39;)?&#39;&amp;r=1&#39;:&#39;?r=1&#39;)},1500)}else{this.parentElement.classList.add(&#39;image-failed&#39;);this.style.display=&#39;none&#39;}"></span>` : ''}`
         : ic('image', 36)}
       <button class="hv heart ${saved ? 'saved' : ''}" type="button" data-action="save" data-id="${esc(p.id)}" aria-label="រក្សាទុក" aria-pressed="${saved ? 'true' : 'false'}">
         ${ic('heart', 17)}
@@ -1008,69 +1015,181 @@ function closeProductLightbox() {
 async function openStorefront(vendorId, options = {}) {
   if (!vendorId) { toast('មិនមានព័ត៌មានហាងនេះទេ។', 'warning'); return false; }
   const storeId = String(vendorId);
-  state.currentStoreCategory = 'all';
-  state.currentStoreSearch = '';
-
+  Object.assign(state, {
+    currentStoreId: storeId, currentStoreCategory: 'all', currentStoreSearch: '',
+    currentStoreProducts: [], currentStorePage: 1, currentStoreLimit: 50,
+    currentStoreTotal: 0, currentStoreLoading: true, currentStoreLoadError: false,
+    currentStoreMoreLoading: false, currentStoreMoreError: false
+  });
   try {
     sessionStorage.setItem('ecomstore.currentStoreId', storeId);
     sessionStorage.setItem('ecomstore.activeView', 'store');
+    await showView('store', { preserveScroll: Boolean(options.preserveScroll) });
+    renderStorefront();
     const [result, catalogue] = await Promise.all([
       api('/api/vendors/' + encodeURIComponent(storeId) + '/ratings'),
-      api('/api/products?page=1&limit=50')
+      api('/api/products?page=1&limit=' + state.currentStoreLimit + '&vendor_id=' + encodeURIComponent(storeId))
     ]);
-    state.currentStoreId = storeId;
     state.currentStoreData = result.data || null;
-    state.currentStoreProducts = (catalogue.data || []).filter((p) => String(p.vendor_id) === storeId);
-    await showView('store', { preserveScroll: Boolean(options.preserveScroll) });
+    state.currentStoreProducts = catalogue.data || [];
+    state.currentStorePage = Number(catalogue.page || 1);
+    state.currentStoreTotal = Number(catalogue.total || 0);
+    state.currentStoreLoading = false;
+    state.currentStoreLoadError = false;
+    renderStorefront();
     return true;
   } catch (error) {
-    toast(error.message, 'error');
+    state.currentStoreLoading = false;
+    state.currentStoreLoadError = true;
+    renderStorefront();
+    console.warn('Could not load storefront:', error.message);
     return false;
   }
 }
 
-function renderStorefront() {
-  const data = state.currentStoreData;
-  if (!data) return;
-  const query = state.currentStoreSearch.trim().toLowerCase();
-  const visible = state.currentStoreProducts.filter(
-    (p) => (state.currentStoreCategory === 'all' || p.category === state.currentStoreCategory) &&
-           (!query || `${p.title} ${p.description || ''}`.toLowerCase().includes(query))
-  );
-
-  $('storefrontContent').innerHTML = `
-  <section class="storefront-public">
-    <div class="storefront-cover">${data.store_cover_url ? `<img src="${esc(data.store_cover_url)}" alt="">` : ''}</div>
-    <div class="storefront-profile">
-      <div class="storefront-avatar"><div class="h-20 w-20 overflow-hidden rounded-full bg-emerald-50">${data.store_logo_url ? `<img src="${esc(data.store_logo_url)}" class="h-full w-full object-cover">` : avatarFallbackMarkup(data.store_name)}</div></div>
-      <div class="min-w-0 flex-1">
-        <div class="flex flex-wrap items-center gap-2"><h1 class="text-xl font-bold">${esc(data.store_name || 'ហាងអ្នកលក់')}</h1>${data.verified ? verifiedStoreBadge(data.id, true) : ''}</div>
-        <p class="mt-1 text-xs text-slate-500">${esc(data.store_location || 'កម្ពុជា')} · ${Number(data.active_listings || 0)} មុខទំនិញ</p>
-        <p class="mt-1 text-xs text-slate-600">${esc(data.description || '')}</p>
-      </div>
-    </div>
-    <div class="storefront-tools">
-      <input id="storeSearchInput" type="search" placeholder="ស្វែងរកក្នុងហាងនេះ..." value="${esc(state.currentStoreSearch)}" class="field">
-      <div class="flex flex-wrap gap-2" id="storeCategoryFilters">${[['all', 'ទាំងអស់'], ...Object.entries(CATEGORIES)].map(([k, l]) => `<button type="button" data-store-category="${k}" class="store-filter ${state.currentStoreCategory === k ? 'active' : ''}">${l}</button>`).join('')}</div>
-    </div>
-  </section>
-  <div class="my-4 flex items-center justify-between"><h2 class="font-bold">ទំនិញក្នុងហាង</h2><span class="text-xs text-slate-500">${visible.length} មុខ</span></div>
-  <div id="storeProductGrid">${visible.map(productCard).join('')}</div>`;
-
-  $('storeSearchInput')?.addEventListener('input', (e) => {
-    state.currentStoreSearch = e.target.value;
+async function loadMoreStoreProducts() {
+  if (!state.currentStoreId || state.currentStoreMoreLoading ||
+      state.currentStorePage * state.currentStoreLimit >= state.currentStoreTotal) return;
+  state.currentStoreMoreLoading = true;
+  state.currentStoreMoreError = false;
+  renderStorefront();
+  const nextPage = state.currentStorePage + 1;
+  try {
+    const result = await api('/api/products?page=' + nextPage + '&limit=' +
+      state.currentStoreLimit + '&vendor_id=' + encodeURIComponent(state.currentStoreId));
+    const existing = new Set(state.currentStoreProducts.map(product => String(product.id)));
+    state.currentStoreProducts = state.currentStoreProducts.concat(
+      (result.data || []).filter(product => !existing.has(String(product.id)))
+    );
+    state.currentStorePage = Number(result.page || nextPage);
+    state.currentStoreTotal = Number(result.total ?? state.currentStoreTotal);
+  } catch (error) {
+    state.currentStoreMoreError = true;
+    console.warn('Could not load more store products:', error.message);
+  } finally {
+    state.currentStoreMoreLoading = false;
     renderStorefront();
+  }
+}
+
+function renderStorefront() {
+  const root = $('storefrontContent');
+  if (!root) return;
+  root.onclick = handleStorefrontAction;
+  if (state.currentStoreLoading) {
+    root.innerHTML = `<div class="storefront-skeleton" aria-label="កំពុងផ្ទុកព័ត៌មានហាង">
+      <div class="storefront-skeleton-profile skeleton"></div>
+      <div class="storefront-skeleton-grid">${Array.from({length:8}, () => '<div class="storefront-skeleton-card"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>').join('')}</div>
+    </div>`;
+    return;
+  }
+  if (state.currentStoreLoadError || !state.currentStoreData) {
+    root.innerHTML = `<div class="storefront-error"><span>${ic('alert', 28)}</span>
+      <h2>មិនអាចផ្ទុកព័ត៌មានហាងបានទេ</h2>
+      <p>សូមពិនិត្យការតភ្ជាប់អ៊ីនធឺណិត ហើយព្យាយាមម្តងទៀត។</p>
+      <button type="button" class="storefront-retry" data-store-retry>ព្យាយាមម្តងទៀត</button>
+    </div>`;
+    return;
+  }
+
+  const data = state.currentStoreData;
+  const query = state.currentStoreSearch.trim().toLowerCase();
+  const visible = state.currentStoreProducts.filter(product =>
+    (state.currentStoreCategory === 'all' || product.category === state.currentStoreCategory) &&
+    (!query || `${product.title || ''} ${product.description || ''}`.toLowerCase().includes(query))
+  );
+  const rating = Number(data.rating || 0);
+  const ratingLabel = rating ? rating.toFixed(1) : '—';
+  const reviewCount = Number(data.review_count || 0);
+  const memberSince = data.created_at
+    ? new Date(data.created_at).toLocaleDateString('km-KH', { year: 'numeric', month: 'short' }) : '—';
+  const categories = [['all', 'ទាំងអស់'], ...Object.entries(CATEGORIES)];
+  const hasMore = state.currentStorePage * state.currentStoreLimit < state.currentStoreTotal;
+  const reviews = Array.isArray(data.reviews) ? data.reviews : [];
+
+  root.innerHTML = `
+    <section class="storefront-public">
+      <div class="storefront-cover">${data.store_cover_url ? `<img src="${esc(data.store_cover_url)}" alt="" onerror="this.remove()">` : ''}</div>
+      <div class="storefront-profile">
+        <div class="storefront-avatar"><div class="storefront-avatar-ring">
+          ${data.store_logo_url
+            ? `<img src="${esc(data.store_logo_url)}" alt="${esc(data.store_name || 'ហាងអ្នកលក់')}" loading="lazy" onerror="this.remove()">`
+            : avatarFallbackMarkup(data.store_name || 'ហាងអ្នកលក់')}
+        </div></div>
+        <div class="storefront-identity">
+          <div class="storefront-title-line"><h1>${esc(data.store_name || 'ហាងអ្នកលក់')}</h1>${data.verified ? verifiedStoreBadge(data.id, true) : ''}</div>
+          <p class="storefront-meta"><span>${esc(data.store_location || 'កម្ពុជា')}</span>
+            <span>${Number(data.active_listings || 0)} មុខទំនិញ</span>
+            <span>${rating ? '★ ' + esc(ratingLabel) : 'មិនទាន់មានពិន្ទុ'} (${reviewCount} ពិនិត្យ)</span>
+          </p>
+          ${data.description ? `<p class="storefront-description">${esc(data.description)}</p>` : ''}
+        </div>
+      </div>
+      <div class="storefront-stats">
+        <div><strong>${rating ? esc(ratingLabel) : '—'}</strong><span>ការវាយតម្លៃ</span></div>
+        <div><strong>${reviewCount}</strong><span>ការពិនិត្យ</span></div>
+        <div><strong>${Number(data.total_views || 0).toLocaleString('km-KH')}</strong><span>ចំនួនមើល</span></div>
+        <div><strong>${esc(memberSince)}</strong><span>សមាជិកតាំងពី</span></div>
+      </div>
+    </section>
+    <section class="storefront-toolbar" aria-label="ស្វែងរកទំនិញក្នុងហាង">
+      <input id="storeSearchInput" type="search" placeholder="ស្វែងរកក្នុងហាងនេះ..." value="${esc(state.currentStoreSearch)}" class="field">
+      <div class="storefront-toolbar-chips" id="storeCategoryFilters">
+        ${categories.map(([key, label]) => `<button type="button" data-store-category="${esc(key)}" class="store-filter ${state.currentStoreCategory === key ? 'active' : ''}">${esc(label)}</button>`).join('')}
+      </div>
+      <span class="storefront-result-count">${visible.length} / ${state.currentStoreTotal} មុខទំនិញ</span>
+    </section>
+    <section class="storefront-products-section">
+      <div class="storefront-section-heading"><h2>ទំនិញក្នុងហាង</h2><span>${visible.length} មុខ</span></div>
+      ${visible.length
+        ? `<div id="storeProductGrid">${visible.map(productCard).join('')}</div>`
+        : `<div class="storefront-empty"><span>${ic('package', 30)}</span><strong>មិនមានទំនិញដែលត្រូវនឹងការស្វែងរកទេ</strong><p>សូមសាកល្បងពាក្យស្វែងរក ឬប្រភេទទំនិញផ្សេងទៀត។</p></div>`}
+      ${state.currentStoreMoreError ? '<div class="storefront-more-error">មិនអាចផ្ទុកទំនិញបន្ថែមបានទេ។ សូមព្យាយាមម្តងទៀត។</div>' : ''}
+      ${hasMore ? `<div class="storefront-load-more-wrap"><button type="button" class="storefront-load-more" data-store-load-more ${state.currentStoreMoreLoading ? 'disabled' : ''}>${state.currentStoreMoreLoading ? 'កំពុងផ្ទុក...' : 'បង្ហាញបន្ថែម'}</button></div>` : ''}
+    </section>
+    ${reviews.length ? `
+      <section class="storefront-reviews">
+        <div class="storefront-section-heading"><h2>មតិយោបល់ពីអ្នកទិញ</h2><span>${reviewCount} ការពិនិត្យ</span></div>
+        <div class="storefront-review-list">
+          ${reviews.map(review => {
+            const stars = Math.max(0, Math.min(5, Number(review.rating) || 0));
+            const reviewDate = review.created_at ? new Date(review.created_at).toLocaleDateString('km-KH', { year: 'numeric', month: 'short', day: 'numeric' }) : '';
+            return `<article class="storefront-review">
+              <div class="storefront-review-top"><strong>${esc(review.buyer_name || 'អ្នកទិញ')}</strong><time>${esc(reviewDate)}</time></div>
+              <div class="storefront-review-stars" aria-label="${stars} ក្នុង 5 ផ្កាយ">${'★'.repeat(stars)}<span>${'★'.repeat(5-stars)}</span></div>
+              ${review.comment ? `<p>${esc(review.comment)}</p>` : ''}
+            </article>`;
+          }).join('')}
+        </div>
+      </section>` : ''}
+  `;
+
+  $('storeSearchInput')?.addEventListener('input', event => {
+    state.currentStoreSearch = event.target.value;
+    const cursor = event.target.selectionStart;
+    renderStorefront();
+    const input = $('storeSearchInput');
+    input?.focus();
+    if (typeof cursor === 'number') input?.setSelectionRange(cursor, cursor);
   });
-  $('storeCategoryFilters')?.addEventListener('click', (e) => {
-    const btn = e.target.closest('[data-store-category]');
-    if (btn) { state.currentStoreCategory = btn.dataset.storeCategory; renderStorefront(); }
+  $('storeCategoryFilters')?.addEventListener('click', event => {
+    const button = event.target.closest('[data-store-category]');
+    if (button) { state.currentStoreCategory = button.dataset.storeCategory; renderStorefront(); }
   });
-  $('storeProductGrid')?.addEventListener('click', (e) => {
-    const heart = e.target.closest('[data-action="save"]');
-    if (heart) { e.preventDefault(); e.stopPropagation(); saveAction(heart.dataset.id, heart); return; }
-    const view = e.target.closest('[data-action="view"]');
+  $('storeProductGrid')?.addEventListener('click', event => {
+    const heart = event.target.closest('[data-action="save"]');
+    if (heart) { event.preventDefault(); event.stopPropagation(); saveAction(heart.dataset.id, heart); return; }
+    const view = event.target.closest('[data-action="view"]');
     if (view) void openProduct(view.dataset.id);
   });
+}
+
+function handleStorefrontAction(event) {
+  if (event.target.closest('[data-store-retry]')) {
+    void openStorefront(state.currentStoreId, { preserveScroll: true });
+    return;
+  }
+  if (event.target.closest('[data-store-load-more]')) void loadMoreStoreProducts();
 }
 
 /* --------------------------------------------------------------------------

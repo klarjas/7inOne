@@ -30,7 +30,7 @@ app.set('trust proxy', 1);
 app.use(helmet({ contentSecurityPolicy: false, crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' } }));
 app.use(cors({ origin: process.env.FRONTEND_ORIGIN ? process.env.FRONTEND_ORIGIN.split(',').map(v => v.trim()) : true }));
 app.use(express.json({ limit: '1mb' }));
-app.use('/api', rateLimit({ windowMs: 60_000, limit: 120, standardHeaders: 'draft-8', legacyHeaders: false }));
+app.use('/api', rateLimit({ windowMs: 60_000, limit: 120, standardHeaders: 'draft-8', legacyHeaders: false, skip: req => req.path.startsWith('/media/telegram/') }));
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024, files: 8 } });
 const fail = (res, status, message) => res.status(status).json({ error: message });
@@ -200,7 +200,7 @@ function publicProduct(product) {
     vendors: Array.isArray(product.vendors) ? product.vendors.map(publicVendor) : publicVendor(product.vendors),
     product_images: (product.product_images || []).map(image => ({
       id: image.id, sort_order: image.sort_order,
-      image_url: image.image_url || telegramMediaUrl(image.file_id)
+      image_url: image.file_id ? telegramMediaUrl(image.file_id) : image.image_url
     }))
   };
 }
@@ -239,13 +239,31 @@ async function fetchTelegramWithRetry(url, options, stage, maxAttempts = 3) {
   throw new Error(`Telegram ${stage} failed.`);
 }
 
-async function streamTelegramFile(fileId, res, mimeType = 'application/octet-stream', disposition = 'inline', cacheControl = 'public, max-age=86400, stale-while-revalidate=604800') {
-  assertTelegramBotConfig();
-  const token = process.env.TELEGRAM_BOT_TOKEN;
+const TELEGRAM_FILE_PATH_CACHE_TTL_MS = 45 * 60 * 1000;
+const TELEGRAM_FILE_PATH_CACHE_MAX = 2000;
+const telegramFilePathCache = new Map();
 
-  // getFile and file download are read-only, so bounded retries are safe here.
+function cacheTelegramFilePath(fileId, filePath) {
+  telegramFilePathCache.delete(fileId);
+  telegramFilePathCache.set(fileId, { filePath, expiresAt: Date.now() + TELEGRAM_FILE_PATH_CACHE_TTL_MS });
+  while (telegramFilePathCache.size > TELEGRAM_FILE_PATH_CACHE_MAX) {
+    telegramFilePathCache.delete(telegramFilePathCache.keys().next().value);
+  }
+}
+
+function cachedTelegramFilePath(fileId) {
+  const entry = telegramFilePathCache.get(fileId);
+  if (!entry) return null;
+  if (entry.expiresAt <= Date.now()) {
+    telegramFilePathCache.delete(fileId);
+    return null;
+  }
+  return entry.filePath;
+}
+
+async function lookupTelegramFilePath(fileId) {
   const lookupResponse = await fetchTelegramWithRetry(
-    `https://api.telegram.org/bot${token}/getFile`,
+    `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/getFile`,
     {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
@@ -253,32 +271,64 @@ async function streamTelegramFile(fileId, res, mimeType = 'application/octet-str
     },
     'getFile'
   );
-
   const lookup = await lookupResponse.json().catch(() => null);
   if (!lookup?.ok || !lookup.result?.file_path) {
     throw new Error(`Telegram getFile returned an invalid result: ${clean(lookup?.description || 'file_path is missing', 220)}`);
   }
-
   const filePath = clean(lookup.result.file_path, 1024);
   if (!filePath || filePath.startsWith('/') || filePath.split('/').includes('..')) {
     throw new Error('Telegram getFile returned an invalid file path.');
   }
+  cacheTelegramFilePath(fileId, filePath);
+  return filePath;
+}
 
-  const fileResponse = await fetchTelegramWithRetry(
-    `https://api.telegram.org/file/bot${token}/${filePath}`,
-    { method: 'GET' },
-    'file download'
-  );
+async function streamTelegramFile(fileId, res, mimeType = 'application/octet-stream', disposition = 'inline', cacheControl = 'public, max-age=86400, stale-while-revalidate=604800') {
+  assertTelegramBotConfig();
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  let filePath = cachedTelegramFilePath(fileId);
+  const cacheHit = Boolean(filePath);
+  if (!filePath) filePath = await lookupTelegramFilePath(fileId);
 
+  let fileResponse;
+  try {
+    fileResponse = await fetchTelegramWithRetry(
+      `https://api.telegram.org/file/bot${token}/${filePath}`,
+      { method: 'GET' },
+      'file download'
+    );
+  } catch (error) {
+    if (!cacheHit || !/HTTP (?:403|404)/i.test(error.message || '')) throw error;
+    telegramFilePathCache.delete(fileId);
+    filePath = await lookupTelegramFilePath(fileId);
+    fileResponse = await fetchTelegramWithRetry(
+      `https://api.telegram.org/file/bot${token}/${filePath}`,
+      { method: 'GET' },
+      'file download refresh'
+    );
+  }
+
+  const buffer = Buffer.from(await fileResponse.arrayBuffer());
   const detectedType = mimeType !== 'application/octet-stream'
     ? mimeType
     : (fileResponse.headers.get('content-type') || mimeType);
+  const etag = '"' + createHash('sha256').update(buffer).digest('base64url') + '"';
 
   res.set('Content-Type', detectedType);
   res.set('Content-Disposition', disposition);
   res.set('X-Content-Type-Options', 'nosniff');
   res.set('Cache-Control', cacheControl);
-  return res.send(Buffer.from(await fileResponse.arrayBuffer()));
+  res.set('ETag', etag);
+  if (reqHeaderMatchesEtag(res.req?.headers?.['if-none-match'], etag)) {
+    return res.status(304).end();
+  }
+  res.set('Content-Length', String(buffer.length));
+  return res.send(buffer);
+}
+
+function reqHeaderMatchesEtag(header, etag) {
+  if (!header) return false;
+  return String(header).split(',').some(value => value.trim() === '*' || value.trim() === etag);
 }
 
 async function ratingsFor(vendorIds) {
@@ -579,8 +629,10 @@ app.use('/api', async (req, res, nextMiddleware) => {
   }
 });
 
-// Permanent backend media URLs; Telegram file_path is resolved on every request because it expires.
-app.get('/api/media/telegram/:fileId', async (req, res) => {
+// Image traffic is isolated from the normal API budget so catalogue grids do not consume the API quota.
+const telegramMediaRateLimit = rateLimit({ windowMs: 60_000, limit: 600, standardHeaders: 'draft-8', legacyHeaders: false });
+// Permanent backend media URLs; Telegram file paths are cached briefly and refreshed when stale.
+app.get('/api/media/telegram/:fileId', telegramMediaRateLimit, async (req, res) => {
   try {
     if (!process.env.TELEGRAM_BOT_TOKEN) return fail(res, 503, 'Telegram media is unavailable: TELEGRAM_BOT_TOKEN is not configured.');
     const fileId = clean(req.params.fileId, 2048);
@@ -684,6 +736,10 @@ app.get('/api/products', async (req, res) => {
   const limit = Math.min(50, Math.max(1, Number.parseInt(req.query.limit, 10) || 24));
   const q = clean(req.query.q, 100);
   const category = clean(req.query.category, 80);
+  const vendorId = clean(req.query.vendor_id, 36);
+  if (req.query.vendor_id && !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(vendorId)) {
+    return fail(res, 400, 'Invalid vendor ID.');
+  }
   const cutoff = new Date(Date.now() - PRODUCT_PUBLIC_MAX_AGE_MS).toISOString();
 
   const runProductsQuery = async (legacyRenewal = false) => {
@@ -694,6 +750,7 @@ app.get('/api/products', async (req, res) => {
       .eq('status', 'active')
       .in('vendors.status', ['approved','pending','rejected'])
       .gt('stock', 0);
+    if (vendorId) query = query.eq('vendor_id', vendorId);
 
     // Combine age and text filters into one PostgREST logic expression.
     // This avoids duplicate OR query parameters, which can be ambiguous.
@@ -1825,7 +1882,7 @@ app.post('/api/products/:id/images', authenticate, upload.array('images', 5), as
     const { data, error } = await supabase.from('product_images').insert(rows).select('id,product_id,file_id,telegram_message_id,image_url,sort_order');
     if (error) throw new Error('Telegram uploads succeeded, but product image records could not be saved. Apply the Telegram media migration. ' + error.message);
     return res.status(201).json({ data: (data || []).map(image => ({
-      ...image, image_url: image.image_url || telegramMediaUrl(image.file_id)
+      ...image, image_url: image.file_id ? telegramMediaUrl(image.file_id) : image.image_url
     })) });
   } catch (error) {
     for (const item of uploaded) await deleteTelegramMessage(item.messageId);
