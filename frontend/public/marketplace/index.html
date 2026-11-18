@@ -50,29 +50,41 @@
     })();
   </script>
   <style>
-    html.route-restoring .view { display: none !important; }
+    html.route-restoring body {
+      background: #1B2838 !important;
+    }
+    html.route-restoring .view {
+      display: none !important;
+    }
     html.route-restoring[data-initial-view="home"] #view-home,
     html.route-restoring[data-initial-view="profile"] #view-profile,
     html.route-restoring[data-initial-view="seller"] #view-seller,
     html.route-restoring[data-initial-view="admin"] #view-admin,
     html.route-restoring[data-initial-view="product"] #view-product,
     html.route-restoring[data-initial-view="store"] #view-store {
-      display: block !important;
+      display: flex !important;
+      align-items: center;
+      justify-content: center;
+      min-height: 60vh;
       animation: none !important;
     }
-    html.route-restoring .view > * { visibility: hidden !important; }
+    html.route-restoring .view > * {
+      display: none !important;
+    }
     html.route-restoring .view::before {
       content: "";
       display: block;
-      width: min(1200px, calc(100% - 36px));
-      height: clamp(220px, 38vh, 360px);
-      margin: 24px auto;
-      border-radius: 24px;
-      background: linear-gradient(110deg, #ECEEF2 8%, #F8FAFC 18%, #ECEEF2 33%);
-      background-size: 220% 100%;
-      animation: initialRouteShimmer 1.5s linear infinite;
+      width: 46px;
+      height: 46px;
+      margin: 0 auto;
+      border: 3.5px solid rgba(102, 192, 244, 0.2);
+      border-top-color: #66C0F4;
+      border-radius: 50%;
+      animation: initialRouteSpin 0.75s linear infinite;
     }
-    @keyframes initialRouteShimmer { to { background-position-x: -220%; } }
+    @keyframes initialRouteSpin {
+      to { transform: rotate(360deg); }
+    }
   </style>
 </head>
 
