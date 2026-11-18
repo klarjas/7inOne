@@ -1075,6 +1075,7 @@ async function loadMoreStoreProducts() {
 function renderStorefront() {
   const root = $('storefrontContent');
   if (!root) return;
+  root.onclick = handleStorefrontAction;
   if (state.currentStoreLoading) {
     root.innerHTML = `<div class="storefront-skeleton" aria-label="កំពុងផ្ទុកព័ត៌មានហាង">
       <div class="storefront-skeleton-profile skeleton"></div>
@@ -1175,7 +1176,6 @@ function renderStorefront() {
     const button = event.target.closest('[data-store-category]');
     if (button) { state.currentStoreCategory = button.dataset.storeCategory; renderStorefront(); }
   });
-  root.onclick = handleStorefrontAction;
   $('storeProductGrid')?.addEventListener('click', event => {
     const heart = event.target.closest('[data-action="save"]');
     if (heart) { event.preventDefault(); event.stopPropagation(); saveAction(heart.dataset.id, heart); return; }
