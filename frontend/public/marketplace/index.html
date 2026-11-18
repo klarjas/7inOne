@@ -12,8 +12,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
   <link rel="stylesheet" href="./tailwind.css" />
-  <link rel="stylesheet" href="./style.css" />
   <link rel="stylesheet" href="./amazon-ui.css" />
+  <link rel="stylesheet" href="./style.css" />
 
   <!-- Instant Route Restoration (Prevents Flash of Wrong Page) -->
   <script>
@@ -91,6 +91,10 @@
           <small class="site-subtitle block truncate" id="siteSubtitle">ផ្សារទិញលក់កម្ពុជា</small>
         </span>
       </button>
+      <div class="delivery-location" aria-label="ទីតាំងដឹកជញ្ជូន">
+        <span class="delivery-pin">⌖</span>
+        <span><small>Deliver to</small><b>Cambodia</b></span>
+      </div>
 
       <form class="order-3 flex w-full items-center md:order-none md:ml-5 md:flex-1" id="searchForm">
         <select class="hidden h-9 max-w-[145px] cursor-pointer bg-transparent px-3 text-[11px] font-semibold text-slate-600 outline-none sm:block" id="searchCategory">
@@ -171,21 +175,29 @@
     <!-- 1. HOME VIEW -->
     <section class="view" id="view-home">
       <div class="home-layout-shell shell">
-        <!-- Left Sidebar Navigation -->
-        <aside class="home-sidebar" aria-label="ការរុករក">
-          <button class="home-side-link active" type="button" data-home-side="home"><span>⌂</span>ទំព័រដើម</button>
-          <button class="home-side-link" type="button" data-category="phones"><span>▦</span>អេឡិចត្រូនិក</button>
-          <button class="home-side-link" type="button" data-category="vehicles"><span>🚗</span>រថយន្ត និង ម៉ូតូ</button>
-          <button class="home-side-link" type="button" data-category="property"><span>⌂</span>អចលនទ្រព្យ</button>
-          <button class="home-side-link" type="button" data-category="fashion"><span>◇</span>ម៉ូដសម្លៀកបំពាក់</button>
-          <button class="home-side-link" type="button" data-home-side="live"><span>▷</span>Live Shop</button>
-          <button class="home-side-link" type="button" data-home-side="saved"><span>♡</span>ចំណូលចិត្ត</button>
-          <button class="home-side-link" type="button" data-home-side="orders"><span>▤</span>ការបញ្ជាទិញ</button>
-          <button class="home-side-link" type="button" data-view="profile"><span>♙</span>គណនី</button>
-          <div class="home-sidebar-vip">
-            <b>♛ 7inOne VIP</b>
-            <small>អត្ថប្រយោជន៍ពិសេសសម្រាប់សមាជិក</small>
-          </div>
+        <!-- Amazon-style filters: existing category and sort actions are preserved. -->
+        <aside class="home-sidebar" aria-label="តម្រងទំនិញ">
+          <section class="store-filter-group">
+            <h3>ប្រភេទទំនិញ</h3>
+            <button class="store-filter-link active" type="button" data-category="all">ទំនិញទាំងអស់</button>
+            <button class="store-filter-link" type="button" data-category="phones">ទូរស័ព្ទ និង អេឡិចត្រូនិក</button>
+            <button class="store-filter-link" type="button" data-category="vehicles">រថយន្ត និង ម៉ូតូ</button>
+            <button class="store-filter-link" type="button" data-category="property">អចលនទ្រព្យ</button>
+            <button class="store-filter-link" type="button" data-category="fashion">សម្លៀកបំពាក់</button>
+            <button class="store-filter-link" type="button" data-category="furniture">គ្រឿងសង្ហារិម</button>
+          </section>
+          <section class="store-filter-group">
+            <h3>ស្ថានភាព</h3>
+            <label class="store-filter-radio"><input type="radio" name="conditionFilter" value="all" data-condition-filter checked /> ទាំងអស់</label>
+            <label class="store-filter-radio"><input type="radio" name="conditionFilter" value="new" data-condition-filter /> ថ្មី</label>
+            <label class="store-filter-radio"><input type="radio" name="conditionFilter" value="used" data-condition-filter /> មួយទឹក / ប្រើរួច</label>
+          </section>
+          <section class="store-filter-group">
+            <h3>តម្រៀបតម្លៃ</h3>
+            <button class="store-filter-link" type="button" data-sort-value="low">តម្លៃទាបទៅខ្ពស់</button>
+            <button class="store-filter-link" type="button" data-sort-value="high">តម្លៃខ្ពស់ទៅទាប</button>
+            <button class="store-filter-link" type="button" data-sort-value="newest">បង្ហោះថ្មីៗ</button>
+          </section>
         </aside>
 
         <!-- Center Content -->
