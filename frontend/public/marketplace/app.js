@@ -72,6 +72,7 @@ const state = {
   supabase: null,
   session: null,
   sessionRefreshPromise: null,
+  authRevision: 0,
   me: null,
   routeAccessReady: false,
   routeSyncGuardKey: '',
@@ -81,6 +82,7 @@ const state = {
 
   // Marketplace
   products: [],
+  productsRequestId: 0,
   savedIds: new Set(),
   favoritePending: new Set(),
   activeCategory: 'all',
@@ -105,6 +107,7 @@ const state = {
   telegramBotUsername: '',
   telegramLoginWidgetMounted: false,
   telegramProfileWidgetMounted: false,
+  telegramAuthPending: false,
   myOrders: [],
 
   // Seller
@@ -254,20 +257,25 @@ function toggleDrop(id) {
    4. API & Authentication Helpers
    -------------------------------------------------------------------------- */
 async function api(path, options = {}) {
-  const headers = new Headers(options.headers || {});
-  if (state.session?.access_token) {
-    headers.set('Authorization', 'Bearer ' + state.session.access_token);
-  }
-  if (options.body && !(options.body instanceof FormData) && !headers.has('Content-Type')) {
+  const { authToken, ...fetchOptions } = options;
+  const sessionAtRequest = state.session;
+  const headers = new Headers(fetchOptions.headers || {});
+  const requestToken = authToken !== undefined ? authToken : sessionAtRequest?.access_token;
+  if (requestToken) headers.set('Authorization', 'Bearer ' + requestToken);
+  else headers.delete('Authorization');
+
+  if (fetchOptions.body && !(fetchOptions.body instanceof FormData) && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json');
   }
 
-  const requestOptions = { ...options, headers, cache: 'no-store' };
+  const requestOptions = { ...fetchOptions, headers, cache: 'no-store' };
   let response = await fetch(path, requestOptions);
   let payload = {};
   try { payload = await response.json(); } catch {}
 
-  if (response.status === 401 && state.session?.refresh_token && state.supabase) {
+  if (response.status === 401 && sessionAtRequest?.refresh_token && state.supabase &&
+      state.session?.user?.id === sessionAtRequest.user?.id &&
+      (authToken === undefined || authToken === sessionAtRequest.access_token)) {
     try {
       if (!state.sessionRefreshPromise) {
         state.sessionRefreshPromise = state.supabase.auth.refreshSession()
@@ -304,10 +312,19 @@ function requireLogin() {
   return false;
 }
 
-async function loadIdentity() {
-  if (!state.session) { state.me = null; return; }
-  const res = await api('/api/me');
+async function loadIdentity(sessionSnapshot = state.session, revision = state.authRevision) {
+  if (!sessionSnapshot?.access_token) {
+    if (revision === state.authRevision) state.me = null;
+    return null;
+  }
+
+  const res = await api('/api/me', { authToken: sessionSnapshot.access_token });
+  // Ignore a delayed profile response after the user switches accounts or signs out.
+  if (revision !== state.authRevision ||
+      state.session?.user?.id !== sessionSnapshot.user?.id) return null;
+
   state.me = res.data;
+  return res.data;
 }
 
 async function refreshSession() {
@@ -328,26 +345,32 @@ async function refreshSession() {
     state.session = null;
   }
 
-  if (state.session) {
+  const revision = ++state.authRevision;
+  const sessionSnapshot = state.session;
+
+  if (sessionSnapshot) {
     try {
-      await loadIdentity();
+      await loadIdentity(sessionSnapshot, revision);
     } catch (error) {
       // A profile/API hiccup must not invalidate a valid Supabase login or block the storefront.
-      console.warn('Could not load account profile:', error.message);
-      state.me = {
-        user: {
-          id: state.session.user?.id,
-          email: state.session.user?.email || null,
-          phone: state.session.user?.phone || null
-        },
-        profile: {
-          display_name: state.session.user?.user_metadata?.display_name
-            || state.session.user?.email?.split('@')[0]
-            || 'គណនីអ្នកប្រើប្រាស់'
-        },
-        vendor: null,
-        isAdmin: false
-      };
+      if (revision === state.authRevision &&
+          state.session?.user?.id === sessionSnapshot.user?.id) {
+        console.warn('Could not load account profile:', error.message);
+        state.me = {
+          user: {
+            id: sessionSnapshot.user?.id,
+            email: sessionSnapshot.user?.email || null,
+            phone: sessionSnapshot.user?.phone || null
+          },
+          profile: {
+            display_name: sessionSnapshot.user?.user_metadata?.display_name
+              || sessionSnapshot.user?.email?.split('@')[0]
+              || 'គណនីអ្នកប្រើប្រាស់'
+          },
+          vendor: null,
+          isAdmin: false
+        };
+      }
     }
   } else {
     state.me = null;
@@ -671,6 +694,7 @@ function renderProducts() {
 }
 
 async function loadProducts() {
+  const requestId = ++state.productsRequestId;
   const grid = $('productGrid');
   grid.setAttribute('aria-busy', 'true');
   grid.classList.add('hidden');
@@ -683,18 +707,22 @@ async function loadProducts() {
 
   try {
     const res = await api('/api/products?' + params.toString());
-    state.products = res.data || [];
+    if (requestId !== state.productsRequestId) return;
+    state.products = Array.isArray(res.data) ? res.data : [];
     renderProducts();
     syncHomeHeroImagesFromProducts();
     void loadHomeVendorMedia();
   } catch (error) {
-    state.products = [];
+    // Keep the last successful catalogue visible during a temporary API/network failure.
+    if (requestId !== state.productsRequestId) return;
     renderProducts();
     toast('មិនអាចទាញយកទំនិញបានទេ៖ ' + error.message, 'error');
   } finally {
-    $('skeletonGrid').classList.add('hidden');
-    grid.classList.remove('hidden');
-    grid.setAttribute('aria-busy', 'false');
+    if (requestId === state.productsRequestId) {
+      $('skeletonGrid').classList.add('hidden');
+      grid.classList.remove('hidden');
+      grid.setAttribute('aria-busy', 'false');
+    }
   }
 }
 
@@ -1523,7 +1551,99 @@ function openCheckout(p) {
 function openAuth(mode = 'login') {
   setAuthMode(mode);
   openModal('authModal');
+  mountTelegramLoginWidget();
 }
+
+function mountTelegramLoginWidget() {
+  return mountTelegramWidget('telegramLoginWidget', 'on7inOneTelegramLogin', 'telegramLoginWidgetMounted');
+}
+
+function mountTelegramWidget(containerId, callbackName, mountedKey) {
+  const container = $(containerId);
+  const username = String(state.telegramBotUsername || '').replace(/^@/, '').trim();
+  if (!container || !/^[A-Za-z0-9_]{5,32}$/.test(username)) return false;
+  if (state[mountedKey]) return true;
+
+  container.replaceChildren();
+  const script = document.createElement('script');
+  script.async = true;
+  script.src = 'https://telegram.org/js/telegram-widget.js?22';
+  script.dataset.telegramLogin = username;
+  script.dataset.size = 'large';
+  script.dataset.userpic = 'false';
+  script.dataset.onauth = callbackName + '(user)';
+  container.appendChild(script);
+  state[mountedKey] = true;
+  return true;
+}
+
+async function completeTelegramLogin(identity) {
+  if (state.telegramAuthPending) return;
+  state.telegramAuthPending = true;
+  try {
+    if (!state.supabase) throw new Error('ប្រព័ន្ធ Supabase មិនទាន់ភ្ជាប់ទេ។');
+    const response = await fetch('/api/auth/telegram', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(identity),
+      cache: 'no-store'
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(payload.error || 'មិនអាចចូលតាម Telegram បានទេ។');
+
+    const session = payload.data?.session;
+    if (!session?.access_token || !session?.refresh_token) {
+      throw new Error('Telegram មិនបានផ្ដល់ Session ត្រឹមត្រូវទេ។');
+    }
+
+    const { data, error } = await state.supabase.auth.setSession({
+      access_token: session.access_token,
+      refresh_token: session.refresh_token
+    });
+    if (error) throw error;
+    state.session = data.session || session;
+    await refreshSession();
+    if (!state.session) throw new Error('មិនអាចរក្សាទុក Session របស់ Telegram បានទេ។');
+
+    syncHeader();
+    closeModal('authModal');
+    toast(payload.data?.isNewUser
+      ? 'បានបង្កើតគណនី និងចូលតាម Telegram ជោគជ័យ!'
+      : 'បានចូលគណនីតាម Telegram ជោគជ័យ!');
+    void Promise.all([loadSaved(), loadOrders(), loadUnifiedSellerChatInbox()])
+      .catch(error => console.warn('Could not load Telegram account data:', error.message));
+  } catch (error) {
+    toast(error.message || 'មិនអាចចូលតាម Telegram បានទេ។', 'error');
+  } finally {
+    state.telegramAuthPending = false;
+  }
+}
+
+async function completeTelegramLink(identity) {
+  if (state.telegramAuthPending) return;
+  if (!state.session) {
+    toast('សូមចូលគណនី 7inOne ជាមុនសិន។', 'warning');
+    return;
+  }
+  state.telegramAuthPending = true;
+  try {
+    await api('/api/me/telegram', {
+      method: 'POST',
+      body: JSON.stringify(identity)
+    });
+    state.telegramProfileWidgetMounted = false;
+    $('telegramProfileWidget')?.replaceChildren();
+    await renderTelegramSecurity();
+    toast('បានភ្ជាប់ Telegram Login ជាមួយគណនីនេះរួចរាល់។');
+  } catch (error) {
+    toast(error.message || 'មិនអាចភ្ជាប់ Telegram បានទេ។', 'error');
+  } finally {
+    state.telegramAuthPending = false;
+  }
+}
+
+window.on7inOneTelegramLogin = identity => { void completeTelegramLogin(identity); };
+window.on7inOneTelegramLink = identity => { void completeTelegramLink(identity); }
 
 function setAuthMode(mode) {
   state.authMode = mode;
@@ -1541,6 +1661,7 @@ function setAuthMode(mode) {
 
 async function renderTelegramSecurity() {
   if (!state.session) return;
+  mountTelegramWidget('telegramProfileWidget', 'on7inOneTelegramLink', 'telegramProfileWidgetMounted');
   try {
     const res = await api('/api/me/telegram');
     const connected = Boolean(res.data?.connected);
@@ -1711,6 +1832,7 @@ function bindEvents() {
       if (res.error) throw res.error;
 
       state.session = res.data.session || null;
+      const authRevision = ++state.authRevision;
       if (!state.session) {
         if (isRegister) {
           toast('បានបង្កើតគណនី។ សូមពិនិត្យ Email ឬ SMS ដើម្បីផ្ទៀងផ្ទាត់ មុនចូលប្រើ។');
@@ -1721,7 +1843,7 @@ function bindEvents() {
 
       let profileLoaded = true;
       try {
-        await loadIdentity();
+        await loadIdentity(state.session, authRevision);
       } catch (profileError) {
         // Authentication already succeeded; keep the valid session and let profile data retry later.
         profileLoaded = false;
@@ -1898,7 +2020,9 @@ async function boot() {
       cfg = await configResponse.json();
       state.maintenanceMode = cfg.maintenanceMode === true;
       state.maintenanceMessage = String(cfg.maintenanceMessage || DEFAULT_MAINTENANCE_MSG);
+      state.telegramBotUsername = String(cfg.telegramBotUsername || '').replace(/^@/, '').trim();
       applySiteBranding(cfg);
+      mountTelegramLoginWidget();
     } catch (configError) {
       console.error('Could not load marketplace config:', configError);
       toast('មិនអាចទាញការកំណត់ប្រព័ន្ធបានទេ៖ ' + configError.message, 'warning');
@@ -1907,20 +2031,28 @@ async function boot() {
     if (cfg.supabaseUrl && cfg.supabaseAnonKey && window.supabase?.createClient) {
       state.supabase = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
       state.supabase.auth.onAuthStateChange((event, session) => {
-        state.session = session || null;
-        if (!state.session) {
+        const revision = ++state.authRevision;
+        const sessionSnapshot = session || null;
+        state.session = sessionSnapshot;
+
+        if (!sessionSnapshot) {
           state.me = null;
           syncHeader();
           return;
         }
 
-        // Do not await Supabase auth callbacks; profile/API work runs after the callback returns.
+        // Supabase invokes this for initial restore, account switches and token refresh.
+        // Defer API work until the callback returns; discard stale account responses.
         Promise.resolve().then(async () => {
+          if (revision !== state.authRevision) return;
           try {
-            await loadIdentity();
+            await loadIdentity(sessionSnapshot, revision);
           } catch (error) {
-            console.warn('Auth state changed but profile could not be loaded:', error.message);
+            if (revision === state.authRevision) {
+              console.warn('Auth state changed but profile could not be loaded:', error.message);
+            }
           }
+          if (revision !== state.authRevision) return;
           syncHeader();
           void syncVendorPresence();
         });

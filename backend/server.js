@@ -204,14 +204,76 @@ function publicProduct(product) {
     }))
   };
 }
+async function fetchTelegramWithRetry(url, options, stage, maxAttempts = 3) {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    let response;
+    try {
+      response = await fetch(url, { ...options, signal: AbortSignal.timeout(20_000) });
+    } catch (error) {
+      const causeCode = clean(error?.cause?.code || error?.name || 'FETCH_FAILED', 80);
+      if (attempt === maxAttempts) {
+        throw new Error(`Telegram ${stage} network failure after ${maxAttempts} attempts (${causeCode}).`);
+      }
+      await new Promise(resolve => setTimeout(resolve, 300 * attempt));
+      continue;
+    }
+
+    if (response.ok) return response;
+
+    const responseText = await response.text().catch(() => '');
+    let responseJson = null;
+    try { responseJson = JSON.parse(responseText); } catch {}
+    const description = clean(responseJson?.description || responseText || response.statusText, 220);
+
+    if (response.status !== 429 && response.status < 500) {
+      throw new Error(`Telegram ${stage} rejected the request (HTTP ${response.status}): ${description}`);
+    }
+    if (attempt === maxAttempts) {
+      throw new Error(`Telegram ${stage} failed after ${maxAttempts} attempts: ${description}`);
+    }
+
+    const retryAfter = Number(responseJson?.parameters?.retry_after || 0);
+    const delay = Math.min(5_000, retryAfter > 0 ? retryAfter * 1000 : 400 * attempt);
+    await new Promise(resolve => setTimeout(resolve, delay));
+  }
+  throw new Error(`Telegram ${stage} failed.`);
+}
+
 async function streamTelegramFile(fileId, res, mimeType = 'application/octet-stream', disposition = 'inline', cacheControl = 'public, max-age=86400, stale-while-revalidate=604800') {
-  const file = await telegram('getFile', {
-    method: 'POST', headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ file_id: fileId })
-  });
-  const fileResponse = await fetch(`https://api.telegram.org/file/bot${process.env.TELEGRAM_BOT_TOKEN}/${file.file_path}`);
-  if (!fileResponse.ok) throw new Error('Telegram file download failed.');
-  const detectedType = mimeType !== 'application/octet-stream' ? mimeType : (fileResponse.headers.get('content-type') || mimeType);
+  assertTelegramBotConfig();
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+
+  // getFile and file download are read-only, so bounded retries are safe here.
+  const lookupResponse = await fetchTelegramWithRetry(
+    `https://api.telegram.org/bot${token}/getFile`,
+    {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ file_id: fileId })
+    },
+    'getFile'
+  );
+
+  const lookup = await lookupResponse.json().catch(() => null);
+  if (!lookup?.ok || !lookup.result?.file_path) {
+    throw new Error(`Telegram getFile returned an invalid result: ${clean(lookup?.description || 'file_path is missing', 220)}`);
+  }
+
+  const filePath = clean(lookup.result.file_path, 1024);
+  if (!filePath || filePath.startsWith('/') || filePath.split('/').includes('..')) {
+    throw new Error('Telegram getFile returned an invalid file path.');
+  }
+
+  const fileResponse = await fetchTelegramWithRetry(
+    `https://api.telegram.org/file/bot${token}/${filePath}`,
+    { method: 'GET' },
+    'file download'
+  );
+
+  const detectedType = mimeType !== 'application/octet-stream'
+    ? mimeType
+    : (fileResponse.headers.get('content-type') || mimeType);
+
   res.set('Content-Type', detectedType);
   res.set('Content-Disposition', disposition);
   res.set('X-Content-Type-Options', 'nosniff');
@@ -600,7 +662,19 @@ app.get('/api/vendor-media',async(_req,res)=>{
 // Public catalogue.
 app.get('/api/categories', async (_req, res) => {
   if (!db(res)) return;
-  const { data, error } = await supabase.from('products').select('category').eq('status', 'active').gte('renewed_at',new Date(Date.now()-PRODUCT_PUBLIC_MAX_AGE_MS).toISOString());
+  const cutoff = new Date(Date.now() - PRODUCT_PUBLIC_MAX_AGE_MS).toISOString();
+  let { data, error } = await supabase.from('products').select('category')
+    .eq('status', 'active')
+    .or(`renewed_at.gte.${cutoff},and(renewed_at.is.null,created_at.gte.${cutoff})`);
+
+  const missingRenewalColumn = error && (
+    error.code === '42703'
+    || /renewed_at.*(does not exist|schema cache)|column .*renewed_at/i.test(error.message || '')
+  );
+  if (missingRenewalColumn) {
+    ({ data, error } = await supabase.from('products').select('category')
+      .eq('status', 'active').gte('created_at', cutoff));
+  }
   if (error) return fail(res, 500, 'Could not load categories');
   res.json({ data: [...new Set((data || []).map(row => row.category).filter(Boolean))].sort() });
 });
@@ -619,14 +693,20 @@ app.get('/api/products', async (req, res) => {
     let query = supabase.from('products').select(fields, { count: 'exact' })
       .eq('status', 'active')
       .in('vendors.status', ['approved','pending','rejected'])
-      .gt('stock', 0)
-      .gte(legacyRenewal ? 'created_at' : 'renewed_at', cutoff)
-      .order('created_at', { ascending: false })
-      .range((page - 1) * limit, page * limit - 1);
+      .gt('stock', 0);
+
+    // Combine age and text filters into one PostgREST logic expression.
+    // This avoids duplicate OR query parameters, which can be ambiguous.
+    const filters = [legacyRenewal
+      ? `created_at.gte.${cutoff}`
+      : `or(renewed_at.gte.${cutoff},and(renewed_at.is.null,created_at.gte.${cutoff}))`];
     if (q) {
       const term = q.replace(/[%_,()]/g, '').trim();
-      if (term) query = query.or(`title.ilike.%${term}%,description.ilike.%${term}%,location.ilike.%${term}%`);
+      if (term) filters.push(`or(title.ilike.%${term}%,description.ilike.%${term}%,location.ilike.%${term}%)`);
     }
+    query = query.or(`and(${filters.join(',')})`)
+      .order('created_at', { ascending: false })
+      .range((page - 1) * limit, page * limit - 1);
     if (category) query = query.eq('category', category);
     return query;
   };
@@ -666,9 +746,23 @@ app.get('/api/products', async (req, res) => {
 });
 app.get('/api/products/:id', async (req, res) => {
   if (!db(res)) return;
-  let { data, error } = await supabase.from('products')
-    .select('*,product_images(id,file_id,image_url,sort_order),vendors!inner(id,user_id,store_name,status,store_logo_file_id)')
-    .eq('id', req.params.id).eq('status', 'active').in('vendors.status', ['approved','pending','rejected']).gt('stock', 0).gte('renewed_at',new Date(Date.now()-PRODUCT_PUBLIC_MAX_AGE_MS).toISOString()).maybeSingle();
+  const cutoff = new Date(Date.now() - PRODUCT_PUBLIC_MAX_AGE_MS).toISOString();
+  const productFields = '*,product_images(id,file_id,image_url,sort_order),vendors!inner(id,user_id,store_name,status,store_logo_file_id)';
+  let { data, error } = await supabase.from('products').select(productFields)
+    .eq('id', req.params.id).eq('status', 'active').in('vendors.status', ['approved','pending','rejected']).gt('stock', 0)
+    .or(`renewed_at.gte.${cutoff},and(renewed_at.is.null,created_at.gte.${cutoff})`)
+    .maybeSingle();
+
+  const missingRenewalColumn = error && (
+    error.code === '42703'
+    || /renewed_at.*(does not exist|schema cache)|column .*renewed_at/i.test(error.message || '')
+  );
+  if (missingRenewalColumn) {
+    ({ data, error } = await supabase.from('products').select(productFields)
+      .eq('id', req.params.id).eq('status', 'active')
+      .in('vendors.status', ['approved','pending','rejected']).gt('stock', 0)
+      .gte('created_at', cutoff).maybeSingle());
+  }
   if (error || !data) return fail(res, 404, 'Product not found');
 
   // Store owners may inspect their own products without inflating public view counts.
