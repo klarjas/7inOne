@@ -2193,7 +2193,7 @@ textarea,
 .home-main-content .market-listing-header{margin:12px 0 14px!important;padding:0 0 8px!important}
 .home-main-content .market-listing-header h2{font-size:clamp(20px,2vw,26px)!important;color:#172b24!important}
 /* productGrid lacked display:grid, causing a single oversized product card */
-.home-main-content #productGrid:not(.hidden),.home-main-content #skeletonGrid:not(.hidden){display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:16px!important;min-height:0!important;align-content:start!important}
+.home-main-content #productGrid:not(.hidden){display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:16px!important;min-height:0!important;align-content:start!important}
 .home-main-content .cd{min-width:0;border-radius:18px}
 .home-main-content .cd:hover{transform:translateY(-3px)}
 .home-main-content .cd .im{aspect-ratio:1.18/1!important;margin:8px 8px 0!important;border-radius:13px!important;background:#f5f7f6!important;color:#a2afa8!important}
@@ -2569,13 +2569,17 @@ textarea,
 }
 #view-home #homeVendorMediaSection{grid-column:2!important;grid-row:2!important;min-width:0}
 #view-home .market-listing-header{grid-column:2!important;grid-row:3!important}
-#view-home #skeletonGrid:not(.hidden),
 #view-home #productGrid:not(.hidden){
   display:grid!important;
   grid-column:2!important;
   grid-row:4!important;
   grid-template-columns:repeat(6,minmax(0,1fr))!important;
   gap:12px!important;
+  min-width:0!important;
+}
+#view-home #skeletonGrid:not(.hidden){
+  grid-column:2!important;
+  grid-row:4!important;
   min-width:0!important;
 }
 #view-home #emptyHome{grid-column:2!important;grid-row:4!important}
