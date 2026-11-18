@@ -4161,3 +4161,26 @@ button:hover:not(:disabled):not(.product-buy-primary):not(.hero-primary-action):
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
+/* Keep Footer Anchored to Bottom & Hidden While Restoring */
+html.route-restoring footer {
+  display: none !important;
+}
+
+body {
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: 100vh !important;
+  min-height: 100dvh !important;
+}
+
+body > main {
+  flex: 1 0 auto !important;
+  width: 100% !important;
+}
+
+body > footer {
+  flex: 0 0 auto !important;
+  margin-top: auto !important;
+  width: 100% !important;
+}
