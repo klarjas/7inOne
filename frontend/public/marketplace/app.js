@@ -1136,9 +1136,9 @@ function renderStorefront() {
   if (!root) return;
   root.onclick = handleStorefrontAction;
   if (state.currentStoreLoading) {
-    root.innerHTML = `<div class="storefront-skeleton" aria-label="កំពុងផ្ទុកព័ត៌មានហាង">
-      <div class="storefront-skeleton-profile skeleton"></div>
-      <div class="storefront-skeleton-grid">${Array.from({length:8}, () => '<div class="storefront-skeleton-card"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>').join('')}</div>
+    root.innerHTML = `<div class="global-loading" role="status" aria-label="កំពុងផ្ទុកព័ត៌មានហាង">
+      <div class="loader" aria-hidden="true"></div>
+      <span>កំពុងផ្ទុកព័ត៌មានហាង...</span>
     </div>`;
     return;
   }
@@ -1204,7 +1204,7 @@ function renderStorefront() {
         ? `<div id="storeProductGrid">${visible.map(productCard).join('')}</div>`
         : `<div class="storefront-empty"><span>${ic('package', 30)}</span><strong>មិនមានទំនិញដែលត្រូវនឹងការស្វែងរកទេ</strong><p>សូមសាកល្បងពាក្យស្វែងរក ឬប្រភេទទំនិញផ្សេងទៀត។</p></div>`}
       ${state.currentStoreMoreError ? '<div class="storefront-more-error">មិនអាចផ្ទុកទំនិញបន្ថែមបានទេ។ សូមព្យាយាមម្តងទៀត។</div>' : ''}
-      ${hasMore ? `<div class="storefront-load-more-wrap"><button type="button" class="storefront-load-more" data-store-load-more ${state.currentStoreMoreLoading ? 'disabled' : ''}>${state.currentStoreMoreLoading ? 'កំពុងផ្ទុក...' : 'បង្ហាញបន្ថែម'}</button></div>` : ''}
+      ${hasMore ? `<div class="storefront-load-more-wrap"><button type="button" class="storefront-load-more" data-store-load-more ${state.currentStoreMoreLoading ? 'disabled' : ''}>${state.currentStoreMoreLoading ? '<span class="loader" aria-hidden="true"></span>' : 'បង្ហាញបន្ថែម'}</button></div>` : ''}
     </section>
     ${reviews.length ? `
       <section class="storefront-reviews">
@@ -1620,7 +1620,7 @@ async function openSellerChat(conversationId, mode, draftProduct = null) {
   if (mode) state.chatMode = mode;
 
   openModal('sellerChatModal');
-  $('sellerChatMessages').innerHTML = '<p class="py-8 text-center text-xs text-slate-400">កំពុងផ្ទុកសន្ទនា…</p>';
+  $('sellerChatMessages').innerHTML = '<div class="global-loading" role="status" aria-label="កំពុងផ្ទុកសន្ទនា"><div class="loader" aria-hidden="true"></div><span>កំពុងផ្ទុកសន្ទនា...</span></div>';
   await loadSellerChatConversation(true);
   await loadUnifiedSellerChatInbox();
   scrollSellerChatToBottom();
