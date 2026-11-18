@@ -1573,9 +1573,13 @@ function renderSellerChatInbox() {
   badge.classList.toggle('hidden', !total);
 
   target.innerHTML = state.chatInbox.map((chat) => {
-    const avatarUrl = chat.other_role === 'seller' ? chat.vendor?.profile?.avatar_url : chat.buyer?.avatar_url;
-    const img = avatarUrl ? `<img src="${esc(avatarUrl)}" class="h-11 w-11 shrink-0 rounded-full object-cover">` : `<span class="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-slate-100 text-slate-400">${ic('user', 20)}</span>`;
-    return `<button type="button" data-unified-chat="${esc(chat.id)}" class="seller-chat-inbox-item ${Number(chat.unread_count) > 0 ? 'unread' : ''}">${img}<span class="min-w-0 flex-1"><b class="block truncate">${esc(chat.other_name || 'អ្នកប្រើប្រាស់')}</b><small class="block truncate text-slate-400">${esc(chat.last_message_preview || 'ចុចដើម្បីបើកសន្ទនា')}</small></span>${Number(chat.unread_count) > 0 ? `<span class="rounded-full bg-emerald-700 px-2 py-0.5 text-[10px] font-bold text-white">${Number(chat.unread_count)}</span>` : ''}</button>`;
+    const isShop = chat.other_role === 'seller';
+    const displayName = isShop ? (chat.vendor?.store_name || 'ហាងអ្នកលក់') : (chat.buyer?.display_name || chat.other_name || 'អ្នកប្រើប្រាស់');
+    const avatarUrl = isShop ? chat.vendor?.store_logo_url : chat.buyer?.avatar_url;
+    const img = avatarUrl
+      ? `<img src="${esc(avatarUrl)}" alt="${esc(displayName)}" class="h-11 w-11 shrink-0 rounded-full object-cover">`
+      : `<span class="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-slate-100 text-slate-400">${ic(isShop ? 'store' : 'user', 20)}</span>`;
+    return `<button type="button" data-unified-chat="${esc(chat.id)}" class="seller-chat-inbox-item ${Number(chat.unread_count) > 0 ? 'unread' : ''}">${img}<span class="min-w-0 flex-1"><b class="block truncate">${esc(displayName)}</b><small class="block truncate text-slate-400">${esc(chat.last_message_preview || 'ចុចដើម្បីបើកសន្ទនា')}</small></span>${Number(chat.unread_count) > 0 ? `<span class="rounded-full bg-emerald-700 px-2 py-0.5 text-[10px] font-bold text-white">${Number(chat.unread_count)}</span>` : ''}</button>`;
   }).join('') || '<p class="py-8 text-center text-xs text-slate-400">មិនទាន់មានសន្ទនាទេ។</p>';
 }
 
@@ -1598,11 +1602,15 @@ async function loadSellerChatConversation(scrollToBottom = false) {
   const messages = data.messages || [];
 
   state.chatMode = conv.current_role === 'seller' ? 'seller' : 'buyer';
-  $('sellerChatTitle').textContent = state.chatMode === 'seller' ? (conv.buyer?.display_name || 'អ្នកទិញ') : (conv.vendor?.store_name || 'អ្នកលក់');
-  $('sellerChatSubtitle').textContent = 'សន្ទនាតាមហាង · ឆាតផ្ទាល់';
+  const isShop = state.chatMode !== 'seller';
+  const otherName = isShop ? (conv.vendor?.store_name || 'ហាងអ្នកលក់') : (conv.buyer?.display_name || 'អ្នកទិញ');
+  $('sellerChatTitle').textContent = otherName;
+  $('sellerChatSubtitle').textContent = isShop ? 'គណនីហាង · សន្ទនាផ្ទាល់' : 'សន្ទនាជាមួយអ្នកទិញ';
 
-  const otherAvatar = state.chatMode === 'seller' ? conv.buyer?.avatar_url : conv.vendor?.profile?.avatar_url;
-  $('sellerChatProductImage').innerHTML = otherAvatar ? `<img src="${esc(otherAvatar)}" class="h-full w-full object-cover">` : `<span class="grid h-full w-full place-items-center text-slate-400">${ic('user', 18)}</span>`;
+  const otherAvatar = isShop ? conv.vendor?.store_logo_url : conv.buyer?.avatar_url;
+  $('sellerChatProductImage').innerHTML = otherAvatar
+    ? `<img src="${esc(otherAvatar)}" alt="${esc(otherName)}" class="h-full w-full object-cover">`
+    : `<span class="grid h-full w-full place-items-center text-slate-400">${ic(isShop ? 'store' : 'user', 18)}</span>`;
 
   state.chatLoadedMessages = messages;
   const pending = state.chatPendingMedia.filter((m) => m.conversation_id === state.chatConversationId);
