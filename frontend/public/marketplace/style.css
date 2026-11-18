@@ -2802,12 +2802,14 @@ textarea,
 }
 
 
-/* Keep the listing banner in normal document flow; never pin it while scrolling. */
+/* Keep the listing banner sticky at the same scroll offset as the sidebar categories. */
 #view-home .market-listing-header{
-  position:static!important;
-  top:auto!important;
-  inset-block-start:auto!important;
+  position:sticky!important;
+  top:118px!important;
+  inset-block-start:118px!important;
+  align-self:start!important;
   transform:none!important;
+  z-index:20!important;
 }
 
 
