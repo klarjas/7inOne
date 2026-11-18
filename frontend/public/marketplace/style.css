@@ -341,7 +341,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 
 
 /* 7inOne clean marketplace refresh · Emerald & Warm Gold */
-:root{--market-bg:#F8FAFC;--market-border:#E2EDE7;--market-ink:#102820;--market-emerald:#064E3B;--market-emerald-mid:#065F46;--market-green:#10B981;--market-gold:#F59E0B}
+:root{--market-bg:#1B2838;--market-border:#2A475E;--market-ink:#C7D5E0;--market-emerald:#171A21;--market-emerald-mid:#16202D;--market-green:#2B74B8;--market-gold:#66C0F4}
 body{background:var(--market-bg);color:var(--market-ink)}.shell{width:min(1440px,calc(100% - 32px));max-width:1440px}.glass{background:rgba(23,26,33,.94)!important;border-color:#2A475E!important;backdrop-filter:blur(14px)}
 .product-card{border-color:var(--market-border)!important;box-shadow:0 4px 18px rgba(6,78,59,.055)!important;transition:transform .34s cubic-bezier(.22,1,.36,1),box-shadow .34s cubic-bezier(.22,1,.36,1),border-color .28s ease}.product-card:hover{transform:translate3d(0,-5px,0);box-shadow:0 18px 38px rgba(6,78,59,.12)!important;border-color:#A7D8C1!important}
 .product-card-media .product-img{transition:opacity .3s ease,transform .55s cubic-bezier(.22,1,.36,1)}.product-img-secondary{position:absolute;inset:0;opacity:0}.product-card:hover .product-img-primary:has(~.product-img-secondary){opacity:0}.product-card:hover .product-img-secondary{opacity:1}.product-image-count{position:absolute;bottom:9px;right:9px;z-index:2;border-radius:7px;background:rgba(6,46,37,.78);padding:4px 7px;color:#fff;font-size:9px;font-weight:700}.product-card-description{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;min-height:60px}
