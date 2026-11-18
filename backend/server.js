@@ -169,6 +169,9 @@ function friendlyTelegramUploadError(error) {
   if (/chat not found/i.test(message)) {
     return 'Telegram storage channel not found. Check TELEGRAM_STORAGE_CHAT_ID (must look like -100...) and that the bot was added to the channel.';
   }
+  if (/\b404\b|not found/i.test(message)) {
+    return 'Telegram Bot API returned 404 Not Found. Check TELEGRAM_BOT_TOKEN: use only the token from BotFather (for example 123456:ABC...), without a URL, the word "bot", or extra spaces.';
+  }
   if (/\b403\b|not enough rights|forbidden/i.test(message)) {
     return 'The bot must be an Administrator of the channel with permission to post messages.';
   }
@@ -2258,6 +2261,10 @@ app.patch('/api/admin/orders/:id', authenticate, requireAdmin, async (req, res) 
   if (error) return fail(res, 400, 'Could not load updated order');
   res.json({ data });
 });
+
+// Return JSON for unknown API paths instead of Next.js HTML 404 pages. This
+// makes missing or stale upload endpoints visible to the marketplace client.
+app.use('/api', (req, res) => fail(res, 404, `API route not found: ${req.method} ${req.path}`));
 
 app.use((error, _req, res, _next) => {
   if (error instanceof multer.MulterError) return fail(res, 400, error.message);
