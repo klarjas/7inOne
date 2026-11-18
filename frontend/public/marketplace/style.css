@@ -4070,3 +4070,16 @@ button:hover:not(:disabled):not(.product-buy-primary):not(.hero-primary-action):
   border-color: #66C0F4 !important;
   color: #66C0F4 !important;
 }
+
+
+/* Keep the full-card image view overlay transparent on hover */
+:is(#view-home,#view-store,#view-product) .cd .im > button[data-action="view"],
+:is(#view-home,#view-store,#view-product) .cd .im > button[data-action="view"]:hover,
+.product-related-grid .cd .im > button[data-action="view"],
+.product-related-grid .cd .im > button[data-action="view"]:hover {
+  background: transparent !important;
+  background-color: transparent !important;
+  border-color: transparent !important;
+  color: transparent !important;
+  box-shadow: none !important;
+}
