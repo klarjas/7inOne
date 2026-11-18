@@ -314,7 +314,8 @@ async function api(path, options = {}) {
 const isAdmin = () => Boolean(state.me?.isAdmin);
 const isSellerAccount = () => Boolean(state.me?.vendor && state.me.vendor.status !== 'blocked');
 const isVerifiedSeller = () => state.me?.vendor?.status === 'approved';
-const profileName = () => state.me?.profile?.display_name || state.session?.user?.user_metadata?.display_name || state.session?.user?.email?.split('@')[0] || 'គណនីអ្នកប្រើប្រាស់';
+const isInternalAuthEmail = (email) => /@auth\.7inone\.invalid$/i.test(String(email || '').trim());
+const profileName = () => state.me?.profile?.display_name || state.session?.user?.user_metadata?.display_name || (isInternalAuthEmail(state.session?.user?.email) ? '' : state.session?.user?.email?.split('@')[0]) || 'គណនីអ្នកប្រើប្រាស់';
 
 function requireLogin() {
   if (state.session) return true;
@@ -374,7 +375,7 @@ async function refreshSession() {
           },
           profile: {
             display_name: sessionSnapshot.user?.user_metadata?.display_name
-              || sessionSnapshot.user?.email?.split('@')[0]
+              || (isInternalAuthEmail(sessionSnapshot.user?.email) ? '' : sessionSnapshot.user?.email?.split('@')[0])
               || 'គណនីអ្នកប្រើប្រាស់'
           },
           vendor: null,
@@ -1284,7 +1285,7 @@ async function renderProfile() {
   $('profileBio').value = p.bio || '';
   setAvatar($('profileAvatar'), p.avatar_url, profileName());
   $('profileHeadingName').textContent = profileName();
-  $('profileHeadingMeta').textContent = state.session.user.phone || state.session.user.email || 'សមាជិក 7inOne';
+  $('profileHeadingMeta').textContent = state.session.user.phone || (isInternalAuthEmail(state.session.user.email) ? '' : state.session.user.email) || 'សមាជិក 7inOne';
 
   const badges = [];
   if (isAdmin()) badges.push(`<span class="account-role-chip bg-violet-50 text-violet-700">${ic('shield', 12)} អ្នកគ្រប់គ្រង</span>`);
