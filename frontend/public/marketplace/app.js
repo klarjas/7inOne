@@ -1920,10 +1920,10 @@ function bindEvents() {
     window.searchWait = setTimeout(() => void loadProducts(), 350);
   });
   $('searchCategory').addEventListener('change', (e) => setCategory(e.target.value));
-  $('categoryStrip').addEventListener('click', (e) => {
-    const b = e.target.closest('[data-category]');
-    if (b) setCategory(b.dataset.category);
-  });
+  document.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-category]');
+  if (b) setCategory(b.dataset.category);
+});
   document.querySelectorAll('[data-tag]').forEach((b) => b.addEventListener('click', () => {
     state.searchTerm = b.dataset.tag;
     $('searchInput').value = state.searchTerm;
