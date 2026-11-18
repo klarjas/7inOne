@@ -1039,7 +1039,7 @@ body {
   height: 42px !important;
   flex: 0 0 42px !important;
   border-radius: 50% !important;
-  background: linear-gradient(135deg, #064E3B, #10B981) !important;
+  background: linear-gradient(135deg, #2B74B8, #66C0F4) !important;
   color: #FFFFFF !important;
   transition: transform .18s ease, opacity .18s ease, box-shadow .18s ease !important;
 }
@@ -1049,7 +1049,7 @@ body {
 }
 #sellerChatSend:not(:disabled):hover {
   transform: translateY(-1px) scale(1.03);
-  box-shadow: 0 6px 16px rgba(6, 78, 59, .24) !important;
+  box-shadow: 0 6px 16px rgba(102, 192, 244, .28) !important;
 }
 
 
