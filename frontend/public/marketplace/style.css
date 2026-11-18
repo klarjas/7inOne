@@ -2789,3 +2789,14 @@ textarea,
   }
   #view-home #sortSelect{min-height:38px!important}
 }
+
+
+/* Align the listing banner with the top edge of the sidebar category section. */
+@media(min-width:901px){
+  #view-home .market-listing-header{
+    margin-top:0!important;
+    align-self:start!important;
+    width:100%!important;
+    box-sizing:border-box!important;
+  }
+}
