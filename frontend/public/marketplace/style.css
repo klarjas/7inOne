@@ -3069,11 +3069,4 @@ body:has(#view-home) {
   background:var(--gpt-input)!important;
   border-color:var(--gpt-border)!important;
 }
-/* The app's SVG icon helper already draws outline icons; standardize line weight. */
-:is(#view-home,#view-product,#view-store,#view-profile,#view-seller) svg[aria-hidden="true"]{
-  fill:none;
-  stroke:currentColor;
-  stroke-width:1.8;
-  stroke-linecap:round;
-  stroke-linejoin:round;
-}
+/* app.js already renders its interface icons as outline SVGs; preserve special status marks/logos. */
