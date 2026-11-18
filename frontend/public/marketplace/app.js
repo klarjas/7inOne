@@ -1175,7 +1175,7 @@ function renderStorefront() {
     const button = event.target.closest('[data-store-category]');
     if (button) { state.currentStoreCategory = button.dataset.storeCategory; renderStorefront(); }
   });
-  root.addEventListener('click', handleStorefrontAction);
+  root.onclick = handleStorefrontAction;
   $('storeProductGrid')?.addEventListener('click', event => {
     const heart = event.target.closest('[data-action="save"]');
     if (heart) { event.preventDefault(); event.stopPropagation(); saveAction(heart.dataset.id, heart); return; }
