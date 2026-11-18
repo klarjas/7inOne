@@ -3837,3 +3837,12 @@ body > footer {
   box-shadow: none;
 }
 
+/* Empty-home panel: match the requested light dashed surface */
+#emptyHome {
+  border-width: 1px !important;
+  border-style: dashed !important;
+  border-color: rgb(210, 210, 215) !important;
+  border-image: none !important;
+  border-radius: 20px !important;
+  background: rgb(255, 255, 255) !important;
+}
