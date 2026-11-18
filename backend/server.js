@@ -684,16 +684,20 @@ app.get('/api/products', async (req, res) => {
     let query = supabase.from('products').select(fields, { count: 'exact' })
       .eq('status', 'active')
       .in('vendors.status', ['approved','pending','rejected'])
-      .gt('stock', 0)
-      .or(legacyRenewal
-        ? `created_at.gte.${cutoff}`
-        : `renewed_at.gte.${cutoff},and(renewed_at.is.null,created_at.gte.${cutoff})`)
-      .order('created_at', { ascending: false })
-      .range((page - 1) * limit, page * limit - 1);
+      .gt('stock', 0);
+
+    // Combine age and text filters into one PostgREST logic expression.
+    // This avoids duplicate OR query parameters, which can be ambiguous.
+    const filters = [legacyRenewal
+      ? `created_at.gte.${cutoff}`
+      : `or(renewed_at.gte.${cutoff},and(renewed_at.is.null,created_at.gte.${cutoff}))`];
     if (q) {
       const term = q.replace(/[%_,()]/g, '').trim();
-      if (term) query = query.or(`title.ilike.%${term}%,description.ilike.%${term}%,location.ilike.%${term}%`);
+      if (term) filters.push(`or(title.ilike.%${term}%,description.ilike.%${term}%,location.ilike.%${term}%)`);
     }
+    query = query.or(`and(${filters.join(',')})`)
+      .order('created_at', { ascending: false })
+      .range((page - 1) * limit, page * limit - 1);
     if (category) query = query.eq('category', category);
     return query;
   };
