@@ -4045,3 +4045,28 @@ html, body, body > main {
   border-color: #66C0F4 !important;
   color: #66C0F4 !important;
 }
+
+
+/* Final Steam interaction polish: keep fields dark and remove gold hover states */
+input:focus,
+input:focus-visible,
+textarea:focus,
+textarea:focus-visible,
+select:focus,
+select:focus-visible,
+.field:focus,
+.field:focus-visible {
+  background: #101822 !important;
+  background-color: #101822 !important;
+  color: #FFFFFF !important;
+  border-color: #2A475E !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Neutral steel-blue hover for ordinary buttons; preserve primary CTA gradients */
+button:hover:not(:disabled):not(.product-buy-primary):not(.hero-primary-action):not(#supportChatLauncher) {
+  background-color: #2A475E !important;
+  border-color: #66C0F4 !important;
+  color: #66C0F4 !important;
+}
