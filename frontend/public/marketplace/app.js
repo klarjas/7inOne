@@ -72,6 +72,7 @@ const state = {
   supabase: null,
   session: null,
   sessionRefreshPromise: null,
+  authRevision: 0,
   me: null,
   routeAccessReady: false,
   routeSyncGuardKey: '',
@@ -254,15 +255,17 @@ function toggleDrop(id) {
    4. API & Authentication Helpers
    -------------------------------------------------------------------------- */
 async function api(path, options = {}) {
-  const headers = new Headers(options.headers || {});
-  if (state.session?.access_token) {
-    headers.set('Authorization', 'Bearer ' + state.session.access_token);
-  }
-  if (options.body && !(options.body instanceof FormData) && !headers.has('Content-Type')) {
+  const { authToken, ...fetchOptions } = options;
+  const headers = new Headers(fetchOptions.headers || {});
+  const requestToken = authToken !== undefined ? authToken : state.session?.access_token;
+  if (requestToken) headers.set('Authorization', 'Bearer ' + requestToken);
+  else headers.delete('Authorization');
+
+  if (fetchOptions.body && !(fetchOptions.body instanceof FormData) && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json');
   }
 
-  const requestOptions = { ...options, headers, cache: 'no-store' };
+  const requestOptions = { ...fetchOptions, headers, cache: 'no-store' };
   let response = await fetch(path, requestOptions);
   let payload = {};
   try { payload = await response.json(); } catch {}
@@ -304,10 +307,19 @@ function requireLogin() {
   return false;
 }
 
-async function loadIdentity() {
-  if (!state.session) { state.me = null; return; }
-  const res = await api('/api/me');
+async function loadIdentity(sessionSnapshot = state.session, revision = state.authRevision) {
+  if (!sessionSnapshot?.access_token) {
+    if (revision === state.authRevision) state.me = null;
+    return null;
+  }
+
+  const res = await api('/api/me', { authToken: sessionSnapshot.access_token });
+  // Ignore a delayed profile response after the user switches accounts or signs out.
+  if (revision !== state.authRevision ||
+      state.session?.user?.id !== sessionSnapshot.user?.id) return null;
+
   state.me = res.data;
+  return res.data;
 }
 
 async function refreshSession() {
@@ -328,9 +340,12 @@ async function refreshSession() {
     state.session = null;
   }
 
-  if (state.session) {
+  const revision = ++state.authRevision;
+  const sessionSnapshot = state.session;
+
+  if (sessionSnapshot) {
     try {
-      await loadIdentity();
+      await loadIdentity(sessionSnapshot, revision);
     } catch (error) {
       // A profile/API hiccup must not invalidate a valid Supabase login or block the storefront.
       console.warn('Could not load account profile:', error.message);
@@ -1711,6 +1726,7 @@ function bindEvents() {
       if (res.error) throw res.error;
 
       state.session = res.data.session || null;
+      const authRevision = ++state.authRevision;
       if (!state.session) {
         if (isRegister) {
           toast('បានបង្កើតគណនី។ សូមពិនិត្យ Email ឬ SMS ដើម្បីផ្ទៀងផ្ទាត់ មុនចូលប្រើ។');
@@ -1721,7 +1737,7 @@ function bindEvents() {
 
       let profileLoaded = true;
       try {
-        await loadIdentity();
+        await loadIdentity(state.session, authRevision);
       } catch (profileError) {
         // Authentication already succeeded; keep the valid session and let profile data retry later.
         profileLoaded = false;
@@ -1907,20 +1923,28 @@ async function boot() {
     if (cfg.supabaseUrl && cfg.supabaseAnonKey && window.supabase?.createClient) {
       state.supabase = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
       state.supabase.auth.onAuthStateChange((event, session) => {
-        state.session = session || null;
-        if (!state.session) {
+        const revision = ++state.authRevision;
+        const sessionSnapshot = session || null;
+        state.session = sessionSnapshot;
+
+        if (!sessionSnapshot) {
           state.me = null;
           syncHeader();
           return;
         }
 
-        // Do not await Supabase auth callbacks; profile/API work runs after the callback returns.
+        // Supabase invokes this for initial restore, account switches and token refresh.
+        // Defer API work until the callback returns; discard stale account responses.
         Promise.resolve().then(async () => {
+          if (revision !== state.authRevision) return;
           try {
-            await loadIdentity();
+            await loadIdentity(sessionSnapshot, revision);
           } catch (error) {
-            console.warn('Auth state changed but profile could not be loaded:', error.message);
+            if (revision === state.authRevision) {
+              console.warn('Auth state changed but profile could not be loaded:', error.message);
+            }
           }
+          if (revision !== state.authRevision) return;
           syncHeader();
           void syncVendorPresence();
         });
