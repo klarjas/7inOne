@@ -3946,3 +3946,140 @@ body > footer {
     padding: 15px;
   }
 }
+
+
+/* Seller Center — Steam Dark Slate & Steel Blue */
+#view-seller .overflow-hidden.rounded-3xl.bg-white.soft-shadow{
+  overflow:hidden;
+  border:1px solid #2A475E;
+  border-radius:20px;
+  background:#16202D;
+  box-shadow:0 12px 32px rgba(0,0,0,.22);
+}
+#view-seller .seller-tabs{
+  border-bottom:1px solid #2A475E;
+  background:#171A21;
+  scrollbar-color:#2A475E #171A21;
+}
+#view-seller .seller-tab{color:#8F98A0}
+#view-seller .seller-tab:hover{background:#203244;color:#C7D5E0}
+#view-seller .seller-tab.is-active{border-bottom-color:#66C0F4;color:#fff}
+#view-seller .seller-tab-count{background:#203244;color:#66C0F4}
+#view-seller .seller-tab-panel{background:#16202D;color:#C7D5E0}
+#view-seller .seller-search{
+  border-color:#2A475E;
+  background:#101822;
+  color:#8F98A0;
+}
+#view-seller .seller-search:focus-within{border-color:#66C0F4;box-shadow:0 0 0 2px rgba(102,192,244,.12)}
+#view-seller .seller-search input{color:#C7D5E0}
+#view-seller .seller-search input::placeholder{color:#8F98A0}
+#view-seller .seller-filter{
+  border-color:#2A475E;
+  background:#203244;
+  color:#8F98A0;
+}
+#view-seller .seller-filter:hover{border-color:#66C0F4;color:#C7D5E0}
+#view-seller .seller-filter.is-active{
+  border-color:#66C0F4;
+  background:rgba(102,192,244,.13);
+  color:#66C0F4;
+}
+#view-seller .seller-add-button{
+  border:1px solid #66C0F4;
+  background:#2B74B8;
+  color:#fff;
+  box-shadow:0 5px 16px rgba(43,116,184,.2);
+}
+#view-seller .seller-add-button:hover{background:#3688cf}
+#view-seller .seller-table-wrap,
+#view-seller .seller-list-rows{border-color:#2A475E;background:#16202D}
+#view-seller .seller-table-head{background:#203244;color:#8F98A0}
+#view-seller .seller-product-row,
+#view-seller .seller-transaction-row{border-color:#2A475E}
+#view-seller .seller-product-row:hover,
+#view-seller .seller-transaction-row:hover{background:#203244}
+#view-seller .seller-product-thumb{border-color:#2A475E;background:#101822;color:#8F98A0}
+#view-seller .seller-product-copy b,
+#view-seller .seller-transaction-main b,
+#view-seller .seller-list-heading h3{color:#fff}
+#view-seller .seller-product-copy small,
+#view-seller .seller-transaction-main small,
+#view-seller .seller-transaction-contact small{color:#8F98A0}
+#view-seller .seller-product-price,
+#view-seller .seller-transaction-price{color:#66C0F4}
+#view-seller .seller-product-metrics,
+#view-seller .seller-transaction-contact{color:#C7D5E0}
+#view-seller .seller-status-badge.is-active{background:rgba(190,238,17,.13);color:#BEEE11}
+#view-seller .seller-status-badge.is-expired{background:rgba(235,87,87,.13);color:#F28B82}
+#view-seller .seller-status-badge.is-sold,
+#view-seller .seller-status-badge.is-muted{background:#203244;color:#8F98A0}
+#view-seller .seller-status-badge.is-pending{background:rgba(255,190,70,.13);color:#F5C46B}
+#view-seller .seller-validity{color:#8F98A0}
+#view-seller .seller-expiry-warning{color:#F5C46B}
+#view-seller .seller-action-button{
+  border-color:#2A475E;
+  background:#203244;
+  color:#C7D5E0;
+}
+#view-seller .seller-action-button:hover{
+  transform:translateY(-1px);
+  border-color:#66C0F4;
+  background:#29445D;
+  color:#fff;
+}
+#view-seller .seller-action-button.is-renew,
+#view-seller .seller-action-button.is-complete{
+  border-color:rgba(190,238,17,.35);
+  background:rgba(190,238,17,.1);
+  color:#BEEE11;
+}
+#view-seller .seller-action-button.is-delete{
+  border-color:rgba(242,139,130,.3);
+  background:rgba(242,139,130,.09);
+  color:#F28B82;
+}
+#view-seller .seller-list-heading p,
+#view-seller .seller-empty-state,
+#view-seller .seller-empty-state svg{color:#8F98A0}
+#view-seller .seller-empty-state b{color:#C7D5E0}
+#view-seller .seller-shop-form,
+#view-seller .seller-media-form{
+  border-color:#2A475E;
+  border-radius:16px;
+  background:#16202D;
+  color:#C7D5E0;
+}
+#view-seller .seller-shop-cover-preview{
+  border-color:#2A475E;
+  background:#101822;
+  color:#8F98A0;
+}
+#view-seller .seller-shop-logo-preview{
+  border-color:#2A475E;
+  background:#101822;
+  color:#8F98A0;
+}
+#view-seller .seller-tab-panel .label{color:#C7D5E0}
+#view-seller .seller-tab-panel .field{
+  border-color:#2A475E;
+  background:#101822;
+  color:#C7D5E0;
+}
+#view-seller .seller-tab-panel .field::placeholder{color:#8F98A0}
+#view-seller .seller-tab-panel .field:focus{
+  border-color:#66C0F4;
+  box-shadow:0 0 0 2px rgba(102,192,244,.12);
+}
+#view-seller .seller-tab-panel option{background:#16202D;color:#C7D5E0}
+#view-seller #sellerMediaClose{
+  border-color:rgba(242,139,130,.3);
+  background:rgba(242,139,130,.09);
+  color:#F28B82;
+}
+#view-seller #sellerMediaStatus,
+#view-seller .seller-tab-panel small{color:#8F98A0}
+@media(max-width:639px){
+  #view-seller .seller-product-actions{border-color:#2A475E}
+  #view-seller .seller-transaction-actions{border-color:#2A475E}
+}
