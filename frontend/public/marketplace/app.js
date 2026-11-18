@@ -1942,13 +1942,6 @@ function bindEvents() {
       renderProducts();
     });
   });
-  document.querySelectorAll('[data-sort-value]').forEach((button) => {
-    button.addEventListener('click', () => {
-      $('sortSelect').value = button.dataset.sortValue || 'newest';
-      $('sortSelect').dispatchEvent(new Event('change', { bubbles: true }));
-    });
-  });
-
   $('productGrid').addEventListener('click', (e) => {
     const heart = e.target.closest('[data-action="save"]');
     if (heart) { e.preventDefault(); e.stopPropagation(); saveAction(heart.dataset.id, heart); return; }
