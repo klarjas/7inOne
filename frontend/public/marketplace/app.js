@@ -82,6 +82,7 @@ const state = {
 
   // Marketplace
   products: [],
+  productsRequestId: 0,
   savedIds: new Set(),
   favoritePending: new Set(),
   activeCategory: 'all',
@@ -348,21 +349,24 @@ async function refreshSession() {
       await loadIdentity(sessionSnapshot, revision);
     } catch (error) {
       // A profile/API hiccup must not invalidate a valid Supabase login or block the storefront.
-      console.warn('Could not load account profile:', error.message);
-      state.me = {
-        user: {
-          id: state.session.user?.id,
-          email: state.session.user?.email || null,
-          phone: state.session.user?.phone || null
-        },
-        profile: {
-          display_name: state.session.user?.user_metadata?.display_name
-            || state.session.user?.email?.split('@')[0]
-            || 'គណនីអ្នកប្រើប្រាស់'
-        },
-        vendor: null,
-        isAdmin: false
-      };
+      if (revision === state.authRevision &&
+          state.session?.user?.id === sessionSnapshot.user?.id) {
+        console.warn('Could not load account profile:', error.message);
+        state.me = {
+          user: {
+            id: sessionSnapshot.user?.id,
+            email: sessionSnapshot.user?.email || null,
+            phone: sessionSnapshot.user?.phone || null
+          },
+          profile: {
+            display_name: sessionSnapshot.user?.user_metadata?.display_name
+              || sessionSnapshot.user?.email?.split('@')[0]
+              || 'គណនីអ្នកប្រើប្រាស់'
+          },
+          vendor: null,
+          isAdmin: false
+        };
+      }
     }
   } else {
     state.me = null;
@@ -686,6 +690,7 @@ function renderProducts() {
 }
 
 async function loadProducts() {
+  const requestId = ++state.productsRequestId;
   const grid = $('productGrid');
   grid.setAttribute('aria-busy', 'true');
   grid.classList.add('hidden');
@@ -698,18 +703,22 @@ async function loadProducts() {
 
   try {
     const res = await api('/api/products?' + params.toString());
-    state.products = res.data || [];
+    if (requestId !== state.productsRequestId) return;
+    state.products = Array.isArray(res.data) ? res.data : [];
     renderProducts();
     syncHomeHeroImagesFromProducts();
     void loadHomeVendorMedia();
   } catch (error) {
-    state.products = [];
+    // Keep the last successful catalogue visible during a temporary API/network failure.
+    if (requestId !== state.productsRequestId) return;
     renderProducts();
     toast('មិនអាចទាញយកទំនិញបានទេ៖ ' + error.message, 'error');
   } finally {
-    $('skeletonGrid').classList.add('hidden');
-    grid.classList.remove('hidden');
-    grid.setAttribute('aria-busy', 'false');
+    if (requestId === state.productsRequestId) {
+      $('skeletonGrid').classList.add('hidden');
+      grid.classList.remove('hidden');
+      grid.setAttribute('aria-busy', 'false');
+    }
   }
 }
 
