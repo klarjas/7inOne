@@ -3912,3 +3912,75 @@ html, body, body > main {
   background-image: none !important;
   box-shadow: none !important;
 }
+
+/* Chat UX: subtle focus and floating non-blocking chat panel */
+/* Keep the existing field border steady when the user focuses a text box. */
+:is(input, textarea, select, .field):focus,
+:is(input, textarea, select, .field):focus-visible {
+  border-color: #2A475E !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* The buyer/seller chat is a floating panel, not a page-covering modal. */
+#sellerChatModal.modal,
+#sellerChatModal.modal.open {
+  position: fixed !important;
+  inset: auto 24px 88px auto !important;
+  width: auto !important;
+  height: auto !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: flex-end !important;
+  justify-content: flex-end !important;
+  background: transparent !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  pointer-events: none !important;
+}
+
+#sellerChatModal .seller-chat-shell {
+  width: min(430px, calc(100vw - 32px)) !important;
+  height: min(620px, calc(100dvh - 120px)) !important;
+  max-width: 430px !important;
+  max-height: none !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  border: 1px solid #2A475E !important;
+  border-radius: 18px !important;
+  background: #16202D !important;
+  box-shadow: 0 18px 54px rgba(0, 0, 0, .42) !important;
+  pointer-events: auto !important;
+}
+
+#sellerChatModal .seller-chat-layout {
+  min-height: 0 !important;
+  height: calc(100% - 58px) !important;
+}
+
+#sellerChatInput,
+#sellerChatInput:focus,
+#sellerChatInput:focus-visible {
+  border: 1px solid #2A475E !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+@media (max-width: 640px) {
+  #sellerChatModal.modal,
+  #sellerChatModal.modal.open {
+    inset: auto 10px 82px 10px !important;
+    width: auto !important;
+    height: auto !important;
+    padding: 0 !important;
+  }
+  #sellerChatModal .seller-chat-shell {
+    width: 100% !important;
+    height: min(600px, calc(100dvh - 110px)) !important;
+    max-width: none !important;
+    max-height: none !important;
+    margin: 0 !important;
+    border-radius: 18px !important;
+  }
+}
