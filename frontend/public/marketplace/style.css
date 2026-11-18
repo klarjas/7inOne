@@ -3577,3 +3577,64 @@ body > footer {
 #profileMenu .menu-action[data-action="logout"]{color:#C7D5E0}
 #profileMenu .menu-action[data-action="logout"]:hover{background:#3A2630;color:#F08A9A}
 
+/* Profile edit form: Steam Dark Slate & Steel Blue */
+#profileForm{
+  color:#C7D5E0;
+}
+#profileForm .label{
+  color:#C7D5E0;
+}
+#profileForm .field,
+#profileForm input,
+#profileForm select,
+#profileForm textarea{
+  width:100%;
+  background:#101822;
+  background-color:#101822;
+  color:#FFFFFF;
+  border:1px solid #2A475E;
+  border-radius:12px;
+  caret-color:#66C0F4;
+  box-shadow:none;
+}
+#profileForm .field::placeholder,
+#profileForm input::placeholder,
+#profileForm textarea::placeholder{
+  color:#8F98A0;
+  opacity:1;
+}
+#profileForm .field:focus,
+#profileForm input:focus,
+#profileForm select:focus,
+#profileForm textarea:focus{
+  background:#101822;
+  border-color:#66C0F4;
+  color:#FFFFFF;
+  outline:none;
+  box-shadow:0 0 0 3px rgba(102,192,244,.13);
+}
+#profileForm select option{
+  background:#16202D;
+  color:#FFFFFF;
+}
+#profileForm button[type="submit"],
+#profileForm button.brand-gradient{
+  width:100%;
+  border:1px solid #3D6687;
+  border-radius:999px;
+  background:linear-gradient(135deg,#2B74B8,#316282);
+  color:#FFFFFF;
+  box-shadow:0 6px 18px rgba(43,116,184,.2);
+  transition:background .2s ease,border-color .2s ease,transform .2s ease;
+}
+#profileForm button[type="submit"]:hover,
+#profileForm button.brand-gradient:hover{
+  background:linear-gradient(135deg,#316282,#3D83B5);
+  border-color:#66C0F4;
+  color:#FFFFFF;
+}
+#profileForm button[type="submit"]:active,
+#profileForm button.brand-gradient:active{
+  transform:scale(.985);
+}
+
