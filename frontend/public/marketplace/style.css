@@ -2445,3 +2445,9 @@ textarea,
 }
 @media(min-width:700px) and (max-width:1023px){#skeletonGrid,#productGrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(min-width:1024px) and (max-width:1359px){#skeletonGrid,#productGrid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+
+
+/* Profile cover image layer: keep the existing emerald gradient as the fallback. */
+#view-profile .cover{position:relative;isolation:isolate;overflow:hidden}
+#view-profile .cover>.profile-cover-image{position:absolute;inset:0;z-index:0;display:block;width:100%;height:100%;object-fit:cover;object-position:center}
+#view-profile .cover.has-profile-cover{background-image:none!important}
