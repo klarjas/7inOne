@@ -1081,14 +1081,17 @@ body{background:var(--page)!important;color:var(--ink);font-family:"Kantumruy Pr
 @media(hover:hover){.dk:hover{--s:1.38}.dk:hover+.dk,.dk:has(+.dk:hover){--s:1.2}.dk:hover+.dk+.dk,.dk:has(+.dk+.dk:hover){--s:1.08}}
 .market-listing-header{display:flex;justify-content:space-between;align-items:flex-end;padding:12px 0 16px;gap:14px}
 .market-listing-header h2{margin:0;font-size:24px;font-weight:700;color:var(--ink)}
-.cd{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;animation:cardIn .58s cubic-bezier(.22,1,.36,1) both;transition:transform .22s ease,box-shadow .22s ease;min-width:0}
-.cd:hover{transform:translateY(-4px);box-shadow:0 14px 30px rgba(6,78,59,.08)}
-.cd .im{position:relative;aspect-ratio:1.2;background:#E1EDE6;color:#5E7F70;display:grid;place-items:center;overflow:hidden}
+.cd{background:#16202D;border:1px solid #2A475E;border-radius:16px;overflow:hidden;animation:cardIn .58s cubic-bezier(.22,1,.36,1) both;transition:transform .22s ease,box-shadow .22s ease,background-color .22s ease;min-width:0;color:#C7D5E0}
+.cd:hover{background:#16202D;border:1px solid #2A475E;transform:translateY(-3px);box-shadow:0 10px 24px rgba(0,0,0,.35)}
+.cd .im{position:relative;aspect-ratio:1.2;background:#101822;color:#8F98A0;display:grid;place-items:center;overflow:hidden}
 .cd .im .cd-image-wrap{position:absolute;inset:0;display:block;overflow:hidden}
 .cd .im .cd-image-wrap img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:opacity .2s ease,transform .35s ease}
-.cd .im .cd-secondary-wrap{opacity:0;transition:opacity .2s ease}
+.cd .im .cd-main-wrap{display:block;opacity:1;visibility:visible;z-index:1}
+.cd .im .cd-main{opacity:1;visibility:visible;z-index:1}
+.cd .im .cd-secondary-wrap{display:none;opacity:0;visibility:hidden;transition:opacity .2s ease}
+.cd .im .cd-secondary-wrap:not(.is-loaded),.cd .im .cd-secondary-wrap.is-failed{display:none}
 .cd:hover .im .cd-main{transform:scale(1.035)}
-.cd:hover .im .cd-secondary-wrap{opacity:1}
+@media(hover:hover) and (pointer:fine){.cd:hover .im .cd-secondary-wrap.is-loaded:not(.is-failed){display:block;opacity:1;visibility:visible}}
 .cd .pr{display:flex;align-items:center;flex-wrap:wrap;gap:7px}.cd .cd-condition-meta{display:inline-flex;align-items:center;flex:none;padding:0;border:0;border-radius:0;background:transparent;font-size:10px;font-weight:600;line-height:1.5;color:#64748b;white-space:nowrap}
 .cd .cd-image-count{position:absolute;bottom:8px;left:8px;z-index:2;border-radius:6px;background:rgba(15,23,42,.72);padding:4px 8px;font-size:10px;font-weight:600;color:#fff}
 .cd .hv{position:absolute;top:8px;right:8px;z-index:3;width:40px;height:40px;border-radius:50%;border:0;background:#fff;color:#BE123C;display:grid;place-items:center;box-shadow:0 2px 8px rgba(15,23,42,.12)}
@@ -3155,12 +3158,13 @@ html, body, body > main {
   background: #16202D;
   border: 1px solid #2A475E;
   color: #C7D5E0;
-  box-shadow: none;
 }
 
 #view-home #productGrid .cd:hover {
-  background: #203244;
-  border-color: #66C0F4;
+  background: #16202D;
+  border: 1px solid #2A475E;
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
 }
 
 #view-home #productGrid .cd .ph {
@@ -3475,74 +3479,3 @@ body > footer {
   font-family: "Hanuman", serif;
   font-weight: 300;
 }
-
-/* Product cards — canonical Steam Dark surface and hover behavior. */
-body #view-home .cd,
-body #view-store .cd,
-body #view-product .product-related-grid > .cd,
-body .product-related-grid .cd {
-  background: #16202D;
-  border: 1px solid #2A475E;
-  color: #C7D5E0;
-  transition: transform .22s ease, box-shadow .22s ease, background-color .22s ease;
-}
-
-body #view-home .cd:hover,
-body #view-store .cd:hover,
-body #view-product .product-related-grid > .cd:hover,
-body .product-related-grid .cd:hover {
-  background: #16202D;
-  border: 1px solid #2A475E;
-  transform: translateY(-3px);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
-}
-
-body #view-home .cd .im .cd-main-wrap,
-body #view-store .cd .im .cd-main-wrap,
-body #view-product .product-related-grid .cd .im .cd-main-wrap,
-body .product-related-grid .cd .im .cd-main-wrap {
-  display: block;
-  opacity: 1;
-  visibility: visible;
-  z-index: 1;
-}
-
-body #view-home .cd .im .cd-main,
-body #view-store .cd .im .cd-main,
-body #view-product .product-related-grid .cd .im .cd-main,
-body .product-related-grid .cd .im .cd-main {
-  opacity: 1;
-  visibility: visible;
-  z-index: 1;
-}
-
-body #view-home .cd .im .cd-secondary-wrap:not(.is-loaded),
-body #view-home .cd .im .cd-secondary-wrap.is-failed,
-body #view-store .cd .im .cd-secondary-wrap:not(.is-loaded),
-body #view-store .cd .im .cd-secondary-wrap.is-failed,
-body #view-product .product-related-grid .cd .im .cd-secondary-wrap:not(.is-loaded),
-body #view-product .product-related-grid .cd .im .cd-secondary-wrap.is-failed,
-body .product-related-grid .cd .im .cd-secondary-wrap:not(.is-loaded),
-body .product-related-grid .cd .im .cd-secondary-wrap.is-failed {
-  display: none;
-}
-
-body #view-home .cd .im .cd-secondary-wrap.is-loaded:not(.is-failed),
-body #view-store .cd .im .cd-secondary-wrap.is-loaded:not(.is-failed),
-body #view-product .product-related-grid .cd .im .cd-secondary-wrap.is-loaded:not(.is-failed),
-body .product-related-grid .cd .im .cd-secondary-wrap.is-loaded:not(.is-failed) {
-  display: block;
-  opacity: 0;
-  visibility: hidden;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  body #view-home .cd:hover .im .cd-secondary-wrap.is-loaded:not(.is-failed),
-  body #view-store .cd:hover .im .cd-secondary-wrap.is-loaded:not(.is-failed),
-  body #view-product .product-related-grid .cd:hover .im .cd-secondary-wrap.is-loaded:not(.is-failed),
-  body .product-related-grid .cd:hover .im .cd-secondary-wrap.is-loaded:not(.is-failed) {
-    opacity: 1;
-    visibility: visible;
-  }
-}
-
