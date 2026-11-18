@@ -2705,3 +2705,87 @@ textarea,
   #view-home #productGrid,
   #view-home #emptyHome{grid-row:auto!important}
 }
+
+
+/* Convert the listing heading into a banner while keeping its existing controls and IDs. */
+#view-home .market-listing-header{
+  position:relative!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:18px!important;
+  min-height:118px!important;
+  margin:4px 0 18px!important;
+  padding:22px 24px!important;
+  overflow:hidden!important;
+  color:#fff!important;
+  background:linear-gradient(112deg,#064E3B 0%,#047857 58%,#0F766E 100%)!important;
+  border:1px solid rgba(255,255,255,.12)!important;
+  border-radius:18px!important;
+  box-shadow:0 10px 26px rgba(6,78,59,.14)!important;
+}
+#view-home .market-listing-header:after{
+  content:"";
+  position:absolute;
+  width:230px;
+  height:230px;
+  right:12%;
+  top:-145px;
+  border:34px solid rgba(255,255,255,.07);
+  border-radius:50%;
+  pointer-events:none;
+}
+#view-home .market-listing-header>div{position:relative;z-index:1;min-width:0}
+#view-home .market-listing-header .new{
+  display:flex!important;
+  align-items:center!important;
+  gap:7px!important;
+  margin:0 0 7px!important;
+  color:#A7F3D0!important;
+  font-size:11px!important;
+  font-weight:800!important;
+}
+#view-home .market-listing-header .new i{
+  width:7px!important;height:7px!important;flex:0 0 7px!important;
+  border-radius:50%!important;background:#6EE7B7!important;
+  box-shadow:0 0 0 4px rgba(110,231,183,.15)!important;
+}
+#view-home #listingTitle{
+  margin:0!important;
+  color:#fff!important;
+  font-size:clamp(19px,2vw,25px)!important;
+  line-height:1.3!important;
+  font-weight:850!important;
+}
+#view-home #listingSub{
+  margin:6px 0 0!important;
+  color:rgba(236,253,245,.82)!important;
+  font-size:12px!important;
+}
+#view-home #resultCount{color:#D1FAE5!important}
+#view-home #sortSelect{
+  position:relative;z-index:2;
+  color:#064E3B!important;
+  background:#fff!important;
+  border:1px solid rgba(255,255,255,.7)!important;
+  border-radius:10px!important;
+  min-height:42px!important;
+}
+@media(max-width:639px){
+  #view-home .market-listing-header{
+    align-items:flex-start!important;
+    flex-direction:column!important;
+    min-height:0!important;
+    gap:13px!important;
+    padding:18px!important;
+    margin-bottom:14px!important;
+    border-radius:15px!important;
+  }
+  #view-home .market-listing-header>div:last-child{
+    display:flex!important;
+    align-items:center!important;
+    justify-content:space-between!important;
+    width:100%!important;
+  }
+  #view-home #sortSelect{min-height:38px!important}
+}
