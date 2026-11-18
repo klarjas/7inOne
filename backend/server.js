@@ -338,6 +338,14 @@ async function lookupTelegramFilePath(fileId) {
   return filePath;
 }
 
+function detectSupportedImageMimeType(buffer) {
+  if (!Buffer.isBuffer(buffer) || buffer.length < 12) return null;
+  if (buffer.length >= 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) return 'image/jpeg';
+  if (buffer.length >= 8 && buffer.subarray(0, 8).equals(Buffer.from([0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a])) return 'image/png';
+  if (buffer.toString('ascii', 0, 4) === 'RIFF' && buffer.toString('ascii', 8, 12) === 'WEBP') return 'image/webp';
+  return null;
+}
+
 async function streamTelegramFile(fileId, res, mimeType = 'application/octet-stream', disposition = 'inline', cacheControl = 'public, max-age=86400, stale-while-revalidate=604800') {
   assertTelegramBotConfig();
   const token = process.env.TELEGRAM_BOT_TOKEN;
@@ -364,9 +372,16 @@ async function streamTelegramFile(fileId, res, mimeType = 'application/octet-str
   }
 
   const buffer = Buffer.from(await fileResponse.arrayBuffer());
-  const detectedType = mimeType !== 'application/octet-stream'
-    ? mimeType
-    : (fileResponse.headers.get('content-type') || mimeType);
+  // Telegram's file download response may omit or generalize Content-Type.
+  // Detect supported image formats from their actual bytes so browsers can
+  // safely render uploads even when the upstream header is generic.
+  const sniffedImageType = detectSupportedImageMimeType(buffer);
+  const upstreamType = clean(fileResponse.headers.get('content-type') || '', 100).split(';')[0].toLowerCase();
+  const detectedType = sniffedImageType
+    || (mimeType !== 'application/octet-stream' ? mimeType : (upstreamType || mimeType));
+  if (sniffedImageType && upstreamType && upstreamType !== sniffedImageType && upstreamType !== 'application/octet-stream') {
+    console.warn('Telegram media Content-Type corrected from file signature:', { upstreamType, detectedType: sniffedImageType });
+  }
   const etag = '"' + createHash('sha256').update(buffer).digest('base64url') + '"';
 
   res.set('Content-Type', detectedType);
