@@ -175,7 +175,7 @@ body>footer{flex:0 0 auto;margin-top:auto;background:#16202D;color:#C7D5E0;borde
 #searchForm:focus-within{border-color:#66C0F4;background:#16202D;box-shadow:0 0 0 3px rgba(102,192,244,.14)}
 #searchBtn{background:linear-gradient(135deg,#2B74B8,#316282);color:#FFFFFF;border-radius:999px;box-shadow:none}
 #profileMenuBtn:hover{background:#2A475E;color:#66C0F4}
-#profileMenu{border-color:#E2ECE6!important;box-shadow:0 20px 60px rgba(6,78,59,.12)!important}
+#profileMenu{border-color:#2A475E;box-shadow:0 16px 42px rgba(0,0,0,.38)}
 .menu-action:hover{background:#203244;color:#66C0F4}
 .text-indigo-600,.text-indigo-700,.text-indigo-500{color:#047857!important}
 .text-rose-600{color:#B45309!important}
@@ -1944,8 +1944,8 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 #postAdBtn,#mobilePostBtn{border-radius:980px!important;box-shadow:none!important;min-height:40px}
 #notificationBtn{border:0!important;background:transparent!important;border-radius:50%!important}
 #profileMenuBtn{border-radius:980px!important}
-.menu-action:hover{background:#F5F5F7!important;color:var(--accent)!important}
-.dropdown{border:1px solid var(--line)!important;border-radius:16px!important;box-shadow:0 8px 30px rgba(0,0,0,.10)!important}
+.menu-action:hover{background:#203244;color:#66C0F4}
+.dropdown{border:1px solid var(--line);border-radius:16px;box-shadow:0 8px 30px rgba(0,0,0,.10)}
 @media(max-width:767px){
   .hd .shell{width:100%;max-width:100%;gap:8px;padding-inline:24px}
  #searchForm{order:3;width:100%;max-width:none;margin:0!important}
@@ -3532,3 +3532,48 @@ body > footer {
 .seller-chat-product-info b{color:#FFFFFF}
 .seller-chat-product-info strong{color:#66C0F4}
 .seller-chat-location b{color:#FFFFFF}
+
+/* Profile dropdown: Steam Dark Slate & Steel Blue */
+#profileMenu{
+  background:#16202D;
+  background-color:#16202D;
+  color:#C7D5E0;
+  border:1px solid #2A475E;
+  border-radius:14px;
+  box-shadow:0 16px 42px rgba(0,0,0,.38);
+}
+#profileMenu > div:first-child{
+  background:transparent;
+  border-color:#2A475E;
+}
+#profileMenu #menuUserName{color:#FFFFFF}
+#profileMenu #menuUserStatus{color:#8F98A0}
+#profileMenu .menu-action{
+  display:flex;
+  align-items:center;
+  gap:11px;
+  width:100%;
+  border:0;
+  border-radius:9px;
+  padding:10px 12px;
+  background:transparent;
+  color:#C7D5E0;
+  text-align:left;
+}
+#profileMenu .menu-action span{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  color:#8F98A0;
+}
+#profileMenu .menu-action svg{stroke:currentColor}
+#profileMenu .menu-action:hover,
+#profileMenu .menu-action:focus-visible{
+  background:#203244;
+  color:#66C0F4;
+}
+#profileMenu .menu-action:hover span,
+#profileMenu .menu-action:focus-visible span{color:#66C0F4}
+#profileMenu .menu-action[data-action="logout"]{color:#C7D5E0}
+#profileMenu .menu-action[data-action="logout"]:hover{background:#3A2630;color:#F08A9A}
+
