@@ -80,7 +80,7 @@ body>footer{flex:0 0 auto;margin-top:auto}
 .view{min-height:48vh;animation:viewIn .42s var(--motion-ease) both;will-change:opacity,transform}
 #view-home{min-height:58vh}
 #productGrid,#skeletonGrid{min-height:clamp(300px,36vh,440px);align-content:start}
-#skeletonGrid>div{min-height:292px;border-color:#e9edf5;box-shadow:var(--surface-shadow)}
+/* The home loader is not a skeleton card; keep its own compact dimensions. */
 #skeletonGrid .skeleton:first-child{aspect-ratio:1.18}
 #productGrid[aria-busy="true"]{opacity:.78}
 .skeleton{background:linear-gradient(110deg,#edf0f6 8%,#f7f8fc 18%,#edf0f6 33%);background-size:220% 100%}
@@ -3435,8 +3435,9 @@ button:hover:not(:disabled):not(.product-buy-primary):not(.hero-primary-action):
 .loader {
   display: block;
   width: 32px;
+  min-height: 0;
   aspect-ratio: 1;
-  --_g: no-repeat radial-gradient(farthest-side,#000 90%,#0000);
+  --_g: no-repeat radial-gradient(farthest-side,#66C0F4 90%,#0000);
   background: var(--_g), var(--_g), var(--_g), var(--_g);
   background-size: 40% 40%;
   animation: l46 1s infinite;
