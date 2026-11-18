@@ -3823,3 +3823,17 @@ body > footer {
   box-shadow: 0 0 0 3px rgba(102,192,244,.13);
 }
 
+/* Blend homepage layout wrappers into the Steam Dark page background */
+#view-home,
+#view-home .home-layout-shell,
+#view-home .amazon-store-body,
+#view-home .shell,
+#view-home .home-layout-shell.shell,
+#view-home .amazon-store-body.shell {
+  background: transparent;
+  background-color: transparent;
+  background-image: none;
+  color: #C7D5E0;
+  box-shadow: none;
+}
+
