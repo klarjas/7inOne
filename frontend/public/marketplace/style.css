@@ -183,7 +183,7 @@ body>footer{flex:0 0 auto;margin-top:auto;background:#16202D;color:#C7D5E0;borde
 .border-indigo-100,.border-indigo-200{border-color:#D1FAE5!important}
 .shadow-indigo-100,.shadow-indigo-200{--tw-shadow-color:rgba(6,78,59,.12)!important}
 .tag-btn{border-color:#B7DDC9!important;background:#F1FBF5!important;color:#065F46!important}
-.tag-btn:hover{background:#fff!important;border-color:#10B981!important;box-shadow:0 5px 16px rgba(6,78,59,.08)}
+.tag-btn:hover{background:#101822!important;border-color:#10B981!important;box-shadow:0 5px 16px rgba(6,78,59,.08)}
 .cat-pill.active{background:#EAF8F0!important;border-color:#B7DDC9!important;color:#065F46!important;box-shadow:0 4px 16px rgba(6,78,59,.08)!important}
 .cat-pill:hover{border-color:#86CFA8!important;color:#065F46!important}
 .hero-editorial-grid{display:grid;grid-template-columns:minmax(0,1.03fr) minmax(340px,.97fr);gap:14px;align-items:stretch}
@@ -2741,10 +2741,10 @@ body > header.hd.glass{
   padding:22px 24px!important;
   overflow:hidden!important;
   color:#fff!important;
-  background:linear-gradient(112deg,#064E3B 0%,#047857 58%,#0F766E 100%)!important;
-  border:1px solid rgba(255,255,255,.12)!important;
+  background:linear-gradient(112deg,#171A21 0%,#16202D 58%,#203244 100%)!important;
+  border:1px solid #2A475E!important;
   border-radius:18px!important;
-  box-shadow:0 10px 26px rgba(6,78,59,.14)!important;
+  box-shadow:0 10px 26px rgba(0,0,0,.28)!important;
 }
 #view-home .market-listing-header:after{
   content:"";
@@ -2753,7 +2753,7 @@ body > header.hd.glass{
   height:230px;
   right:12%;
   top:-145px;
-  border:34px solid rgba(255,255,255,.07);
+  border:34px solid rgba(102,192,244,.08);
   border-radius:50%;
   pointer-events:none;
 }
@@ -2763,14 +2763,14 @@ body > header.hd.glass{
   align-items:center!important;
   gap:7px!important;
   margin:0 0 7px!important;
-  color:#A7F3D0!important;
+  color:#66C0F4!important;
   font-size:11px!important;
   font-weight:800!important;
 }
 #view-home .market-listing-header .new i{
   width:7px!important;height:7px!important;flex:0 0 7px!important;
-  border-radius:50%!important;background:#6EE7B7!important;
-  box-shadow:0 0 0 4px rgba(110,231,183,.15)!important;
+  border-radius:50%!important;background:#66C0F4!important;
+  box-shadow:0 0 0 4px rgba(102,192,244,.14)!important;
 }
 #view-home #listingTitle{
   margin:0!important;
@@ -2781,15 +2781,15 @@ body > header.hd.glass{
 }
 #view-home #listingSub{
   margin:6px 0 0!important;
-  color:rgba(236,253,245,.82)!important;
+  color:#8F98A0!important;
   font-size:12px!important;
 }
-#view-home #resultCount{color:#D1FAE5!important}
+#view-home #resultCount{color:#C7D5E0!important}
 #view-home #sortSelect{
   position:relative;z-index:2;
-  color:#064E3B!important;
+  color:#C7D5E0!important;
   background:#fff!important;
-  border:1px solid rgba(255,255,255,.7)!important;
+  border:1px solid #2A475E!important;
   border-radius:10px!important;
   min-height:42px!important;
 }
