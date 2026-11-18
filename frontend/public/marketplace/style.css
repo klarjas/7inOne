@@ -2596,12 +2596,17 @@ textarea,
 }
 #view-home #emptyHome{grid-column:2!important;grid-row:4!important}
 
-/* Steam Store header surface */
+/* Steam Store header surface — preserve sticky top navigation */
 body > header.hd.glass{
+  position:sticky;
+  top:0;
+  z-index:50;
   background:#171A21;
   color:#FFFFFF;
   border-bottom:1px solid #2A475E;
   box-shadow:0 4px 18px rgba(0,0,0,.22);
+  backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
 }
 .hd #siteTitle,
 .hd #navName,
