@@ -3860,3 +3860,19 @@ body > footer {
 #view-product .product-rating-summary > p {
   color: #8F98A0;
 }
+
+/* Product seller metrics — Steam Dark Theme */
+.product-seller-metrics {
+  color: #C7D5E0;
+}
+.product-seller-metrics > div {
+  background: #16202D;
+  border: 1px solid #2A475E;
+  border-radius: 12px;
+}
+.product-seller-metrics b {
+  color: #FFFFFF;
+}
+.product-seller-metrics small {
+  color: #8F98A0;
+}
