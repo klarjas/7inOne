@@ -2829,3 +2829,120 @@ textarea,
     grid-row:2!important;
   }
 }
+
+
+/* 7inOne marketplace cards: transparent, borderless product presentation across all public pages. */
+#view-home .cd,
+#view-store .cd,
+#view-product .cd,
+.product-related-grid .cd{
+  border:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  border-radius:0!important;
+}
+#view-home .cd:hover,
+#view-store .cd:hover,
+#view-product .cd:hover,
+.product-related-grid .cd:hover{
+  transform:none!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+#view-home .cd .im,
+#view-store .cd .im,
+#view-product .cd .im,
+.product-related-grid .cd .im{
+  margin:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+#view-home .cd .im .cd-image-wrap,
+#view-store .cd .im .cd-image-wrap,
+#view-product .cd .im .cd-image-wrap,
+.product-related-grid .cd .im .cd-image-wrap{
+  background:transparent!important;
+}
+#view-home .cd .cb,
+#view-store .cd .cb,
+#view-product .cd .cb,
+.product-related-grid .cd .cb{
+  background:transparent!important;
+}
+
+/* Every shop logo/avatar stays perfectly circular wherever seller information appears. */
+.cd .sh .sp,
+.product-related-grid .cd .sh .sp{
+  position:relative!important;
+  width:30px!important;
+  height:30px!important;
+  min-width:30px!important;
+  min-height:30px!important;
+  flex:0 0 30px!important;
+  overflow:hidden!important;
+  border-radius:50%!important;
+  aspect-ratio:1/1!important;
+  clip-path:circle(50% at 50% 50%)!important;
+}
+.cd .sh .sp img,
+.cd .sh .sp picture,
+.cd .sh .sp picture img,
+.product-related-grid .cd .sh .sp img{
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+  max-width:none!important;
+  border-radius:50%!important;
+  object-fit:cover!important;
+  object-position:center!important;
+}
+.cd .sh .sp .sp-fallback,
+.product-related-grid .cd .sh .sp .sp-fallback{
+  position:absolute!important;
+  inset:0!important;
+  display:grid!important;
+  width:100%!important;
+  height:100%!important;
+  place-items:center!important;
+  border-radius:50%!important;
+  overflow:hidden!important;
+}
+#view-product .product-seller-logo{
+  width:52px!important;
+  height:52px!important;
+  min-width:52px!important;
+  flex:0 0 52px!important;
+  overflow:hidden!important;
+  border-radius:50%!important;
+  aspect-ratio:1/1!important;
+  clip-path:circle(50% at 50% 50%)!important;
+}
+#view-product .product-seller-logo img{
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+  border-radius:50%!important;
+  object-fit:cover!important;
+}
+#view-store .storefront-avatar,
+#view-store .storefront-avatar-ring,
+#view-store .storefront-avatar-ring img,
+.storefront-avatar>div,
+.storefront-avatar img,
+.product-seller-avatar,
+.product-seller-avatar .img-scan-wrap,
+.product-seller-avatar img{
+  overflow:hidden!important;
+  border-radius:50%!important;
+  aspect-ratio:1/1!important;
+}
+#view-store .storefront-avatar-ring img,
+.storefront-avatar img,
+.product-seller-avatar img{
+  width:100%!important;
+  height:100%!important;
+  object-fit:cover!important;
+  object-position:center!important;
+}
