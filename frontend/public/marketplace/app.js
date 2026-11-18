@@ -1067,6 +1067,7 @@ function closeProductLightbox() {
 async function openStorefront(vendorId, options = {}) {
   if (!vendorId) { toast('មិនមានព័ត៌មានហាងនេះទេ។', 'warning'); return false; }
   const storeId = String(vendorId);
+  const isCurrent = () => options.routeSyncNavigationId == null || options.routeSyncNavigationId === state.routeSyncNavigationId;
   Object.assign(state, {
     currentStoreId: storeId, currentStoreCategory: 'all', currentStoreSearch: '',
     currentStoreProducts: [], currentStorePage: 1, currentStoreLimit: 50,
@@ -1077,11 +1078,13 @@ async function openStorefront(vendorId, options = {}) {
     sessionStorage.setItem('ecomstore.currentStoreId', storeId);
     sessionStorage.setItem('ecomstore.activeView', 'store');
     await showView('store', { preserveScroll: Boolean(options.preserveScroll) });
+    if (!isCurrent()) return false;
     renderStorefront();
     const [result, catalogue] = await Promise.all([
       api('/api/vendors/' + encodeURIComponent(storeId) + '/ratings'),
       api('/api/products?page=1&limit=' + state.currentStoreLimit + '&vendor_id=' + encodeURIComponent(storeId))
     ]);
+    if (!isCurrent()) return false;
     state.currentStoreData = result.data || null;
     state.currentStoreProducts = catalogue.data || [];
     state.currentStorePage = Number(catalogue.page || 1);
@@ -1091,6 +1094,7 @@ async function openStorefront(vendorId, options = {}) {
     renderStorefront();
     return true;
   } catch (error) {
+    if (!isCurrent()) return false;
     state.currentStoreLoading = false;
     state.currentStoreLoadError = true;
     renderStorefront();
@@ -1949,6 +1953,37 @@ function bindEvents() {
     if (store) { e.preventDefault(); e.stopPropagation(); void openStorefront(store.dataset.vendorId); return; }
     const view = e.target.closest('[data-action="view"]');
     if (view) void openProduct(view.dataset.id);
+  });
+
+  // Keep the visible view in sync with browser Back / Forward navigation.
+  window.addEventListener('hashchange', () => {
+    const routeParts = String(window.location.hash || '#home')
+      .replace(/^#\\/?/, '')
+      .split('/')
+      .filter(Boolean);
+    const routeName = routeParts[0] || 'home';
+    let routeId = '';
+    try { routeId = routeParts[1] ? decodeURIComponent(routeParts[1]) : ''; } catch {}
+
+    const activeView = document.querySelector('.view.active')?.id?.replace(/^view-/, '') || '';
+    if (routeName === 'product' && routeId) {
+      if (activeView === 'product' && String(state.currentProduct?.id || '') === routeId) return;
+      const navigationId = ++state.routeSyncNavigationId;
+      void openProduct(routeId, { preserveScroll: true, routeSyncNavigationId: navigationId });
+      return;
+    }
+    if (routeName === 'store' && routeId) {
+      if (activeView === 'store' && String(state.currentStoreId || '') === routeId) return;
+      const navigationId = ++state.routeSyncNavigationId;
+      void openStorefront(routeId, { preserveScroll: true, routeSyncNavigationId: navigationId });
+      return;
+    }
+
+    const allowedRoutes = ['home', 'profile', 'seller', 'admin'];
+    const nextView = allowedRoutes.includes(routeName) ? routeName : 'home';
+    if (activeView === nextView) return;
+    ++state.routeSyncNavigationId;
+    void showView(nextView, { fromHistory: true, preserveScroll: true });
   });
 
   // Header & Navigation
