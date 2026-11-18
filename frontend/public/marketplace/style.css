@@ -3417,19 +3417,18 @@ button:hover:not(:disabled):not(.product-buy-primary):not(.hero-primary-action):
   }
 }
 
-/* 7. Loading indicator */
+/* Steam Blue Gradient Blurred Ring Loader */
 #skeletonGrid.hidden {
   display: none;
 }
 
-.steam-loader-wrap,
 #view-home #skeletonGrid:not(.hidden),
 #skeletonGrid:not(.hidden) {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 14px;
+  gap: 16px;
   min-height: 320px;
   width: 100%;
   background: transparent;
@@ -3441,21 +3440,37 @@ button:hover:not(:disabled):not(.product-buy-primary):not(.hero-primary-action):
 }
 
 .loader {
-  width: 54px;
-  height: 54px;
-  flex: 0 0 54px;
+  height: 80px;
+  width: 80px;
+  aspect-ratio: 1;
+  padding: 10px;
   border-radius: 50%;
-  background: conic-gradient(from 0deg, transparent 15%, rgba(102, 192, 244, 0.35) 55%, #66C0F4 100%);
-  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 5px), #000 calc(100% - 4px));
-  mask: radial-gradient(farthest-side, transparent calc(100% - 5px), #000 calc(100% - 4px));
-  animation: steamGradientSpin 0.85s linear infinite;
+  box-sizing: border-box;
+  position: relative;
+  background: transparent;
+  -webkit-mask: conic-gradient(#000 0 0) content-box exclude, conic-gradient(#000 0 0);
+  mask: conic-gradient(#000 0 0) content-box exclude, conic-gradient(#000 0 0);
+  filter: blur(8px);
 }
 
-@keyframes steamGradientSpin {
-  to { transform: rotate(360deg); }
-}
+.loader::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-conic-gradient(
+    #0000 0 5%,
+    #1A9FFF 10%,
+    #66C0F4 16%,
+    #0000 22% 50%
+  );
+  animation: l2 1.5s linear infinite;
 }
 
+@keyframes l2 {
+  to {
+    rotate: 1turn;
+  }
+}
 .global-loading {
   display: flex;
   width: 100%;
