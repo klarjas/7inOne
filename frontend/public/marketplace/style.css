@@ -3671,3 +3671,54 @@ body > footer {
   color:#FFFFFF;
 }
 
+
+
+/* Profile personal-information panel: enforce Steam Dark styling around the form. */
+#view-profile .account-panel:has(#profileForm){
+  background:#16202D;
+  background-color:#16202D;
+  border:1px solid #2A475E;
+  color:#C7D5E0;
+  box-shadow:0 8px 24px rgba(0,0,0,.22);
+}
+#view-profile .account-panel:has(#profileForm) h3{
+  color:#FFFFFF;
+}
+#view-profile .account-panel:has(#profileForm) p,
+#view-profile .account-panel:has(#profileForm) .label{
+  color:#C7D5E0;
+}
+#view-profile .account-panel:has(#profileForm) .text-emerald-700,
+#view-profile .account-panel:has(#profileForm) .text-slate-500{
+  color:#8F98A0;
+}
+#profileForm label{
+  display:block;
+}
+#profileForm .label{
+  display:block;
+  margin-bottom:6px;
+  font-size:12px;
+  font-weight:600;
+}
+#profileForm input,
+#profileForm select,
+#profileForm textarea{
+  display:block;
+  min-height:42px;
+  padding:10px 12px;
+  font:inherit;
+  font-size:13px;
+}
+#profileForm textarea{
+  min-height:90px;
+  resize:vertical;
+}
+#profileForm select{
+  color-scheme:dark;
+}
+#profileForm button.brand-gradient{
+  min-height:44px;
+  font-size:12px;
+  cursor:pointer;
+}
