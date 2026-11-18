@@ -2121,7 +2121,7 @@ body > footer .brand-gradient{background:#316282;box-shadow:none}
 .mobile-market-item.active{color:var(--accent)!important}
 .mobile-market-nav .fab,.mobile-market-post span{border-radius:50%!important;background:var(--accent)!important;box-shadow:none!important}
 #sortSelect{border:1px solid var(--line)!important;border-radius:980px!important;background:#fff!important;color:var(--text)!important}
-#emptyHome{border:1px dashed #D2D2D7!important;border-radius:20px!important;background:#fff!important}
+/* #emptyHome uses the scoped Steam Dark styles below. */
 .verified{background:#EAF5EF!important;color:var(--accent)!important;border:0!important}
 .toast{box-shadow:var(--shadow-sm)!important}
 @media(max-width:639px){
