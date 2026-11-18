@@ -3863,7 +3863,12 @@ footer button:hover {
   color: #FFFFFF !important;
 }
 
-/* Fix Body Background & Product Hero Grid White Container */
+/* ==========================================================================
+   STEAM THEME COMPONENT OVERRIDES
+   Organized by component. Keep these overrides below the legacy/base styles.
+   ========================================================================== */
+
+/* 1. Page surfaces and Product Detail layout */
 html, body, body > main {
   background-color: #1B2838 !important;
   background-image: radial-gradient(circle at 50% 0%, #2A475E 0%, #1B2838 55%, #171A21 100%) !important;
@@ -3901,7 +3906,7 @@ html, body, body > main {
   border-radius: 12px !important;
 }
 
-/* Match home layout wrapper surfaces to the Steam page background */
+/* 2. Home page wrapper surfaces */
 #view-home .home-layout-shell,
 #view-home .amazon-store-body,
 #view-home .shell {
@@ -3911,102 +3916,33 @@ html, body, body > main {
   box-shadow: none !important;
 }
 
-/* Chat UX: subtle focus and floating non-blocking chat panel */
-/* Keep the existing field border steady when the user focuses a text box. */
-:is(input, textarea, select, .field):focus,
-:is(input, textarea, select, .field):focus-visible {
-  border-color: #2A475E !important;
-  outline: none !important;
-  box-shadow: none !important;
-}
-
-/* The buyer/seller chat is a floating panel, not a page-covering modal. */
-#sellerChatModal.modal,
-#sellerChatModal.modal.open {
-  position: fixed !important;
-  inset: auto 24px 88px auto !important;
-  width: auto !important;
-  height: auto !important;
-  min-height: 0 !important;
-  padding: 0 !important;
-  display: flex !important;
-  align-items: flex-end !important;
-  justify-content: flex-end !important;
-  background: transparent !important;
-  -webkit-backdrop-filter: none !important;
-  backdrop-filter: none !important;
-  pointer-events: none !important;
-}
-
-#sellerChatModal .seller-chat-shell {
-  width: min(430px, calc(100vw - 32px)) !important;
-  height: min(620px, calc(100dvh - 120px)) !important;
-  max-width: 430px !important;
-  max-height: none !important;
-  min-height: 0 !important;
-  margin: 0 !important;
-  border: 1px solid #2A475E !important;
-  border-radius: 18px !important;
-  background: #16202D !important;
-  box-shadow: 0 18px 54px rgba(0, 0, 0, .42) !important;
-  pointer-events: auto !important;
-}
-
-#sellerChatModal .seller-chat-layout {
-  min-height: 0 !important;
-  height: calc(100% - 58px) !important;
-}
-
-#sellerChatInput,
-#sellerChatInput:focus,
-#sellerChatInput:focus-visible {
-  border: 1px solid #2A475E !important;
-  outline: none !important;
-  box-shadow: none !important;
-}
-
-@media (max-width: 640px) {
-  #sellerChatModal.modal,
-  #sellerChatModal.modal.open {
-    inset: auto 10px 82px 10px !important;
-    width: auto !important;
-    height: auto !important;
-    padding: 0 !important;
-  }
-  #sellerChatModal .seller-chat-shell {
-    width: 100% !important;
-    height: min(600px, calc(100dvh - 110px)) !important;
-    max-width: none !important;
-    max-height: none !important;
-    margin: 0 !important;
-    border-radius: 18px !important;
-  }
-}
-
-/* Steam theme: remove remaining white empty-state and filtered product surfaces */
+/* 3. Product cards and image presentation */
 #view-home #emptyHome {
   background: #16202D !important;
   border: 1px dashed #2A475E !important;
   color: #C7D5E0 !important;
   box-shadow: none !important;
 }
+
 #view-home #emptyHome #emptyIcon {
   background: #203244 !important;
   color: #66C0F4 !important;
 }
+
 #view-home #emptyHome h3 { color: #FFFFFF !important; }
 #view-home #emptyHome p { color: #9FB2C3 !important; }
+
 #view-home #emptyHome #clearFilters {
   background: #2A475E !important;
   color: #66C0F4 !important;
   border: 1px solid #3D6687 !important;
 }
+
 #view-home #emptyHome #clearFilters:hover {
   background: #365B78 !important;
   color: #FFFFFF !important;
 }
 
-/* Keep product cards dark after every condition/category filter render */
 #view-home #productGrid .cd,
 #view-home #productGrid .cd:focus-within {
   background: #16202D !important;
@@ -4014,29 +3950,36 @@ html, body, body > main {
   color: #C7D5E0 !important;
   box-shadow: none !important;
 }
+
 #view-home #productGrid .cd:hover {
   background: #203244 !important;
   border-color: #66C0F4 !important;
 }
+
 #view-home #productGrid .cd .ph {
   background: #101822 !important;
 }
+
 #view-home #productGrid .cd .cb,
 #view-home #productGrid .cd .cb * {
   background-color: transparent !important;
 }
+
 #view-home #productGrid .cd .cb h3 { color: #FFFFFF !important; }
 #view-home #productGrid .cd .pr { color: #BEEE11 !important; }
-#view-home #productGrid .cd .sn,
-#view-home #productGrid .cd .mt { color: #9FB2C3 !important; }
 
-/* Dark surfaces for the filter controls */
+#view-home #productGrid .cd .sn,
+#view-home #productGrid .cd .mt {
+  color: #9FB2C3 !important;
+}
+
 #view-home .store-filter-radio,
 #view-home .store-filter-link {
   background: #16202D !important;
   border-color: #2A475E !important;
   color: #C7D5E0 !important;
 }
+
 #view-home .store-filter-radio:has(input:checked),
 #view-home .store-filter-link:hover {
   background: #203244 !important;
@@ -4044,149 +3987,7 @@ html, body, body > main {
   color: #66C0F4 !important;
 }
 
-
-/* Final Steam interaction polish: keep fields dark and remove gold hover states */
-input:focus,
-input:focus-visible,
-textarea:focus,
-textarea:focus-visible,
-select:focus,
-select:focus-visible,
-.field:focus,
-.field:focus-visible {
-  background: #101822 !important;
-  background-color: #101822 !important;
-  color: #FFFFFF !important;
-  border-color: #2A475E !important;
-  outline: none !important;
-  box-shadow: none !important;
-}
-
-/* Neutral steel-blue hover for ordinary buttons; preserve primary CTA gradients */
-button:hover:not(:disabled):not(.product-buy-primary):not(.hero-primary-action):not(#supportChatLauncher) {
-  background-color: #2A475E !important;
-  border-color: #66C0F4 !important;
-  color: #66C0F4 !important;
-}
-
-
-/* Keep the full-card image view overlay transparent on hover */
-:is(#view-home,#view-store,#view-product) .cd .im > button[data-action="view"],
-:is(#view-home,#view-store,#view-product) .cd .im > button[data-action="view"]:hover,
-.product-related-grid .cd .im > button[data-action="view"],
-.product-related-grid .cd .im > button[data-action="view"]:hover {
-  background: transparent !important;
-  background-color: transparent !important;
-  border-color: transparent !important;
-  color: transparent !important;
-  box-shadow: none !important;
-}
-
-
-/* Steam-themed centered loading indicator for the Home storefront */
-#skeletonGrid.hidden {
-  display: none !important;
-}
-
-#view-home #skeletonGrid:not(.hidden),
-#skeletonGrid:not(.hidden) {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: 14px !important;
-  min-height: 320px !important;
-  width: 100% !important;
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  color: #9FB2C3 !important;
-  font-size: 13px !important;
-  font-weight: 600 !important;
-}
-
-.steam-spinner {
-  width: 44px;
-  height: 44px;
-  border: 3.5px solid rgba(102, 192, 244, 0.2);
-  border-top-color: #66C0F4;
-  border-radius: 50%;
-  animation: steamSpin 0.75s linear infinite;
-}
-
-@keyframes steamSpin {
-  to { transform: rotate(360deg); }
-}
-
-/* Fix Steam Circular Loading Spinner */
-.steam-loader-wrap,
-#view-home #skeletonGrid:not(.hidden),
-#skeletonGrid:not(.hidden) {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: 14px !important;
-  min-height: 320px !important;
-  width: 100% !important;
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  color: #9FB2C3 !important;
-  font-size: 13px !important;
-  font-weight: 600 !important;
-}
-
-.steam-spinner {
-  display: block !important;
-  width: 44px !important;
-  height: 44px !important;
-  min-width: 44px !important;
-  min-height: 44px !important;
-  max-width: 44px !important;
-  max-height: 44px !important;
-  flex: 0 0 44px !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  background: transparent !important;
-  background-color: transparent !important;
-  border: 4px solid rgba(102, 192, 244, 0.2) !important;
-  border-top-color: #66C0F4 !important;
-  border-radius: 50% !important;
-  box-shadow: none !important;
-  animation: steamSpin 0.75s linear infinite !important;
-}
-
-@keyframes steamSpin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-/* Keep Footer Anchored to Bottom & Hidden While Restoring */
-html.route-restoring footer {
-  display: none !important;
-}
-
-body {
-  display: flex !important;
-  flex-direction: column !important;
-  min-height: 100vh !important;
-  min-height: 100dvh !important;
-}
-
-body > main {
-  flex: 1 0 auto !important;
-  width: 100% !important;
-}
-
-body > footer {
-  flex: 0 0 auto !important;
-  margin-top: auto !important;
-  width: 100% !important;
-}
-
-
-/* Product cards: edge-to-edge square product imagery */
+/* Product image fills its square; retain a dark image stage */
 .cd .im {
   margin: 0 !important;
   padding: 0 !important;
@@ -4208,7 +4009,19 @@ body > footer {
   background: #101822 !important;
 }
 
-/* Steam theme: consistent dark search and form controls */
+/* Keep the full-card view overlay transparent over product photos */
+:is(#view-home,#view-store,#view-product) .cd .im > button[data-action="view"],
+:is(#view-home,#view-store,#view-product) .cd .im > button[data-action="view"]:hover,
+.product-related-grid .cd .im > button[data-action="view"],
+.product-related-grid .cd .im > button[data-action="view"]:hover {
+  background: transparent !important;
+  background-color: transparent !important;
+  border-color: transparent !important;
+  color: transparent !important;
+  box-shadow: none !important;
+}
+
+/* 4. Search, form fields and autofill */
 #searchForm {
   background: #101822 !important;
   border: 1px solid #3D6687 !important;
@@ -4251,7 +4064,6 @@ textarea::placeholder {
   opacity: 1 !important;
 }
 
-/* Prevent Chrome/Edge autofill from turning inputs white/yellow with black text */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
@@ -4261,4 +4073,164 @@ select:-webkit-autofill {
   -webkit-text-fill-color: #FFFFFF !important;
   caret-color: #66C0F4 !important;
   transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Keep focused fields visually stable */
+:is(input, textarea, select, .field):focus,
+:is(input, textarea, select, .field):focus-visible,
+input:focus,
+input:focus-visible,
+textarea:focus,
+textarea:focus-visible,
+select:focus,
+select:focus-visible,
+.field:focus,
+.field:focus-visible {
+  background: #101822 !important;
+  background-color: #101822 !important;
+  color: #FFFFFF !important;
+  border-color: #2A475E !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+#sellerChatInput,
+#sellerChatInput:focus,
+#sellerChatInput:focus-visible {
+  border: 1px solid #2A475E !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* 5. Buttons and interactive hover states */
+button:hover:not(:disabled):not(.product-buy-primary):not(.hero-primary-action):not(#supportChatLauncher) {
+  background-color: #2A475E !important;
+  border-color: #66C0F4 !important;
+  color: #66C0F4 !important;
+}
+
+/* 6. Floating buyer/seller chat */
+#sellerChatModal.modal,
+#sellerChatModal.modal.open {
+  position: fixed !important;
+  inset: auto 24px 88px auto !important;
+  width: auto !important;
+  height: auto !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: flex-end !important;
+  justify-content: flex-end !important;
+  background: transparent !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  pointer-events: none !important;
+}
+
+#sellerChatModal .seller-chat-shell {
+  width: min(430px, calc(100vw - 32px)) !important;
+  height: min(620px, calc(100dvh - 120px)) !important;
+  max-width: 430px !important;
+  max-height: none !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  border: 1px solid #2A475E !important;
+  border-radius: 18px !important;
+  background: #16202D !important;
+  box-shadow: 0 18px 54px rgba(0, 0, 0, .42) !important;
+  pointer-events: auto !important;
+}
+
+#sellerChatModal .seller-chat-layout {
+  min-height: 0 !important;
+  height: calc(100% - 58px) !important;
+}
+
+@media (max-width: 640px) {
+  #sellerChatModal.modal,
+  #sellerChatModal.modal.open {
+    inset: auto 10px 82px 10px !important;
+    width: auto !important;
+    height: auto !important;
+    padding: 0 !important;
+  }
+
+  #sellerChatModal .seller-chat-shell {
+    width: 100% !important;
+    height: min(600px, calc(100dvh - 110px)) !important;
+    max-width: none !important;
+    max-height: none !important;
+    margin: 0 !important;
+    border-radius: 18px !important;
+  }
+}
+
+/* 7. Loading indicator */
+#skeletonGrid.hidden {
+  display: none !important;
+}
+
+.steam-loader-wrap,
+#view-home #skeletonGrid:not(.hidden),
+#skeletonGrid:not(.hidden) {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 14px !important;
+  min-height: 320px !important;
+  width: 100% !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: #9FB2C3 !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+}
+
+.steam-spinner {
+  display: block !important;
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  min-height: 44px !important;
+  max-width: 44px !important;
+  max-height: 44px !important;
+  flex: 0 0 44px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  border: 4px solid rgba(102, 192, 244, 0.2) !important;
+  border-top-color: #66C0F4 !important;
+  border-radius: 50% !important;
+  box-shadow: none !important;
+  animation: steamSpin 0.75s linear infinite !important;
+}
+
+@keyframes steamSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* 8. Page footer and short-content layout */
+html.route-restoring footer {
+  display: none !important;
+}
+
+body {
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: 100vh !important;
+  min-height: 100dvh !important;
+}
+
+body > main {
+  flex: 1 0 auto !important;
+  width: 100% !important;
+}
+
+body > footer {
+  flex: 0 0 auto !important;
+  margin-top: auto !important;
+  width: 100% !important;
 }
