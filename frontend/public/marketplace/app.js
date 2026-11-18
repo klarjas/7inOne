@@ -506,8 +506,10 @@ function setProfileCover(target, url = '') {
   img.decoding = 'async';
   img.loading = 'eager';
   img.src = String(url);
+  img.addEventListener('load', () => target.classList.add('has-profile-cover'), { once: true });
   img.addEventListener('error', () => {
     img.remove();
+    target.style.backgroundImage = '';
     target.classList.remove('has-profile-cover');
     console.warn('Profile cover image failed to load:', String(url).slice(0, 180));
   }, { once: true });
@@ -1935,7 +1937,6 @@ function bindEvents() {
   $('clearFilters').addEventListener('click', () => {
     state.searchTerm = '';
     state.activeCondition = 'all';
-    const allCondition = document.querySelector('[data-condition-filter=""]');
     document.querySelector('[data-condition-filter][value="all"]')?.click();
     $('searchInput').value = '';
     setCategory('all');
