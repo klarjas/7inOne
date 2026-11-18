@@ -2953,3 +2953,127 @@ textarea,
 #view-product .product-related-grid .cd .im .cd-image-wrap{
   background:#FFFFFF!important;
 }
+
+
+/* ==========================================================
+   7inOne user area — ChatGPT-inspired dark theme
+   Scoped to public/customer pages; admin view is intentionally untouched.
+   ========================================================== */
+:root{
+  --gpt-bg:#202123;
+  --gpt-panel:#2B2C2F;
+  --gpt-panel-2:#343541;
+  --gpt-input:#40414F;
+  --gpt-border:#4A4B57;
+  --gpt-text:#ECECF1;
+  --gpt-muted:#B4B4BE;
+  --gpt-accent:#10A37F;
+}
+:is(#view-home,#view-product,#view-store,#view-profile,#view-seller){
+  color:var(--gpt-text)!important;
+  color-scheme:dark;
+}
+body:has(#view-home) {
+  background:var(--gpt-bg)!important;
+}
+:is(#view-home,#view-product,#view-store,#view-profile,#view-seller) :is(
+  h1,h2,h3,h4,h5,h6,p,label,small,strong,span,li,dt,dd
+):not(.badge):not(.status-badge){
+  --user-text-color:inherit;
+}
+:is(#view-home,#view-product,#view-store,#view-profile,#view-seller) :is(
+  .home-layout-shell,.home-main-content,.market-listing-header,
+  .product-detail-layout,.product-detail-main,.product-detail-sidebar,
+  .storefront-header,.storefront-content,.profile-panel,.profile-card,
+  .seller-panel,.seller-card,.section-card,.content-card,.panel,
+  .surface,.modal-card,.dialog-card,.drawer-panel,.bottom-sheet
+){
+  color:var(--gpt-text)!important;
+  background:var(--gpt-panel)!important;
+  border-color:var(--gpt-border)!important;
+  box-shadow:none!important;
+}
+:is(#view-home,#view-product,#view-store,#view-profile,#view-seller) :is(
+  .cd,.product-card,.product-info,.product-description,.product-specs,
+  .storefront-bio,.storefront-description,.profile-info,.seller-info,
+  .empty-state,.filter-group,.filter-section,.listing-toolbar
+){
+  color:var(--gpt-text)!important;
+  background:var(--gpt-panel)!important;
+  border-color:var(--gpt-border)!important;
+}
+:is(#view-home,#view-product,#view-store,#view-profile,#view-seller) :is(
+  h1,h2,h3,h4,h5,h6,.product-title,.storefront-name,.profile-name,
+  .seller-name,#listingTitle
+){
+  color:var(--gpt-text)!important;
+}
+:is(#view-home,#view-product,#view-store,#view-profile,#view-seller) :is(
+  p,.muted,.text-muted,.subtext,.product-meta,.storefront-description,
+  .profile-meta,.seller-meta,#listingSub
+){
+  color:var(--gpt-muted)!important;
+}
+:is(#view-home,#view-product,#view-store,#view-profile,#view-seller) :is(
+  input,select,textarea,.search-input,.form-control
+){
+  color:var(--gpt-text)!important;
+  background:var(--gpt-input)!important;
+  border-color:var(--gpt-border)!important;
+}
+:is(#view-home,#view-product,#view-store,#view-profile,#view-seller) :is(
+  input,select,textarea
+)::placeholder{color:#92939F!important}
+:is(#view-home,#view-product,#view-store,#view-profile,#view-seller) :is(
+  button,.btn,.tab-button,[role="button"]
+):not(.primary):not(.btn-primary):not([class*="brand"]){
+  border-color:var(--gpt-border);
+}
+:is(#view-home,#view-product,#view-store,#view-profile,#view-seller) :is(
+  .hd,.header,.topbar,.profile-tabs,.storefront-tabs,.product-tabs
+){
+  color:var(--gpt-text)!important;
+  background:var(--gpt-panel-2)!important;
+  border-color:var(--gpt-border)!important;
+  box-shadow:none!important;
+}
+:is(#view-home,#view-product,#view-store,#view-profile,#view-seller) :is(
+  .amazon-filter-sidebar,.filter-sidebar,.filter-panel
+){
+  color:var(--gpt-text)!important;
+  background:var(--gpt-panel)!important;
+  border-color:var(--gpt-border)!important;
+}
+:is(#view-home,#view-product,#view-store,#view-profile,#view-seller) :is(
+  .cd .cb,.cd .sh,.product-seller,.storefront-bio
+){
+  color:var(--gpt-text)!important;
+}
+:is(#view-home,#view-product,#view-store,#view-profile,#view-seller) :is(
+  .cd .sh .sp,.storefront-avatar,.product-seller-logo
+){
+  border-color:var(--gpt-border)!important;
+}
+/* Keep product photos unchanged; only their surrounding surfaces become dark. */
+:is(#view-home,#view-product,#view-store,#view-profile,#view-seller) img{
+  filter:none!important;
+}
+/* Keep the listing banner's existing green identity, with readable controls. */
+#view-home .market-listing-header{
+  background:linear-gradient(112deg,#202123 0%,#343541 100%)!important;
+  border-color:var(--gpt-border)!important;
+  box-shadow:none!important;
+}
+#view-home #sortSelect{
+  color:var(--gpt-text)!important;
+  background:var(--gpt-input)!important;
+  border-color:var(--gpt-border)!important;
+}
+/* The app's SVG icon helper already draws outline icons; standardize line weight. */
+:is(#view-home,#view-product,#view-store,#view-profile,#view-seller) svg[aria-hidden="true"]{
+  fill:none;
+  stroke:currentColor;
+  stroke-width:1.8;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
