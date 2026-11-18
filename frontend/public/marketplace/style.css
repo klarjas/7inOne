@@ -2101,7 +2101,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 /* Apple Store redesign — modals, inputs, navigation and final polish */
 .modal{background:rgba(29,29,31,.28)!important;backdrop-filter:blur(8px)!important;-webkit-backdrop-filter:blur(8px)!important}
 .modal-box{border:1px solid #2A475E;border-radius:24px;color:#C7D5E0;box-shadow:0 18px 60px rgba(0,0,0,.38);transition:transform .26s var(--motion-ease),opacity .24s ease}
-.field{border:1px solid var(--line)!important;border-radius:12px!important;background:#F5F5F7!important;color:var(--text)!important;min-height:42px}
+.field{border:1px solid #2A475E;border-radius:12px;background:#101822;color:#C7D5E0;min-height:42px}
 .field:focus{border-color:var(--accent-bright)!important;box-shadow:0 0 0 3px rgba(16,185,129,.14)!important;background:#fff!important}
 .label{color:var(--muted)!important}
 .close-btn{border:0!important;background:#F5F5F7!important;color:var(--text)!important}
