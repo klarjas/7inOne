@@ -4083,3 +4083,39 @@ button:hover:not(:disabled):not(.product-buy-primary):not(.hero-primary-action):
   color: transparent !important;
   box-shadow: none !important;
 }
+
+
+/* Steam-themed centered loading indicator for the Home storefront */
+#skeletonGrid.hidden {
+  display: none !important;
+}
+
+#view-home #skeletonGrid:not(.hidden),
+#skeletonGrid:not(.hidden) {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 14px !important;
+  min-height: 320px !important;
+  width: 100% !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: #9FB2C3 !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+}
+
+.steam-spinner {
+  width: 44px;
+  height: 44px;
+  border: 3.5px solid rgba(102, 192, 244, 0.2);
+  border-top-color: #66C0F4;
+  border-radius: 50%;
+  animation: steamSpin 0.75s linear infinite;
+}
+
+@keyframes steamSpin {
+  to { transform: rotate(360deg); }
+}
