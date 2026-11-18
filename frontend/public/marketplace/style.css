@@ -4184,3 +4184,81 @@ body > footer {
   margin-top: auto !important;
   width: 100% !important;
 }
+
+
+/* Product cards: edge-to-edge square product imagery */
+.cd .im {
+  margin: 0 !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  aspect-ratio: 1 / 1 !important;
+  background: #101822 !important;
+  overflow: hidden !important;
+}
+
+.cd .im .cd-image-wrap,
+.cd .im .cd-image-wrap img {
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  object-fit: cover !important;
+  mix-blend-mode: normal !important;
+  background: #101822 !important;
+}
+
+/* Steam theme: consistent dark search and form controls */
+#searchForm {
+  background: #101822 !important;
+  border: 1px solid #3D6687 !important;
+}
+
+#searchForm:focus-within {
+  border-color: #66C0F4 !important;
+  background: #16202D !important;
+}
+
+#searchCategory {
+  background: #1E3144 !important;
+  color: #E5F3FC !important;
+  border-right: 1px solid #2A475E !important;
+}
+
+#searchInput,
+.field,
+input[type="text"],
+input[type="search"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="url"],
+textarea,
+select {
+  background: #101822 !important;
+  background-color: #101822 !important;
+  color: #FFFFFF !important;
+  -webkit-text-fill-color: #FFFFFF !important;
+  caret-color: #66C0F4 !important;
+}
+
+#searchInput::placeholder,
+.field::placeholder,
+input::placeholder,
+textarea::placeholder {
+  color: #7A91A6 !important;
+  -webkit-text-fill-color: #7A91A6 !important;
+  opacity: 1 !important;
+}
+
+/* Prevent Chrome/Edge autofill from turning inputs white/yellow with black text */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 1000px #101822 inset !important;
+  -webkit-text-fill-color: #FFFFFF !important;
+  caret-color: #66C0F4 !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
