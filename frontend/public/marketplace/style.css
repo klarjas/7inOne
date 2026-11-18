@@ -3448,7 +3448,7 @@ button:hover:not(:disabled):not(.product-buy-primary):not(.hero-primary-action):
   content: "";
   position: absolute;
   inset: 0;
-  background: repeating-conic-gradient(#0000 0 5%, #C02942, #0000 20% 50%);
+  background: repeating-conic-gradient(#0000 0 5%, #66C0F4, #0000 20% 50%);
   animation: l2 1.5s linear infinite;
 }
 
