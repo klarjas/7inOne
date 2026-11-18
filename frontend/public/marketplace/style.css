@@ -4014,13 +4014,13 @@ html, body, body > main {
 .cd .im .cd-secondary-wrap,
 .cd:hover .im .cd-secondary-wrap:not(.is-loaded),
 .cd:hover .im .cd-secondary-wrap.is-failed {
-  opacity: 0 !important;
-  visibility: hidden !important;
+  opacity: 0;
+  visibility: hidden;
 }
 
 .cd:hover .im .cd-secondary-wrap.is-loaded:not(.is-failed) {
-  opacity: 1 !important;
-  visibility: visible !important;
+  opacity: 1;
+  visibility: visible;
 }
 
 .cd .im .cd-main-wrap {
