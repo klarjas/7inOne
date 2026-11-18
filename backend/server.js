@@ -258,8 +258,6 @@ function cachedTelegramFilePath(fileId) {
     telegramFilePathCache.delete(fileId);
     return null;
   }
-  telegramFilePathCache.delete(fileId);
-  telegramFilePathCache.set(fileId, entry);
   return entry.filePath;
 }
 
