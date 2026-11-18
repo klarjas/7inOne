@@ -3732,3 +3732,41 @@ body > footer {
   font-size:12px;
   cursor:pointer;
 }
+
+/* Seller chat product draft banner: Steam Dark Slate & Steel Blue */
+#sellerChatProductBanner.seller-chat-draft-product{
+  background:linear-gradient(110deg,#171A21 0%,#16202D 62%,#203244 100%);
+  border:1px solid #2A475E;
+  color:#C7D5E0;
+  box-shadow:0 6px 18px rgba(0,0,0,.22);
+}
+#sellerChatProductBanner .seller-chat-draft-thumb{
+  background:#101822;
+  border:1px solid #2A475E;
+  color:#66C0F4;
+}
+#sellerChatProductBanner .seller-chat-draft-thumb img{
+  display:block;
+  background:#101822;
+}
+#sellerChatProductBanner .seller-chat-draft-meta small{
+  color:#8F98A0;
+}
+#sellerChatProductBanner .seller-chat-draft-meta b{
+  color:#FFFFFF;
+}
+#sellerChatProductBanner .seller-chat-draft-meta strong{
+  color:#66C0F4;
+}
+#sellerChatProductBanner .seller-chat-draft-close{
+  border:1px solid #2A475E;
+  background:#203244;
+  color:#8F98A0;
+}
+#sellerChatProductBanner .seller-chat-draft-close:hover,
+#sellerChatProductBanner .seller-chat-draft-close:focus-visible{
+  border-color:#B65A6B;
+  background:#3A2630;
+  color:#F08A9A;
+  outline:none;
+}
