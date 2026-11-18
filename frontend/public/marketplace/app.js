@@ -1926,11 +1926,6 @@ function bindEvents() {
     $('searchInput').value = state.searchTerm;
     void loadProducts();
   }));
-  $('sortSelect').addEventListener('change', () => {
-    const sort = $('sortSelect').value;
-    state.products.sort((a, b) => sort === 'low' ? Number(a.price) - Number(b.price) : sort === 'high' ? Number(b.price) - Number(a.price) : new Date(b.created_at) - new Date(a.created_at));
-    renderProducts();
-  });
   $('clearFilters').addEventListener('click', () => {
     state.searchTerm = '';
     state.activeCondition = 'all';
