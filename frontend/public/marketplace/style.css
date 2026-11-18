@@ -257,7 +257,7 @@ body>footer{flex:0 0 auto;margin-top:auto;background:#16202D;color:#C7D5E0;borde
 #view-profile .account-shortcut:hover{border-color:#66C0F4;box-shadow:0 10px 24px rgba(0,0,0,.28)}
 #view-seller .brand-gradient,#view-admin .brand-gradient{background:linear-gradient(135deg,#2B74B8,#316282);color:#FFFFFF}
 input:focus,select:focus,textarea:focus{--tw-ring-color:rgba(16,185,129,.18)}
-.field:focus{border-color:#6EE7B7!important;box-shadow:0 0 0 4px rgba(16,185,129,.09)!important}
+.field:focus{border-color:#66C0F4;box-shadow:0 0 0 3px rgba(102,192,244,.14);background:#101822}
 button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid rgba(16,185,129,.32);outline-offset:2px}
 #supportChatLauncher{background:#2B74B8;box-shadow:0 8px 28px rgba(43,116,184,.35)}
 .support-chat-panel>header{background:#171A21;color:#FFFFFF;border-bottom:1px solid #2A475E}
@@ -2102,7 +2102,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .modal{background:rgba(29,29,31,.28)!important;backdrop-filter:blur(8px)!important;-webkit-backdrop-filter:blur(8px)!important}
 .modal-box{border:1px solid #2A475E;border-radius:24px;color:#C7D5E0;box-shadow:0 18px 60px rgba(0,0,0,.38);transition:transform .26s var(--motion-ease),opacity .24s ease}
 .field{border:1px solid #2A475E;border-radius:12px;background:#101822;color:#C7D5E0;min-height:42px}
-.field:focus{border-color:var(--accent-bright)!important;box-shadow:0 0 0 3px rgba(16,185,129,.14)!important;background:#fff!important}
+.field:focus{border-color:#66C0F4;box-shadow:0 0 0 3px rgba(102,192,244,.14);background:#101822}
 .label{color:var(--muted)!important}
 .close-btn{border:0!important;background:#F5F5F7!important;color:var(--text)!important}
 .tab{border:0!important;border-radius:980px!important;color:var(--muted)!important}
