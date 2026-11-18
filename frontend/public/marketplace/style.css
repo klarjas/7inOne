@@ -2946,3 +2946,10 @@ textarea,
   object-fit:cover!important;
   object-position:center!important;
 }
+
+
+/* Restore a clean white image surface only for related products on product details. */
+#view-product .product-related-grid .cd .im,
+#view-product .product-related-grid .cd .im .cd-image-wrap{
+  background:#FFFFFF!important;
+}
