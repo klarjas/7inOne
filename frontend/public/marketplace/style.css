@@ -3432,28 +3432,35 @@ button:hover:not(:disabled):not(.product-buy-primary):not(.hero-primary-action):
   font-weight: 600;
 }
 
-.steam-spinner {
+.loader {
   display: block;
-  width: 44px;
-  height: 44px;
-  min-width: 44px;
-  min-height: 44px;
-  max-width: 44px;
-  max-height: 44px;
-  flex: 0 0 44px;
-  padding: 0;
-  margin: 0;
-  background: transparent;
-  background-color: transparent;
-  border: 4px solid rgba(102, 192, 244, 0.2);
-  border-top-color: #66C0F4;
-  border-radius: 50%;
-  box-shadow: none;
-  animation: steamSpin 0.75s linear infinite;
+  width: 32px;
+  aspect-ratio: 1;
+  --_g: no-repeat radial-gradient(farthest-side,#000 90%,#0000);
+  background: var(--_g), var(--_g), var(--_g), var(--_g);
+  background-size: 40% 40%;
+  animation: l46 1s infinite;
 }
 
-@keyframes steamSpin {
-  to { transform: rotate(360deg); }
+@keyframes l46 {
+  0%  {background-position: 0 0,100% 0,100% 100%,0 100%}
+  40%,
+  50% {background-position: 100% 100%,100% 0,0 0,0 100%}
+  90%,
+  100%{background-position: 100% 100%,0 100%,0 0,100% 0}
+}
+
+.global-loading {
+  display: flex;
+  min-height: 180px;
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  color: #9FB2C3;
+  font-size: 12px;
+  font-weight: 600;
 }
 
 /* 8. Page footer and short-content layout */
