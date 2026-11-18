@@ -700,7 +700,6 @@ function productCard(p, index) {
   const verified = p.vendors?.status === 'approved';
   const description = productDescriptionParts(p).short;
 
-  const condition = p.condition || 'ពិសេស';
   const location = p.location || 'ភ្នំពេញ';
   return `
   <article class="cd" style="animation-delay:${Math.min(index, 12) * 30}ms">
@@ -712,13 +711,11 @@ function productCard(p, index) {
       <button class="hv heart ${saved ? 'saved' : ''}" type="button" data-action="save" data-id="${esc(p.id)}" aria-label="រក្សាទុក" aria-pressed="${saved ? 'true' : 'false'}">
         ${ic('heart', 17)}
       </button>
-      <button class="cd-quick-add" type="button" data-action="view" data-id="${esc(p.id)}" aria-label="មើលទំនិញ">+</button>
     </div>
     <div class="cb">
       <h3 class="cursor-pointer hover:text-emerald-800" data-action="view" data-id="${esc(p.id)}">${esc(p.title)}</h3>
       <p class="pr"><span>${money(p.price)}</span></p>
       <div class="cd-condition-row">
-        <span class="cd-condition-meta">${esc(condition)}</span>
         <span class="cd-location-meta">${esc(location)}</span>
       </div>
       ${description ? `<p class="cd-description">${esc(description)}</p>` : ''}
