@@ -2102,8 +2102,15 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .close-btn{border:0!important;background:#F5F5F7!important;color:var(--text)!important}
 .tab{border:0!important;border-radius:980px!important;color:var(--muted)!important}
 .tab.active{background:#F5F5F7!important;color:var(--text)!important}
-footer{border-color:var(--line)!important;background:#fff!important}
-footer .brand-gradient{background:var(--accent)!important;box-shadow:none!important}
+body > footer{
+  border-top:1px solid #2A475E;
+  background:#16202D;
+  color:#C7D5E0;
+}
+body > footer .text-slate-400,
+body > footer .text-slate-500{color:#8F98A0}
+body > footer button{color:#C7D5E0}
+body > footer .brand-gradient{background:#316282;box-shadow:none}
 .mobile-market-nav{grid-template-columns:repeat(5,minmax(0,1fr))!important;background:rgba(255,255,255,.78)!important;border-top:1px solid var(--line)!important;backdrop-filter:saturate(180%) blur(18px)!important;-webkit-backdrop-filter:saturate(180%) blur(18px)!important;box-shadow:0 -3px 18px rgba(0,0,0,.035)!important}
 .mobile-market-item{color:var(--muted)!important}
 .mobile-market-item.active{color:var(--accent)!important}
@@ -2584,18 +2591,19 @@ textarea,
 }
 #view-home #emptyHome{grid-column:2!important;grid-row:4!important}
 
-/* Dark emerald primary header with high-contrast account and notification labels. */
-.hd.glass{
-  background:#00453E!important;
-  color:#FFFFFF!important;
-  border-bottom:none!important;
+/* Steam Store header surface */
+body > header.hd.glass{
+  background:#171A21;
+  color:#C7D5E0;
+  border-bottom:1px solid #2A475E;
+  box-shadow:0 4px 18px rgba(0,0,0,.22);
 }
 .hd #siteTitle,
 .hd #navName,
-.hd #bellIcon{color:#FFFFFF!important}
+.hd #bellIcon,
+.hd #notificationBtn{color:#C7D5E0}
 .hd #siteSubtitle,
-.hd #navRole{color:#A7F3D0!important}
-.hd #notificationBtn{color:#FFFFFF!important}
+.hd #navRole{color:#8F98A0}
 
 /* Product-card shop avatar: clean circular crop, never a square thumbnail. */
 #view-home .cd .sh .sp{
