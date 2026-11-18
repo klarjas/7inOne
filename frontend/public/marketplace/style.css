@@ -3876,3 +3876,73 @@ body > footer {
 .product-seller-metrics small {
   color: #8F98A0;
 }
+
+/* Product reviews + compact buyer safety side-by-side layout */
+#view-product .product-trust-reviews-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(230px, 290px);
+  align-items: start;
+  gap: 16px;
+  margin-top: 18px;
+}
+#view-product .product-trust-reviews-grid > .product-reviews {
+  min-width: 0;
+  margin: 0;
+  padding: 20px;
+  border: 1px solid #2A475E;
+  border-radius: 16px;
+  background: #16202D;
+  color: #C7D5E0;
+  box-shadow: none;
+}
+#view-product .product-trust-reviews-grid .product-reviews h2,
+#view-product .product-trust-reviews-grid .product-reviews .product-review-heading b {
+  color: #FFFFFF;
+}
+#view-product .product-trust-reviews-grid .product-reviews > div > span,
+#view-product .product-trust-reviews-grid .product-reviews .product-rating-summary p,
+#view-product .product-trust-reviews-grid .product-reviews .product-empty-note {
+  color: #8F98A0;
+}
+#view-product .product-trust-reviews-grid .product-safety-note {
+  min-width: 0;
+  margin: 0;
+  padding: 15px;
+  border: 1px solid #2A475E;
+  border-radius: 16px;
+  background: #16202D;
+  color: #C7D5E0;
+  box-shadow: none;
+}
+#view-product .product-trust-reviews-grid .product-safety-note h2 {
+  color: #FFFFFF;
+  font-size: 13px;
+  line-height: 1.5;
+}
+#view-product .product-trust-reviews-grid .product-safety-note ul {
+  display: grid;
+  gap: 9px;
+  margin-top: 11px;
+}
+#view-product .product-trust-reviews-grid .product-safety-note li {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  color: #C7D5E0;
+  font-size: 10px;
+  line-height: 1.65;
+}
+#view-product .product-trust-reviews-grid .product-safety-note li svg {
+  flex: 0 0 15px;
+  margin-top: 1px;
+  color: #66C0F4;
+}
+@media (max-width: 900px) {
+  #view-product .product-trust-reviews-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+  #view-product .product-trust-reviews-grid .product-safety-note {
+    padding: 15px;
+  }
+}
