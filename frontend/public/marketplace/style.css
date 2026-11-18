@@ -2458,3 +2458,20 @@ textarea,
 .header-shortcuts button span{font-size:10px;font-weight:650}
 @media(max-width:1100px){.header-shortcuts{gap:3px}.header-shortcuts button{padding:5px 3px}.header-shortcuts button span{display:none}}
 @media(max-width:699px){.header-shortcuts{display:none}}
+
+
+/* Temporarily hide the home hero banner while retaining its DOM hooks/configuration. */
+#view-home .market-hero{display:none!important}
+#view-home .home-sidebar{grid-row:2 / span 5!important}
+#view-home #categoryStrip{grid-row:1!important}
+#view-home #homeVendorMediaSection{grid-row:2!important}
+#view-home .market-listing-header{grid-row:3!important}
+#view-home #skeletonGrid,#view-home #productGrid{grid-row:4!important}
+#view-home #emptyHome{grid-row:4!important}
+@media(max-width:899px){
+ #view-home .home-sidebar{display:none!important}
+ #view-home #categoryStrip{display:flex!important}
+ #view-home #homeVendorMediaSection,#view-home .market-listing-header{display:block}
+ #view-home #skeletonGrid,#view-home #productGrid{display:grid}
+ #view-home #skeletonGrid.hidden,#view-home #productGrid.hidden{display:none!important}
+}
