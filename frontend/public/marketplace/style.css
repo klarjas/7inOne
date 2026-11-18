@@ -2475,3 +2475,173 @@ textarea,
  #view-home #skeletonGrid,#view-home #productGrid{display:grid}
  #view-home #skeletonGrid.hidden,#view-home #productGrid.hidden{display:none!important}
 }
+
+
+/* 7inOne storefront layout correction — keeps the hero hidden and all existing IDs/actions intact. */
+#view-home{
+  width:min(1560px,calc(100% - 32px))!important;
+  max-width:none!important;
+  margin:0 auto!important;
+}
+#view-home .home-layout-shell,
+#view-home .amazon-store-body{
+  display:grid!important;
+  width:100%!important;
+  max-width:none!important;
+  grid-template-columns:230px minmax(0,1fr)!important;
+  gap:20px!important;
+  align-items:start!important;
+}
+#view-home .home-main-content{display:contents!important}
+#view-home .amazon-filter-sidebar{
+  display:block!important;
+  grid-column:1!important;
+  grid-row:2 / span 5!important;
+  min-width:0!important;
+  position:sticky;
+  top:118px;
+  background:#fff!important;
+  border:1px solid #E3E6E6!important;
+  border-radius:8px!important;
+  padding:14px!important;
+  box-shadow:none!important;
+}
+#view-home .amazon-filter-sidebar [data-category]{
+  display:block;
+  width:100%;
+  text-align:left;
+}
+#view-home #categoryStrip{
+  grid-column:1/-1!important;
+  grid-row:1!important;
+  display:flex!important;
+  flex-wrap:nowrap!important;
+  align-items:center!important;
+  gap:9px!important;
+  overflow-x:auto!important;
+  background:transparent!important;
+  border:none!important;
+  box-shadow:none!important;
+  padding:12px 0!important;
+}
+#view-home #categoryStrip .dk{
+  display:flex!important;
+  flex-direction:row!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:8px!important;
+  flex:0 0 auto!important;
+  min-width:auto!important;
+  min-height:38px!important;
+  padding:8px 14px!important;
+  border:1px solid #D5D9D9!important;
+  border-radius:8px!important;
+  background:#FFFFFF!important;
+  color:#0F1111!important;
+}
+#view-home #categoryStrip .dk .ico{
+  display:grid!important;
+  place-items:center!important;
+  width:18px!important;
+  height:18px!important;
+  flex:0 0 18px!important;
+  padding:0!important;
+  margin:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+#view-home #categoryStrip .dk .ico svg,
+#view-home #categoryStrip .dk .ico img{
+  display:block!important;
+  width:18px!important;
+  height:18px!important;
+  filter:none!important;
+  box-shadow:none!important;
+}
+#view-home #categoryStrip .dk .lb{white-space:nowrap!important}
+#view-home #categoryStrip .dk.active{
+  border:1px solid #00453E!important;
+  background:#F0FDF8!important;
+  color:#00453E!important;
+  padding:8px 14px!important;
+}
+#view-home #homeVendorMediaSection{grid-column:2!important;grid-row:2!important;min-width:0}
+#view-home .market-listing-header{grid-column:2!important;grid-row:3!important}
+#view-home #skeletonGrid:not(.hidden),
+#view-home #productGrid:not(.hidden){
+  display:grid!important;
+  grid-column:2!important;
+  grid-row:4!important;
+  grid-template-columns:repeat(6,minmax(0,1fr))!important;
+  gap:12px!important;
+  min-width:0!important;
+}
+#view-home #emptyHome{grid-column:2!important;grid-row:4!important}
+
+/* Dark emerald primary header with high-contrast account and notification labels. */
+.hd.glass{
+  background:#00453E!important;
+  color:#FFFFFF!important;
+  border-bottom:none!important;
+}
+.hd #siteTitle,
+.hd #navName,
+.hd #bellIcon{color:#FFFFFF!important}
+.hd #siteSubtitle,
+.hd #navRole{color:#A7F3D0!important}
+.hd #notificationBtn{color:#FFFFFF!important}
+
+/* Product-card shop avatar: clean circular crop, never a square thumbnail. */
+#view-home .cd .sh .sp{
+  width:30px!important;
+  height:30px!important;
+  min-width:30px!important;
+  flex:0 0 30px!important;
+  overflow:hidden!important;
+  display:grid!important;
+  place-items:center!important;
+  border:1px solid #E3E6E6!important;
+  border-radius:50%!important;
+  background:#F0FDF8!important;
+  box-shadow:none!important;
+}
+#view-home .cd .sh .sp img,
+#view-home .cd .sh .sp picture,
+#view-home .cd .sh .sp picture img{
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+  max-width:none!important;
+  border-radius:50%!important;
+  object-fit:cover!important;
+  object-position:center!important;
+}
+@media(max-width:1360px){
+  #view-home #skeletonGrid:not(.hidden),
+  #view-home #productGrid:not(.hidden){
+    grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  }
+}
+@media(max-width:900px){
+  #view-home{width:calc(100% - 24px)!important}
+  #view-home .home-layout-shell,
+  #view-home .amazon-store-body{grid-template-columns:1fr!important;gap:10px!important}
+  #view-home .amazon-filter-sidebar{display:none!important}
+  #view-home #categoryStrip{grid-column:1!important;grid-row:1!important}
+  #view-home #homeVendorMediaSection,
+  #view-home .market-listing-header,
+  #view-home #skeletonGrid,
+  #view-home #productGrid,
+  #view-home #emptyHome{grid-column:1!important;grid-row:auto!important}
+  #view-home #skeletonGrid:not(.hidden),
+  #view-home #productGrid:not(.hidden){grid-template-columns:repeat(3,minmax(0,1fr))!important}
+}
+@media(max-width:639px){
+  #view-home #skeletonGrid:not(.hidden),
+  #view-home #productGrid:not(.hidden){
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:10px!important;
+  }
+}
