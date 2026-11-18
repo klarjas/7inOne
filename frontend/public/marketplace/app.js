@@ -463,7 +463,7 @@ function avatarFallbackMarkup(name = '') {
 function setAvatar(target, url, name = '') {
   if (!target) return;
   const fallback = () => {
-    target.classList.remove('shimmer-scan');
+    target.classList.remove('shimmer-scan', 'is-loaded');
     target.classList.add('is-failed');
     target.innerHTML = avatarFallbackMarkup(name);
   };
@@ -471,7 +471,33 @@ function setAvatar(target, url, name = '') {
   target.classList.add('img-scan-wrap', 'shimmer-scan');
   target.classList.remove('is-loaded', 'is-failed');
   target.innerHTML = `<img src="${esc(url)}" alt="" class="h-full w-full object-cover">`;
-  target.querySelector('img')?.addEventListener('error', fallback, { once: true });
+  const img = target.querySelector('img');
+  if (img) {
+    img.addEventListener('load', () => {
+      target.classList.remove('shimmer-scan');
+      target.classList.add('is-loaded');
+    }, { once: true });
+    img.addEventListener('error', fallback, { once: true });
+    if (img.complete && img.naturalWidth > 0) {
+      target.classList.remove('shimmer-scan');
+      target.classList.add('is-loaded');
+    }
+  }
+}
+
+function setProfileCover(target, url = '') {
+  if (!target) return;
+  if (url) {
+    target.style.backgroundImage = `url("${url}")`;
+    target.style.backgroundSize = 'cover';
+    target.style.backgroundPosition = 'center';
+    target.style.backgroundRepeat = 'no-repeat';
+    return;
+  }
+  target.style.backgroundImage = '';
+  target.style.backgroundSize = '';
+  target.style.backgroundPosition = '';
+  target.style.backgroundRepeat = '';
 }
 
 function syncHeader() {
@@ -1233,7 +1259,7 @@ async function renderProfile() {
   $('profileSellerBadge').innerHTML = badges.join('');
 
   const cover = $('view-profile').querySelector('.cover');
-  cover.style.backgroundImage = p.cover_url ? `url("${p.cover_url}")` : '';
+  setProfileCover(cover, p.cover_url || '');
   $('profileApplyTop').textContent = state.me.vendor ? 'មើលស្ថានភាពហាង' : 'បើកហាងលក់នៅ 7inOne';
   await renderProfileTab();
 }
@@ -2193,7 +2219,37 @@ function bindEvents() {
     try { await api('/api/me/profile', { method: 'PATCH', body: JSON.stringify({ display_name: $('profileName')?.value.trim() || '', phone: $('profilePhone')?.value.trim() || '', province: $('profileLocation')?.value || '', bio: $('profileBio')?.value.trim() || '' }) }); await refreshSession(); toast('បានរក្សាទុកព័ត៌មាន Profile ជោគជ័យ!'); await renderProfileTab(); }
     catch (err) { toast(err.message || 'មិនអាចរក្សាទុក Profile បានទេ។', 'error'); }
   });
-  const uploadProfileImage = async (inputId, type) => { const file = $(inputId)?.files?.[0]; if (!file) return; const form = new FormData(); form.append('file', file); form.append('type', type); try { await api('/api/me/media', { method: 'POST', body: form }); await refreshSession(); await renderProfileTab(); toast('បានប្ដូររូបភាព Profile ជោគជ័យ!'); } catch (err) { toast(err.message || 'មិនអាច Upload រូបភាពបានទេ។', 'error'); } };
+  const uploadProfileImage = async (inputId, type) => {
+    const file = $(inputId)?.files?.[0];
+    if (!file) return;
+
+    const previewUrl = URL.createObjectURL(file);
+    if (type === 'avatar') {
+      setAvatar($('profileAvatar'), previewUrl, profileName());
+    } else {
+      setProfileCover($('view-profile')?.querySelector('.cover'), previewUrl);
+    }
+
+    const form = new FormData();
+    form.append('file', file);
+    form.append('type', type);
+    try {
+      await api('/api/me/media', { method: 'POST', body: form });
+      await refreshSession();
+
+      const savedUrl = state.me?.profile?.[type === 'avatar' ? 'avatar_url' : 'cover_url'];
+      if (savedUrl) {
+        if (type === 'avatar') setAvatar($('profileAvatar'), savedUrl, profileName());
+        else setProfileCover($('view-profile')?.querySelector('.cover'), savedUrl);
+        URL.revokeObjectURL(previewUrl);
+      }
+
+      await renderProfileTab();
+      toast('បានប្ដូររូបភាព Profile ជោគជ័យ!');
+    } catch (err) {
+      toast(err.message || 'មិនអាច Upload រូបភាពបានទេ។', 'error');
+    }
+  };
   $('avatarUpload')?.addEventListener('change', () => void uploadProfileImage('avatarUpload', 'avatar'));
   $('coverUpload')?.addEventListener('change', () => void uploadProfileImage('coverUpload', 'cover'));
   $('profileTabContent')?.addEventListener('click', (e) => { const open = e.target.closest('[data-open-product]'); if (open) { void openProduct(open.dataset.openProduct); return; } const remove = e.target.closest('[data-remove-saved]'); if (remove) saveAction(remove.dataset.removeSaved, remove); });
