@@ -727,7 +727,7 @@ async function loadProducts() {
   } finally {
     if (requestId === state.productsRequestId) {
       $('skeletonGrid').classList.add('hidden');
-      grid.classList.remove('hidden');
+      grid.classList.toggle('hidden', state.products.length === 0);
       grid.setAttribute('aria-busy', 'false');
     }
   }
