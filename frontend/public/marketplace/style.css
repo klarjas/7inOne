@@ -3803,3 +3803,23 @@ body > footer {
   object-fit: cover;
 }
 
+/* Full-name field in the profile editor */
+#profileForm #profileName {
+  width: 100%;
+  min-height: 42px;
+  padding: 11px 13px;
+  border: 1px solid #2A475E;
+  border-radius: 12px;
+  background: #101822;
+  color: #FFFFFF;
+  caret-color: #66C0F4;
+  outline: none;
+  transition: border-color .2s ease, box-shadow .2s ease, background-color .2s ease;
+}
+#profileForm #profileName:focus {
+  background: #101822;
+  border-color: #66C0F4;
+  color: #FFFFFF;
+  box-shadow: 0 0 0 3px rgba(102,192,244,.13);
+}
+
