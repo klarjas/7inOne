@@ -2180,7 +2180,7 @@ function bindEvents() {
     e.preventDefault(); if (!requireLogin()) return;
     const form = new FormData(); form.append('store_name', $('shopName')?.value.trim() || ''); form.append('contact_phone', $('shopContact')?.value.trim() || ''); form.append('address', $('shopAddress')?.value.trim() || '');
     const file = $('sellerDocument')?.files?.[0]; if (file) form.append('document', file);
-    try { await api('/api/vendors/apply', { method: 'POST', body: form }); closeModal('sellerModal'); $('sellerApplyForm').reset(); await refreshSession(); toast('បានដាក់ពាក្យស្នើសុំអ្នកលក់ជោគជ័យ!'); await showView('seller'); }
+    try { await api('/api/vendors/register', { method: 'POST', body: form }); closeModal('sellerModal'); $('sellerApplyForm').reset(); await refreshSession(); toast('បានដាក់ពាក្យស្នើសុំអ្នកលក់ជោគជ័យ!'); await showView('seller'); }
     catch (err) { toast(err.message || 'មិនអាចដាក់ពាក្យបានទេ។', 'error'); }
   });
 
@@ -2193,9 +2193,9 @@ function bindEvents() {
     try { await api('/api/me/profile', { method: 'PATCH', body: JSON.stringify({ display_name: $('profileName')?.value.trim() || '', phone: $('profilePhone')?.value.trim() || '', province: $('profileLocation')?.value || '', bio: $('profileBio')?.value.trim() || '' }) }); await refreshSession(); toast('បានរក្សាទុកព័ត៌មាន Profile ជោគជ័យ!'); await renderProfileTab(); }
     catch (err) { toast(err.message || 'មិនអាចរក្សាទុក Profile បានទេ។', 'error'); }
   });
-  const uploadProfileImage = async (inputId, endpoint, fieldName) => { const file = $(inputId)?.files?.[0]; if (!file) return; const form = new FormData(); form.append(fieldName, file); try { await api(endpoint, { method: 'POST', body: form }); await refreshSession(); await renderProfileTab(); toast('បានប្ដូររូបភាព Profile ជោគជ័យ!'); } catch (err) { toast(err.message || 'មិនអាច Upload រូបភាពបានទេ។', 'error'); } };
-  $('avatarUpload')?.addEventListener('change', () => void uploadProfileImage('avatarUpload', '/api/me/avatar', 'avatar'));
-  $('coverUpload')?.addEventListener('change', () => void uploadProfileImage('coverUpload', '/api/me/cover', 'cover'));
+  const uploadProfileImage = async (inputId, type) => { const file = $(inputId)?.files?.[0]; if (!file) return; const form = new FormData(); form.append('file', file); form.append('type', type); try { await api('/api/me/media', { method: 'POST', body: form }); await refreshSession(); await renderProfileTab(); toast('បានប្ដូររូបភាព Profile ជោគជ័យ!'); } catch (err) { toast(err.message || 'មិនអាច Upload រូបភាពបានទេ។', 'error'); } };
+  $('avatarUpload')?.addEventListener('change', () => void uploadProfileImage('avatarUpload', 'avatar'));
+  $('coverUpload')?.addEventListener('change', () => void uploadProfileImage('coverUpload', 'cover'));
   $('profileTabContent')?.addEventListener('click', (e) => { const open = e.target.closest('[data-open-product]'); if (open) { void openProduct(open.dataset.openProduct); return; } const remove = e.target.closest('[data-remove-saved]'); if (remove) saveAction(remove.dataset.removeSaved, remove); });
 
   $('connectTelegramBtn')?.addEventListener('click', async () => { try { const res = await api('/api/me/telegram/connect', { method: 'POST', body: JSON.stringify({}) }); const url = res.data?.url || res.data?.link || res.data?.telegram_url; if (url && $('telegramConnectLink')) { $('telegramConnectLink').href = url; $('telegramConnectLink').classList.remove('hidden'); } $('refreshTelegramStatusBtn')?.classList.remove('hidden'); toast('បានបង្កើតតំណភ្ជាប់ Telegram។'); } catch (err) { toast(err.message || 'មិនអាចភ្ជាប់ Telegram បានទេ។', 'error'); } });
@@ -2222,7 +2222,7 @@ function bindEvents() {
   $('adminApplications')?.addEventListener('click', async (e) => { const b = e.target.closest('[data-admin-review]'); if (!b) return; try { await api('/api/admin/vendors/' + encodeURIComponent(b.dataset.id), { method: 'PATCH', body: JSON.stringify({ status: b.dataset.adminReview }) }); await renderAdmin(); toast('បានធ្វើបច្ចុប្បន្នភាពពាក្យស្នើសុំ។'); } catch (err) { toast(err.message || 'មិនអាចពិនិត្យពាក្យស្នើសុំបានទេ។', 'error'); } });
 
   $('sellerChatChooseImage')?.addEventListener('click', () => $('sellerChatImageInput')?.click());
-  $('sellerChatImageInput')?.addEventListener('change', async () => { const file = $('sellerChatImageInput').files?.[0]; if (!file || !state.chatConversationId) return; const form = new FormData(); form.append('image', file); try { await api('/api/seller-chat/conversations/' + encodeURIComponent(state.chatConversationId) + '/images', { method: 'POST', body: form }); $('sellerChatImageInput').value = ''; await loadSellerChatConversation(true); await loadUnifiedSellerChatInbox(); } catch (err) { toast(err.message || 'មិនអាចផ្ញើរូបភាពបានទេ។', 'error'); } });
+  $('sellerChatImageInput')?.addEventListener('change', async () => { const file = $('sellerChatImageInput').files?.[0]; if (!file || !state.chatConversationId) return; const form = new FormData(); form.append('image', file); try { await api('/api/seller-chat/conversations/' + encodeURIComponent(state.chatConversationId) + '/image', { method: 'POST', body: form }); $('sellerChatImageInput').value = ''; await loadSellerChatConversation(true); await loadUnifiedSellerChatInbox(); } catch (err) { toast(err.message || 'មិនអាចផ្ញើរូបភាពបានទេ។', 'error'); } });
   $('sellerChatMute')?.addEventListener('click', () => { state.chatMuted = !state.chatMuted; const b = $('sellerChatMute'); b.setAttribute('aria-pressed', String(state.chatMuted)); b.textContent = state.chatMuted ? 'បើកសំឡេង' : 'បិទសំឡេង'; b.title = state.chatMuted ? 'បើកសំឡេង' : 'បិទសំឡេង'; });
 
 }
