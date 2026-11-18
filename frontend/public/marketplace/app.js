@@ -16,6 +16,7 @@ const ICON_PATHS = {
   chev: '<path d="m7 10 5 5 5-5"/>',
   x: '<path d="m18 6-12 12M6 6l12 12"/>',
   heart: '<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z"/>',
+  bookmark: '<path d="M6 4.5A1.5 1.5 0 0 1 7.5 3h9A1.5 1.5 0 0 1 18 4.5V21l-6-4-6 4V4.5Z"/>',
   pin: '<path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/>',
   clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
   shield: '<path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z"/><path d="m9 12 2 2 4-4"/>',
@@ -709,7 +710,7 @@ function productCard(p, index) {
         ? `<span class="img-scan-wrap shimmer-scan cd-image-wrap cd-main-wrap"><img src="${esc(image)}" alt="${esc(p.title)}" loading="lazy" decoding="async" class="cd-main" onload="this.parentElement.classList.add(&#39;is-loaded&#39;)" onerror="if(this.dataset.retryAttempted!==&#39;1&#39;){this.dataset.retryAttempted=&#39;1&#39;;const image=this;setTimeout(()=>{image.src=image.src+(image.src.includes(&#39;?&#39;)?&#39;&amp;r=1&#39;:&#39;?r=1&#39;)},1500)}else{this.parentElement.classList.add(&#39;is-failed&#39;,&#39;image-failed&#39;);this.style.display=&#39;none&#39;}"></span>${secondImage ? `<span class="img-scan-wrap shimmer-scan cd-image-wrap cd-secondary-wrap"><img src="${esc(secondImage)}" alt="" loading="lazy" decoding="async" class="cd-secondary" onload="this.parentElement.classList.add(&#39;is-loaded&#39;)" onerror="if(this.dataset.retryAttempted!==&#39;1&#39;){this.dataset.retryAttempted=&#39;1&#39;;const image=this;setTimeout(()=>{image.src=image.src+(image.src.includes(&#39;?&#39;)?&#39;&amp;r=1&#39;:&#39;?r=1&#39;)},1500)}else{this.parentElement.classList.add(&#39;is-failed&#39;,&#39;image-failed&#39;);this.style.display=&#39;none&#39;}"></span>` : ''}`
         : ic('image', 36)}
       <button class="hv heart ${saved ? 'saved' : ''}" type="button" data-action="save" data-id="${esc(p.id)}" aria-label="រក្សាទុក" aria-pressed="${saved ? 'true' : 'false'}">
-        ${ic('heart', 17)}
+        ${ic('bookmark', 17)}
       </button>
     </div>
     <div class="cb">
@@ -896,7 +897,7 @@ function renderProductDetail() {
   const related = state.products.filter((item) => String(item.id) !== String(p.id) && (item.category === p.category || String(item.vendor_id) === String(p.vendor_id))).slice(0, 6);
 
   const galleryHtml = images.length
-    ? `<div class="product-gallery-stage"><img id="productMainImage" src="${esc(activeImage.image_url)}" alt="${esc(p.title)}" data-gallery-zoom><span class="product-gallery-condition">${esc(p.condition || 'មិនបានបញ្ជាក់')}</span><button type="button" class="product-gallery-save" data-product-action="save" aria-pressed="${saved}">${ic('heart', 18)}</button>${images.length > 1 ? `<button type="button" class="product-gallery-arrow prev" data-gallery-step="-1">${ic('arrow', 17)}</button><button type="button" class="product-gallery-arrow next" data-gallery-step="1">${ic('arrow', 17)}</button>` : ''}<span class="product-gallery-counter">${state.productGalleryIndex + 1} / ${images.length}</span></div><div class="product-gallery-thumbs" id="productGalleryThumbs">${images.map((im, i) => `<button type="button" class="product-gallery-thumb ${i === state.productGalleryIndex ? 'active' : ''}" data-image="${i}"><img src="${esc(im.image_url)}" alt=""></button>`).join('')}</div>`
+    ? `<div class="product-gallery-stage"><img id="productMainImage" src="${esc(activeImage.image_url)}" alt="${esc(p.title)}" data-gallery-zoom><span class="product-gallery-condition">${esc(p.condition || 'មិនបានបញ្ជាក់')}</span><button type="button" class="product-gallery-save" data-product-action="save" aria-pressed="${saved}">${ic('bookmark', 18)}</button>${images.length > 1 ? `<button type="button" class="product-gallery-arrow prev" data-gallery-step="-1">${ic('arrow', 17)}</button><button type="button" class="product-gallery-arrow next" data-gallery-step="1">${ic('arrow', 17)}</button>` : ''}<span class="product-gallery-counter">${state.productGalleryIndex + 1} / ${images.length}</span></div><div class="product-gallery-thumbs" id="productGalleryThumbs">${images.map((im, i) => `<button type="button" class="product-gallery-thumb ${i === state.productGalleryIndex ? 'active' : ''}" data-image="${i}"><img src="${esc(im.image_url)}" alt=""></button>`).join('')}</div>`
     : `<div class="product-gallery-stage">${ic('image', 48)}</div>`;
 
   const reviewItems = (v.reviews || []).slice(0, 5);
@@ -928,7 +929,7 @@ function renderProductDetail() {
           </div>
           <div class="product-utility-actions">
             <button type="button" data-product-action="offer">${ic('tag', 16)} តថ្លៃទំនិញ</button>
-            <button type="button" data-product-action="save" aria-pressed="${saved}">${ic('heart', 16)} ${saved ? 'បានរក្សាទុក' : 'រក្សាទុក'}</button>
+            <button type="button" data-product-action="save" aria-pressed="${saved}">${ic('bookmark', 16)} ${saved ? 'បានរក្សាទុក' : 'រក្សាទុក'}</button>
           </div>
         </div>
 
@@ -1882,7 +1883,7 @@ function initIcons() {
   $('menuUserIcon').innerHTML = ic('user', 15);
   $('menuStoreIcon').innerHTML = ic('store', 15);
   $('menuAdminIcon').innerHTML = ic('shield', 15);
-  $('menuSaveIcon').innerHTML = ic('heart', 15);
+  $('menuSaveIcon').innerHTML = ic('bookmark', 15);
   $('menuLoginIcon').innerHTML = ic('logout', 15);
   $('heroShield').innerHTML = ic('shield', 15);
   $('heroUsers').innerHTML = ic('users', 15);
