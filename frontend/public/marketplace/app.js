@@ -176,7 +176,8 @@ const state = {
   chatInboxUserId: null,
   chatLoadedMessages: [],
   chatPendingMedia: [],
-  chatDraftProduct: null
+  chatDraftProduct: null,
+  chatConversation: null
 };
 
 /* --------------------------------------------------------------------------
@@ -1547,18 +1548,30 @@ function renderSellerChatMessages(messages, forceScroll = false) {
 
   target.innerHTML = (messages || []).map((msg) => {
     const own = msg.sender_role === state.chatMode;
+    const senderIsShop = msg.sender_role === 'seller';
+    const participant = state.chatConversation || {};
+    const senderName = senderIsShop
+      ? (participant.vendor?.store_name || 'ហាងអ្នកលក់')
+      : (participant.buyer?.display_name || 'អ្នកទិញ');
+    const senderAvatar = senderIsShop ? participant.vendor?.store_logo_url : participant.buyer?.avatar_url;
+    const avatar = senderAvatar
+      ? `<img class="seller-chat-message-avatar" src="${esc(senderAvatar)}" alt="${esc(senderName)}">`
+      : `<span class="seller-chat-message-avatar seller-chat-message-avatar-fallback">${ic(senderIsShop ? 'store' : 'user', 15)}</span>`;
     let content = '';
     if (msg.message_type === 'product') {
       const prod = msg.product || null;
-      const img = prod?.image_url ? `<img src="${esc(prod.image_url)}" alt="">` : `<span class="seller-chat-product-placeholder">${ic('bag', 24)}</span>`;
-      content = `<article class="seller-chat-product-card" ${prod?.id ? `data-chat-product-id="${esc(prod.id)}"` : ''}>${img}<div class="seller-chat-product-info"><small>ផលិតផលដែលបានសួរ</small><b>${esc(prod?.title || msg.body || 'ផលិតផល')}</b>${prod ? `<strong>${money(prod.price)}</strong>` : ''}</div></article>`;
+      const img = prod?.image_url
+        ? `<img src="${esc(prod.image_url)}" alt="${esc(prod.title || 'ផលិតផល')}" loading="lazy">`
+        : `<span class="seller-chat-product-placeholder">${ic('bag', 24)}</span>`;
+      content = `<article class="seller-chat-product-card" ${prod?.id ? `data-chat-product-id="${esc(prod.id)}"` : ''}>${img}<div class="seller-chat-product-info"><small>ផលិតផលដែលបានសួរ</small><b>${esc(prod?.title || msg.body || 'ផលិតផល')}</b>${prod ? `<strong>${money(prod.price)}</strong>` : '<span class="seller-chat-product-unavailable">ព័ត៌មានផលិតផលមិនទាន់មាន</span>'}</div></article>`;
     } else if (msg.message_type === 'image' && (msg.telegram_file_id || msg.local_image_url)) {
       const src = msg.local_image_url || `/api/media/telegram/${encodeURIComponent(msg.telegram_file_id)}?mime=${encodeURIComponent(msg.mime_type || 'image/jpeg')}`;
       content = `<a href="${esc(src)}" target="_blank" rel="noopener noreferrer"><img class="seller-chat-image" src="${esc(src)}" alt=""></a>`;
     } else {
       content = `<p>${esc(msg.body || '').replace(/\n/g, '<br>')}</p>`;
     }
-    return `<div class="flex ${own ? 'justify-end' : 'justify-start'}"><div class="seller-chat-bubble ${own ? 'own' : 'other'}">${content}<small>${esc(new Date(msg.created_at).toLocaleTimeString('km-KH', { hour: '2-digit', minute: '2-digit' }))}</small></div></div>`;
+    const time = esc(new Date(msg.created_at).toLocaleTimeString('km-KH', { hour: '2-digit', minute: '2-digit' }));
+    return `<div class="seller-chat-message-row ${own ? 'own' : 'other'}">${own ? '' : avatar}<div class="seller-chat-bubble ${own ? 'own' : 'other'}">${content}<small>${time}</small></div>${own ? avatar : ''}</div>`;
   }).join('') || '<p class="py-8 text-center text-xs text-slate-400">មិនទាន់មានសារទេ។ សូមចាប់ផ្ដើមសន្ទនា។</p>';
 
   if (wasNearBottom) scrollSellerChatToBottom();
@@ -1605,6 +1618,7 @@ async function loadSellerChatConversation(scrollToBottom = false) {
   const messages = data.messages || [];
 
   // current_role identifies the viewer; display the opposite participant's identity.
+  state.chatConversation = conv;
   const currentRole = String(conv.current_role || state.chatMode || 'buyer').toLowerCase();
   state.chatMode = currentRole === 'seller' ? 'seller' : 'buyer';
   const otherIsShop = state.chatMode === 'buyer';
@@ -2230,7 +2244,7 @@ function bindEvents() {
         await api(`/api/seller-chat/conversations/${encodeURIComponent(state.chatConversationId)}/messages`, {
           method: 'POST',
           body: JSON.stringify({ product_id: draft.id, message_type: 'product', body: draft.title || '' })
-        }).catch(() => null);
+        });
         state.chatDraftProduct = null;
         renderSellerChatDraftProduct();
       }
