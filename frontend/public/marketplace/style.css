@@ -2800,3 +2800,12 @@ textarea,
     box-sizing:border-box!important;
   }
 }
+
+
+/* Keep the listing banner in normal document flow; never pin it while scrolling. */
+#view-home .market-listing-header{
+  position:static!important;
+  top:auto!important;
+  inset-block-start:auto!important;
+  transform:none!important;
+}
