@@ -1574,9 +1574,10 @@ body{background:var(--page)!important;color:var(--ink);font-family:"Kantumruy Pr
   margin:0;
   padding:0;
   list-style:none;
-  border:1px solid #E6EEE9;
+  border:1px solid #2A475E;
   border-radius:14px;
   overflow:hidden;
+  background:#16202D;
 }
 #view-product .product-facts-list li{
   display:grid;
@@ -1584,11 +1585,12 @@ body{background:var(--page)!important;color:var(--ink);font-family:"Kantumruy Pr
   align-items:center;
   gap:12px;
   padding:11px 14px;
-  background:#fff;
+  background:#16202D;
+  color:#C7D5E0;
 }
 #view-product .product-facts-list li:has(.product-facts-price){grid-template-columns:112px minmax(0,1fr)}
 #view-product .product-facts-list li .product-facts-price{justify-self:start}
-#view-product .product-facts-list li+li{border-top:1px solid #EDF2EE}
+#view-product .product-facts-list li+li{border-top:1px solid #2A475E}
 #view-product .product-facts-list li>span{
   color:#64748B;
   font-size:12px;
@@ -1813,7 +1815,7 @@ body{background:var(--page)!important;color:var(--ink);font-family:"Kantumruy Pr
 }
 #view-product .product-meta-item{color:#7a838d;font-size:10px}
 #view-product .product-facts-list{
-  border:1px solid #e9ecef;border-radius:18px;background:#fff
+  border:1px solid #2A475E;border-radius:18px;background:#16202D;color:#C7D5E0
 }
 #view-product .product-facts-list li{
   grid-template-columns:118px minmax(0,1fr);gap:16px;padding:15px 17px
@@ -3477,3 +3479,36 @@ body > footer {
   font-family: "Hanuman", serif;
   font-weight: 300;
 }
+
+
+/* Steam Dark surfaces for dynamic product, storefront and account panels. */
+:is(#view-home,#view-product,#view-store,#view-profile,#view-seller,#view-admin) :is(
+.product-facts-list,.product-facts-list li,.account-hero,.account-panel,.account-shortcut,
+.account-settings,.account-section,.profile-panel,.profile-card,.storefront-public,
+.storefront-profile,.storefront-toolbar,.storefront-review-list,.storefront-review,
+.storefront-skeleton-card,.seller-shop-form,.seller-panel,.seller-card,.admin-panel,
+.admin-card,.support-chat-panel,.admin-chat-item
+){background-color:#16202D;color:#C7D5E0;border-color:#2A475E}
+:is(#view-home,#view-product,#view-store,#view-profile,#view-seller,#view-admin) :is(
+.product-facts-list li+li,.storefront-review,.account-shortcut
+){border-color:#2A475E}
+:is(#view-home,#view-product,#view-store,#view-profile,#view-seller,#view-admin) :is(
+.product-facts-list li>span,.account-shortcut small,.account-shortcut-arrow,
+.storefront-meta,.storefront-result-count,.profile-meta,.seller-meta
+){color:#8F98A0}
+:is(#view-home,#view-product,#view-store,#view-profile,#view-seller,#view-admin) :is(
+.account-shortcut b,.product-detail-title,.product-fact-description p,
+.storefront-section-heading h2,.storefront-review-top strong
+){color:#C7D5E0}
+:is(#view-home,#view-product,#view-store,#view-profile,#view-seller,#view-admin) :is(
+.bg-white,.bg-slate-50,.bg-gray-50,.bg-emerald-50,.bg-indigo-50,.bg-blue-50,.bg-stone-50
+){background-color:#16202D}
+:is(#view-home,#view-product,#view-store,#view-profile,#view-seller,#view-admin) :is(
+.border-slate-100,.border-slate-200,.border-gray-100,.border-gray-200,.border-emerald-100
+){border-color:#2A475E}
+:is(#view-home,#view-product,#view-store,#view-profile,#view-seller,#view-admin) :is(
+.text-slate-900,.text-slate-800,.text-gray-900,.text-gray-800
+){color:#FFFFFF}
+:is(#view-home,#view-product,#view-store,#view-profile,#view-seller,#view-admin) :is(
+.text-slate-600,.text-slate-500,.text-gray-600,.text-gray-500
+){color:#8F98A0}
