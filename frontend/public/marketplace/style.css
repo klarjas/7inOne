@@ -2324,3 +2324,9 @@ textarea,
 #productGrid.hidden {
   display: none !important;
 }
+
+#view-profile .cover {
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+}
