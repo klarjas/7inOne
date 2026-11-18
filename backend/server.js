@@ -158,14 +158,66 @@ async function getTelegramBotUsername() {
     return fallback;
   }
 }
+function friendlyTelegramUploadError(error) {
+  const rawMessage = String(error?.message || error || 'Telegram image upload failed.');
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const message = token ? rawMessage.split(token).join('[redacted]') : rawMessage;
+
+  if (/\\b401\\b|unauthorized|invalid bot token/i.test(message)) {
+    return 'Telegram bot token is invalid. Check TELEGRAM_BOT_TOKEN.';
+  }
+  if (/chat not found/i.test(message)) {
+    return 'Telegram storage channel not found. Check TELEGRAM_STORAGE_CHAT_ID (must look like -100...) and that the bot was added to the channel.';
+  }
+  if (/\\b403\\b|not enough rights|forbidden/i.test(message)) {
+    return 'The bot must be an Administrator of the channel with permission to post messages.';
+  }
+  if (/PHOTO_INVALID_DIMENSIONS|invalid photo dimensions|photo.*dimensions|dimensions.*photo|aspect ratio/i.test(message)) {
+    return 'Telegram cannot send this image as a photo because its dimensions or aspect ratio are unsupported.';
+  }
+  return message;
+}
+
 async function uploadToTelegram(file) {
   const invalid = imageUploadError(file);
   if (invalid) throw new Error(invalid);
   assertTelegramStorageConfig();
-  const form = new FormData();
-  form.append('chat_id', telegramStorageChatId());
-  form.append('photo', new Blob([file.buffer], { type: file.mimetype }), file.originalname || 'image.jpg');
-  const result = await telegram('sendPhoto', { method: 'POST', body: form });
+
+  const createForm = (fieldName) => {
+    const form = new FormData();
+    form.append('chat_id', telegramStorageChatId());
+    form.append(fieldName, new Blob([file.buffer], { type: file.mimetype }), file.originalname || 'image.jpg');
+    return form;
+  };
+
+  let result;
+  try {
+    result = await telegram('sendPhoto', { method: 'POST', body: createForm('photo') });
+  } catch (photoError) {
+    console.error('Telegram sendPhoto upload error:', photoError);
+    const photoMessage = String(photoError?.message || photoError);
+    const invalidDimensions = /PHOTO_INVALID_DIMENSIONS|invalid photo dimensions|photo.*dimensions|dimensions.*photo|aspect ratio/i.test(photoMessage);
+    if (!invalidDimensions) throw new Error(friendlyTelegramUploadError(photoError));
+
+    try {
+      result = await telegram('sendDocument', { method: 'POST', body: createForm('document') });
+    } catch (documentError) {
+      console.error('Telegram sendDocument fallback upload error:', documentError);
+      throw new Error(friendlyTelegramUploadError(documentError));
+    }
+
+    const document = result.document;
+    if (!document?.file_id || !result.message_id) {
+      throw new Error('Telegram accepted the image as a document but did not return a file_id/message_id.');
+    }
+    return {
+      messageId: String(result.message_id),
+      fileId: document.file_id,
+      mimeType: file.mimetype,
+      method: 'sendDocument'
+    };
+  }
+
   const media = result.photo?.at(-1);
   if (!media?.file_id || !result.message_id) throw new Error('Telegram accepted the image but did not return a file_id/message_id.');
   return { messageId: String(result.message_id), fileId: media.file_id, mimeType: file.mimetype, method: 'sendPhoto' };
