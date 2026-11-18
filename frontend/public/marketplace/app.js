@@ -1958,7 +1958,7 @@ function bindEvents() {
   // Keep the visible view in sync with browser Back / Forward navigation.
   window.addEventListener('hashchange', () => {
     const routeParts = String(window.location.hash || '#home')
-      .replace(/^#\\/?/, '')
+      .replace(/^#/, ''))
       .split('/')
       .filter(Boolean);
     const routeName = routeParts[0] || 'home';
