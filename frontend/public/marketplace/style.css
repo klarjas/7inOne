@@ -2194,8 +2194,8 @@ textarea,
 .home-main-content .market-listing-header h2{font-size:clamp(20px,2vw,26px)!important;color:#172b24!important}
 /* productGrid lacked display:grid, causing a single oversized product card */
 .home-main-content #productGrid:not(.hidden),.home-main-content #skeletonGrid:not(.hidden){display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:16px!important;min-height:0!important;align-content:start!important}
-.home-main-content .cd{min-width:0!important;border:1px solid #e8eee9!important;border-radius:18px!important;background:#fff!important;box-shadow:0 5px 20px rgba(16,40,32,.045)!important}
-.home-main-content .cd:hover{transform:translateY(-3px)!important;border-color:#c6e4d1!important;box-shadow:0 14px 30px rgba(16,40,32,.09)!important}
+.home-main-content .cd{min-width:0;border-radius:18px}
+.home-main-content .cd:hover{transform:translateY(-3px)}
 .home-main-content .cd .im{aspect-ratio:1.18/1!important;margin:8px 8px 0!important;border-radius:13px!important;background:#f5f7f6!important;color:#a2afa8!important}
 .home-main-content .cd .im .cd-image-wrap img{object-fit:contain!important;padding:14px!important;mix-blend-mode:normal!important}
 .home-main-content .cd .hv{width:36px!important;height:36px!important}
@@ -2397,8 +2397,7 @@ textarea,
 #skeletonGrid.hidden,#productGrid.hidden{display:none!important}
 #emptyHome{grid-column:2;grid-row:5}
 #homePromoRail{display:none!important}
-.cd{border:1px solid #e7e7e7;border-radius:8px;background:#fff;box-shadow:none}
-.cd:hover{transform:translateY(-2px);box-shadow:0 5px 16px rgba(15,17,17,.08)}
+.cd{border-radius:8px}
 .cd .im{aspect-ratio:1/1!important;background:#f7f7f7!important;border-radius:8px!important;color:#777;overflow:hidden}
 .cd .im .cd-image-wrap img{object-fit:contain!important;padding:10px;box-sizing:border-box}
 .cd .im .cd-image-wrap{background:#f7f7f7}
@@ -2833,23 +2832,6 @@ textarea,
 
 
 /* 7inOne marketplace cards: transparent, borderless product presentation across all public pages. */
-#view-home .cd,
-#view-store .cd,
-#view-product .cd,
-.product-related-grid .cd{
-  border:0!important;
-  background:transparent!important;
-  box-shadow:none!important;
-  border-radius:0!important;
-}
-#view-home .cd:hover,
-#view-store .cd:hover,
-#view-product .cd:hover,
-.product-related-grid .cd:hover{
-  transform:none!important;
-  border:0!important;
-  box-shadow:none!important;
-}
 #view-home .cd .im,
 #view-store .cd .im,
 #view-product .cd .im,
@@ -2857,20 +2839,20 @@ textarea,
   margin:0!important;
   border:0!important;
   border-radius:0!important;
-  background:transparent!important;
+  background:#101822;
   box-shadow:none!important;
 }
 #view-home .cd .im .cd-image-wrap,
 #view-store .cd .im .cd-image-wrap,
 #view-product .cd .im .cd-image-wrap,
 .product-related-grid .cd .im .cd-image-wrap{
-  background:transparent!important;
+  background:#101822;
 }
 #view-home .cd .cb,
 #view-store .cd .cb,
 #view-product .cd .cb,
 .product-related-grid .cd .cb{
-  background:transparent!important;
+  background:#101822;
 }
 
 /* Every shop logo/avatar stays perfectly circular wherever seller information appears. */
