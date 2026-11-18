@@ -3466,7 +3466,6 @@ button:hover:not(:disabled):not(.product-buy-primary):not(.hero-primary-action):
 
 .global-loading {
   display: flex;
-  min-height: 180px;
   width: 100%;
   flex-direction: column;
   align-items: center;
@@ -3475,6 +3474,10 @@ button:hover:not(:disabled):not(.product-buy-primary):not(.hero-primary-action):
   color: #9FB2C3;
   font-size: 12px;
   font-weight: 600;
+}
+
+.global-loading:not(.steam-loader-wrap) {
+  min-height: 180px;
 }
 
 /* 8. Page footer and short-content layout */
