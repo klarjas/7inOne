@@ -3638,3 +3638,36 @@ body > footer {
   transform:scale(.985);
 }
 
+/* Profile avatar camera control: offset it outside the photo corner to prevent overlap. */
+#view-profile #profileAvatar{
+  position:relative;
+  z-index:1;
+}
+#view-profile #avatarCam{
+  position:absolute;
+  right:-5px;
+  bottom:-5px;
+  z-index:3;
+  display:grid;
+  width:30px;
+  height:30px;
+  place-items:center;
+  border:2px solid #16202D;
+  border-radius:50%;
+  background:#2B74B8;
+  color:#FFFFFF;
+  box-shadow:0 3px 10px rgba(0,0,0,.35);
+  line-height:1;
+}
+#view-profile #avatarCam svg{
+  display:block;
+  width:13px;
+  height:13px;
+  flex:0 0 13px;
+}
+#view-profile #avatarCam:hover{
+  background:#316282;
+  border-color:#66C0F4;
+  color:#FFFFFF;
+}
+
