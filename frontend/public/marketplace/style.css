@@ -70,7 +70,7 @@ body.maintenance-active{overflow:hidden}
 
 
 /* 7inOne premium interaction + stable page layout */
-:root{color-scheme:light;--motion-ease:cubic-bezier(.22,1,.36,1);--surface-shadow:0 10px 30px rgba(15,23,42,.055),0 2px 8px rgba(15,23,42,.035)}
+:root{color-scheme:dark;--motion-ease:cubic-bezier(.22,1,.36,1);--surface-shadow:0 10px 30px rgba(15,23,42,.055),0 2px 8px rgba(15,23,42,.035)}
 html{scrollbar-gutter:stable}
 body{display:flex;flex-direction:column;min-height:100vh;min-height:100dvh;background:linear-gradient(180deg,#f8faff 0%,#f7f8fc 48%,#f8fafc 100%)}
 body>header{flex:0 0 auto}
@@ -141,20 +141,20 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
    7inOne · Luxury Emerald & Bento Editorial design system
    -------------------------------------------------------------------------- */
 :root{
-  color-scheme:light;
-  --brand:#064E3B;
-  --brand-deep:#052E25;
-  --brand-mid:#065F46;
-  --brand-rich:#10B981;
-  --brand-soft:#D1FAE5;
-  --gold:#D97706;
-  --gold-bright:#F59E0B;
-  --ink:#102820;
-  --muted:#71817B;
-  --line:#E5ECE7;
-  --page:#F8FAFC;
-  --surface:#FFFFFF;
-  --surface-shadow:0 18px 48px rgba(6,78,59,.075),0 3px 12px rgba(15,23,42,.035);
+  color-scheme:dark;
+  --brand:#2B74B8;
+  --brand-deep:#171A21;
+  --brand-mid:#316282;
+  --brand-rich:#66C0F4;
+  --brand-soft:#203244;
+  --gold:#BEEE11;
+  --gold-bright:#66C0F4;
+  --ink:#C7D5E0;
+  --muted:#8F98A0;
+  --line:#2A475E;
+  --page:#1B2838;
+  --surface:#16202D;
+  --surface-shadow:0 18px 48px rgba(0,0,0,.28);
   --motion-ease:cubic-bezier(.22,1,.36,1);
 }
 html{scrollbar-gutter:stable;scroll-behavior:smooth}
@@ -1901,17 +1901,17 @@ body{background:var(--page)!important;color:var(--ink);font-family:"Kantumruy Pr
  
 /* Apple Store redesign — design tokens and neutral foundation */
 :root{
-  --bg:#F5F5F7;
-  --card:#FFFFFF;
-  --text:#1D1D1F;
-  --muted:#6E6E73;
-  --line:rgba(0,0,0,.08);
-  --accent:#064E3B;
-  --accent-bright:#10B981;
+  --bg:#1B2838;
+  --card:#16202D;
+  --text:#C7D5E0;
+  --muted:#8F98A0;
+  --line:#2A475E;
+  --accent:#66C0F4;
+  --accent-bright:#2B74B8;
   --radius-lg:24px;
   --shadow-sm:0 2px 12px rgba(0,0,0,.06);
   --brand:var(--accent);
-  --brand2:#065F46;
+  --brand2:#316282;
   --green:var(--accent-bright);
   --ink:var(--text);
   --page:var(--bg);
@@ -1984,7 +1984,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .cd .im{margin:0;padding:0;background:#101822;color:#8F98A0;aspect-ratio:1/1;border-radius:0}
 .cd .im .cd-image-wrap img{width:100%;height:100%;padding:0;object-fit:cover;mix-blend-mode:normal}
 .cd:hover .im .cd-main{transform:scale(1.025)!important}
-.cd .hv{top:12px!important;right:12px!important;width:34px!important;height:34px!important;background:rgba(255,255,255,.88)!important;color:var(--text)!important;box-shadow:0 1px 6px rgba(0,0,0,.08)!important;backdrop-filter:blur(10px)}
+.cd .hv{top:12px;right:12px;width:34px;height:34px;background:rgba(32,50,68,.92);color:#C7D5E0;box-shadow:0 1px 6px rgba(0,0,0,.28);backdrop-filter:blur(10px)}
 .cd .hv.saved{color:var(--accent)!important}
 .cd .cb{padding:14px 16px 17px!important}
 .cd .cb h3{font-size:15px!important;font-weight:650!important;line-height:1.65!important;color:var(--text)!important;white-space:normal!important;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
@@ -1992,7 +1992,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .cd .cd-condition-meta{color:var(--muted)!important;font-size:10px!important}
 .cd .cd-description{color:var(--muted)!important;line-height:1.7!important}
 .cd .sh{gap:7px!important}
-.cd .sp{width:24px!important;height:24px!important;background:#F5F5F7!important;color:var(--muted)!important}
+.cd .sp{width:24px;height:24px;background:#203244;color:#8F98A0}
 .cd .sn{font-size:11px!important;color:var(--muted)!important}
 .cd .mt{font-size:10px!important;color:var(--muted)!important}
 @media(max-width:900px){.market-hero{grid-template-columns:1fr}.hero-bento{min-height:240px}.market-hero .hc{min-height:260px}}
@@ -2031,16 +2031,16 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 #view-product .product-detail-info{position:sticky;top:78px;gap:18px;padding:26px;border:1px solid #2A475E;border-radius:24px;background:#16202D;color:#C7D5E0;box-shadow:none;max-height:none;overflow:visible}
 #view-product .product-top-meta{color:var(--muted)!important;font-size:11px}
 #view-product .product-category-badge{background:#2A475E;color:#66C0F4;border-radius:980px}
-#view-product .product-detail-title{font-size:clamp(24px,2.6vw,34px)!important;line-height:1.55!important;color:var(--text)!important;font-weight:700!important}
+#view-product .product-detail-title{font-size:clamp(24px,2.6vw,34px);line-height:1.55;color:#FFFFFF;font-weight:700}
 #view-product .product-facts-list{border:0!important;border-radius:0!important;overflow:visible!important}
-#view-product .product-facts-list li{grid-template-columns:104px minmax(0,1fr)!important;gap:10px!important;padding:12px 0!important;border-top:1px solid var(--line)!important;background:transparent!important}
-#view-product .product-facts-list li>span{color:var(--muted)!important;font-size:12px!important}
-#view-product .product-facts-price{color:var(--text)!important;font-size:28px!important;font-weight:700!important}
-#view-product .product-facts-stock{color:var(--accent)!important;font-size:13px!important}
+#view-product .product-facts-list li{grid-template-columns:104px minmax(0,1fr);gap:10px;padding:12px 0;border-top:1px solid #2A475E;background:transparent}
+#view-product .product-facts-list li>span{color:#8F98A0;font-size:12px}
+#view-product .product-facts-price{color:#BEEE11;font-size:28px;font-weight:700}
+#view-product .product-facts-stock{color:#66C0F4;font-size:13px}
 #view-product .product-facts-stock.is-out{color:#D70015!important}
-#view-product .product-fact-description p{color:var(--muted)!important;line-height:1.8!important}
+#view-product .product-fact-description p{color:#C7D5E0;line-height:1.8}
 #view-product .product-primary-actions{display:grid!important;grid-template-columns:1fr!important;gap:9px!important}
-#view-product .product-buy-primary{min-height:50px!important;border:0!important;border-radius:980px!important;background:var(--accent)!important;color:#fff!important;box-shadow:none!important;font-size:14px!important}
+#view-product .product-buy-primary{min-height:50px;border:0;border-radius:980px;background:#2B74B8;color:#FFFFFF;box-shadow:none;font-size:14px}
 #view-product .product-chat-primary{min-height:48px;border:1px solid #2A475E;border-radius:980px;background:#203244;color:#C7D5E0}
 #view-product .product-utility-actions{display:flex;gap:9px!important}
 #view-product .product-utility-actions button{min-height:42px;flex:1;border:1px solid #2A475E;border-radius:980px;background:#203244;color:#C7D5E0}
@@ -2075,8 +2075,8 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 #view-profile .account-avatar{border-radius:50%!important}
 #view-profile .account-shortcut{border:1px solid var(--line)!important;border-radius:16px!important;box-shadow:none!important}
 #view-profile .account-shortcut:hover{transform:translateY(-2px)!important;box-shadow:var(--shadow-sm)!important;border-color:#D2D2D7!important}
-#view-profile .account-tabs .tab{border-radius:980px!important;border:0!important;background:transparent!important;color:var(--muted)!important}
-#view-profile .account-tabs .tab.active{background:#F5F5F7!important;color:var(--text)!important}
+#view-profile .account-tabs .tab{border-radius:980px;border:0;background:transparent;color:#8F98A0}
+#view-profile .account-tabs .tab.active{background:#203244;color:#66C0F4}
 @media(max-width:900px){
  #view-product .product-hero-grid{grid-template-columns:minmax(0,1fr)!important;gap:18px!important}
  #view-product .product-detail-gallery{position:static!important}
