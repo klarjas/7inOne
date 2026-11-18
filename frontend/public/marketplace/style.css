@@ -2312,4 +2312,4 @@ textarea,
 
 /* Product image fallback also applies to marketplace cards outside the store view. */
 .cd-image-wrap.image-failed{display:grid!important;place-items:center;min-height:70px;background:#F1F7F3!important}
-.cd-image-wrap.image-failed:after{content:"▧";display:grid;place-items:center;width:42px;height:42px;border-radius:50%;background:#E4F2E9;color:#0B7655;font-size:24px}
+.cd-image-wrap.image-failed:after{animation:none!important;content:"▧";display:grid;place-items:center;width:42px;height:42px;border-radius:50%;background:#E4F2E9;color:#0B7655;font-size:24px}
