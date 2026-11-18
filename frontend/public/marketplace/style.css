@@ -3846,3 +3846,17 @@ body > footer {
   border-radius: 20px;
   background: rgb(255, 255, 255);
 }
+
+/* Product rating summary: Steam Dark Slate & Steel Blue */
+#view-product .product-rating-summary {
+  background: #16202D;
+  border-color: #2A475E;
+  color: #C7D5E0;
+  box-shadow: none;
+}
+#view-product .product-rating-summary > strong {
+  color: #FFFFFF;
+}
+#view-product .product-rating-summary > p {
+  color: #8F98A0;
+}
