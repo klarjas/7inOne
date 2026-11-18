@@ -54,42 +54,58 @@
       background: radial-gradient(circle at 50% 0%, #2A475E 0%, #1B2838 55%, #171A21 100%);
       margin: 0;
     }
+
     html.route-restoring .view,
     html.route-restoring footer,
     html.route-restoring .mobile-market-nav {
       display: none;
     }
-    html.route-restoring::before {
+
+    html.route-restoring body::before {
       content: "";
       position: fixed;
       top: 50%;
       left: 50%;
-      width: 54px;
-      height: 54px;
-      margin: -38px 0 0 -27px;
+      width: 80px;
+      height: 80px;
+      margin: -40px 0 0 -40px;
+      padding: 10px;
+      box-sizing: border-box;
       border-radius: 50%;
-      background: conic-gradient(from 0deg, transparent 15%, rgba(102, 192, 244, 0.35) 55%, #66C0F4 100%);
-      -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 5px), #000 calc(100% - 4px));
-      mask: radial-gradient(farthest-side, transparent calc(100% - 5px), #000 calc(100% - 4px));
+      background: repeating-conic-gradient(
+        #0000 0 5%,
+        #1A9FFF 10%,
+        #66C0F4 16%,
+        #0000 22% 50%
+      );
+      -webkit-mask: conic-gradient(#000 0 0) content-box exclude, conic-gradient(#000 0 0);
+      mask: conic-gradient(#000 0 0) content-box exclude, conic-gradient(#000 0 0);
+      filter: blur(8px);
       z-index: 99999;
       pointer-events: none;
-      animation: steamGradientSpin 0.85s linear infinite;
+      animation: l2 1.5s linear infinite;
     }
-    html.route-restoring::after {
+
+    html.route-restoring body::after {
       content: "កំពុងផ្ទុកទំនិញ...";
       position: fixed;
       top: 50%;
       left: 50%;
-      transform: translate(-50%, 26px);
+      margin-top: 45px;
+      transform: translateX(-50%);
       color: #9FB2C3;
       font-family: 'Kantumruy Pro', sans-serif;
       font-size: 13px;
       font-weight: 600;
+      white-space: nowrap;
       z-index: 99999;
       pointer-events: none;
     }
-    @keyframes steamGradientSpin {
-      to { transform: rotate(360deg); }
+
+    @keyframes l2 {
+      to {
+        rotate: 1turn;
+      }
     }
   </style>
 </head>
