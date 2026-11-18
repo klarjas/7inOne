@@ -3070,799 +3070,6 @@ body:has(#view-home) {
 /* app.js already renders its interface icons as outline SVGs; preserve special status marks/logos. */
 
 
-/* ==========================================================
-   7inOne — Steam Store Dark Slate & Steel Blue theme
-   Scoped color overrides only; layout, IDs and app behavior stay intact.
-   ========================================================== */
-:root{
-  --page:#1B2838;
-  --bg:#1B2838;
-  --ink:#C7D5E0;
-  --muted:#8F98A0;
-  --line:#2A475E;
-  --brand:#66C0F4;
-  --brand2:#326082;
-  --green:#75B022;
-}
-html,body{
-  background-color:#1B2838!important;
-  color:#C7D5E0!important;
-}
-body{
-  background-image:radial-gradient(ellipse 100% 420px at 50% 0%,#2A475E 0%,#1B2838 72%)!important;
-  background-attachment:fixed!important;
-  color:#C7D5E0!important;
-}
-
-/* Main header and search controls */
-.hd.glass{
-  background:#171A21!important;
-  color:#FFFFFF!important;
-  border-color:#2A475E!important;
-  box-shadow:none!important;
-}
-.hd #siteTitle,.hd #navName,.hd #bellIcon,
-.hd #notificationBtn,.hd #profileMenuBtn{color:#FFFFFF!important}
-.hd #siteSubtitle,.hd #navRole{color:#8F98A0!important}
-#searchForm{
-  background:#223A4C!important;
-  border:1px solid #316282!important;
-}
-#searchForm input,#searchInput{
-  color:#FFFFFF!important;
-  background:#223A4C!important;
-  border-color:#316282!important;
-}
-#searchForm input::placeholder,#searchInput::placeholder{color:#90B4CE!important}
-#searchBtn{
-  background:#66C0F4!important;
-  color:#171A21!important;
-}
-#searchBtn svg{color:#171A21!important;stroke:#171A21!important}
-
-/* Secondary navigation, when present */
-.amazon-nav-row{
-  background:linear-gradient(90deg,#326082 0%,#244763 100%)!important;
-  border-color:#2A475E!important;
-}
-.amazon-nav-row a,.amazon-nav-row button,.amazon-nav-row span{
-  color:#E5F3FC!important;
-}
-.amazon-nav-row .active,.amazon-nav-row [aria-current="page"]{
-  color:#FFFFFF!important;
-  border-bottom:2px solid #66C0F4!important;
-}
-
-/* Sidebar, product cards, storefront and account panels */
-:is(#view-home,#view-product,#view-store,#view-profile,#view-seller,#view-admin)
-:is(.amazon-filter-sidebar,.filter-sidebar,.filter-panel,.cd,.modal-box,.modal-card,
-.modal-content,.panel,.section-card,.content-card,.profile-panel,.profile-card,
-.seller-panel,.seller-card,.admin-panel,.admin-card,.admin-section,.dashboard-card,
-.storefront-header,.storefront-content,.product-detail-layout,.product-detail-main,
-.product-detail-sidebar,.surface,.dropdown,.menu-panel){
-  color:#C7D5E0!important;
-  background-color:#16202D!important;
-  border:1px solid #2A475E!important;
-  box-shadow:none;
-}
-:is(#view-home,#view-product,#view-store,#view-profile,#view-seller,#view-admin)
-:is(.cd,.product-card):hover{
-  background:#2A475E!important;
-  border-color:#316282!important;
-  box-shadow:0 8px 24px rgba(0,0,0,.35)!important;
-}
-
-/* Product photo stage: the image file itself is never modified. */
-:is(#view-home,#view-product,#view-store,#view-profile,#view-seller,#view-admin) .cd .im,
-:is(#view-home,#view-product,#view-store,#view-profile,#view-seller,#view-admin) .cd .im .cd-image-wrap{
-  background:#101822!important;
-  border-color:#2A475E!important;
-}
-
-/* Text, prices, metadata and deal labels */
-:is(#view-home,#view-product,#view-store,#view-profile,#view-seller,#view-admin)
-:is(h1,h2,h3,h4,h5,h6,.product-title,.storefront-name,.profile-name,.seller-name,
-#listingTitle,.cd .cb h3){
-  color:#FFFFFF!important;
-}
-:is(#view-home,#view-product,#view-store,#view-profile,#view-seller,#view-admin)
-:is(p,.muted,.text-muted,.subtext,.product-meta,.storefront-description,
-.profile-meta,.seller-meta,.cd .sn,.cd .cd-location-meta,#listingSub){
-  color:#8F98A0!important;
-}
-:is(#view-home,#view-product,#view-store,#view-profile,#view-seller,#view-admin) .cd .pr{
-  color:#ACDBF5!important;
-  font-weight:800!important;
-}
-:is(#view-home,#view-product,#view-store,#view-profile,#view-seller,#view-admin) .cd .cd-condition-meta{
-  color:#BEEE11!important;
-  background:#4C6B22!important;
-  border-radius:3px!important;
-  font-weight:800!important;
-}
-
-/* Brand and primary action buttons */
-.brand-gradient{
-  background:linear-gradient(135deg,#47BFFF 0%,#1A44C2 100%)!important;
-  color:#FFFFFF!important;
-  border-color:transparent!important;
-}
-#postAdBtn,#heroPostBtn{
-  background:linear-gradient(135deg,#47BFFF 0%,#1A44C2 100%)!important;
-  color:#FFFFFF!important;
-  border-color:transparent!important;
-  font-weight:800!important;
-}
-
-/* Form fields, selects, dropdowns and modal controls */
-:is(#view-home,#view-product,#view-store,#view-profile,#view-seller,#view-admin)
-:is(.field,input,select,textarea,.dropdown){
-  color:#FFFFFF!important;
-  background-color:#101822!important;
-  border-color:#2A475E!important;
-}
-:is(#view-home,#view-product,#view-store,#view-profile,#view-seller,#view-admin)
-:is(input,textarea,select,.field):focus{
-  border-color:#66C0F4!important;
-  outline-color:#66C0F4!important;
-}
-:is(#view-home,#view-product,#view-store,#view-profile,#view-seller,#view-admin)
-:is(input,textarea)::placeholder{color:#90B4CE!important}
-:is(#view-home,#view-product,#view-store,#view-profile,#view-seller,#view-admin)
-:is(.modal-box,.modal-card,.dropdown){
-  background-color:#16202D!important;
-  color:#C7D5E0!important;
-  border-color:#2A475E!important;
-}
-
-/* Keep all uploaded product and seller images pixel-identical. */
-:is(#view-home,#view-product,#view-store,#view-profile,#view-seller,#view-admin) img{
-  filter:none!important;
-}
-
-
-/* ======================================================================
-   7inOne GLOBAL STEAM DARK THEME — final application-wide override layer
-   Covers Tailwind utility surfaces and every user/admin view without
-   changing DOM structure, IDs, API behavior, or upload handling.
-   ====================================================================== */
-:root{
-  --page:#1B2838!important;
-  --bg:#1B2838!important;
-  --ink:#C7D5E0!important;
-  --muted:#8F98A0!important;
-  --line:#2A475E!important;
-  --brand:#66C0F4!important;
-  --brand2:#326082!important;
-  --green:#75B022!important;
-  color-scheme:dark;
-}
-html,body{
-  min-height:100%;
-  background:radial-gradient(circle at top center,#2A475E 0%,#1B2838 45%,#171A21 100%)!important;
-  background-attachment:fixed!important;
-  color:#C7D5E0!important;
-}
-
-/* Tailwind light utility classes used by dynamically rendered templates. */
-.bg-white{
-  background-color:#16202D!important;
-  color:#C7D5E0!important;
-}
-.bg-slate-50,.bg-slate-100,.bg-emerald-50{
-  background-color:#203244!important;
-  color:#C7D5E0!important;
-}
-.text-slate-900,.text-slate-800,.text-slate-700,.text-ink{
-  color:#FFFFFF!important;
-}
-.text-slate-600,.text-slate-500,.text-slate-400{
-  color:#8F98A0!important;
-}
-.border-slate-100,.border-slate-200,.border-slate-300,
-.border-emerald-100,.border-emerald-200{
-  border-color:#2A475E!important;
-}
-
-/* Shared top header, search, sub-navigation and global dropdowns. */
-.hd.glass{
-  background:#171A21!important;
-  color:#FFFFFF!important;
-  border-bottom:1px solid #2A475E!important;
-  box-shadow:none!important;
-}
-.hd #siteTitle,.hd #navName,.hd #bellIcon,
-.hd #notificationBtn,.hd #profileMenuBtn{color:#FFFFFF!important}
-.hd #siteSubtitle,.hd #navRole{color:#8F98A0!important}
-#searchForm{
-  background:#316282!important;
-  border:1px solid #4B8BB8!important;
-}
-#searchCategory{
-  background:#223A4C!important;
-  color:#E5F3FC!important;
-  border-color:#2A475E!important;
-}
-#searchForm #searchInput,#searchInput{
-  background:transparent!important;
-  color:#FFFFFF!important;
-  border-color:transparent!important;
-}
-#searchForm #searchInput::placeholder,#searchInput::placeholder{
-  color:#90B4CE!important;
-}
-#searchBtn{
-  background:#66C0F4!important;
-  color:#171A21!important;
-}
-#searchBtn svg{color:#171A21!important;stroke:#171A21!important}
-#postAdBtn{
-  background:linear-gradient(135deg,#66C0F4 0%,#2B74B8 100%)!important;
-  color:#FFFFFF!important;
-  border-color:transparent!important;
-}
-.amazon-nav-row{
-  position:static!important;
-  top:auto!important;
-  background:linear-gradient(90deg,#326082 0%,#244763 100%)!important;
-  color:#E5F3FC!important;
-  border-color:#2A475E!important;
-}
-.amazon-nav-row a,.amazon-nav-row button,.amazon-nav-row span{
-  color:#E5F3FC!important;
-}
-.amazon-nav-row .active,.amazon-nav-row [aria-current="page"]{
-  color:#FFFFFF!important;
-  border-bottom:2px solid #66C0F4!important;
-}
-#profileMenu,#notificationMenu{
-  background:#171A21!important;
-  color:#C7D5E0!important;
-  border:1px solid #2A475E!important;
-  box-shadow:0 12px 32px rgba(0,0,0,.5)!important;
-}
-.menu-action{color:#C7D5E0!important}
-.menu-action:hover{
-  background:#2A475E!important;
-  color:#66C0F4!important;
-}
-footer{
-  background:#171A21!important;
-  border-top:1px solid #2A475E!important;
-  color:#8F98A0!important;
-}
-footer :is(p,a,span,small){color:#8F98A0!important}
-
-/* Shared surfaces and typography across every application view. */
-:is(#view-home,#view-product,#view-store,#view-profile,#view-seller,#view-admin)
-:is(.panel,.section-card,.content-card,.surface,.card,.modal-card,.dialog-card,
-.drawer-panel,.bottom-sheet,.account-hero,.account-panel,.account-shortcut,
-.seller-panel,.seller-card,.admin-panel,.admin-card,.admin-section,
-.product-detail-info,.product-seller-card,.product-detail-description,
-.product-safety-note,.product-reviews,.product-mobile-actions,
-.storefront-public,.storefront-profile,.storefront-toolbar,
-.storefront-review-list,.storefront-review,.seller-kpi-card,
-.seller-tabs,.seller-table,.seller-transaction-row){
-  background:#16202D!important;
-  color:#C7D5E0!important;
-  border-color:#2A475E!important;
-}
-:is(#view-home,#view-product,#view-store,#view-profile,#view-seller,#view-admin)
-:is(h1,h2,h3,h4,h5,h6,.product-title,.storefront-name,.profile-name,
-.seller-name,.account-title,.panel-title){
-  color:#FFFFFF!important;
-}
-:is(#view-home,#view-product,#view-store,#view-profile,#view-seller,#view-admin)
-:is(p,small,.muted,.text-muted,.subtext,.product-meta,.profile-meta,
-.seller-meta,.storefront-description){
-  color:#8F98A0!important;
-}
-
-/* Home storefront: filters, categories and product cards. */
-#view-home .amazon-filter-sidebar{
-  background:#16202D!important;
-  border:1px solid #2A475E!important;
-  color:#C7D5E0!important;
-}
-#view-home .amazon-filter-sidebar :is(h2,h3,h4,strong){
-  color:#FFFFFF!important;
-}
-#view-home .amazon-filter-sidebar :is(a,button,[data-category]){
-  color:#C7D5E0!important;
-}
-#view-home .amazon-filter-sidebar :is(a,button,[data-category]):hover,
-#view-home .amazon-filter-sidebar :is(.active,[aria-current="page"]){
-  color:#66C0F4!important;
-}
-#categoryStrip .dk{
-  background:#203244!important;
-  border:1px solid #2A475E!important;
-  color:#C7D5E0!important;
-}
-#categoryStrip .dk.active{
-  background:#2A475E!important;
-  border-color:#66C0F4!important;
-  color:#FFFFFF!important;
-}
-:is(#view-home,#view-store,#view-product) .cd{
-  background:#16202D!important;
-  border:1px solid #2A475E!important;
-  color:#C7D5E0!important;
-}
-:is(#view-home,#view-store,#view-product) .cd:hover{
-  background:#203244!important;
-  border-color:#66C0F4!important;
-  box-shadow:0 8px 24px rgba(0,0,0,.35)!important;
-}
-:is(#view-home,#view-store,#view-product) .cd .im,
-:is(#view-home,#view-store,#view-product) .cd .im .cd-image-wrap{
-  background:#101822!important;
-  border-color:#2A475E!important;
-}
-:is(#view-home,#view-store,#view-product) .cd .cb{
-  background:transparent!important;
-  color:#C7D5E0!important;
-}
-:is(#view-home,#view-store,#view-product) .cd .cb h3{
-  color:#FFFFFF!important;
-}
-:is(#view-home,#view-store,#view-product) .cd .pr{
-  color:#ACDBF5!important;
-}
-:is(#view-home,#view-store,#view-product) .cd .cd-condition-meta{
-  background:#4C6B22!important;
-  color:#BEEE11!important;
-  border-radius:3px!important;
-  font-weight:800!important;
-}
-:is(#view-home,#view-store,#view-product) .cd .cd-quick-add{
-  background:#66C0F4!important;
-  border-color:#47BFFF!important;
-  color:#171A21!important;
-}
-
-/* Product detail gallery, facts, seller, description, reviews and actions. */
-#view-product .product-gallery-stage{
-  background:#101822!important;
-  border:1px solid #2A475E!important;
-}
-#view-product :is(.product-detail-info,.product-facts-list li,
-.product-seller-card,.product-detail-description,.product-safety-note,
-.product-reviews,.product-mobile-actions){
-  background:#16202D!important;
-  border:1px solid #2A475E!important;
-  color:#C7D5E0!important;
-}
-#view-product .product-facts-price{color:#BEEE11!important}
-#view-product .product-buy-primary{
-  background:linear-gradient(135deg,#75B022 0%,#588A1B 100%)!important;
-  color:#FFFFFF!important;
-  border-color:transparent!important;
-}
-#view-product :is(.product-chat-primary,.product-utility-actions button){
-  background:#2A475E!important;
-  border:1px solid #3D6687!important;
-  color:#66C0F4!important;
-}
-
-/* Public seller storefront and reviews. */
-#view-store :is(.storefront-public,.storefront-profile,.storefront-toolbar,
-.storefront-review-list,.storefront-review){
-  background:#16202D!important;
-  border-color:#2A475E!important;
-  color:#C7D5E0!important;
-}
-#view-store .storefront-profile strong,
-#view-store .storefront-stats strong{color:#66C0F4!important}
-#view-store .store-filter{
-  background:#203244!important;
-  border-color:#2A475E!important;
-  color:#C7D5E0!important;
-}
-#view-store .store-filter.active{
-  background:#66C0F4!important;
-  color:#171A21!important;
-  border-color:#66C0F4!important;
-}
-
-/* Account/profile, saved items, seller center and admin workspace. */
-:is(#view-profile,#view-seller,#view-admin)
-:is(.account-hero,.account-panel,.account-shortcut){
-  background:#16202D!important;
-  border:1px solid #2A475E!important;
-  color:#C7D5E0!important;
-}
-#view-profile .account-shortcut:hover{background:#203244!important}
-#view-profile [data-saved-card]{
-  background:#203244!important;
-  border:1px solid #2A475E!important;
-  color:#C7D5E0!important;
-}
-#view-seller :is(.seller-kpi-card,.seller-tabs,.seller-product-row,
-.seller-transaction-row){
-  background:#16202D!important;
-  border-color:#2A475E!important;
-  color:#C7D5E0!important;
-}
-#view-seller .seller-table-head{
-  background:#101822!important;
-  color:#8F98A0!important;
-}
-#view-seller .seller-product-row:hover,
-#view-seller .seller-transaction-row:hover{background:#203244!important}
-#view-seller .seller-tab.is-active{
-  color:#66C0F4!important;
-  border-bottom-color:#66C0F4!important;
-}
-#view-admin :is(.maintenance-panel,.branding-panel,.telegram-diagnostics,
-#telegramDiagnosticsResult,.vendor-application-card,.admin-panel,.admin-card){
-  background:#16202D!important;
-  border:1px solid #2A475E!important;
-  color:#C7D5E0!important;
-}
-#view-admin :is(.admin-subpanel,.diagnostics-box,.vendor-card){
-  background:#203244!important;
-  border-color:#2A475E!important;
-  color:#C7D5E0!important;
-}
-
-/* Modals, forms and dropdown surfaces throughout the app. */
-.modal-box,.modal-card,.dialog-card{
-  background:#16202D!important;
-  border:1px solid #2A475E!important;
-  color:#C7D5E0!important;
-}
-:is(#view-home,#view-product,#view-store,#view-profile,#view-seller,#view-admin,
-#sellerChatModal)
-:is(.field,input,select,textarea){
-  background:#101822!important;
-  border:1px solid #2A475E!important;
-  color:#FFFFFF!important;
-}
-:is(#view-home,#view-product,#view-store,#view-profile,#view-seller,#view-admin,
-#sellerChatModal)
-:is(.field,input,select,textarea):focus{
-  border-color:#66C0F4!important;
-  outline-color:#66C0F4!important;
-}
-:is(#view-home,#view-product,#view-store,#view-profile,#view-seller,#view-admin,
-#sellerChatModal)
-:is(input,textarea)::placeholder{color:#90B4CE!important}
-
-/* Unified buyer/seller chat and support controls. */
-#sellerChatModal,#sellerChatInboxPane{
-  background:#16202D!important;
-  border-color:#2A475E!important;
-  color:#C7D5E0!important;
-}
-#sellerChatMessages{
-  background-color:#101822!important;
-  background-image:radial-gradient(rgba(102,192,244,.08) 1px,transparent 1px)!important;
-  color:#C7D5E0!important;
-}
-.seller-chat-bubble.own{
-  background:#2A475E!important;
-  color:#FFFFFF!important;
-}
-.seller-chat-bubble.other{
-  background:#1E2C3D!important;
-  color:#C7D5E0!important;
-  border:1px solid #2A475E!important;
-}
-#sellerChatForm{
-  background:#171A21!important;
-  border-top:1px solid #2A475E!important;
-}
-#supportChatLauncher,.mobile-market-nav{
-  background:#171A21!important;
-  border-color:#2A475E!important;
-  color:#C7D5E0!important;
-}
-
-/* Preserve source imagery exactly; theme applies to surfaces, not image pixels. */
-:is(#view-home,#view-product,#view-store,#view-profile,#view-seller,#view-admin,
-#sellerChatModal) img{filter:none!important}
-
-
-/* ==========================================================================
-   COMPLETE STEAM DARK THEME OVERRIDES (ALL PAGES & COMPONENTS)
-   ========================================================================== */
-
-/* 1. Global Surfaces, Footer & Text Contrast */
-html, body {
-  background: radial-gradient(circle at top center, #2A475E 0%, #1B2838 45%, #171A21 100%) !important;
-  color: #C7D5E0 !important;
-}
-
-footer,
-body > footer {
-  background: #171A21 !important;
-  border-top: 1px solid #2A475E !important;
-  color: #8F98A0 !important;
-}
-footer b, footer button {
-  color: #C7D5E0 !important;
-}
-footer button:hover {
-  color: #66C0F4 !important;
-}
-
-/* Override Tailwind light utilities globally */
-.bg-white { background-color: #16202D !important; color: #C7D5E0 !important; }
-.bg-slate-50, .bg-slate-100, .bg-emerald-50, .bg-amber-50, .bg-rose-50, .bg-sky-50 {
-  background-color: #203244 !important;
-  color: #C7D5E0 !important;
-}
-.text-slate-900, .text-slate-800, .text-slate-700, .text-amber-900, .text-emerald-900 {
-  color: #FFFFFF !important;
-}
-.text-slate-600, .text-slate-500, .text-slate-400, .text-amber-800, .text-amber-700 {
-  color: #9FB2C3 !important;
-}
-.text-emerald-700, .text-emerald-800 {
-  color: #66C0F4 !important;
-}
-.border-slate-100, .border-slate-200, .border-slate-300, .border-amber-200, .border-emerald-100, .border-emerald-200 {
-  border-color: #2A475E !important;
-}
-
-/* 2. Home Storefront & Product Cards */
-#view-home .amazon-filter-sidebar,
-#view-home .market-listing-header {
-  background: #16202D !important;
-  border: 1px solid #2A475E !important;
-  border-radius: 10px !important;
-  padding: 14px 16px !important;
-}
-#view-home .store-filter-group h3 { color: #FFFFFF !important; }
-#view-home .store-filter-link,
-#view-home .store-filter-radio { color: #C7D5E0 !important; }
-#view-home .store-filter-link.active,
-#view-home .store-filter-link:hover { color: #66C0F4 !important; }
-
-.cd {
-  background: #16202D !important;
-  border: 1px solid #2A475E !important;
-}
-.cd:hover {
-  background: #203244 !important;
-  border-color: #66C0F4 !important;
-}
-.cd .im {
-  background: #101822 !important;
-  border-bottom: 1px solid #2A475E !important;
-}
-.cd .cb h3 { color: #FFFFFF !important; }
-.cd .pr { color: #BEEE11 !important; }
-.cd .sn, .cd .mt, .cd .cd-location-meta { color: #9FB2C3 !important; }
-.cd .hv {
-  background: rgba(23, 26, 33, 0.85) !important;
-  border: 1px solid #2A475E !important;
-  color: #FFFFFF !important;
-}
-.cd .hv.saved { color: #FF4D6D !important; }
-.cd .cd-quick-add {
-  background: #66C0F4 !important;
-  border-color: #47BFFF !important;
-  color: #171A21 !important;
-  font-weight: 800 !important;
-}
-
-/* 3. Product Detail Page (#view-product) */
-#view-product .product-hero-card,
-#view-product .product-detail-info,
-#view-product .product-seller-card,
-#view-product .product-detail-description,
-#view-product .product-safety-note,
-#view-product .product-reviews,
-#view-product .product-related-section,
-#view-product .product-review {
-  background: #16202D !important;
-  border: 1px solid #2A475E !important;
-  color: #C7D5E0 !important;
-}
-#view-product .product-gallery-stage,
-#view-product .product-gallery-thumb,
-#view-product .product-seller-metrics > div,
-#view-product .product-spec-grid > div,
-#view-product .product-rating-summary {
-  background: #101822 !important;
-  border: 1px solid #2A475E !important;
-}
-#view-product .product-facts-list {
-  border-color: #2A475E !important;
-}
-#view-product .product-facts-list li {
-  background: #16202D !important;
-  border-color: #2A475E !important;
-}
-#view-product .product-facts-list li > span,
-#view-product .product-meta-item,
-#view-product .product-seller-metrics small,
-#view-product .product-spec-grid small,
-#view-product .product-safety-note li,
-#view-product .product-full-description {
-  color: #9FB2C3 !important;
-}
-#view-product .product-detail-title,
-#view-product .product-seller-identity > b,
-#view-product .product-seller-metrics b,
-#view-product .product-spec-grid b,
-#view-product .product-rating-summary > strong,
-#view-product h2 {
-  color: #FFFFFF !important;
-}
-#view-product .product-facts-price {
-  color: #BEEE11 !important;
-}
-#view-product .product-facts-stock {
-  color: #4ADE80 !important;
-}
-#view-product .product-store-button,
-#view-product .product-chat-primary,
-#view-product .product-utility-actions button {
-  background: #2A475E !important;
-  border: 1px solid #3D6687 !important;
-  color: #66C0F4 !important;
-}
-#view-product .product-store-button:hover,
-#view-product .product-chat-primary:hover,
-#view-product .product-utility-actions button:hover {
-  background: #365B78 !important;
-  color: #FFFFFF !important;
-}
-#view-product .product-buy-primary {
-  background: linear-gradient(135deg, #75B022 0%, #588A1B 100%) !important;
-  color: #FFFFFF !important;
-}
-#view-product .product-gallery-condition,
-#view-product .product-gallery-save,
-#view-product .product-gallery-counter {
-  background: rgba(23, 26, 33, 0.9) !important;
-  border-color: #2A475E !important;
-  color: #FFFFFF !important;
-}
-
-/* 4. Profile Page (#view-profile) */
-#view-profile .account-hero,
-#view-profile .account-panel {
-  background: #16202D !important;
-  border: 1px solid #2A475E !important;
-}
-#view-profile .cover label {
-  background: rgba(23, 26, 33, 0.88) !important;
-  border: 1px solid #4B8BB8 !important;
-  color: #FFFFFF !important;
-}
-#avatarCam {
-  background: #2A475E !important;
-  border: 2px solid #66C0F4 !important;
-  color: #FFFFFF !important;
-}
-#view-profile .account-shortcut {
-  background: #203244 !important;
-  border: 1px solid #2A475E !important;
-}
-#view-profile .account-shortcut:hover {
-  background: #2A475E !important;
-  border-color: #66C0F4 !important;
-}
-#view-profile .account-shortcut b { color: #FFFFFF !important; }
-#view-profile .account-shortcut small,
-#view-profile .account-shortcut-arrow { color: #9FB2C3 !important; }
-#view-profile .tab { color: #9FB2C3 !important; }
-#view-profile .tab.active {
-  background: #2A475E !important;
-  color: #66C0F4 !important;
-}
-[data-saved-card] {
-  background: #203244 !important;
-  border-color: #2A475E !important;
-}
-[data-saved-card] b:first-child { color: #FFFFFF !important; }
-
-/* 5. Seller Center (#view-seller) & Admin (#view-admin) */
-#sellerVerificationNotice {
-  background: #203244 !important;
-  border: 1px solid #4B8BB8 !important;
-}
-#sellerVerifyNow {
-  background: #66C0F4 !important;
-  color: #171A21 !important;
-}
-#sellerDashboardContent .soft-shadow,
-#sellerDashboardContent .rounded-2xl {
-  background: #16202D !important;
-  border: 1px solid #2A475E !important;
-}
-#sellerDashboardContent .text-2xl { color: #FFFFFF !important; }
-.seller-tabs {
-  background: #101822 !important;
-  border-bottom: 1px solid #2A475E !important;
-}
-.seller-tab { color: #9FB2C3 !important; }
-.seller-tab.is-active {
-  color: #66C0F4 !important;
-  border-bottom-color: #66C0F4 !important;
-}
-.seller-tab-count {
-  background: #2A475E !important;
-  color: #FFFFFF !important;
-}
-.seller-tab-panel {
-  background: #16202D !important;
-}
-.seller-search {
-  background: #101822 !important;
-  border-color: #2A475E !important;
-}
-.seller-search input { color: #FFFFFF !important; }
-.seller-filter {
-  background: #203244 !important;
-  border-color: #2A475E !important;
-  color: #C7D5E0 !important;
-}
-.seller-filter.is-active {
-  background: #66C0F4 !important;
-  border-color: #66C0F4 !important;
-  color: #171A21 !important;
-}
-.seller-table-wrap,
-.seller-list-rows {
-  border-color: #2A475E !important;
-}
-.seller-table-head {
-  background: #101822 !important;
-  color: #9FB2C3 !important;
-}
-.seller-product-row,
-.seller-transaction-row {
-  background: #16202D !important;
-  border-color: #2A475E !important;
-}
-.seller-product-row:hover {
-  background: #203244 !important;
-}
-.seller-product-copy b,
-.seller-transaction-row b { color: #FFFFFF !important; }
-.seller-product-copy small,
-.seller-product-metrics { color: #9FB2C3 !important; }
-.seller-product-price { color: #BEEE11 !important; }
-.seller-status-badge.is-active {
-  background: #4C6B22 !important;
-  color: #BEEE11 !important;
-}
-.seller-action-button {
-  background: #2A475E !important;
-  border-color: #3D6687 !important;
-  color: #FFFFFF !important;
-}
-.seller-action-button.is-delete {
-  background: #4C1D24 !important;
-  border-color: #7F1D1D !important;
-  color: #FCA5A5 !important;
-}
-
-/* 6. Inputs, Modals & Floating Chat */
-.field, input, select, textarea {
-  background: #101822 !important;
-  border: 1px solid #2A475E !important;
-  color: #FFFFFF !important;
-}
-.field:focus, input:focus, select:focus, textarea:focus {
-  border-color: #66C0F4 !important;
-  background: #16202D !important;
-}
-.modal-box {
-  background: #16202D !important;
-  border: 1px solid #2A475E !important;
-  color: #C7D5E0 !important;
-}
-#supportChatLauncher {
-  background: linear-gradient(135deg, #66C0F4 0%, #2B74B8 100%) !important;
-  color: #FFFFFF !important;
-}
-
 /* ==========================================================================
    STEAM THEME COMPONENT OVERRIDES
    Organized by component. Keep these overrides below the legacy/base styles.
@@ -3870,10 +3077,10 @@ footer button:hover {
 
 /* 1. Page surfaces and Product Detail layout */
 html, body, body > main {
-  background-color: #1B2838 !important;
-  background-image: radial-gradient(circle at 50% 0%, #2A475E 0%, #1B2838 55%, #171A21 100%) !important;
-  background-attachment: fixed !important;
-  color: #C7D5E0 !important;
+  background-color: #1B2838;
+  background-image: radial-gradient(circle at 50% 0%, #2A475E 0%, #1B2838 55%, #171A21 100%);
+  background-attachment: fixed;
+  color: #C7D5E0;
 }
 
 #view-product,
@@ -3882,131 +3089,131 @@ html, body, body > main {
 #view-product .product-hero-card,
 #view-product .product-hero-grid,
 #view-product .product-detail-gallery {
-  background: transparent !important;
-  background-color: transparent !important;
-  border-color: transparent !important;
-  box-shadow: none !important;
+  background: transparent;
+  background-color: transparent;
+  border-color: transparent;
+  box-shadow: none;
 }
 
 #view-product .product-hero-grid {
-  background: #16202D !important;
-  border: 1px solid #2A475E !important;
-  border-radius: 20px !important;
-  padding: 20px !important;
+  background: #16202D;
+  border: 1px solid #2A475E;
+  border-radius: 20px;
+  padding: 20px;
 }
 
 #view-product .product-category-badge {
-  background: #2A475E !important;
-  border: 1px solid #4B8BB8 !important;
-  color: #66C0F4 !important;
+  background: #2A475E;
+  border: 1px solid #4B8BB8;
+  color: #66C0F4;
 }
 
 #view-product .product-gallery-stage > img {
-  background: #101822 !important;
-  border-radius: 12px !important;
+  background: #101822;
+  border-radius: 12px;
 }
 
 /* 2. Home page wrapper surfaces */
 #view-home .home-layout-shell,
 #view-home .amazon-store-body,
 #view-home .shell {
-  background: transparent !important;
-  background-color: transparent !important;
-  background-image: none !important;
-  box-shadow: none !important;
+  background: transparent;
+  background-color: transparent;
+  background-image: none;
+  box-shadow: none;
 }
 
 /* 3. Product cards and image presentation */
 #view-home #emptyHome {
-  background: #16202D !important;
-  border: 1px dashed #2A475E !important;
-  color: #C7D5E0 !important;
-  box-shadow: none !important;
+  background: #16202D;
+  border: 1px dashed #2A475E;
+  color: #C7D5E0;
+  box-shadow: none;
 }
 
 #view-home #emptyHome #emptyIcon {
-  background: #203244 !important;
-  color: #66C0F4 !important;
+  background: #203244;
+  color: #66C0F4;
 }
 
-#view-home #emptyHome h3 { color: #FFFFFF !important; }
-#view-home #emptyHome p { color: #9FB2C3 !important; }
+#view-home #emptyHome h3 { color: #FFFFFF; }
+#view-home #emptyHome p { color: #9FB2C3; }
 
 #view-home #emptyHome #clearFilters {
-  background: #2A475E !important;
-  color: #66C0F4 !important;
-  border: 1px solid #3D6687 !important;
+  background: #2A475E;
+  color: #66C0F4;
+  border: 1px solid #3D6687;
 }
 
 #view-home #emptyHome #clearFilters:hover {
-  background: #365B78 !important;
-  color: #FFFFFF !important;
+  background: #365B78;
+  color: #FFFFFF;
 }
 
 #view-home #productGrid .cd,
 #view-home #productGrid .cd:focus-within {
-  background: #16202D !important;
-  border: 1px solid #2A475E !important;
-  color: #C7D5E0 !important;
-  box-shadow: none !important;
+  background: #16202D;
+  border: 1px solid #2A475E;
+  color: #C7D5E0;
+  box-shadow: none;
 }
 
 #view-home #productGrid .cd:hover {
-  background: #203244 !important;
-  border-color: #66C0F4 !important;
+  background: #203244;
+  border-color: #66C0F4;
 }
 
 #view-home #productGrid .cd .ph {
-  background: #101822 !important;
+  background: #101822;
 }
 
 #view-home #productGrid .cd .cb,
 #view-home #productGrid .cd .cb * {
-  background-color: transparent !important;
+  background-color: transparent;
 }
 
-#view-home #productGrid .cd .cb h3 { color: #FFFFFF !important; }
-#view-home #productGrid .cd .pr { color: #BEEE11 !important; }
+#view-home #productGrid .cd .cb h3 { color: #FFFFFF; }
+#view-home #productGrid .cd .pr { color: #BEEE11; }
 
 #view-home #productGrid .cd .sn,
 #view-home #productGrid .cd .mt {
-  color: #9FB2C3 !important;
+  color: #9FB2C3;
 }
 
 #view-home .store-filter-radio,
 #view-home .store-filter-link {
-  background: #16202D !important;
-  border-color: #2A475E !important;
-  color: #C7D5E0 !important;
+  background: #16202D;
+  border-color: #2A475E;
+  color: #C7D5E0;
 }
 
 #view-home .store-filter-radio:has(input:checked),
 #view-home .store-filter-link:hover {
-  background: #203244 !important;
-  border-color: #66C0F4 !important;
-  color: #66C0F4 !important;
+  background: #203244;
+  border-color: #66C0F4;
+  color: #66C0F4;
 }
 
 /* Product image fills its square; retain a dark image stage */
 .cd .im {
-  margin: 0 !important;
-  padding: 0 !important;
-  border-radius: 0 !important;
-  aspect-ratio: 1 / 1 !important;
-  background: #101822 !important;
-  overflow: hidden !important;
+  margin: 0;
+  padding: 0;
+  border-radius: 0;
+  aspect-ratio: 1 / 1;
+  background: #101822;
+  overflow: hidden;
 }
 
 .cd .im .cd-image-wrap,
 .cd .im .cd-image-wrap img {
-  inset: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  object-fit: cover !important;
-  mix-blend-mode: normal !important;
-  background: #101822 !important;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  object-fit: cover;
+  mix-blend-mode: normal;
+  background: #101822;
 }
 
 /* Product images: keep the primary photo visible and avoid sticky hover on touch devices. */
@@ -4032,28 +3239,28 @@ html, body, body > main {
 :is(#view-home,#view-store,#view-product) .cd .im > button[data-action="view"]:hover,
 .product-related-grid .cd .im > button[data-action="view"],
 .product-related-grid .cd .im > button[data-action="view"]:hover {
-  background: transparent !important;
-  background-color: transparent !important;
-  border-color: transparent !important;
-  color: transparent !important;
-  box-shadow: none !important;
+  background: transparent;
+  background-color: transparent;
+  border-color: transparent;
+  color: transparent;
+  box-shadow: none;
 }
 
 /* 4. Search, form fields and autofill */
 #searchForm {
-  background: #101822 !important;
-  border: 1px solid #3D6687 !important;
+  background: #101822;
+  border: 1px solid #3D6687;
 }
 
 #searchForm:focus-within {
-  border-color: #66C0F4 !important;
-  background: #16202D !important;
+  border-color: #66C0F4;
+  background: #16202D;
 }
 
 #searchCategory {
-  background: #1E3144 !important;
-  color: #E5F3FC !important;
-  border-right: 1px solid #2A475E !important;
+  background: #1E3144;
+  color: #E5F3FC;
+  border-right: 1px solid #2A475E;
 }
 
 #searchInput,
@@ -4066,20 +3273,20 @@ input[type="number"],
 input[type="url"],
 textarea,
 select {
-  background: #101822 !important;
-  background-color: #101822 !important;
-  color: #FFFFFF !important;
-  -webkit-text-fill-color: #FFFFFF !important;
-  caret-color: #66C0F4 !important;
+  background: #101822;
+  background-color: #101822;
+  color: #FFFFFF;
+  -webkit-text-fill-color: #FFFFFF;
+  caret-color: #66C0F4;
 }
 
 #searchInput::placeholder,
 .field::placeholder,
 input::placeholder,
 textarea::placeholder {
-  color: #7A91A6 !important;
-  -webkit-text-fill-color: #7A91A6 !important;
-  opacity: 1 !important;
+  color: #7A91A6;
+  -webkit-text-fill-color: #7A91A6;
+  opacity: 1;
 }
 
 input:-webkit-autofill,
@@ -4087,9 +3294,9 @@ input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
 textarea:-webkit-autofill,
 select:-webkit-autofill {
-  -webkit-box-shadow: 0 0 0 1000px #101822 inset !important;
-  -webkit-text-fill-color: #FFFFFF !important;
-  caret-color: #66C0F4 !important;
+  -webkit-box-shadow: 0 0 0 1000px #101822 inset;
+  -webkit-text-fill-color: #FFFFFF;
+  caret-color: #66C0F4;
   transition: background-color 5000s ease-in-out 0s;
 }
 
@@ -4104,126 +3311,126 @@ select:focus,
 select:focus-visible,
 .field:focus,
 .field:focus-visible {
-  background: #101822 !important;
-  background-color: #101822 !important;
-  color: #FFFFFF !important;
-  border-color: #2A475E !important;
-  outline: none !important;
-  box-shadow: none !important;
+  background: #101822;
+  background-color: #101822;
+  color: #FFFFFF;
+  border-color: #2A475E;
+  outline: none;
+  box-shadow: none;
 }
 
 #sellerChatInput,
 #sellerChatInput:focus,
 #sellerChatInput:focus-visible {
-  border: 1px solid #2A475E !important;
-  outline: none !important;
-  box-shadow: none !important;
+  border: 1px solid #2A475E;
+  outline: none;
+  box-shadow: none;
 }
 
 /* 5. Buttons and interactive hover states */
 button:hover:not(:disabled):not(.product-buy-primary):not(.hero-primary-action):not(#supportChatLauncher) {
-  background-color: #2A475E !important;
-  border-color: #66C0F4 !important;
-  color: #66C0F4 !important;
+  background-color: #2A475E;
+  border-color: #66C0F4;
+  color: #66C0F4;
 }
 
 /* 6. Floating buyer/seller chat */
 #sellerChatModal.modal,
 #sellerChatModal.modal.open {
-  position: fixed !important;
-  inset: auto 24px 88px auto !important;
-  width: auto !important;
-  height: auto !important;
-  min-height: 0 !important;
-  padding: 0 !important;
-  display: flex !important;
-  align-items: flex-end !important;
-  justify-content: flex-end !important;
-  background: transparent !important;
-  -webkit-backdrop-filter: none !important;
-  backdrop-filter: none !important;
-  pointer-events: none !important;
+  position: fixed;
+  inset: auto 24px 88px auto;
+  width: auto;
+  height: auto;
+  min-height: 0;
+  padding: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  background: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  pointer-events: none;
 }
 
 #sellerChatModal .seller-chat-shell {
-  width: min(430px, calc(100vw - 32px)) !important;
-  height: min(620px, calc(100dvh - 120px)) !important;
-  max-width: 430px !important;
-  max-height: none !important;
-  min-height: 0 !important;
-  margin: 0 !important;
-  border: 1px solid #2A475E !important;
-  border-radius: 18px !important;
-  background: #16202D !important;
-  box-shadow: 0 18px 54px rgba(0, 0, 0, .42) !important;
-  pointer-events: auto !important;
+  width: min(430px, calc(100vw - 32px));
+  height: min(620px, calc(100dvh - 120px));
+  max-width: 430px;
+  max-height: none;
+  min-height: 0;
+  margin: 0;
+  border: 1px solid #2A475E;
+  border-radius: 18px;
+  background: #16202D;
+  box-shadow: 0 18px 54px rgba(0, 0, 0, .42);
+  pointer-events: auto;
 }
 
 #sellerChatModal .seller-chat-layout {
-  min-height: 0 !important;
-  height: calc(100% - 58px) !important;
+  min-height: 0;
+  height: calc(100% - 58px);
 }
 
 @media (max-width: 640px) {
   #sellerChatModal.modal,
   #sellerChatModal.modal.open {
-    inset: auto 10px 82px 10px !important;
-    width: auto !important;
-    height: auto !important;
-    padding: 0 !important;
+    inset: auto 10px 82px 10px;
+    width: auto;
+    height: auto;
+    padding: 0;
   }
 
   #sellerChatModal .seller-chat-shell {
-    width: 100% !important;
-    height: min(600px, calc(100dvh - 110px)) !important;
-    max-width: none !important;
-    max-height: none !important;
-    margin: 0 !important;
-    border-radius: 18px !important;
+    width: 100%;
+    height: min(600px, calc(100dvh - 110px));
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    border-radius: 18px;
   }
 }
 
 /* 7. Loading indicator */
 #skeletonGrid.hidden {
-  display: none !important;
+  display: none;
 }
 
 .steam-loader-wrap,
 #view-home #skeletonGrid:not(.hidden),
 #skeletonGrid:not(.hidden) {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: 14px !important;
-  min-height: 320px !important;
-  width: 100% !important;
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  color: #9FB2C3 !important;
-  font-size: 13px !important;
-  font-weight: 600 !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  min-height: 320px;
+  width: 100%;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  color: #9FB2C3;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .steam-spinner {
-  display: block !important;
-  width: 44px !important;
-  height: 44px !important;
-  min-width: 44px !important;
-  min-height: 44px !important;
-  max-width: 44px !important;
-  max-height: 44px !important;
-  flex: 0 0 44px !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  background: transparent !important;
-  background-color: transparent !important;
-  border: 4px solid rgba(102, 192, 244, 0.2) !important;
-  border-top-color: #66C0F4 !important;
-  border-radius: 50% !important;
-  box-shadow: none !important;
-  animation: steamSpin 0.75s linear infinite !important;
+  display: block;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  max-width: 44px;
+  max-height: 44px;
+  flex: 0 0 44px;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  background-color: transparent;
+  border: 4px solid rgba(102, 192, 244, 0.2);
+  border-top-color: #66C0F4;
+  border-radius: 50%;
+  box-shadow: none;
+  animation: steamSpin 0.75s linear infinite;
 }
 
 @keyframes steamSpin {
@@ -4232,25 +3439,25 @@ button:hover:not(:disabled):not(.product-buy-primary):not(.hero-primary-action):
 
 /* 8. Page footer and short-content layout */
 html.route-restoring footer {
-  display: none !important;
+  display: none;
 }
 
 body {
-  display: flex !important;
-  flex-direction: column !important;
-  min-height: 100vh !important;
-  min-height: 100dvh !important;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
 }
 
 body > main {
-  flex: 1 0 auto !important;
-  width: 100% !important;
+  flex: 1 0 auto;
+  width: 100%;
 }
 
 body > footer {
-  flex: 0 0 auto !important;
-  margin-top: auto !important;
-  width: 100% !important;
+  flex: 0 0 auto;
+  margin-top: auto;
+  width: 100%;
 }
 
 /* Typography: titles use Kantumruy Pro Regular; subtitles use Hanuman Light. */
@@ -4268,3 +3475,74 @@ body > footer {
   font-family: "Hanuman", serif;
   font-weight: 300;
 }
+
+/* Product cards — canonical Steam Dark surface and hover behavior. */
+body #view-home .cd,
+body #view-store .cd,
+body #view-product .product-related-grid > .cd,
+body .product-related-grid .cd {
+  background: #16202D;
+  border: 1px solid #2A475E;
+  color: #C7D5E0;
+  transition: transform .22s ease, box-shadow .22s ease, background-color .22s ease;
+}
+
+body #view-home .cd:hover,
+body #view-store .cd:hover,
+body #view-product .product-related-grid > .cd:hover,
+body .product-related-grid .cd:hover {
+  background: #16202D;
+  border: 1px solid #2A475E;
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+}
+
+body #view-home .cd .im .cd-main-wrap,
+body #view-store .cd .im .cd-main-wrap,
+body #view-product .product-related-grid .cd .im .cd-main-wrap,
+body .product-related-grid .cd .im .cd-main-wrap {
+  display: block;
+  opacity: 1;
+  visibility: visible;
+  z-index: 1;
+}
+
+body #view-home .cd .im .cd-main,
+body #view-store .cd .im .cd-main,
+body #view-product .product-related-grid .cd .im .cd-main,
+body .product-related-grid .cd .im .cd-main {
+  opacity: 1;
+  visibility: visible;
+  z-index: 1;
+}
+
+body #view-home .cd .im .cd-secondary-wrap:not(.is-loaded),
+body #view-home .cd .im .cd-secondary-wrap.is-failed,
+body #view-store .cd .im .cd-secondary-wrap:not(.is-loaded),
+body #view-store .cd .im .cd-secondary-wrap.is-failed,
+body #view-product .product-related-grid .cd .im .cd-secondary-wrap:not(.is-loaded),
+body #view-product .product-related-grid .cd .im .cd-secondary-wrap.is-failed,
+body .product-related-grid .cd .im .cd-secondary-wrap:not(.is-loaded),
+body .product-related-grid .cd .im .cd-secondary-wrap.is-failed {
+  display: none;
+}
+
+body #view-home .cd .im .cd-secondary-wrap.is-loaded:not(.is-failed),
+body #view-store .cd .im .cd-secondary-wrap.is-loaded:not(.is-failed),
+body #view-product .product-related-grid .cd .im .cd-secondary-wrap.is-loaded:not(.is-failed),
+body .product-related-grid .cd .im .cd-secondary-wrap.is-loaded:not(.is-failed) {
+  display: block;
+  opacity: 0;
+  visibility: hidden;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  body #view-home .cd:hover .im .cd-secondary-wrap.is-loaded:not(.is-failed),
+  body #view-store .cd:hover .im .cd-secondary-wrap.is-loaded:not(.is-failed),
+  body #view-product .product-related-grid .cd:hover .im .cd-secondary-wrap.is-loaded:not(.is-failed),
+  body .product-related-grid .cd:hover .im .cd-secondary-wrap.is-loaded:not(.is-failed) {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
