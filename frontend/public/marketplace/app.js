@@ -258,8 +258,9 @@ function toggleDrop(id) {
    -------------------------------------------------------------------------- */
 async function api(path, options = {}) {
   const { authToken, ...fetchOptions } = options;
+  const sessionAtRequest = state.session;
   const headers = new Headers(fetchOptions.headers || {});
-  const requestToken = authToken !== undefined ? authToken : state.session?.access_token;
+  const requestToken = authToken !== undefined ? authToken : sessionAtRequest?.access_token;
   if (requestToken) headers.set('Authorization', 'Bearer ' + requestToken);
   else headers.delete('Authorization');
 
@@ -272,8 +273,9 @@ async function api(path, options = {}) {
   let payload = {};
   try { payload = await response.json(); } catch {}
 
-  if (response.status === 401 && state.session?.refresh_token && state.supabase &&
-      (authToken === undefined || authToken === state.session.access_token)) {
+  if (response.status === 401 && sessionAtRequest?.refresh_token && state.supabase &&
+      state.session?.user?.id === sessionAtRequest.user?.id &&
+      (authToken === undefined || authToken === sessionAtRequest.access_token)) {
     try {
       if (!state.sessionRefreshPromise) {
         state.sessionRefreshPromise = state.supabase.auth.refreshSession()
