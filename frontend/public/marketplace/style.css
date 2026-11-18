@@ -2645,3 +2645,45 @@ textarea,
     gap:10px!important;
   }
 }
+
+
+/* Public seller bio and circular shop avatars in related-product cards. */
+#view-store .storefront-bio{margin-top:8px}
+#view-store .storefront-bio-label{display:block;margin-bottom:2px;color:#315541;font-size:10px;font-weight:800;letter-spacing:.02em}
+#view-store .storefront-description{margin-top:0}
+.product-related-grid .cd .sh .sp{
+  position:relative!important;
+  display:grid!important;
+  width:30px!important;
+  height:30px!important;
+  min-width:30px!important;
+  min-height:30px!important;
+  flex:0 0 30px!important;
+  overflow:hidden!important;
+  border:1px solid #DCE8E0!important;
+  border-radius:50%!important;
+  aspect-ratio:1/1!important;
+  background:#F0FDF8!important;
+  clip-path:circle(50% at 50% 50%)!important;
+}
+.product-related-grid .cd .sh .sp img{
+  position:absolute!important;
+  inset:0!important;
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+  max-width:none!important;
+  border-radius:50%!important;
+  object-fit:cover!important;
+  object-position:center!important;
+}
+.product-related-grid .cd .sh .sp .sp-fallback{
+  position:absolute!important;
+  inset:0!important;
+  display:grid!important;
+  width:100%!important;
+  height:100%!important;
+  place-items:center!important;
+  border-radius:50%!important;
+  overflow:hidden!important;
+}
