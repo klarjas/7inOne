@@ -4119,3 +4119,47 @@ button:hover:not(:disabled):not(.product-buy-primary):not(.hero-primary-action):
 @keyframes steamSpin {
   to { transform: rotate(360deg); }
 }
+
+/* Fix Steam Circular Loading Spinner */
+.steam-loader-wrap,
+#view-home #skeletonGrid:not(.hidden),
+#skeletonGrid:not(.hidden) {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 14px !important;
+  min-height: 320px !important;
+  width: 100% !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: #9FB2C3 !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+}
+
+.steam-spinner {
+  display: block !important;
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  min-height: 44px !important;
+  max-width: 44px !important;
+  max-height: 44px !important;
+  flex: 0 0 44px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  border: 4px solid rgba(102, 192, 244, 0.2) !important;
+  border-top-color: #66C0F4 !important;
+  border-radius: 50% !important;
+  box-shadow: none !important;
+  animation: steamSpin 0.75s linear infinite !important;
+}
+
+@keyframes steamSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
