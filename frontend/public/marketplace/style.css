@@ -3864,3 +3864,41 @@ footer button:hover {
   background: linear-gradient(135deg, #66C0F4 0%, #2B74B8 100%) !important;
   color: #FFFFFF !important;
 }
+
+/* Fix Body Background & Product Hero Grid White Container */
+html, body, body > main {
+  background-color: #1B2838 !important;
+  background-image: radial-gradient(circle at 50% 0%, #2A475E 0%, #1B2838 55%, #171A21 100%) !important;
+  background-attachment: fixed !important;
+  color: #C7D5E0 !important;
+}
+
+#view-product,
+#view-product .shell,
+#view-product .product-detail-page,
+#view-product .product-hero-card,
+#view-product .product-hero-grid,
+#view-product .product-detail-gallery {
+  background: transparent !important;
+  background-color: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+#view-product .product-hero-grid {
+  background: #16202D !important;
+  border: 1px solid #2A475E !important;
+  border-radius: 20px !important;
+  padding: 20px !important;
+}
+
+#view-product .product-category-badge {
+  background: #2A475E !important;
+  border: 1px solid #4B8BB8 !important;
+  color: #66C0F4 !important;
+}
+
+#view-product .product-gallery-stage > img {
+  background: #101822 !important;
+  border-radius: 12px !important;
+}
