@@ -86,6 +86,7 @@ const state = {
   savedIds: new Set(),
   favoritePending: new Set(),
   activeCategory: 'all',
+  activeCondition: 'all',
   searchTerm: '',
   currentProduct: null,
   currentVendor: null,
@@ -487,17 +488,31 @@ function setAvatar(target, url, name = '') {
 
 function setProfileCover(target, url = '') {
   if (!target) return;
-  if (url) {
-    target.style.backgroundImage = `url("${url}")`;
-    target.style.backgroundSize = 'cover';
-    target.style.backgroundPosition = 'center';
-    target.style.backgroundRepeat = 'no-repeat';
+  const current = target.querySelector(':scope > .profile-cover-image');
+  if (!url) {
+    current?.remove();
+    target.style.backgroundImage = '';
+    target.style.backgroundSize = '';
+    target.style.backgroundPosition = '';
+    target.style.backgroundRepeat = '';
+    target.classList.remove('has-profile-cover');
     return;
   }
-  target.style.backgroundImage = '';
-  target.style.backgroundSize = '';
-  target.style.backgroundPosition = '';
-  target.style.backgroundRepeat = '';
+  target.style.backgroundImage = 'none';
+  target.classList.add('has-profile-cover');
+  const img = document.createElement('img');
+  img.className = 'profile-cover-image';
+  img.alt = 'Cover របស់គណនី';
+  img.decoding = 'async';
+  img.loading = 'eager';
+  img.src = String(url);
+  img.addEventListener('error', () => {
+    img.remove();
+    target.classList.remove('has-profile-cover');
+    console.warn('Profile cover image failed to load:', String(url).slice(0, 180));
+  }, { once: true });
+  if (current) current.replaceWith(img);
+  else target.insertBefore(img, target.firstChild);
 }
 
 function syncHeader() {
@@ -683,6 +698,8 @@ function productCard(p, index) {
   const verified = p.vendors?.status === 'approved';
   const description = productDescriptionParts(p).short;
 
+  const condition = p.condition || 'ពិសេស';
+  const location = p.location || 'ភ្នំពេញ';
   return `
   <article class="cd" style="animation-delay:${Math.min(index, 12) * 30}ms">
     <div class="ph im">
@@ -693,10 +710,15 @@ function productCard(p, index) {
       <button class="hv heart ${saved ? 'saved' : ''}" type="button" data-action="save" data-id="${esc(p.id)}" aria-label="រក្សាទុក" aria-pressed="${saved ? 'true' : 'false'}">
         ${ic('heart', 17)}
       </button>
+      <button class="cd-quick-add" type="button" data-action="view" data-id="${esc(p.id)}" aria-label="មើលទំនិញ">+</button>
     </div>
     <div class="cb">
       <h3 class="cursor-pointer hover:text-emerald-800" data-action="view" data-id="${esc(p.id)}">${esc(p.title)}</h3>
-      <p class="pr"><span>${money(p.price)}</span><span class="cd-condition-meta">${esc(p.condition || 'ទំនិញ')}</span></p>
+      <p class="pr"><span>${money(p.price)}</span></p>
+      <div class="cd-condition-row">
+        <span class="cd-condition-meta">${esc(condition)}</span>
+        <span class="cd-location-meta">${esc(location)}</span>
+      </div>
       ${description ? `<p class="cd-description">${esc(description)}</p>` : ''}
       <div class="sh">
         <span class="sp" role="img" aria-label="រូប Profile ហាង">
@@ -707,7 +729,6 @@ function productCard(p, index) {
         ${verified ? verifiedStoreBadge(p.vendor_id) : ''}
       </div>
       <p class="mt">
-        <span>${esc(p.location || 'ភ្នំពេញ')}</span>
         <span>${timeAgoKm(p.created_at)}</span>
         <span class="vw" title="ចំនួនអ្នកមើល">${ic('eye', 13)}${formatViews(p.view_count)}</span>
       </p>
@@ -716,7 +737,13 @@ function productCard(p, index) {
 }
 
 function renderProducts() {
-  const list = state.products;
+  const list = state.products.filter((product) => {
+    if (state.activeCondition === 'all') return true;
+    const condition = String(product.condition || '').toLowerCase();
+    const isNew = condition.includes('new') || condition.includes('ថ្មី');
+    const isUsed = condition.includes('used') || condition.includes('second') || condition.includes('មួយទឹក') || condition.includes('ប្រើរួច');
+    return state.activeCondition === 'new' ? isNew : isUsed;
+  });
   $('productGrid').innerHTML = list.map(productCard).join('');
   $('resultCount').textContent = `${list.length} មុខ`;
   $('listingTitle').textContent = state.activeCategory === 'all' ? 'ទំនិញដែលគួរឱ្យចាប់អារម្មណ៍' : CATEGORIES[state.activeCategory] || 'ទំនិញ';
@@ -1907,11 +1934,28 @@ function bindEvents() {
   });
   $('clearFilters').addEventListener('click', () => {
     state.searchTerm = '';
+    state.activeCondition = 'all';
+    const allCondition = document.querySelector('[data-condition-filter=""]');
+    document.querySelector('[data-condition-filter][value="all"]')?.click();
     $('searchInput').value = '';
     setCategory('all');
   });
 
   // Product Grid Delegation
+  document.querySelectorAll('[data-condition-filter]').forEach((input) => {
+    input.addEventListener('change', () => {
+      if (!input.checked) return;
+      state.activeCondition = input.value || 'all';
+      renderProducts();
+    });
+  });
+  document.querySelectorAll('[data-sort-value]').forEach((button) => {
+    button.addEventListener('click', () => {
+      $('sortSelect').value = button.dataset.sortValue || 'newest';
+      $('sortSelect').dispatchEvent(new Event('change', { bubbles: true }));
+    });
+  });
+
   $('productGrid').addEventListener('click', (e) => {
     const heart = e.target.closest('[data-action="save"]');
     if (heart) { e.preventDefault(); e.stopPropagation(); saveAction(heart.dataset.id, heart); return; }
@@ -2234,20 +2278,23 @@ function bindEvents() {
     form.append('file', file);
     form.append('type', type);
     try {
-      await api('/api/me/media', { method: 'POST', body: form });
+      const uploadResult = await api('/api/me/media', { method: 'POST', body: form });
       await refreshSession();
 
-      const savedUrl = state.me?.profile?.[type === 'avatar' ? 'avatar_url' : 'cover_url'];
+      const savedUrl = uploadResult?.data?.[type === 'avatar' ? 'avatar_url' : 'cover_url']
+        || state.me?.profile?.[type === 'avatar' ? 'avatar_url' : 'cover_url'];
       if (savedUrl) {
         if (type === 'avatar') setAvatar($('profileAvatar'), savedUrl, profileName());
         else setProfileCover($('view-profile')?.querySelector('.cover'), savedUrl);
-        URL.revokeObjectURL(previewUrl);
       }
 
       await renderProfileTab();
       toast('បានប្ដូររូបភាព Profile ជោគជ័យ!');
     } catch (err) {
       toast(err.message || 'មិនអាច Upload រូបភាពបានទេ។', 'error');
+      setProfileCover($('view-profile')?.querySelector('.cover'), state.me?.profile?.cover_url || '');
+    } finally {
+      URL.revokeObjectURL(previewUrl);
     }
   };
   $('avatarUpload')?.addEventListener('change', () => void uploadProfileImage('avatarUpload', 'avatar'));
