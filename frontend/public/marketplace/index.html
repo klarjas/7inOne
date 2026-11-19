@@ -1022,6 +1022,79 @@
     </section>
   </div>
 
+
+  <!-- 3A. Unified listing type chooser -->
+  <div aria-hidden="true" class="modal" id="listingTypeModal">
+    <section class="modal-box listing-type-box p-6 sm:p-7">
+      <div class="mb-5 flex items-start justify-between">
+        <div><p class="text-[10px] font-bold text-sky-400">7INONE MARKETPLACE</p><h2 class="mt-1 text-xl font-bold">តើអ្នកចង់បង្ហោះអ្វី?</h2><p class="mt-1 text-xs text-slate-400">ជ្រើសរើសប្រភេទប្រកាស ដើម្បីបន្ត</p></div>
+        <button class="close-btn" data-close="listingTypeModal" type="button" aria-label="បិទ"></button>
+      </div>
+      <div class="listing-type-grid">
+        <button type="button" class="listing-type-option" data-create-kind="product"><span>▣</span><b>ផលិតផល</b><small>ទំនិញថ្មី និងមួយទឹក</small></button>
+        <button type="button" class="listing-type-option" data-create-kind="job"><span>▤</span><b>ការងារ</b><small>ជ្រើសរើសបុគ្គលិក និងប្រកាសការងារ</small></button>
+        <button type="button" class="listing-type-option" data-create-kind="real_estate"><span>⌂</span><b>អចលនទ្រព្យ</b><small>ផ្ទះ ដី ខុនដូ និងអចលនទ្រព្យផ្សេងៗ</small></button>
+      </div>
+    </section>
+  </div>
+
+  <!-- 3B. Job listing form -->
+  <div aria-hidden="true" class="modal" id="jobFormModal">
+    <section class="modal-box max-w-[720px] p-6 sm:p-7">
+      <div class="mb-5 flex items-start justify-between"><div><p class="text-[10px] font-bold text-sky-400">JOB LISTING</p><h2 class="mt-1 text-xl font-bold">បង្ហោះប្រកាសការងារ</h2><p class="mt-1 text-xs text-slate-400">បំពេញព័ត៌មានការងារ និងលក្ខខណ្ឌជ្រើសរើស</p></div><button class="close-btn" data-close="jobFormModal" type="button"></button></div>
+      <form id="jobListingForm" class="space-y-3">
+        <div class="grid gap-3 sm:grid-cols-2">
+          <label><span class="label">ប្រភេទការងារ *</span><select class="field" id="jobCategory" name="category" required><option value="">ជ្រើសរើសប្រភេទ</option><option value="it">IT & Technology</option><option value="office">ការិយាល័យ និងរដ្ឋបាល</option><option value="sales">លក់ និងទីផ្សារ</option><option value="transport">ដឹកជញ្ជូន</option><option value="hospitality">ភោជនីយដ្ឋាន និងសណ្ឋាគារ</option><option value="construction">សំណង់ និងវិស្វកម្ម</option><option value="education">អប់រំ</option><option value="healthcare">សុខាភិបាល</option><option value="factory">រោងចក្រ និងផលិតកម្ម</option><option value="agriculture">កសិកម្ម</option><option value="services">សម្រស់ និងសេវាកម្ម</option><option value="other">ការងារផ្សេងៗ</option></select></label>
+          <label><span class="label">មុខតំណែង / Job Title *</span><input class="field" name="title" maxlength="160" placeholder="ឧ. IT Support" required></label>
+          <label><span class="label">ក្រុមហ៊ុន / អ្នកជ្រើសរើស</span><input class="field" name="company_name" maxlength="160" placeholder="ឈ្មោះក្រុមហ៊ុន"></label>
+          <label><span class="label">ទីតាំងការងារ *</span><input class="field" name="location" maxlength="120" placeholder="ខណ្ឌ សង្កាត់ រាជធានី/ខេត្ត" required></label>
+          <label><span class="label">ផ្នែករង</span><select class="field" id="jobSubcategory" name="subcategory"><option value="">ជ្រើសរើសផ្នែករង</option></select></label>
+          <label><span class="label">មុខតំណែងលម្អិត</span><select class="field" id="jobDetailType" name="detail_type"><option value="">ជ្រើសរើសមុខតំណែង</option></select></label>
+          <label><span class="label">ប្រភេទការងារ</span><select class="field" name="employment_type"><option value="full_time">ពេញម៉ោង</option><option value="part_time">ក្រៅម៉ោង</option><option value="contract">កិច្ចសន្យា</option><option value="internship">ហាត់ការ</option><option value="freelance">Freelance</option></select></label>
+          <label><span class="label">ម៉ោងធ្វើការ</span><input class="field" name="work_schedule" placeholder="ឧ. 8:00 ព្រឹក - 5:00 ល្ងាច"></label>
+          <label><span class="label">ប្រាក់ខែអប្បបរមា (USD)</span><input class="field" name="salary_min" type="number" min="0" step="0.01" placeholder="0"></label>
+          <label><span class="label">ប្រាក់ខែអតិបរមា (USD)</span><input class="field" name="salary_max" type="number" min="0" step="0.01" placeholder="0"></label>
+          <label><span class="label">របៀបបង្ហាញប្រាក់ខែ</span><select class="field" name="salary_period"><option value="monthly">ប្រចាំខែ</option><option value="daily">ប្រចាំថ្ងៃ</option><option value="hourly">ប្រចាំម៉ោង</option><option value="negotiable">ចរចា</option></select></label>
+          <label><span class="label">ចំនួនត្រូវជ្រើសរើស</span><input class="field" name="vacancies" type="number" min="1" max="999" value="1"></label>
+          <label><span class="label">បទពិសោធន៍</span><input class="field" name="experience" placeholder="ឧ. 1-2 ឆ្នាំ / មិនទាមទារ"></label>
+          <label><span class="label">កម្រិតសិក្សា</span><input class="field" name="education" placeholder="ឧ. បរិញ្ញាបត្រ / មិនកំណត់"></label>
+          <label class="sm:col-span-2"><span class="label">ព័ត៌មានលម្អិត និងតួនាទីការងារ *</span><textarea class="field min-h-[110px]" name="description" maxlength="5000" rows="5" placeholder="ពិពណ៌នាអំពីតួនាទី ភារកិច្ច និងលក្ខខណ្ឌ..." required></textarea></label>
+          <label class="sm:col-span-2"><span class="label">ជំនាញដែលត្រូវការ (បំបែកដោយសញ្ញាក្បៀស)</span><input class="field" name="skills_text" placeholder="ឧ. Computer, Excel, Communication"></label>
+          <label class="sm:col-span-2"><span class="label">អត្ថប្រយោជន៍ (បំបែកដោយសញ្ញាក្បៀស)</span><input class="field" name="benefits_text" placeholder="ឧ. ប្រាក់ខែបន្ថែម, ធានារ៉ាប់រង"></label>
+          <label class="sm:col-span-2"><span class="label">រូបភាព / Logo (ជាជម្រើស · JPG/PNG/WEBP · អតិបរមា 8MB)</span><input class="field" name="image" type="file" accept="image/jpeg,image/png,image/webp"></label>
+        </div>
+        <div id="jobSpecificationFields" class="listing-spec-fields"></div>
+        <div class="flex justify-end gap-2 pt-3"><button class="rounded-full border border-slate-600 px-5 py-2.5 text-[11px] font-bold" data-close="jobFormModal" type="button">បោះបង់</button><button class="brand-gradient rounded-full px-6 py-2.5 text-[11px] font-bold text-white" type="submit">បង្ហោះការងារ</button></div>
+      </form>
+    </section>
+  </div>
+
+  <!-- 3C. Real estate listing form -->
+  <div aria-hidden="true" class="modal" id="propertyFormModal">
+    <section class="modal-box max-w-[720px] p-6 sm:p-7">
+      <div class="mb-5 flex items-start justify-between"><div><p class="text-[10px] font-bold text-sky-400">REAL ESTATE LISTING</p><h2 class="mt-1 text-xl font-bold">បង្ហោះអចលនទ្រព្យ</h2><p class="mt-1 text-xs text-slate-400">ព័ត៌មានលក់ ជួល និងលក្ខណៈសម្បត្តិអចលនទ្រព្យ</p></div><button class="close-btn" data-close="propertyFormModal" type="button"></button></div>
+      <form id="propertyListingForm" class="space-y-3">
+        <div class="grid gap-3 sm:grid-cols-2">
+          <label><span class="label">ប្រភេទអចលនទ្រព្យ *</span><select class="field" id="propertyCategory" name="category" required><option value="">ជ្រើសរើសប្រភេទ</option><option value="house_sale">ផ្ទះលក់</option><option value="house_rent">ផ្ទះជួល</option><option value="condo_sale">ខុនដូសម្រាប់លក់</option><option value="apartment_rent">អាផាតមិនសម្រាប់ជួល</option><option value="land">ដីលក់</option><option value="land_rent">ដីសម្រាប់ជួល</option><option value="commercial_sale">អចលនទ្រព្យពាណិជ្ជកម្មសម្រាប់លក់</option><option value="commercial_rent">អចលនទ្រព្យពាណិជ្ជកម្មសម្រាប់ជួល</option><option value="room_rent">បន្ទប់ជួល</option><option value="properties_wanted">ត្រូវការអចលនទ្រព្យ</option><option value="agent_services">សេវាកម្មភ្នាក់ងារ</option><option value="others_properties">ផ្សេងៗ</option></select></label>
+          <label><span class="label">ចំណងជើងប្រកាស *</span><input class="field" name="title" maxlength="160" placeholder="ឧ. ផ្ទះវីឡាលក់នៅបុរី..." required></label>
+          <label><span class="label">ផ្នែករង</span><select class="field" id="propertySubcategory" name="subcategory"><option value="">ជ្រើសរើសផ្នែករង</option></select></label>
+          <label><span class="label">ប្រភេទលម្អិត</span><select class="field" id="propertyDetailType" name="detail_type"><option value="">ជ្រើសរើសប្រភេទលម្អិត</option></select></label>
+          <label><span class="label">តម្លៃ (USD)</span><input class="field" name="price" type="number" min="0" step="0.01" placeholder="តម្លៃ"></label>
+          <label><span class="label">រយៈពេល / ប្រភេទតម្លៃ</span><select class="field" name="price_period"><option value="total">តម្លៃសរុប</option><option value="monthly">ប្រចាំខែ</option><option value="yearly">ប្រចាំឆ្នាំ</option><option value="daily">ប្រចាំថ្ងៃ</option><option value="negotiable">ចរចា</option></select></label>
+          <label><span class="label">ទំហំ (m²)</span><input class="field" name="area_sqm" type="number" min="0" step="0.01" placeholder="ទំហំផ្ទៃក្រឡា"></label>
+          <label><span class="label">បន្ទប់គេង</span><input class="field" name="bedrooms" type="number" min="0" step="1" placeholder="ចំនួន"></label>
+          <label><span class="label">បន្ទប់ទឹក</span><input class="field" name="bathrooms" type="number" min="0" step="1" placeholder="ចំនួន"></label>
+          <label><span class="label">ទីតាំង / ខេត្ត *</span><input class="field" name="location" maxlength="120" placeholder="រាជធានី/ខេត្ត" required></label>
+          <label class="sm:col-span-2"><span class="label">អាសយដ្ឋានលម្អិត</span><input class="field" name="address" maxlength="300" placeholder="ផ្លូវ សង្កាត់ ខណ្ឌ និងទីតាំងជិតខាង"></label>
+          <label class="sm:col-span-2"><span class="label">ការពិពណ៌នាលម្អិត *</span><textarea class="field min-h-[110px]" name="description" maxlength="5000" rows="5" placeholder="ពិពណ៌នាព័ត៌មានលម្អិត..." required></textarea></label>
+          <label class="sm:col-span-2"><span class="label">រូបភាពអចលនទ្រព្យ (JPG/PNG/WEBP · អតិបរមា 8MB)</span><input class="field" name="image" type="file" accept="image/jpeg,image/png,image/webp"></label>
+        </div>
+        <div id="propertySpecificationFields" class="listing-spec-fields"></div>
+        <div class="flex justify-end gap-2 pt-3"><button class="rounded-full border border-slate-600 px-5 py-2.5 text-[11px] font-bold" data-close="propertyFormModal" type="button">បោះបង់</button><button class="brand-gradient rounded-full px-6 py-2.5 text-[11px] font-bold text-white" type="submit">បង្ហោះអចលនទ្រព្យ</button></div>
+      </form>
+    </section>
+  </div>
+
   <!-- 4. Offer Modal -->
   <div aria-hidden="true" class="modal" id="offerModal">
     <section class="modal-box max-w-[420px] p-6">
