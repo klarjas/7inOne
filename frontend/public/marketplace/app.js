@@ -2515,11 +2515,12 @@ function renderSellerChatInbox() {
   target.innerHTML = visibleChats.map((chat) => {
     const isPersonal = chat.chat_type === 'personal';
     const otherIsShop = !isPersonal && String(chat.other_role || '').toLowerCase() === 'seller';
+    const personalOther = String(chat.buyer_id) === String(state.session?.user?.id) ? chat.recipient : chat.buyer;
     const displayName = isPersonal
-      ? (chat.recipient?.display_name || chat.buyer?.display_name || chat.other_name || 'អ្នកប្រើប្រាស់')
+      ? (personalOther?.display_name || chat.other_name || 'អ្នកប្រើប្រាស់')
       : (otherIsShop ? (chat.vendor?.store_name || 'ហាងអ្នកលក់') : (chat.buyer?.display_name || chat.other_name || 'អ្នកប្រើប្រាស់'));
     const avatarUrl = isPersonal
-      ? (chat.buyer?.avatar_url || chat.recipient?.avatar_url)
+      ? personalOther?.avatar_url
       : (otherIsShop ? chat.vendor?.store_logo_url : chat.buyer?.avatar_url);
     const online = Boolean(chat.other_user_id && state.chatOnlineUserIds.has(String(chat.other_user_id)));
     const avatar = avatarUrl
@@ -2555,9 +2556,10 @@ async function syncChatUserPresence() {
       headers: { Authorization: 'Bearer ' + state.session.access_token },
       cache: 'no-store'
     }).catch(() => {});
+    if (!$('sellerChatModal')?.classList.contains('hidden')) void loadChatOnlineUsers();
   };
   send();
-  if (!state.chatUserPresenceTimer) state.chatUserPresenceTimer = window.setInterval(send, 25_000);
+  if (!state.chatUserPresenceTimer) state.chatUserPresenceTimer = window.setInterval(send, 20_000);
 }
 
 async function loadUnifiedSellerChatInbox() {
@@ -2583,20 +2585,30 @@ async function loadSellerChatConversation(scrollToBottom = false) {
   state.chatConversation = conv;
   const currentRole = String(conv.current_role || state.chatMode || 'buyer').toLowerCase();
   state.chatMode = currentRole === 'seller' ? 'seller' : 'buyer';
-  const otherIsShop = state.chatMode === 'buyer';
-  const otherName = otherIsShop
-    ? (conv.vendor?.store_name || 'ហាងអ្នកលក់')
-    : (conv.buyer?.display_name || 'អ្នកទិញ');
-  const otherAvatar = otherIsShop ? conv.vendor?.store_logo_url : conv.buyer?.avatar_url;
+  const isPersonalChat = Boolean(conv.recipient_id);
+  const personalOther = String(conv.buyer_id) === String(state.session?.user?.id) ? conv.recipient : conv.buyer;
+  const otherIsShop = !isPersonalChat && state.chatMode === 'buyer';
+  const otherName = isPersonalChat
+    ? (personalOther?.display_name || 'អ្នកប្រើប្រាស់')
+    : (otherIsShop ? (conv.vendor?.store_name || 'ហាងអ្នកលក់') : (conv.buyer?.display_name || 'អ្នកទិញ'));
+  const otherAvatar = isPersonalChat
+    ? personalOther?.avatar_url
+    : (otherIsShop ? conv.vendor?.store_logo_url : conv.buyer?.avatar_url);
+  const otherUserId = isPersonalChat
+    ? personalOther?.id
+    : (otherIsShop ? conv.vendor?.user_id : conv.buyer?.id);
+  const headerOnlineDot = otherUserId && state.chatOnlineUserIds.has(String(otherUserId))
+    ? '<i class="seller-chat-online-dot" title="Online" aria-label="Online"></i>'
+    : '';
   $('sellerChatTitle').textContent = otherName;
   $('sellerChatSubtitle').textContent = '';
   $('sellerChatHeaderTitle').textContent = otherName;
   $('sellerChatHeaderSubtitle').classList.add('hidden');
   $('sellerChatHeaderIdentity').classList.remove('hidden');
   $('sellerChatHeaderDefault').classList.add('hidden');
-  $('sellerChatHeaderAvatar').innerHTML = otherAvatar
+  $('sellerChatHeaderAvatar').innerHTML = `<span class="seller-chat-avatar-wrap">${otherAvatar
     ? `<img src="${esc(otherAvatar)}" alt="${esc(otherName)}" class="h-full w-full rounded-full object-cover">`
-    : `<span class="grid h-full w-full place-items-center text-slate-400">${ic(otherIsShop ? 'store' : 'user', 18)}</span>`;
+    : `<span class="grid h-full w-full place-items-center text-slate-400">${ic(otherIsShop ? 'store' : 'user', 18)}</span>}${headerOnlineDot}</span>`;
   $('sellerChatProductImage').innerHTML = otherAvatar
     ? `<img src="${esc(otherAvatar)}" alt="${esc(otherName)}" class="h-full w-full object-cover">`
     : `<span class="grid h-full w-full place-items-center text-slate-400">${ic(otherIsShop ? 'store' : 'user', 18)}</span>`;
@@ -2621,6 +2633,11 @@ async function openSellerChat(conversationId, mode, draftProduct = null) {
   $('sellerChatMessages').innerHTML = '<div class="global-loading" role="status" aria-label="កំពុងផ្ទុកសន្ទនា"><div class="loader" aria-hidden="true"></div><span>កំពុងផ្ទុកសន្ទនា...</span></div>';
   await loadSellerChatConversation(true);
   await loadUnifiedSellerChatInbox();
+  const activeChat = state.chatInbox.find(row => String(row.id) === String(conversationId));
+  if (activeChat) {
+    state.chatInboxTab = activeChat.chat_type === 'personal' ? 'personal' : 'shop';
+    renderSellerChatInbox();
+  }
   scrollSellerChatToBottom();
   setTimeout(() => $('sellerChatInput')?.focus(), 80);
 }
