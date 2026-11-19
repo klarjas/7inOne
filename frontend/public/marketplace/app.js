@@ -1822,18 +1822,11 @@ function extractCambodiaGeoRows(payload) {
 }
 async function loadCambodiaGeo() {
   if (!cambodiaGeoPromise) cambodiaGeoPromise = (async () => {
-    const all = [];
-    const pageSize = 1000;
-    for (let page = 1; page <= 40; page += 1) {
-      const url = 'https://data.mef.gov.kh/api/v1/public-datasets/pd_68e370856a965e00074a5e7b/json?page=' + page + '&page_size=' + pageSize;
-      const response = await fetch(url, { headers: { Accept: 'application/json' } });
-      if (!response.ok) throw new Error('មិនអាចទាញយកបញ្ជីទីតាំងផ្លូវការបានទេ។ សូមព្យាយាមម្ដងទៀត។');
-      const payload = await response.json();
-      const rows = extractCambodiaGeoRows(payload);
-      if (!rows.length) break;
-      all.push(...rows);
-    }
-    const normalized = all.map(row => ({
+    const response = await fetch('/api/locations/cambodia', { headers: { Accept: 'application/json' } });
+    const payload = await response.json().catch(() => null);
+    if (!response.ok) throw new Error(payload?.error || payload?.message || 'មិនអាចទាញយកបញ្ជីទីតាំងពី Telegram បានទេ។ សូមព្យាយាមម្ដងទៀត។');
+    const rows = extractCambodiaGeoRows(payload?.data || payload);
+    const normalized = rows.map(row => ({
       province_code: String(row.province_code || ''),
       province_kh: String(row.province_kh || '').trim(),
       province_en: String(row.province_en || '').trim(),
