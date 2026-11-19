@@ -84,6 +84,10 @@ const state = {
   // Marketplace
   products: [],
   productsRequestId: 0,
+  socialPosts: [],
+  socialCommentsOpen: new Set(),
+  socialCommentsCache: new Map(),
+  socialUploadPreviewUrl: null,
   savedIds: new Set(),
   favoritePending: new Set(),
   activeCategory: 'all',
@@ -738,6 +742,121 @@ function productCard(p, index) {
   </article>`;
 }
 
+
+// --------------------------------------------------------------------------
+// 7.1 Community photo feed
+// --------------------------------------------------------------------------
+function socialProfileMarkup(profile = {}) {
+  const name = profile.display_name || 'អ្នកប្រើប្រាស់';
+  const avatar = profile.avatar_url || '';
+  return `<span class="social-avatar">${avatar ? `<img src="${esc(avatar)}" alt="">` : esc(Array.from(name)[0] || '7')}</span>`;
+}
+function syncSocialComposerIdentity() {
+  const profile = state.me?.profile || state.me || {};
+  const name = profile.display_name || state.me?.user?.user_metadata?.display_name || state.me?.email?.split('@')[0] || 'អ្នកប្រើប្រាស់';
+  const avatar = profile.avatar_url || '';
+  const target = $('socialComposerAvatar');
+  if ($('socialComposerName')) $('socialComposerName').textContent = name;
+  if (target) target.innerHTML = avatar ? `<img src="${esc(avatar)}" alt="">` : esc(Array.from(name)[0] || '7');
+}
+function renderSocialPosts() {
+  const target = $('socialFeedList');
+  if (!target) return;
+  if (!state.socialPosts.length) { target.innerHTML = '<div class="social-feed-empty">មិនទាន់មានការផុសទេ។ ចាប់ផ្ដើមចែករំលែកមុនគេ!</div>'; return; }
+  target.innerHTML = state.socialPosts.map(post => {
+    const author = post.profile || {};
+    const liked = Boolean(post.liked_by_me);
+    const comments = state.socialCommentsCache.get(post.id) || [];
+    const opened = state.socialCommentsOpen.has(post.id);
+    return `<article class="social-feed-card" data-social-post="${esc(post.id)}">
+      <div class="social-post-author">${socialProfileMarkup(author)}<div style="min-width:0;flex:1"><b>${esc(author.display_name || 'អ្នកប្រើប្រាស់')}</b><small>${timeAgoKm(post.created_at)}</small></div></div>
+      ${post.caption ? `<p class="social-post-caption">${esc(post.caption)}</p>` : ''}
+      <img class="social-post-image" src="${esc(post.image_url)}" alt="រូបភាពដែលបានផុស" loading="lazy">
+      <div class="social-post-actions">
+        <button type="button" data-social-like="${esc(post.id)}" class="${liked ? 'is-liked' : ''}" aria-pressed="${liked}">♡ ${Number(post.like_count || 0)} Like</button>
+        <button type="button" data-social-comments="${esc(post.id)}">💬 ${Number(post.comment_count || 0)} Comment</button>
+      </div>
+      ${opened ? `<div class="social-comment-panel"><div class="social-comment-list">${comments.map(comment => `<div class="social-comment"><b>${esc(comment.display_name || 'អ្នកប្រើប្រាស់')}</b>${esc(comment.body)}</div>`).join('') || '<small style="color:#8F98A0">មិនទាន់មានមតិយោបល់</small>'}</div><form class="social-comment-form" data-social-comment-form="${esc(post.id)}"><input name="comment" maxlength="500" placeholder="សរសេរមតិយោបល់..." required><button type="submit">ផ្ញើ</button></form></div>` : ''}
+    </article>`;
+  }).join('');
+}
+async function loadSocialPosts() {
+  const target = $('socialFeedList');
+  if (!target) return;
+  if (!state.socialPosts.length) target.innerHTML = '<div class="social-feed-loading">កំពុងផ្ទុកការផុស...</div>';
+  try {
+    const result = await api('/api/social/posts');
+    state.socialPosts = Array.isArray(result.data) ? result.data : [];
+    renderSocialPosts();
+    syncSocialComposerIdentity();
+  } catch (error) {
+    target.innerHTML = '<div class="social-feed-empty">មិនអាចផ្ទុកការផុសបានទេ។</div>';
+  }
+}
+function clearSocialImage() {
+  const input = $('socialPostImage');
+  if (input) input.value = '';
+  if (state.socialUploadPreviewUrl) URL.revokeObjectURL(state.socialUploadPreviewUrl);
+  state.socialUploadPreviewUrl = null;
+  $('socialUploadPreview')?.classList.add('hidden');
+  $('socialUploadPreviewImage')?.removeAttribute('src');
+}
+async function publishSocialPost() {
+  if (!requireLogin()) return;
+  const file = $('socialPostImage')?.files?.[0];
+  const caption = $('socialPostCaption')?.value.trim() || '';
+  if (!file) { toast('សូមជ្រើសរើសរូបភាពជាមុនសិន។', 'error'); return; }
+  if (!['image/jpeg','image/png','image/webp'].includes(file.type) || file.size > 8 * 1024 * 1024) {
+    toast('សូមប្រើរូប JPG, PNG ឬ WEBP ដែលមានទំហំមិនលើស 8MB។', 'error'); return;
+  }
+  const button = $('socialPublishBtn');
+  if (button) { button.disabled = true; button.textContent = 'កំពុងផុស...'; }
+  const form = new FormData();
+  form.append('image', file);
+  form.append('caption', caption);
+  try {
+    await api('/api/social/posts', { method: 'POST', body: form });
+    $('socialPostCaption').value = '';
+    clearSocialImage();
+    await loadSocialPosts();
+    toast('បានផុសរូបភាពជោគជ័យ!');
+  } catch (error) { toast(error.message || 'មិនអាចផុសរូបភាពបានទេ។', 'error'); }
+  finally { if (button) { button.disabled = false; button.textContent = 'ផុសរូបភាព'; } }
+}
+async function toggleSocialLike(postId) {
+  if (!requireLogin()) return;
+  try {
+    const result = await api(`/api/social/posts/${encodeURIComponent(postId)}/like`, { method: 'POST', body: JSON.stringify({}) });
+    const post = state.socialPosts.find(item => String(item.id) === String(postId));
+    if (post) { post.liked_by_me = result.liked; post.like_count = result.like_count; renderSocialPosts(); }
+  } catch (error) { toast(error.message || 'មិនអាច Like បានទេ។', 'error'); }
+}
+async function toggleSocialComments(postId) {
+  if (!state.socialCommentsOpen.has(postId)) {
+    state.socialCommentsOpen.add(postId);
+    try {
+      const result = await api(`/api/social/posts/${encodeURIComponent(postId)}/comments`);
+      state.socialCommentsCache.set(postId, result.data || []);
+    } catch (error) { toast(error.message || 'មិនអាចផ្ទុកមតិយោបល់បានទេ។', 'error'); }
+  } else state.socialCommentsOpen.delete(postId);
+  renderSocialPosts();
+}
+async function submitSocialComment(form) {
+  if (!requireLogin()) return;
+  const postId = form.dataset.socialCommentForm;
+  const input = form.elements.comment;
+  const body = input?.value.trim() || '';
+  if (!body) return;
+  try {
+    await api(`/api/social/posts/${encodeURIComponent(postId)}/comments`, { method: 'POST', body: JSON.stringify({ body }) });
+    const result = await api(`/api/social/posts/${encodeURIComponent(postId)}/comments`);
+    state.socialCommentsCache.set(postId, result.data || []);
+    const post = state.socialPosts.find(item => String(item.id) === String(postId));
+    if (post) post.comment_count = result.data.length;
+    renderSocialPosts();
+  } catch (error) { toast(error.message || 'មិនអាចផ្ញើមតិយោបល់បានទេ។', 'error'); }
+}
+
 function renderProducts() {
   const list = state.products.filter((product) => {
     if (state.activeCondition === 'all') return true;
@@ -774,6 +893,7 @@ async function loadProducts() {
     renderProducts();
     syncHomeHeroImagesFromProducts();
     void loadHomeVendorMedia();
+    void loadSocialPosts();
   } catch (error) {
     // Keep the last successful catalogue visible during a temporary API/network failure.
     if (requestId !== state.productsRequestId) return;
@@ -1941,6 +2061,31 @@ function initIcons() {
 }
 
 function bindEvents() {
+  // Community photo feed
+  $('socialPostImage')?.addEventListener('change', () => {
+    const file = $('socialPostImage').files?.[0];
+    if (!file) { clearSocialImage(); return; }
+    if (!file.type.startsWith('image/')) { clearSocialImage(); toast('សូមជ្រើសរើសរូបភាព។', 'error'); return; }
+    clearSocialImage();
+    const url = URL.createObjectURL(file);
+    state.socialUploadPreviewUrl = url;
+    $('socialUploadPreviewImage').src = url;
+    $('socialUploadPreview').classList.remove('hidden');
+  });
+  $('socialClearImage')?.addEventListener('click', clearSocialImage);
+  $('socialPublishBtn')?.addEventListener('click', () => void publishSocialPost());
+  $('socialRefreshBtn')?.addEventListener('click', () => void loadSocialPosts());
+  $('socialFeedList')?.addEventListener('click', (event) => {
+    const like = event.target.closest('[data-social-like]');
+    if (like) { void toggleSocialLike(like.dataset.socialLike); return; }
+    const comments = event.target.closest('[data-social-comments]');
+    if (comments) void toggleSocialComments(comments.dataset.socialComments);
+  });
+  $('socialFeedList')?.addEventListener('submit', (event) => {
+    const form = event.target.closest('[data-social-comment-form]');
+    if (form) { event.preventDefault(); void submitSocialComment(form); }
+  });
+
   // Search & Category Filters
   $('searchForm').addEventListener('submit', (e) => {
     e.preventDefault();
