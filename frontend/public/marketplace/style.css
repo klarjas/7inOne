@@ -4834,3 +4834,18 @@ body > footer {
 .product-album-empty small,.product-album-hint{font-size:9px;color:#8F98A0}
 .product-album-hint{margin-top:8px;line-height:1.6}
 @media(max-width:420px){.product-image-album{grid-template-columns:repeat(2,minmax(0,1fr))}.product-album-picker{gap:8px;padding:9px}.product-album-add{padding:7px 8px;font-size:9px}}
+
+
+/* Product form modal close button — Steam Dark */
+#productFormModal .close-btn,
+#productFormModal button.close-btn {
+  background:#101822!important;
+  color:#C7D5E0!important;
+  border:1px solid #2A475E!important;
+  box-shadow:none!important;
+}
+#productFormModal .close-btn:hover,
+#productFormModal button.close-btn:hover {
+  background:#2A475E!important;
+  color:#66C0F4!important;
+}
