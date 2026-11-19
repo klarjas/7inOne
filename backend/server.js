@@ -432,7 +432,7 @@ async function streamTelegramVideo(fileId, req, res) {
   res.set('Cache-Control','public, max-age=86400, stale-while-revalidate=604800');
   res.set('X-Content-Type-Options','nosniff');
   if (range) {
-    const match = /^bytes=(\\d*)-(\\d*)$/.exec(range);
+    const match = /^bytes=(\d*)-(\d*)$/.exec(range);
     if (!match) { res.set('Content-Range',`bytes */${buffer.length}`); return res.status(416).end(); }
     let start = match[1] ? Number(match[1]) : Math.max(0, buffer.length - Number(match[2] || 0));
     let end = match[2] && match[1] ? Number(match[2]) : buffer.length - 1;
