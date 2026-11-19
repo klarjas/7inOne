@@ -903,6 +903,22 @@ async function downloadTelegramDocumentBuffer(fileId) {
   );
   return Buffer.from(await response.arrayBuffer());
 }
+function validateCambodiaGeoRows(rows) {
+  if (!Array.isArray(rows) || !rows.length) throw new Error('Cambodia location dataset is empty.');
+  const provinces = new Map();
+  for (const row of rows) {
+    const code = String(row?.province_code || '').trim();
+    if (code) provinces.set(code, String(row?.province_kh || '').trim());
+  }
+  const phnomPenh = provinces.get('12');
+  if (!phnomPenh || !phnomPenh.includes('ភ្នំពេញ')) {
+    throw new Error('Cambodia location dataset is missing Phnom Penh (province code 12).');
+  }
+  if (provinces.size < 25) {
+    throw new Error('Cambodia location dataset is incomplete: expected 25 provinces, found ' + provinces.size + '.');
+  }
+  return rows;
+}
 async function getCambodiaGeoRows() {
   if (Array.isArray(cambodiaGeoRowsCache)) return cambodiaGeoRowsCache;
   if (!cambodiaGeoLoadPromise) cambodiaGeoLoadPromise = (async () => {
@@ -914,16 +930,15 @@ async function getCambodiaGeoRows() {
       try {
         const buffer = await downloadTelegramDocumentBuffer(clean(saved.value.fileId, 2048));
         const rows = JSON.parse(buffer.toString('utf8'));
-        if (Array.isArray(rows) && rows.length) {
-          cambodiaGeoRowsCache = rows;
-          return rows;
-        }
+        validateCambodiaGeoRows(rows);
+        cambodiaGeoRowsCache = rows;
+        return rows;
       } catch (error) {
         console.warn('Stored Cambodia location file could not be read; rebuilding:', error.message);
       }
     }
     assertTelegramStorageConfig();
-    const rows = await fetchOfficialCambodiaGeoRows();
+    const rows = validateCambodiaGeoRows(await fetchOfficialCambodiaGeoRows());
     const buffer = Buffer.from(JSON.stringify(rows), 'utf8');
     const form = new FormData();
     form.append('chat_id', telegramStorageChatId());
