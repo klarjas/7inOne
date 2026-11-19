@@ -256,7 +256,7 @@ function publicProduct(product) {
     product_images: (product.product_images || []).map(image => ({
       id: image.id, sort_order: image.sort_order,
       image_url: image.file_id ? telegramMediaUrl(image.file_id) : image.image_url
-    }))
+    })).sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0))
   };
 }
 async function fetchTelegramWithRetry(url, options, stage, maxAttempts = 3) {
@@ -2067,6 +2067,30 @@ app.post('/api/products/:id/images', authenticate, upload.array('images', 5), as
     console.error('Product image upload failed:', error.message);
     return fail(res, 502, error.message || 'Product image upload failed.');
   }
+});
+
+app.patch('/api/products/:id/images/order', authenticate, async (req, res) => {
+  const admin = await isAdmin(req.user.id);
+  const { data: vendor } = await vendorFor(req.user.id);
+  if (!admin && (!vendor || vendor.status === 'blocked')) return fail(res, 403, 'Active vendor account required');
+  let productQuery = supabase.from('products').select('id').eq('id', req.params.id);
+  if (admin) {
+    if (vendor) productQuery = productQuery.eq('vendor_id', vendor.id);
+    else return fail(res, 404, 'Admin store not found');
+  } else productQuery = productQuery.eq('vendor_id', vendor.id);
+  const { data: product } = await productQuery.maybeSingle();
+  if (!product) return fail(res, 404, 'Product not found');
+  const imageIds = Array.isArray(req.body?.image_ids) ? req.body.image_ids.map(id => clean(id, 80)) : [];
+  if (imageIds.length > 5 || new Set(imageIds).size !== imageIds.length || imageIds.some(id => !id)) return fail(res, 400, 'Invalid product image order.');
+  const { data: rows, error: lookupError } = await supabase.from('product_images').select('id').eq('product_id', product.id);
+  if (lookupError) return fail(res, 500, 'Could not verify product images.');
+  const ownedIds = new Set((rows || []).map(row => String(row.id)));
+  if (imageIds.length !== ownedIds.size || imageIds.some(id => !ownedIds.has(String(id)))) return fail(res, 400, 'Image order must include every current product image.');
+  for (let index = 0; index < imageIds.length; index++) {
+    const { error } = await supabase.from('product_images').update({ sort_order: index }).eq('id', imageIds[index]).eq('product_id', product.id);
+    if (error) return fail(res, 500, 'Could not save product image order.');
+  }
+  return res.json({ success: true, main_image_id: imageIds[0] || null });
 });
 
 app.delete('/api/products/:id/images/:imageId', authenticate, async (req, res) => {
