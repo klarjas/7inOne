@@ -3182,6 +3182,7 @@ function bindEvents() {
   // Shared image preview for image upload controls across the marketplace.
   // Product album and existing profile/document previews keep their dedicated flows.
   const uploadPreviewUrls = new WeakMap();
+  const uploadPreviewNodes = new WeakMap();
   const posterPreviewTargets = {
     posterUploadTop: 'posterPreviewTop',
     posterUploadMiddle: 'posterPreviewMiddle',
@@ -3200,20 +3201,18 @@ function bindEvents() {
 
     const targetId = posterPreviewTargets[input.id];
     const existingTarget = targetId ? $(targetId) : null;
-    let preview = existingTarget;
+    let preview = existingTarget || uploadPreviewNodes.get(input);
     if (!preview) {
-      preview = input.parentElement?.querySelector(':scope > .global-image-upload-preview');
-      if (!preview) {
-        preview = document.createElement('div');
-        preview.className = 'global-image-upload-preview';
-        const anchor = input.closest('label') || input;
-        anchor.insertAdjacentElement('afterend', preview);
-      }
+      preview = document.createElement('div');
+      preview.className = 'global-image-upload-preview';
+      const anchor = input.closest('label') || input;
+      anchor.insertAdjacentElement('afterend', preview);
+      uploadPreviewNodes.set(input, preview);
     }
     preview.replaceChildren();
     if (!files.length) {
       if (targetId) preview.textContent = 'Preview';
-      else preview.remove();
+      else { preview.remove(); uploadPreviewNodes.delete(input); }
       return;
     }
 
