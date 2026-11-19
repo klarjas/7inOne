@@ -3002,7 +3002,7 @@ async function renderTelegramSecurity() {
 
 function youtubeVideoId(value) {
   try {
-    const url = new URL(String(value || '').trim()), host = url.hostname.toLowerCase().replace(/^www\\./, '');
+    const url = new URL(String(value || '').trim()), host = url.hostname.toLowerCase().replace(/^www\./, '');
     if (host === 'youtu.be') return url.pathname.split('/').filter(Boolean)[0] || '';
     if (host === 'youtube.com' || host.endsWith('.youtube.com')) {
       const parts = url.pathname.split('/').filter(Boolean);
