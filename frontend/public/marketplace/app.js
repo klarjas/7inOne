@@ -1870,7 +1870,7 @@ async function initCambodiaLocationPicker(root, legacyLocation = '') {
     };
     const provinceItems = unique(rows,'province_code','province_kh','province_en');
     fill(selects.province, 'ជ្រើសរើសរាជធានី/ខេត្ត', provinceItems);
-    let savedLocation = state.me?.profile?.default_location || null;
+    const getSavedLocation = () => state.me?.profile?.default_location || null;
     const selectedRows = () => Object.fromEntries(levels.map(level => [
       level, rows.find(row => row[level + '_code'] === (selects[level]?.value || '')) || null
     ]));
@@ -1888,6 +1888,7 @@ async function initCambodiaLocationPicker(root, legacyLocation = '') {
         if (summary) summary.textContent = 'សូមជ្រើសរើសរាជធានី/ខេត្ត → ស្រុក/ខណ្ឌ → ឃុំ/សង្កាត់ → ភូមិ';
       }
       if (defaultCheckbox) {
+        const savedLocation = getSavedLocation();
         defaultCheckbox.checked = Boolean(savedLocation && levels.every(level =>
           String(savedLocation[level + '_code'] || '') === String(selects[level]?.value || '')
         ) && levels.every(level => Boolean(selects[level]?.value)));
@@ -1929,8 +1930,7 @@ async function initCambodiaLocationPicker(root, legacyLocation = '') {
           if (!state.session) return;
           try {
             await api('/api/me/default-location', { method: 'PATCH', body: JSON.stringify({ default_location: null }) });
-            savedLocation = null;
-            if (state.me?.profile) state.me.profile.default_location = null;
+            if (state.me) state.me.profile = { ...(state.me.profile || {}), default_location: null };
             toast('បានដកទីតាំងលំនាំដើមចេញ។');
           } catch (error) {
             defaultCheckbox.checked = true;
@@ -1954,8 +1954,7 @@ async function initCambodiaLocationPicker(root, legacyLocation = '') {
         };
         try {
           await api('/api/me/default-location', { method: 'PATCH', body: JSON.stringify({ default_location: nextDefault }) });
-          savedLocation = nextDefault;
-          if (state.me?.profile) state.me.profile.default_location = nextDefault;
+          if (state.me) state.me.profile = { ...(state.me.profile || {}), default_location: nextDefault };
           defaultCheckbox.checked = true;
           toast('បានរក្សាទុកទីតាំងលំនាំដើមជោគជ័យ!');
         } catch (error) {
@@ -1965,7 +1964,7 @@ async function initCambodiaLocationPicker(root, legacyLocation = '') {
       });
       root.dataset.locationBound = 'true';
     }
-    if (!legacyLocation && !locationInput?.value) applySavedLocation(savedLocation);
+    if (!legacyLocation && !locationInput?.value) applySavedLocation(getSavedLocation());
     else updateLocation();
     root.dataset.locationReady = 'true';
   } catch (error) {
