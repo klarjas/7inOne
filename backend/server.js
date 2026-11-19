@@ -1049,7 +1049,7 @@ async function cleanupExpiredProducts(){
   return productCleanupPromise;
 }
 
-// Seller Live / Video links.
+// Seller Live / Video links. Multiple posts are allowed per verified seller.
 function normalizeSellerMediaUrl(value) {
  const raw=clean(value,1000);let parsed;try{parsed=new URL(raw)}catch{return null}
  if(parsed.protocol!=='https:')return null;
@@ -1057,35 +1057,49 @@ function normalizeSellerMediaUrl(value) {
  const allowed=['facebook.com','fb.watch','m.facebook.com','youtube.com','youtu.be'];
  return allowed.includes(host)||host.endsWith('.youtube.com')||host.endsWith('.facebook.com')?parsed.toString():null;
 }
-app.get('/api/vendor/media-link',authenticate,requireVendor,async(req,res)=>{
+function validateSellerMedia(mediaUrl,mediaType){
+ if(!mediaUrl)return 'Please provide a valid public Facebook or YouTube HTTPS link.';
+ if(!['live','video'].includes(mediaType))return 'Media type must be live or video.';
+ if(mediaType==='video'){let host='';try{host=new URL(mediaUrl).hostname.toLowerCase().replace(/^www\./,'')}catch{}if(!(host==='youtube.com'||host==='youtu.be'||host.endsWith('.youtube.com')))return 'YouTube Shorts links are required for video posts.';}
+ return null;
+}
+app.get('/api/vendor/media-links',authenticate,requireVendor,async(req,res)=>{
  if(req.vendor.status!=='approved')return fail(res,403,'Only verified sellers can manage Shorts / Live links');
- const {data,error}=await supabase.from('vendor_media_links').select('id,vendor_id,media_url,media_type,is_active,created_at,updated_at').eq('vendor_id',req.vendor.id).maybeSingle();
- if(error)return fail(res,500,'Could not load shop media link');return res.json({data:data||null});
+ const {data,error}=await supabase.from('vendor_media_links').select('id,vendor_id,media_url,media_type,is_active,created_at,updated_at').eq('vendor_id',req.vendor.id).order('created_at',{ascending:false}).limit(200);
+ if(error)return fail(res,500,'Could not load shop media links');return res.json({data:data||[]});
 });
-app.post('/api/vendor/media-link',authenticate,requireVendor,async(req,res)=>{
+app.post('/api/vendor/media-links',authenticate,requireVendor,async(req,res)=>{
  if(req.vendor.status!=='approved')return fail(res,403,'Only verified sellers can publish Shorts / Live links');
- const mediaUrl=normalizeSellerMediaUrl(req.body?.media_url),mediaType=clean(req.body?.media_type,10);
- if(!mediaUrl)return fail(res,400,'Please provide a valid public Facebook or YouTube HTTPS link.');
- if(!['live','video'].includes(mediaType))return fail(res,400,'Media type must be live or video.');
- if(mediaType==='video'){let videoHost='';try{videoHost=new URL(mediaUrl).hostname.toLowerCase().replace(/^www\./,'')}catch{}if(!(videoHost==='youtube.com'||videoHost==='youtu.be'||videoHost.endsWith('.youtube.com')))return fail(res,400,'YouTube Shorts links are required for video posts.');}
- const {data,error}=await supabase.from('vendor_media_links').upsert({vendor_id:req.vendor.id,media_url:mediaUrl,media_type:mediaType,is_active:true,updated_at:new Date().toISOString()},{onConflict:'vendor_id'}).select('id,vendor_id,media_url,media_type,is_active,created_at,updated_at').single();
- if(error){console.error('Seller media link save failed:',error.message);return fail(res,500,'Could not save the Live / Video link')}return res.json({data});
+ const mediaUrl=normalizeSellerMediaUrl(req.body?.media_url),mediaType=clean(req.body?.media_type,10),invalid=validateSellerMedia(mediaUrl,mediaType);
+ if(invalid)return fail(res,400,invalid);
+ const {data,error}=await supabase.from('vendor_media_links').insert({vendor_id:req.vendor.id,media_url:mediaUrl,media_type:mediaType,is_active:true}).select('id,vendor_id,media_url,media_type,is_active,created_at,updated_at').single();
+ if(error){console.error('Seller media post save failed:',error.message);return fail(res,500,'Could not save the Live / Video link')}return res.status(201).json({data});
 });
-app.patch('/api/vendor/media-link',authenticate,requireVendor,async(req,res)=>{
+app.patch('/api/vendor/media-links/:id',authenticate,requireVendor,async(req,res)=>{
  if(req.vendor.status!=='approved')return fail(res,403,'Only verified sellers can manage Shorts / Live links');
- if(typeof req.body?.is_active!=='boolean')return fail(res,400,'is_active must be true or false');
- const {data,error}=await supabase.from('vendor_media_links').update({is_active:req.body.is_active,updated_at:new Date().toISOString()}).eq('vendor_id',req.vendor.id).select('id,vendor_id,media_url,media_type,is_active,created_at,updated_at').maybeSingle();
- if(error)return fail(res,500,'Could not update Live / Video visibility');if(!data)return fail(res,404,'No Live / Video link has been saved');return res.json({data});
+ const patch={updated_at:new Date().toISOString()};
+ if(typeof req.body?.is_active==='boolean')patch.is_active=req.body.is_active;
+ if(req.body?.media_url!==undefined){const mediaUrl=normalizeSellerMediaUrl(req.body.media_url);if(!mediaUrl)return fail(res,400,'Please provide a valid public Facebook or YouTube HTTPS link.');patch.media_url=mediaUrl;}
+ if(req.body?.media_type!==undefined){const mediaType=clean(req.body.media_type,10);if(!['live','video'].includes(mediaType))return fail(res,400,'Media type must be live or video.');patch.media_type=mediaType;}
+ const mediaType=patch.media_type;
+ if(mediaType==='video'||(req.body?.media_url!==undefined&&req.body?.media_type===undefined)){
+  const url=patch.media_url;
+  if(url){const invalid=validateSellerMedia(url,'video');if(invalid)return fail(res,400,invalid);}
+ }
+ if(Object.keys(patch).length===1)return fail(res,400,'No valid media changes provided');
+ const {data,error}=await supabase.from('vendor_media_links').update(patch).eq('id',req.params.id).eq('vendor_id',req.vendor.id).select('id,vendor_id,media_url,media_type,is_active,created_at,updated_at').maybeSingle();
+ if(error)return fail(res,500,'Could not update Live / Video link');if(!data)return fail(res,404,'Shorts / Live link not found');return res.json({data});
 });
-app.delete('/api/vendor/media-link',authenticate,requireVendor,async(req,res)=>{
+app.delete('/api/vendor/media-links/:id',authenticate,requireVendor,async(req,res)=>{
  if(req.vendor.status!=='approved')return fail(res,403,'Only verified sellers can manage Shorts / Live links');
- const {error}=await supabase.from('vendor_media_links').delete().eq('vendor_id',req.vendor.id);if(error)return fail(res,500,'Could not remove Live / Video link');return res.json({success:true});
+ const {data,error}=await supabase.from('vendor_media_links').delete().eq('id',req.params.id).eq('vendor_id',req.vendor.id).select('id').maybeSingle();
+ if(error)return fail(res,500,'Could not remove Live / Video link');if(!data)return fail(res,404,'Shorts / Live link not found');return res.json({success:true});
 });
 app.get('/api/vendor-media',async(_req,res)=>{
  if(!db(res))return;
- const {data,error}=await supabase.from('vendor_media_links').select('id,vendor_id,media_url,media_type,created_at,vendors!inner(id,store_name,store_logo_file_id,status)').eq('is_active',true).eq('vendors.status','approved').order('updated_at',{ascending:false}).limit(30);
+ const {data,error}=await supabase.from('vendor_media_links').select('id,vendor_id,media_url,media_type,created_at,vendors!inner(id,store_name,status)').eq('is_active',true).eq('vendors.status','approved').order('updated_at',{ascending:false}).limit(60);
  if(error)return fail(res,500,'Could not load Live / Video links');
- return res.json({data:(data||[]).map(row=>({id:row.id,vendor_id:row.vendor_id,media_url:row.media_url,media_type:row.media_type,created_at:row.created_at,store_name:row.vendors?.store_name||'ហាងអ្នកលក់',store_logo_url:row.vendors?.store_logo_file_id?mediaProxyUrl(row.vendors.store_logo_file_id):null}))});
+ return res.json({data:(data||[]).map(row=>({id:row.id,vendor_id:row.vendor_id,media_url:row.media_url,media_type:row.media_type,created_at:row.created_at,store_name:row.vendors?.store_name||'ហាងអ្នកលក់'}))});
 });
 
 // Community photo posts, likes and comments.
