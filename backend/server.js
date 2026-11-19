@@ -32,7 +32,7 @@ app.use(cors({ origin: process.env.FRONTEND_ORIGIN ? process.env.FRONTEND_ORIGIN
 app.use(express.json({ limit: '1mb' }));
 app.use('/api', rateLimit({ windowMs: 60_000, limit: 120, standardHeaders: 'draft-8', legacyHeaders: false, skip: req => req.path.startsWith('/media/telegram/') }));
 
-const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024, files: 8 } });
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024, files: 10 } });
 const fail = (res, status, message) => res.status(status).json({ error: message });
 const db = res => { if (!supabase) { fail(res, 503, 'Supabase is not configured'); return false; } return true; };
 const clean = (value, max = 500) => String(value ?? '').trim().slice(0, max);
@@ -181,8 +181,8 @@ function friendlyTelegramUploadError(error) {
   return message;
 }
 
-async function uploadToTelegram(file) {
-  const invalid = imageUploadError(file);
+async function uploadToTelegram(file, maxBytes = 8 * 1024 * 1024) {
+  const invalid = imageUploadError(file, maxBytes);
   if (invalid) throw new Error(invalid);
   assertTelegramStorageConfig();
 
@@ -195,6 +195,12 @@ async function uploadToTelegram(file) {
 
   let result;
   try {
+    if (file.size > 10 * 1024 * 1024) {
+      result = await telegram('sendDocument', { method: 'POST', body: createForm('document') });
+      const document = result.document;
+      if (!document?.file_id || !result.message_id) throw new Error('Telegram accepted the image as a document but did not return a file_id/message_id.');
+      return { messageId: String(result.message_id), fileId: document.file_id, mimeType: file.mimetype, method: 'sendDocument' };
+    }
     result = await telegram('sendPhoto', { method: 'POST', body: createForm('photo') });
   } catch (photoError) {
     console.error('Telegram sendPhoto upload error:', photoError);
@@ -2045,14 +2051,14 @@ app.post('/api/products/:id/images', authenticate, upload.array('images', 10), a
   const { data: product } = await productQuery.maybeSingle();
   if (!product) return fail(res, 404, 'Product not found');
   const files = req.files || [];
-  if (!files.length || files.some(file => imageUploadError(file))) {
-    return fail(res, 400, 'Choose valid JPG, PNG or WEBP product images only (maximum 8MB per image).');
+  if (!files.length || files.some(file => imageUploadError(file, 20 * 1024 * 1024))) {
+    return fail(res, 400, 'Choose valid JPG, PNG or WEBP product images only (maximum 20MB per image).');
   }
   const { count } = await supabase.from('product_images').select('*', { count: 'exact', head: true }).eq('product_id', product.id);
   if ((count || 0) + files.length > 10) return fail(res, 400, 'Maximum 10 images per product.');
   const uploaded = [];
   try {
-    for (const file of files) uploaded.push(await uploadToTelegram(file));
+    for (const file of files) uploaded.push(await uploadToTelegram(file, 20 * 1024 * 1024));
     const rows = uploaded.map((item, index) => ({
       product_id: product.id, telegram_message_id: item.messageId, file_id: item.fileId,
       image_url: telegramMediaUrl(item.fileId), sort_order: (count || 0) + index
