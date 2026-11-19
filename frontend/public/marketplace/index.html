@@ -336,6 +336,19 @@
         <!-- Right Social Feed Rail: posting stays on homepage, no admin page needed -->
         <aside class="home-promo-rail home-social-rail" id="homePromoRail" aria-label="សហគមន៍ 7inOne">
           <section class="home-social-feed" id="homeSocialFeed" aria-label="សហគមន៍ 7inOne">
+            <section class="social-stories-panel" aria-label="Stories 7inOne">
+              <div class="social-stories-heading"><b>Stories</b><small>បាត់បង់ក្រោយ 24 ម៉ោង</small></div>
+              <div class="social-stories-list" id="socialStoriesList">
+                <label class="social-story-create" for="socialStoryImage">
+                  <span class="social-story-create-icon">＋</span><b>បង្កើត Story</b>
+                </label>
+              </div>
+              <input id="socialStoryImage" type="file" accept="image/jpeg,image/png,image/webp" hidden />
+              <div class="social-story-preview hidden" id="socialStoryPreview">
+                <img id="socialStoryPreviewImage" alt="Story preview" />
+                <div><button type="button" id="socialStoryClearBtn">លុប</button><button type="button" id="socialStoryPublishBtn">ផុស Story</button></div>
+              </div>
+            </section>
             <section class="social-composer" aria-label="បង្កើតការផុស">
               <div class="social-rail-heading"><div><span class="social-kicker">7INONE COMMUNITY</span><h2>សហគមន៍អ្នកប្រើប្រាស់</h2></div><span class="social-live-dot"></span></div>
               <div class="social-compose-user"><span class="social-avatar" id="socialComposerAvatar">7</span><div><b id="socialComposerName">អ្នកប្រើប្រាស់</b><small>ចែករំលែករូបភាពជាមួយសហគមន៍</small></div></div>
@@ -349,6 +362,16 @@
             <div class="social-feed-heading"><h3>ការផុសថ្មីៗ</h3><button type="button" id="socialRefreshBtn" aria-label="ផ្ទុកការផុសឡើងវិញ">↻</button></div>
             <div class="social-feed-list" id="socialFeedList"><div class="social-feed-loading">កំពុងផ្ទុកការផុស...</div></div>
           </section>
+          <div class="social-story-viewer hidden" id="socialStoryViewer" role="dialog" aria-modal="true" aria-label="មើល Story">
+            <button type="button" class="social-story-viewer-close" id="socialStoryViewerClose" aria-label="បិទ">×</button>
+            <button type="button" class="social-story-viewer-nav prev" id="socialStoryViewerPrev" aria-label="Story មុន">‹</button>
+            <div class="social-story-viewer-content">
+              <div class="social-story-viewer-progress"><span id="socialStoryViewerProgress"></span></div>
+              <div class="social-story-viewer-author" id="socialStoryViewerAuthor"></div>
+              <img id="socialStoryViewerImage" alt="Story" />
+            </div>
+            <button type="button" class="social-story-viewer-nav next" id="socialStoryViewerNext" aria-label="Story បន្ទាប់">›</button>
+          </div>
           <div class="home-promo-slot tall" data-promo-slot="tall">
             <div class="home-promo-placeholder"><b>7inOne Promotion</b><span>ការផ្តល់ជូនពិសេស</span></div>
           </div>
