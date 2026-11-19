@@ -5672,18 +5672,20 @@ body > footer {
 }
 
 
-/* Profile header overlap fix:
-   keep the identity row below the cover and lift only the avatar. */
+/* Profile header: overlap only the account avatar over the cover, like the shop profile. */
 #view-profile .account-identity {
   margin-top: 0 !important;
   align-items: flex-end !important;
 }
 #view-profile .account-identity > div:first-child {
   align-items: flex-end !important;
+  position: relative;
 }
 #view-profile .account-identity > div:first-child > .relative {
-  margin-top: -48px !important;
-  z-index: 2;
+  position: relative;
+  z-index: 3;
+  margin-top: -64px !important;
+  transform: translateY(-8px);
 }
 #view-profile .account-identity > div:first-child > .min-w-0 {
   padding-top: 24px !important;
@@ -5694,7 +5696,8 @@ body > footer {
 }
 @media (max-width: 640px) {
   #view-profile .account-identity > div:first-child > .relative {
-    margin-top: -38px !important;
+    margin-top: -54px !important;
+    transform: translateY(-6px);
   }
   #view-profile .account-identity > div:first-child > .min-w-0 {
     padding-top: 20px !important;
