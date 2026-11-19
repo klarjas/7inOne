@@ -5069,3 +5069,12 @@ body > footer {
 @media(max-width:640px){
   #sellerChatProductContext{height:auto;min-height:42px;padding:8px 10px;border-bottom:1px solid #2A475E;overflow:visible}
 }
+
+
+/* Chat header navigation and clickable product inquiry cards */
+.seller-chat-header-back{flex:0 0 36px;width:36px;min-width:36px;padding:0;border-color:#2A475E;background:#203244;color:#C7D5E0}
+.seller-chat-header-back:hover{background:#2A475E;color:#66C0F4}
+.seller-chat-mute{width:36px;min-width:36px;padding:0;border-color:#2A475E;background:#203244;color:#C7D5E0;font-size:0}
+.seller-chat-mute:hover{background:#2A475E;color:#66C0F4}
+.seller-chat-product-card[data-chat-product-id]{cursor:pointer;transition:border-color .15s,background .15s}
+.seller-chat-product-card[data-chat-product-id]:hover,.seller-chat-product-card[data-chat-product-id]:focus-visible{border-color:#66C0F4;background:#203244;outline:none}
