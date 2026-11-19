@@ -2333,6 +2333,36 @@ app.patch('/api/me', authenticate, async (req, res) => {
   if (error) return fail(res, 400, 'Could not update profile');
   res.json({ data: { ...withoutStorageFields(data), avatar_url: normalizeMediaUrl(data.avatar_url) || mediaProxyUrl(data.avatar_file_id) || publicMediaUrl(data.avatar_path), cover_url: normalizeMediaUrl(data.cover_url) || mediaProxyUrl(data.cover_file_id) || publicMediaUrl(data.cover_path) } });
 });
+app.patch('/api/me/default-location', authenticate, async (req, res) => {
+  const value = req.body?.default_location;
+  let defaultLocation = null;
+  if (value !== null) {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) {
+      return fail(res, 400, 'Invalid default location.');
+    }
+    const province_code = clean(value.province_code, 8);
+    const district_code = clean(value.district_code, 8);
+    const commune_code = clean(value.commune_code, 8);
+    const village_code = clean(value.village_code, 8);
+    const location = clean(value.location, 500);
+    if (!/^\d{2}$/.test(province_code) || !/^\d{4}$/.test(district_code) ||
+        !/^\d{6}$/.test(commune_code) || !/^\d{8}$/.test(village_code) || !location) {
+      return fail(res, 400, 'សូមជ្រើសរើសទីតាំងត្រឹមត្រូវដល់កម្រិតភូមិ។');
+    }
+    defaultLocation = { province_code, district_code, commune_code, village_code, location };
+  }
+  const { data, error } = await supabase.from('profiles')
+    .update({ default_location: defaultLocation })
+    .eq('id', req.user.id)
+    .select('default_location')
+    .single();
+  if (error) {
+    console.error('Default location save failed:', error.message);
+    return fail(res, 500, 'មិនអាចរក្សាទុកទីតាំងលំនាំដើមបានទេ។ សូមពិនិត្យ SQL Migration។');
+  }
+  return res.json({ data: { default_location: data.default_location } });
+});
+
 app.post('/api/me/media', authenticate, upload.single('file'), async (req, res) => {
   try {
     const type = clean(req.body.type, 20);
