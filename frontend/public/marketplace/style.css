@@ -5080,16 +5080,16 @@ body > footer {
 .seller-chat-product-card[data-chat-product-id]:hover,.seller-chat-product-card[data-chat-product-id]:focus-visible{border-color:#66C0F4;background:#203244;outline:none}
 
 
-/* Seller Chat Header Actions - Isolated Steam Dark */
+/* Seller Chat Header Actions - transparent surface and subtle smoky hover */
 #sellerChatModal .seller-chat-header-actions {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 5px;
-  padding: 4px;
-  background: #101822;
-  border: 1px solid #2A475E;
-  border-radius: 10px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
   flex: 0 0 auto;
 }
 
@@ -5103,14 +5103,40 @@ body > footer {
   align-items: center;
   justify-content: center;
   background: transparent;
-  border: 0;
-  border-radius: 7px;
+  border: 1px solid transparent;
+  border-radius: 8px;
   color: #C7D5E0;
+  transition: background .16s ease, border-color .16s ease, color .16s ease;
 }
 
-#sellerChatModal .seller-chat-header-actions .seller-chat-header-icon:hover {
-  background: #2A475E;
-  color: #66C0F4;
+#sellerChatModal .seller-chat-header-actions .seller-chat-header-icon:hover,
+#sellerChatModal .seller-chat-header-actions .seller-chat-header-icon:focus-visible,
+#sellerChatModal .seller-chat-header-back:hover,
+#sellerChatModal .seller-chat-mute:hover,
+#sellerChatModal .seller-chat-attach:hover,
+#sellerChatModal #sellerChatProductContext button:hover {
+  background: rgba(143, 152, 160, .07);
+  border-color: rgba(143, 152, 160, .38);
+  color: #D5DCE2;
+  box-shadow: none;
+  outline-color: rgba(143, 152, 160, .38);
+}
+
+#sellerChatModal .seller-chat-inbox-item:hover,
+#sellerChatModal #sellerChatInboxList .seller-chat-inbox-item:hover {
+  background: rgba(143, 152, 160, .055);
+  border-color: rgba(143, 152, 160, .32);
+  box-shadow: none;
+}
+
+#sellerChatModal .seller-chat-product-card[data-chat-product-id]:hover,
+#sellerChatModal .seller-chat-product-card[data-chat-product-id]:focus-visible,
+#sellerChatModal .seller-chat-product-link:hover,
+#sellerChatModal .seller-chat-product-link:focus-visible {
+  background: rgba(143, 152, 160, .055);
+  border-color: rgba(143, 152, 160, .38);
+  box-shadow: none;
+  outline-color: rgba(143, 152, 160, .38);
 }
 
 #sellerChatModal .seller-chat-header-actions .seller-chat-header-icon svg {
