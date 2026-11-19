@@ -1249,7 +1249,7 @@ app.get('/api/marketplace/listings', async (req, res) => {
       })());
     }
     if (type === 'all' || type === 'job') tasks.push((async () => {
-      const fields = 'id,user_id,title,company_name,description,short_description,category,subcategory,detail_type,specifications,location,vacancies,salary_min,salary_max,salary_period,employment_type,work_schedule,experience,education,skills,languages,benefits,image_file_id,image_mime_type,status,expires_at,created_at';
+      const fields = 'id,user_id,title,company_name,description,short_description,category,subcategory,detail_type,specifications,location,vacancies,salary_min,salary_max,salary_period,employment_type,work_schedule,experience,education,skills,languages,benefits,image_file_id,image_mime_type,image_gallery,status,expires_at,created_at';
       const legacyFields = 'id,user_id,title,company_name,description,short_description,category,subcategory,location,vacancies,salary_min,salary_max,salary_period,employment_type,work_schedule,experience,education,skills,languages,benefits,image_file_id,image_mime_type,status,expires_at,created_at';
       const runJobs = async (legacy = false) => {
         let query = supabase.from('jobs').select(legacy ? legacyFields : fields)
@@ -1264,7 +1264,7 @@ app.get('/api/marketplace/listings', async (req, res) => {
       if (result.error && (result.error.code === '42703' || /detail_type|specifications/i.test(result.error.message || ''))) result = await runJobs(true);
       if(result.error && ['42P01','PGRST205'].includes(result.error.code)) return [];
       if(result.error) throw result.error;
-      return (result.data||[]).map(row=>({...row,detail_type:row.detail_type||'',specifications:row.specifications||{},listing_type:'job',image_url:row.image_file_id?mediaProxyUrl(row.image_file_id,row.image_mime_type):null,price_label:[row.salary_min,row.salary_max].filter(v=>v!=null).join(' - ')||'ចរចា',listing_subtitle:row.company_name||'និយោជក'}));
+      return (result.data||[]).map(row=>({...row,detail_type:row.detail_type||'',specifications:row.specifications||{},listing_type:'job',image_url:row.image_file_id?mediaProxyUrl(row.image_file_id,row.image_mime_type):null,image_urls:(Array.isArray(row.image_gallery)&&row.image_gallery.length?row.image_gallery.map(item=>mediaProxyUrl(item.file_id,item.mime_type)):row.image_file_id?[mediaProxyUrl(row.image_file_id,row.image_mime_type)]:[]),price_label:[row.salary_min,row.salary_max].filter(v=>v!=null).join(' - ')||'ចរចា',listing_subtitle:row.company_name||'និយោជក'}));
     })());
     if (type === 'all' || type === 'real_estate') {
       if (type === 'all' || propertyType === 'all' || propertyType === 'house_rent' || propertyType === 'room_rent') tasks.push((async () => {
@@ -1300,14 +1300,14 @@ app.get('/api/marketplace/listings', async (req, res) => {
     }
     // New detailed property listings use their own table; legacy house/rental/land tables remain untouched.
     if (type === 'all' || type === 'real_estate') tasks.push((async () => {
-      let query = supabase.from('property_listings').select('id,user_id,title,description,short_description,category,subcategory,detail_type,location,address,price,price_period,area_sqm,bedrooms,bathrooms,specifications,image_file_id,image_mime_type,status,created_at')
+      let query = supabase.from('property_listings').select('id,user_id,title,description,short_description,category,subcategory,detail_type,location,address,price,price_period,area_sqm,bedrooms,bathrooms,specifications,image_file_id,image_mime_type,image_gallery,status,created_at')
         .eq('status','active').order('created_at',{ascending:false}).limit(limit);
       if (q) query = query.or(`title.ilike.%${q}%,description.ilike.%${q}%,location.ilike.%${q}%`);
       if (propertyType !== 'all') query = query.eq('category', propertyType);
       const { data, error } = await query;
       if (error && ['42P01','PGRST205'].includes(error.code)) return [];
       if (error) throw error;
-      return (data || []).map(row => ({ ...row, listing_type:'real_estate', real_estate_type:row.category, image_url:row.image_file_id?mediaProxyUrl(row.image_file_id,row.image_mime_type):null, price_label:row.price, listing_subtitle:row.subcategory || row.detail_type || 'អចលនទ្រព្យ' }));
+      return (data || []).map(row => ({ ...row, listing_type:'real_estate', real_estate_type:row.category, image_url:row.image_file_id?mediaProxyUrl(row.image_file_id,row.image_mime_type):null, image_urls:(Array.isArray(row.image_gallery)&&row.image_gallery.length?row.image_gallery.map(item=>mediaProxyUrl(item.file_id,item.mime_type)):row.image_file_id?[mediaProxyUrl(row.image_file_id,row.image_mime_type)]:[]), price_label:row.price, listing_subtitle:row.subcategory || row.detail_type || 'អចលនទ្រព្យ' }));
     })());
     const groups=await Promise.all(tasks);
     const data=groups.flat().sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0)).slice(0,limit);
@@ -1325,22 +1325,23 @@ const PROPERTY_CATEGORIES = new Set(['house_sale','house_rent','condo_sale','apa
 const listingText = (value, max = 5000) => clean(value, max);
 const listingObject = value => { if (value && typeof value === 'object' && !Array.isArray(value)) return value; if (typeof value === 'string') { try { const parsed = JSON.parse(value); return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {}; } catch {} } return {}; };
 const listingArray = value => { if (Array.isArray(value)) return value; if (typeof value === 'string') { try { const parsed = JSON.parse(value); return Array.isArray(parsed) ? parsed : []; } catch {} } return []; };
-app.post('/api/jobs', authenticate, upload.single('image'), async (req, res) => {
+app.post('/api/jobs', authenticate, upload.fields([{name:'images',maxCount:10},{name:'image',maxCount:1}]), async (req, res) => {
   if (!db(res)) return;
-  const body = req.body || {};
-  const title = listingText(body.title, 160);
-  const category = listingText(body.category, 40).toLowerCase();
-  const salaryMin = body.salary_min === '' || body.salary_min == null ? null : Number(body.salary_min);
-  const salaryMax = body.salary_max === '' || body.salary_max == null ? null : Number(body.salary_max);
-  const vacancies = Number(body.vacancies || 1);
-  if (title.length < 2 || !JOB_CATEGORIES.has(category)) return fail(res, 400, 'សូមបំពេញចំណងជើង និងប្រភេទការងារត្រឹមត្រូវ។');
-  if (!Number.isInteger(vacancies) || vacancies < 1 || (salaryMin != null && (!Number.isFinite(salaryMin) || salaryMin < 0)) || (salaryMax != null && (!Number.isFinite(salaryMax) || salaryMax < 0)) || (salaryMin != null && salaryMax != null && salaryMax < salaryMin)) return fail(res, 400, 'ព័ត៌មានប្រាក់ខែ ឬចំនួនបុគ្គលិកមិនត្រឹមត្រូវ។');
-  const image = req.file;
-  if (image && imageUploadError(image, 8 * 1024 * 1024)) return fail(res, 400, imageUploadError(image, 8 * 1024 * 1024));
-  let uploaded = null;
-  try {
-    if (image) uploaded = await uploadToTelegram(image);
-    const row = {
+  const body=req.body||{};
+  const title=listingText(body.title,160);
+  const category=listingText(body.category,40).toLowerCase();
+  const salaryMin=body.salary_min===''||body.salary_min==null?null:Number(body.salary_min);
+  const salaryMax=body.salary_max===''||body.salary_max==null?null:Number(body.salary_max);
+  const vacancies=Number(body.vacancies||1);
+  if(title.length<2||!JOB_CATEGORIES.has(category))return fail(res,400,'សូមបំពេញចំណងជើង និងប្រភេទការងារត្រឹមត្រូវ។');
+  if(!Number.isInteger(vacancies)||vacancies<1||(salaryMin!=null&&(!Number.isFinite(salaryMin)||salaryMin<0))||(salaryMax!=null&&(!Number.isFinite(salaryMax)||salaryMax<0))||(salaryMin!=null&&salaryMax!=null&&salaryMax<salaryMin))return fail(res,400,'ព័ត៌មានប្រាក់ខែ ឬចំនួនបុគ្គលិកមិនត្រឹមត្រូវ។');
+  const images=[...(req.files?.images||[]),...(req.files?.image||[])].slice(0,10);
+  for(const image of images){const problem=imageUploadError(image,8*1024*1024);if(problem)return fail(res,400,problem);}
+  const uploaded=[];
+  try{
+    for(const image of images)uploaded.push(await uploadToTelegram(image));
+    const primary=uploaded[0]||null;
+    const row={
       user_id:req.user.id,title,company_name:listingText(body.company_name,160),description:listingText(body.description,5000),
       short_description:listingText(body.short_description,300),category,subcategory:listingText(body.subcategory,100),
       detail_type:listingText(body.detail_type,120),location:listingText(body.location,120),
@@ -1353,32 +1354,35 @@ app.post('/api/jobs', authenticate, upload.single('image'), async (req, res) => 
       languages:listingArray(body.languages).map(v=>listingText(v,60)).filter(Boolean).slice(0,20),
       benefits:listingArray(body.benefits).map(v=>listingText(v,120)).filter(Boolean).slice(0,30),
       specifications:listingObject(body.specifications),
-      image_file_id:uploaded?.fileId||null,image_message_id:uploaded?.messageId||null,image_mime_type:uploaded?.mimeType||null,status:'active'
+      image_file_id:primary?.fileId||null,image_message_id:primary?.messageId||null,image_mime_type:primary?.mimeType||null,
+      image_gallery:uploaded.map(item=>({file_id:item.fileId,message_id:item.messageId,mime_type:item.mimeType})),status:'active'
     };
     const {data,error}=await supabase.from('jobs').insert(row).select().single();
-    if(error) throw error;
-    return res.status(201).json({data:{...data,image_url:data.image_file_id?mediaProxyUrl(data.image_file_id,data.image_mime_type):null}});
-  } catch(error) {
-    if(uploaded?.messageId) await deleteTelegramMessage(uploaded.messageId);
+    if(error)throw error;
+    return res.status(201).json({data:{...data,image_url:primary?mediaProxyUrl(primary.fileId,primary.mimeType):null,image_urls:uploaded.map(item=>mediaProxyUrl(item.fileId,item.mimeType))}});
+  }catch(error){
+    for(const item of uploaded)if(item?.messageId)await deleteTelegramMessage(item.messageId);
     console.error('Job listing create failed:',error.message);
     return fail(res,400,'មិនអាចបង្កើតប្រកាសការងារបានទេ។ សូមពិនិត្យ Database migration និងព័ត៌មានដែលបានបំពេញ។');
   }
 });
-app.post('/api/real-estate', authenticate, upload.single('image'), async (req, res) => {
-  if (!db(res)) return;
+app.post('/api/real-estate', authenticate, upload.fields([{name:'images',maxCount:10},{name:'image',maxCount:1}]), async (req, res) => {
+  if(!db(res))return;
   const body=req.body||{};
   const title=listingText(body.title,160);
   const category=listingText(body.category,40).toLowerCase();
   const price=body.price===''||body.price==null?null:Number(body.price);
   const area=body.area_sqm===''||body.area_sqm==null?null:Number(body.area_sqm);
-  if(title.length<2||!PROPERTY_CATEGORIES.has(category)) return fail(res,400,'សូមបំពេញចំណងជើង និងប្រភេទអចលនទ្រព្យត្រឹមត្រូវ។');
-  if(price!=null&&(!Number.isFinite(price)||price<0)) return fail(res,400,'តម្លៃមិនត្រឹមត្រូវ។');
-  if(area!=null&&(!Number.isFinite(area)||area<0)) return fail(res,400,'ទំហំផ្ទៃដីមិនត្រឹមត្រូវ។');
-  if(['house_sale','house_rent','condo_sale','apartment_rent','land','land_rent','commercial_sale','commercial_rent','room_rent'].includes(category)&&price==null) return fail(res,400,'សូមបញ្ចូលតម្លៃលក់ ឬជួល។');
-  if(req.file&&imageUploadError(req.file,8*1024*1024)) return fail(res,400,imageUploadError(req.file,8*1024*1024));
-  let uploaded=null;
-  try {
-    if(req.file) uploaded=await uploadToTelegram(req.file);
+  if(title.length<2||!PROPERTY_CATEGORIES.has(category))return fail(res,400,'សូមបំពេញចំណងជើង និងប្រភេទអចលនទ្រព្យត្រឹមត្រូវ។');
+  if(price!=null&&(!Number.isFinite(price)||price<0))return fail(res,400,'តម្លៃមិនត្រឹមត្រូវ។');
+  if(area!=null&&(!Number.isFinite(area)||area<0))return fail(res,400,'ទំហំផ្ទៃដីមិនត្រឹមត្រូវ។');
+  if(['house_sale','house_rent','condo_sale','apartment_rent','land','land_rent','commercial_sale','commercial_rent','room_rent'].includes(category)&&price==null)return fail(res,400,'សូមបញ្ចូលតម្លៃលក់ ឬជួល។');
+  const images=[...(req.files?.images||[]),...(req.files?.image||[])].slice(0,10);
+  for(const image of images){const problem=imageUploadError(image,8*1024*1024);if(problem)return fail(res,400,problem);}
+  const uploaded=[];
+  try{
+    for(const image of images)uploaded.push(await uploadToTelegram(image));
+    const primary=uploaded[0]||null;
     const row={
       user_id:req.user.id,title,description:listingText(body.description,5000),short_description:listingText(body.short_description,300),
       category,subcategory:listingText(body.subcategory,120),detail_type:listingText(body.detail_type,120),
@@ -1389,15 +1393,16 @@ app.post('/api/real-estate', authenticate, upload.single('image'), async (req, r
       area_sqm:area,bedrooms:body.bedrooms===''||body.bedrooms==null?null:Math.max(0,Number(body.bedrooms)),
       bathrooms:body.bathrooms===''||body.bathrooms==null?null:Math.max(0,Number(body.bathrooms)),
       specifications:listingObject(body.specifications),
-      image_file_id:uploaded?.fileId||null,image_message_id:uploaded?.messageId||null,image_mime_type:uploaded?.mimeType||null,status:'active'
+      image_file_id:primary?.fileId||null,image_message_id:primary?.messageId||null,image_mime_type:primary?.mimeType||null,
+      image_gallery:uploaded.map(item=>({file_id:item.fileId,message_id:item.messageId,mime_type:item.mimeType})),status:'active'
     };
     const {data,error}=await supabase.from('property_listings').insert(row).select().single();
-    if(error) throw error;
-    return res.status(201).json({data:{...data,image_url:data.image_file_id?mediaProxyUrl(data.image_file_id,data.image_mime_type):null}});
-  } catch(error) {
-    if(uploaded?.messageId) await deleteTelegramMessage(uploaded.messageId);
+    if(error)throw error;
+    return res.status(201).json({data:{...data,image_url:primary?mediaProxyUrl(primary.fileId,primary.mimeType):null,image_urls:uploaded.map(item=>mediaProxyUrl(item.fileId,item.mimeType))}});
+  }catch(error){
+    for(const item of uploaded)if(item?.messageId)await deleteTelegramMessage(item.messageId);
     console.error('Real-estate listing create failed:',error.message);
-    return fail(res,400,'មិនអាចបង្កើតប្រកាសអចលនទ្រព្យបានទេ។ សូមពិនិត្យ Database migration និងព័ត៌មានដែលបានបំពេញ។');
+    return fail(res,400,'មិនអាចបង្ហោះអចលនទ្រព្យបានទេ។ សូមពិនិត្យ Database migration និងព័ត៌មានដែលបានបំពេញ។');
   }
 });
 
