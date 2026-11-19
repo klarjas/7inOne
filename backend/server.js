@@ -973,8 +973,9 @@ app.get('/api/marketplace/listings', async (req, res) => {
         let query = supabase.from('products').select(legacy ? legacyFields : productFields)
           .eq('status', 'active').in('vendors.status', ['approved','pending','rejected']).gt('stock', 0)
           .order('created_at', { ascending: false }).limit(limit);
-        query = legacy ? query.gte('created_at', cutoff) : query.or(`renewed_at.gte.${cutoff},and(renewed_at.is.null,created_at.gte.${cutoff})`);
-        if (q) query = query.or(`title.ilike.%${q}%,description.ilike.%${q}%,location.ilike.%${q}%`);
+        const filters = [legacy ? `created_at.gte.${cutoff}` : `or(renewed_at.gte.${cutoff},and(renewed_at.is.null,created_at.gte.${cutoff}))`];
+        if (q) filters.push(`or(title.ilike.%${q}%,description.ilike.%${q}%,location.ilike.%${q}%)`);
+        query = query.or(`and(${filters.join(',')})`);
         if (category) query = query.eq('category', category);
         return query;
       };
@@ -991,10 +992,14 @@ app.get('/api/marketplace/listings', async (req, res) => {
     }
     if (type === 'all' || type === 'job') tasks.push((async () => {
       let query = supabase.from('jobs').select('id,user_id,title,company_name,description,short_description,category,subcategory,location,vacancies,salary_min,salary_max,salary_period,employment_type,work_schedule,experience,education,skills,languages,benefits,image_file_id,image_mime_type,status,expires_at,created_at')
-        .eq('status','active').or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`).order('created_at',{ascending:false}).limit(limit);
-      if(q) query=query.or(`title.ilike.%${q}%,company_name.ilike.%${q}%,location.ilike.%${q}%`);
+        .eq('status','active').order('created_at',{ascending:false}).limit(limit);
+      const filters=[`or(expires_at.is.null,expires_at.gt.${new Date().toISOString()})`];
+      if(q) filters.push(`or(title.ilike.%${q}%,company_name.ilike.%${q}%,location.ilike.%${q}%)`);
+      query=query.or(`and(${filters.join(',')})`);
       if(category) query=query.eq('category',category);
-      const {data,error}=await query; if(error) throw error;
+      const {data,error}=await query;
+      if(error && ['42P01','PGRST205'].includes(error.code)) return [];
+      if(error) throw error;
       return (data||[]).map(row=>({...row,listing_type:'job',image_url:row.image_file_id?mediaProxyUrl(row.image_file_id,row.image_mime_type):null,price_label:[row.salary_min,row.salary_max].filter(v=>v!=null).join(' - ')||'ចរចា',listing_subtitle:row.company_name||'និយោជក'}));
     })());
     if (type === 'all' || type === 'rent') tasks.push((async () => {
@@ -1002,7 +1007,9 @@ app.get('/api/marketplace/listings', async (req, res) => {
         .eq('status','active').order('created_at',{ascending:false}).limit(limit);
       if(q) query=query.or(`title.ilike.%${q}%,description.ilike.%${q}%,location.ilike.%${q}%`);
       if(category) query=query.eq('category',category);
-      const {data,error}=await query; if(error) throw error;
+      const {data,error}=await query;
+      if(error && ['42P01','PGRST205'].includes(error.code)) return [];
+      if(error) throw error;
       return (data||[]).map(row=>({...row,listing_type:'rent',image_url:row.image_file_id?mediaProxyUrl(row.image_file_id,row.image_mime_type):null,price_label:row.rent_amount,listing_subtitle:row.property_type||'អចលនទ្រព្យជួល'}));
     })());
     if (type === 'all' || type === 'land') tasks.push((async () => {
@@ -1010,7 +1017,9 @@ app.get('/api/marketplace/listings', async (req, res) => {
         .eq('status','active').order('created_at',{ascending:false}).limit(limit);
       if(q) query=query.or(`title.ilike.%${q}%,description.ilike.%${q}%,location.ilike.%${q}%`);
       if(category) query=query.eq('category',category);
-      const {data,error}=await query; if(error) throw error;
+      const {data,error}=await query;
+      if(error && ['42P01','PGRST205'].includes(error.code)) return [];
+      if(error) throw error;
       return (data||[]).map(row=>({...row,listing_type:'land',image_url:row.image_file_id?mediaProxyUrl(row.image_file_id,row.image_mime_type):null,price_label:row.price,listing_subtitle:row.land_type||'ដីលក់'}));
     })());
     const groups=await Promise.all(tasks);
