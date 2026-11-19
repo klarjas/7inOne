@@ -4261,18 +4261,36 @@ body > footer {
   border-color: rgba(102, 192, 244, .35) !important;
 }
 
-/* Top profile action button — use the same gradient as its hover state */
+/* Top profile action button — reset legacy utility styles, then apply Steam Dark styling */
 #view-profile #profileApplyTop {
-  background: linear-gradient(135deg, #316282, #3D83B5) !important;
-  border: 1px solid #66C0F4 !important;
-  color: #FFFFFF !important;
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: .25rem;
+  padding: .625rem 1.25rem;
+  border: 1px solid #66C0F4;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #316282, #3D83B5);
+  color: #FFFFFF;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.5;
+  text-align: center;
+  cursor: pointer;
   box-shadow: 0 6px 18px rgba(43, 116, 184, .18);
   transition: background .2s ease, border-color .2s ease, transform .2s ease;
 }
 #view-profile #profileApplyTop:hover {
-  background: linear-gradient(135deg, #3D83B5, #66C0F4) !important;
-  border-color: #8AD2FF !important;
+  background: linear-gradient(135deg, #3D83B5, #66C0F4);
+  border-color: #8AD2FF;
 }
 #view-profile #profileApplyTop:active {
   transform: scale(.985);
+}
+#view-profile #profileApplyTop:focus-visible {
+  outline: 2px solid #66C0F4;
+  outline-offset: 3px;
 }
