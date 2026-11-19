@@ -1026,9 +1026,21 @@ function syncHomeHeroImagesFromProducts() {
   }
 }
 
+function updateMarketplaceCategoryHeading() {
+  const titles = {
+    all: 'ប្រភេទទាំងអស់',
+    product: 'ប្រភេទផលិតផល',
+    job: 'ប្រភេទការងារ',
+    real_estate: 'ប្រភេទអចលនទ្រព្យ'
+  };
+  const heading = $('marketplaceCategoryHeading');
+  if (heading) heading.textContent = titles[state.activeListingType] || titles.all;
+}
+
 function setCategory(category) {
   state.activeCategory = category;
   if (category !== 'all') state.activeListingType = 'product';
+  updateMarketplaceCategoryHeading();
   $('searchCategory').value = category;
   document.querySelectorAll('[data-category]').forEach((b) => b.classList.toggle('active', b.dataset.category === category));
   document.querySelectorAll('[data-listing-type]').forEach((b) => b.classList.toggle('active', b.dataset.listingType === state.activeListingType));
@@ -1039,6 +1051,7 @@ function setListingType(type) {
   state.activeListingType = ['all','product','job','real_estate'].includes(type) ? type : 'all';
   state.activeCategory = 'all';
   state.activePropertyType = 'all';
+  updateMarketplaceCategoryHeading();
   $('searchCategory').value = 'all';
   document.querySelectorAll('[data-category]').forEach((b) => b.classList.toggle('active', b.dataset.category === 'all'));
   document.querySelectorAll('[data-listing-type]').forEach((b) => b.classList.toggle('active', b.dataset.listingType === state.activeListingType));
@@ -2346,6 +2359,7 @@ function bindEvents() {
     state.searchTerm = $('searchInput').value.trim();
     state.activeCategory = $('searchCategory').value;
     if (state.activeCategory !== 'all') state.activeListingType = 'product';
+    updateMarketplaceCategoryHeading();
     document.querySelectorAll('[data-listing-type]').forEach((b) => b.classList.toggle('active', b.dataset.listingType === state.activeListingType));
     void loadProducts();
   });
