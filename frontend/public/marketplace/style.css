@@ -5985,3 +5985,24 @@ body > footer {
   #view-product .product-detail-description .listing-detail-list > li > span,
   #view-product .product-detail-description .listing-detail-list > li > strong { font-size: 12px; }
 }
+
+
+/* Marketplace poster identity shared across every listing type */
+.listing-poster-row{display:flex;align-items:center;gap:7px;min-width:0;margin-top:9px}
+.listing-poster-avatar{display:grid;place-items:center;width:25px;height:25px;flex:0 0 25px;overflow:hidden;border-radius:50%;background:#203244;color:#C7D5E0;font-size:10px;font-weight:800}
+.listing-poster-avatar img{display:block;width:100%;height:100%;object-fit:cover;border-radius:50%}
+.listing-poster-name{min-width:0;overflow:hidden;color:#C7D5E0;font-size:10px;font-weight:700;text-overflow:ellipsis;white-space:nowrap}
+.listing-poster-kind{min-width:0;margin-left:auto;overflow:hidden;color:#8F98A0;font-size:9px;text-overflow:ellipsis;white-space:nowrap}
+.jobs-result-poster{display:flex;align-items:center;gap:6px;min-width:0;margin-bottom:2px}
+.jobs-result-poster .listing-poster-avatar{width:21px;height:21px;flex-basis:21px;font-size:9px}
+.jobs-result-poster b{min-width:0;overflow:hidden;color:#B7C5D8!important;font-size:8px!important;font-weight:700!important;text-overflow:ellipsis;white-space:nowrap}
+.jobs-result-poster time{margin-left:auto;flex:0 0 auto;color:#8F98A0;font-size:8px}
+.listing-poster-detail{display:flex;align-items:center;gap:12px;min-width:0;margin:18px 0;padding:13px 0;border-top:1px solid #2A475E;border-bottom:1px solid #2A475E}
+.listing-poster-detail-avatar{display:grid;place-items:center;width:44px;height:44px;flex:0 0 44px;overflow:hidden;border-radius:50%;background:#203244;color:#C7D5E0;font-size:15px;font-weight:800}
+.listing-poster-detail-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.listing-poster-detail-copy{display:flex;min-width:0;flex:1;flex-direction:column;gap:3px}
+.listing-poster-detail-copy small,.listing-poster-detail-copy time{color:#8F98A0;font-size:10px}
+.listing-poster-detail-copy b{overflow:hidden;color:#C7D5E0;font-size:13px;text-overflow:ellipsis;white-space:nowrap}
+.listing-poster-chat{display:inline-flex;flex:0 0 auto;align-items:center;justify-content:center;gap:7px;padding:9px 13px;border:1px solid #344256;border-radius:999px;background:#202D3D;color:#B7C5D8;font-size:11px;font-weight:750;transition:background .18s ease,border-color .18s ease}
+.listing-poster-chat:hover{border-color:#66C0F4;background:#203244;color:#66C0F4}
+@media(max-width:520px){.listing-poster-detail{gap:9px}.listing-poster-detail-avatar{width:38px;height:38px;flex-basis:38px}.listing-poster-chat{gap:5px;padding:8px 10px;font-size:10px}}
