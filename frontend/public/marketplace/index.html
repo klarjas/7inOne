@@ -294,40 +294,11 @@
 
         <!-- Center Content -->
         <div class="home-main-content">
-          <!-- Hero & Bento Showcase -->
-          <section class="market-hero">
-            <div class="hc hero-copy">
-              <p class="live"><i></i><span id="heroBadge">ផ្សារអនឡាញសម្រាប់អ្នកទាំងអស់គ្នា</span></p>
-              <h1 id="heroTitle">ទិញលក់ងាយៗ នៅជិតអ្នក</h1>
-              <p class="sub" id="heroSubtitle">ស្វែងរកទំនិញដែលអ្នកស្រឡាញ់ ឬដាក់លក់របស់ដែលអ្នកមិនប្រើ។ ភ្ជាប់អ្នកទិញ និងអ្នកលក់នៅទូទាំងប្រទេសកម្ពុជា។</p>
-              <div class="tags">
-                <span>ស្វែងរកពេញនិយម</span>
-                <button class="tag-btn" type="button" data-tag="iPhone">iPhone</button>
-                <button class="tag-btn" type="button" data-tag="Toyota">Toyota</button>
-                <button class="tag-btn" type="button" data-tag="ខុនដូ">ខុនដូ</button>
-                <button class="tag-btn" type="button" data-tag="កុំព្យូទ័រ">កុំព្យូទ័រ</button>
-              </div>
-              <div class="hero-trust-points">
-                <span><i id="heroShield"></i> អ្នកលក់បានផ្ទៀងផ្ទាត់</span>
-                <span><i id="heroUsers"></i> សហគមន៍អ្នកទិញលក់</span>
-              </div>
-              <button class="go" id="heroPostBtn" type="button">ចាប់ផ្តើមទិញលក់</button>
-            </div>
-
-            <div class="hero-bento hidden md:grid">
-              <div class="hero-tile t1" id="heroImageTile1">
-                <img class="hero-image hidden" id="heroImage1" alt="រូបភាព Hero 1" />
-                <svg class="hero-placeholder" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="1.8"></circle><path d="M21 16l-5-5-8 8"></path></svg>
-              </div>
-              <div class="hero-tile t2" id="heroImageTile2">
-                <img class="hero-image hidden" id="heroImage2" alt="រូបភាព Hero 2" />
-                <svg class="hero-placeholder" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="1.8"></circle><path d="M21 16l-5-5-8 8"></path></svg>
-              </div>
-              <div class="hero-tile t3" id="heroImageTile3">
-                <img class="hero-image hidden" id="heroImage3" alt="រូបភាព Hero 3" />
-                <svg class="hero-placeholder" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="1.8"></circle><path d="M21 16l-5-5-8 8"></path></svg>
-              </div>
-            </div>
+          <!-- Verified Seller YouTube Shorts -->
+          <section id="homeVendorMediaSection" class="home-vendor-media hidden" aria-label="YouTube Shorts ពីអ្នកលក់ដែលបានផ្ទៀងផ្ទាត់">
+            <div class="home-vendor-media-heading"><div><p class="home-vendor-media-kicker">7INONE SHORTS</p><h2>YouTube Shorts ពីអ្នកលក់ផ្ទៀងផ្ទាត់</h2><p class="home-vendor-media-subtitle">វីដេអូខ្លីៗពីហាងដែលបានផ្ទៀងផ្ទាត់</p></div>
+              <div class="home-vendor-media-controls"><button type="button" id="homeVendorMediaPrev" aria-label="វីដេអូមុន">‹</button><button type="button" id="homeVendorMediaNext" aria-label="វីដេអូបន្ទាប់">›</button></div></div>
+            <div id="homeVendorMediaList" class="home-vendor-media-list" tabindex="0" aria-label="អូសដើម្បីមើល Shorts ផ្សេងៗ"></div>
           </section>
 
           <!-- Category Dock -->
@@ -357,18 +328,6 @@
               <span class="lb">គ្រឿងសង្ហារិម</span>
             </button>
           </nav>
-
-          <!-- Live & Video Strip -->
-          <section id="homeVendorMediaSection" class="home-vendor-media hidden" aria-label="Live និងវីដេអូពីហាង">
-            <div class="home-vendor-media-heading">
-              <div>
-                <p class="home-vendor-media-kicker">SHOP LIVE &amp; VIDEO</p>
-                <h2>Live / វីដេអូពីហាង</h2>
-              </div>
-              <span>ពីម្ចាស់ហាង</span>
-            </div>
-            <div id="homeVendorMediaList" class="home-vendor-media-list"></div>
-          </section>
 
           <!-- Listing Header -->
           <div class="market-listing-header">
@@ -755,21 +714,15 @@
 
             <!-- Live / Video Media Tab -->
             <section class="seller-tab-panel" id="sellerTabMedia" data-seller-panel="media" hidden>
+              <div id="sellerMediaVerifiedGate" class="seller-media-verified-gate hidden">មុខងារនេះអាចប្រើបានតែអ្នកលក់ដែលបានផ្ទៀងផ្ទាត់ប៉ុណ្ណោះ។</div>
               <form id="sellerMediaForm" class="seller-media-form">
-                <label class="block"><span class="label">ប្រភេទមាតិកា</span>
-                  <select id="sellerMediaType" class="field">
-                    <option value="live">Live ផ្សាយផ្ទាល់</option>
-                    <option value="video">Video ធម្មតា</option>
-                  </select>
-                </label>
-                <label class="block"><span class="label">Facebook / YouTube Link</span><input id="sellerMediaUrl" class="field" type="url" maxlength="1000" placeholder="https://..." required /></label>
-                <div class="flex flex-wrap items-center justify-between gap-2">
-                  <span id="sellerMediaStatus" class="text-[11px] text-slate-500">មិនទាន់មាន Link</span>
-                  <div class="flex gap-2">
-                    <button type="button" id="sellerMediaClose" class="hidden rounded-full border border-rose-200 bg-rose-50 px-4 py-2 text-[11px] font-bold text-rose-700">បិទ Live និងលុប Link</button>
-                    <button id="sellerMediaSave" type="submit" class="brand-gradient rounded-full px-5 py-2 text-[11px] font-bold text-white">រក្សាទុក និងបង្ហាញ</button>
-                  </div>
-                </div>
+                <label class="block"><span class="label">ប្រភេទមាតិកា</span><select id="sellerMediaType" class="field"><option value="video">YouTube Shorts</option><option value="live">Live ផ្សាយផ្ទាល់</option></select></label>
+                <label class="block"><span class="label">YouTube Shorts Link</span><input id="sellerMediaUrl" class="field" type="url" maxlength="1000" placeholder="https://www.youtube.com/shorts/..." required /></label>
+                <small class="text-[10px] text-slate-500">ដាក់ Link YouTube Shorts របស់ហាងអ្នក។ វីដេអូនឹងបង្ហាញជាទម្រង់ 9:16 នៅទំព័រដើម។</small>
+                <div class="flex flex-wrap items-center justify-between gap-2"><span id="sellerMediaStatus" class="text-[11px] text-slate-500">មិនទាន់មាន Link</span><div class="flex gap-2">
+                  <button type="button" id="sellerMediaClose" class="hidden rounded-full border border-rose-200 bg-rose-50 px-4 py-2 text-[11px] font-bold text-rose-700">លុប Shorts / Live Link</button>
+                  <button id="sellerMediaSave" type="submit" class="brand-gradient rounded-full px-5 py-2 text-[11px] font-bold text-white">រក្សាទុក និងបង្ហាញ</button>
+                </div></div>
               </form>
             </section>
           </div>
