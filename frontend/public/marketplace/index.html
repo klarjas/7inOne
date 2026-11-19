@@ -203,6 +203,14 @@
       <div class="home-layout-shell amazon-store-body shell">
         <!-- Amazon-style filters: existing category and sort actions are preserved. -->
         <aside class="home-sidebar amazon-filter-sidebar" aria-label="តម្រងទំនិញ">
+          <section class="store-filter-group marketplace-type-filter">
+            <h3>ប្រភេទប្រកាស</h3>
+            <button class="store-filter-link active" type="button" data-listing-type="all">ទាំងអស់</button>
+            <button class="store-filter-link" type="button" data-listing-type="product">ផលិតផល</button>
+            <button class="store-filter-link" type="button" data-listing-type="job">ការងារ</button>
+            <button class="store-filter-link" type="button" data-listing-type="rent">ផ្ទះ / បន្ទប់ជួល</button>
+            <button class="store-filter-link" type="button" data-listing-type="land">ដីលក់</button>
+          </section>
           <section class="store-filter-group">
             <h3>ប្រភេទទំនិញ</h3>
             <button class="store-filter-link active" type="button" data-category="all">ទំនិញទាំងអស់</button>
@@ -1097,5 +1105,11 @@
   <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./app.js" defer></script>
-</body>
+<div id="marketplaceListingModal" class="marketplace-detail-overlay hidden" aria-hidden="true">
+    <div class="marketplace-detail-dialog" role="dialog" aria-modal="true" aria-label="ព័ត៌មានប្រកាស">
+      <button type="button" class="marketplace-detail-close" data-close-marketplace-detail aria-label="បិទ">×</button>
+      <div id="marketplaceListingDetail"></div>
+    </div>
+  </div>
+  </body>
 </html>
