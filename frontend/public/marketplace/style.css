@@ -6054,3 +6054,23 @@ body > footer {
 #view-seller .seller-media-item-info small{color:#8F98A0}
 #view-seller .seller-media-item-actions button{border-color:#3B5268;background:#101822;color:#C7D5E0}
 #view-seller .seller-media-item-actions button[data-media-action="delete"]{border-color:rgba(242,139,130,.3);color:#F28B82}
+
+
+/* Shorts: branded poster while YouTube iframe initializes */
+.home-vendor-media-player{background:#111827!important;isolation:isolate}
+.home-vendor-media-player iframe{z-index:1;background:#111827;opacity:1;transition:opacity .35s ease}
+.home-short-poster{position:absolute;inset:0;z-index:2;display:grid;place-items:center;background-color:#17212d;background-position:center;background-size:cover;transition:opacity .35s ease,visibility .35s ease}
+.home-short-poster::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,15,24,.08),rgba(8,15,24,.42))}
+.home-short-poster-spinner{position:relative;z-index:1;width:34px;height:34px;border:2px solid rgba(255,255,255,.24);border-top-color:#dbeafe;border-radius:50%;animation:homeShortPosterSpin .85s linear infinite;filter:drop-shadow(0 2px 8px rgba(0,0,0,.35))}
+.home-vendor-media-player.is-ready .home-short-poster{opacity:0;visibility:hidden;pointer-events:none}
+@keyframes homeShortPosterSpin{to{transform:rotate(360deg)}}
+.home-vendor-media-store{color:#cbd5e1!important}
+.home-shorts-popup{background:#111827!important;border-color:#334155!important;color:#e5e7eb!important}
+.home-shorts-popup-head{background:#111827;color:#e5e7eb}
+.home-shorts-popup-head button{background:#1f2937;border-color:#475569;color:#f8fafc}
+.home-shorts-popup-stage{position:relative;overflow:hidden;background-color:#111827;background-position:center;background-size:cover}
+.home-shorts-popup-stage::after{content:"";position:absolute;z-index:2;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(15,23,42,.08),rgba(15,23,42,.18));opacity:0;transition:opacity .2s ease}
+.home-shorts-popup-stage.is-loading::after{opacity:1}
+.home-shorts-popup-stage.is-loading iframe{opacity:0}
+.home-shorts-popup-stage iframe{position:relative;z-index:1;display:block;opacity:1;transition:opacity .3s ease}
+@media(prefers-reduced-motion:reduce){.home-short-poster-spinner{animation:none}.home-short-poster,.home-vendor-media-player iframe,.home-shorts-popup-stage iframe{transition:none}}
