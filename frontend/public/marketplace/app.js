@@ -2332,6 +2332,8 @@ function bindEvents() {
     e.preventDefault();
     state.searchTerm = $('searchInput').value.trim();
     state.activeCategory = $('searchCategory').value;
+    if (state.activeCategory !== 'all') state.activeListingType = 'product';
+    document.querySelectorAll('[data-listing-type]').forEach((b) => b.classList.toggle('active', b.dataset.listingType === state.activeListingType));
     void loadProducts();
   });
   $('searchInput').addEventListener('input', (e) => {
