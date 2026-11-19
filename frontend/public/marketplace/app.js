@@ -959,8 +959,6 @@ async function loadProducts() {
     renderProducts();
     syncHomeHeroImagesFromProducts();
     void loadHomeVendorMedia();
-    void loadSocialPosts();
-    void loadSocialStories();
   } catch (error) {
     // Keep the last successful catalogue visible during a temporary API/network failure.
     if (requestId !== state.productsRequestId) return;
@@ -2226,58 +2224,31 @@ function initIcons() {
 }
 
 function bindEvents() {
-  // Community photo feed
-  $('socialPostImage')?.addEventListener('change', () => {
-    const file = $('socialPostImage').files?.[0];
-    if (!file) { clearSocialImage(); return; }
-    if (!file.type.startsWith('image/')) { clearSocialImage(); toast('សូមជ្រើសរើសរូបភាព។', 'error'); return; }
-    clearSocialImage();
-    const url = URL.createObjectURL(file);
-    state.socialUploadPreviewUrl = url;
-    $('socialUploadPreviewImage').src = url;
-    $('socialUploadPreview').classList.remove('hidden');
-  });
-  $('socialClearImage')?.addEventListener('click', clearSocialImage);
-  $('socialPublishBtn')?.addEventListener('click', () => void publishSocialPost());
-  $('socialRefreshBtn')?.addEventListener('click', () => void loadSocialPosts());
-  $('socialFeedList')?.addEventListener('click', (event) => {
-    const like = event.target.closest('[data-social-like]');
-    if (like) { void toggleSocialLike(like.dataset.socialLike); return; }
-    const comments = event.target.closest('[data-social-comments]');
-    if (comments) void toggleSocialComments(comments.dataset.socialComments);
-  });
-  $('socialFeedList')?.addEventListener('submit', (event) => {
-    const form = event.target.closest('[data-social-comment-form]');
-    if (form) { event.preventDefault(); void submitSocialComment(form); }
-  });
-
-  $('socialStoryImage')?.addEventListener('change', () => {
-    const file = $('socialStoryImage').files?.[0];
-    if (!file) { clearSocialStoryImage(); return; }
-    if (!['image/jpeg','image/png','image/webp'].includes(file.type) || file.size > 8 * 1024 * 1024) {
-      clearSocialStoryImage(); toast('សូមប្រើរូប JPG, PNG ឬ WEBP ដែលមានទំហំមិនលើស 8MB។', 'error'); return;
+  // Jobs panel category and keyword filters (UI only; data API will be added separately).
+  const jobsSearch = $('jobsSearchInput');
+  const jobsCategories = $('jobsCategoryList');
+  if (jobsCategories) {
+    jobsCategories.addEventListener('click', (event) => {
+      const button = event.target.closest('[data-job-category]');
+      if (!button) return;
+      jobsCategories.querySelectorAll('[data-job-category]').forEach((item) => {
+        item.classList.toggle('is-active', item === button);
+      });
+      const selected = button.dataset.jobCategory || 'all';
+      const heading = document.querySelector('.jobs-results-heading b');
+      if (heading) heading.textContent = selected === 'all' ? 'ការងារទាំងអស់' : button.textContent.trim();
+    });
+  }
+  jobsSearch?.addEventListener('input', () => {
+    const query = jobsSearch.value.trim();
+    const empty = $('jobsList')?.querySelector('.jobs-empty-state');
+    if (empty) {
+      const message = empty.querySelector('p');
+      if (message) message.textContent = query
+        ? 'មិនទាន់មានលទ្ធផលសម្រាប់ពាក្យស្វែងរកនេះទេ។'
+        : 'ការងារថ្មីៗនឹងបង្ហាញនៅទីនេះ នៅពេលនិយោជកចាប់ផ្តើមប្រកាសជ្រើសរើសបុគ្គលិក។';
     }
-    if (state.socialStoryPreviewUrl) URL.revokeObjectURL(state.socialStoryPreviewUrl);
-    state.socialStoryPreviewUrl = null;
-    $('socialStoryPreview')?.classList.add('hidden');
-    $('socialStoryPreviewImage')?.removeAttribute('src');
-    const url = URL.createObjectURL(file);
-    state.socialStoryPreviewUrl = url;
-    $('socialStoryPreviewImage').src = url;
-    $('socialStoryPreview').classList.remove('hidden');
   });
-  $('socialStoryClearBtn')?.addEventListener('click', clearSocialStoryImage);
-  $('socialStoryPublishBtn')?.addEventListener('click', () => void publishSocialStory());
-  $('socialStoriesList')?.addEventListener('click', (event) => {
-    const card = event.target.closest('[data-social-story-view]');
-    if (card) showSocialStory(Number(card.dataset.socialStoryView));
-  });
-  $('socialStoryViewerClose')?.addEventListener('click', closeSocialStoryViewer);
-  $('socialStoryViewer')?.addEventListener('click', (event) => {
-    if (event.target.id === 'socialStoryViewer') closeSocialStoryViewer();
-  });
-  $('socialStoryViewerPrev')?.addEventListener('click', () => showSocialStory(state.socialStoryViewerIndex - 1));
-  $('socialStoryViewerNext')?.addEventListener('click', () => showSocialStory(state.socialStoryViewerIndex + 1));
 
   // Search & Category Filters
   $('searchForm').addEventListener('submit', (e) => {
