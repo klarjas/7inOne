@@ -5053,3 +5053,14 @@ body > footer {
 @media(prefers-reduced-motion:reduce){
   #productFormModal .product-save-spinner{animation-duration:1.8s}
 }
+
+
+/* Buyer/seller chat identity header and in-chat image preview */
+#sellerChatModal>section>header #sellerChatHeaderIdentity{display:flex;align-items:center;gap:12px;min-width:0}
+#sellerChatModal>section>header #sellerChatHeaderAvatar{width:40px;height:40px;flex:0 0 40px;border-radius:50%;overflow:hidden}
+#sellerChatModal>section>header #sellerChatHeaderTitle{font-size:14px;line-height:1.4;color:#C7D5E0}
+.seller-chat-image{display:block;max-width:min(100%,320px);max-height:360px;border-radius:10px;object-fit:contain;cursor:zoom-in}
+.seller-chat-image-preview{position:fixed;inset:0;z-index:10050;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(0,0,0,.88)}
+.seller-chat-image-preview img{display:block;max-width: min(94vw,1200px);max-height:88dvh;width:auto;height:auto;object-fit:contain;border-radius:8px}
+.seller-chat-image-preview-close{position:absolute;top:16px;right:18px;width:42px;height:42px;border:1px solid rgba(255,255,255,.25);border-radius:50%;background:#1B2838;color:#fff;font-size:30px;line-height:1;cursor:pointer}
+@media(max-width:640px){.seller-chat-image-preview{padding:12px}.seller-chat-image-preview img{max-width:96vw;max-height:86dvh}}
