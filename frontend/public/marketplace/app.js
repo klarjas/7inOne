@@ -1661,6 +1661,52 @@ function renderProductImageAlbum() {
   $('productImage').disabled = images.length >= 10;
 }
 
+const listingImageAlbums = new WeakMap();
+function listingAlbumRoot(kind) { return document.querySelector('[data-listing-image-album="'+kind+'"]'); }
+function revokeListingAlbum(kind) {
+  const root=listingAlbumRoot(kind); const items=root?listingImageAlbums.get(root)||[]:[];
+  items.forEach(item=>{if(item.previewUrl)URL.revokeObjectURL(item.previewUrl);});
+  if(root){listingImageAlbums.set(root,[]);renderListingAlbum(root);}
+}
+function renderListingAlbum(root) {
+  if(!root)return;
+  const items=listingImageAlbums.get(root)||[];
+  const count=root.querySelector('[data-listing-image-count]');
+  const grid=root.querySelector('[data-listing-image-grid]');
+  const input=root.querySelector('[data-listing-image-input]');
+  if(count)count.textContent=items.length+' / ១០ រូបបានជ្រើសរើស';
+  if(grid)grid.innerHTML=items.length?items.map((item,index)=>'<div class="product-album-item '+(index===0?'is-main':'')+'"><img src="'+esc(item.previewUrl)+'" alt="រូបភាព '+(index+1)+'">'+(index===0?'<span class="product-album-main-badge">រូបមេ</span>':'<button type="button" class="product-album-set-main" data-listing-image-main="'+index+'">កំណត់ជារូបមេ</button>')+'<span class="product-album-index">'+(index+1)+'</span><button type="button" class="product-album-remove" data-listing-image-remove="'+index+'" aria-label="លុបរូបភាព">'+ic('x',14)+'</button></div>').join(''):'<div class="product-album-empty"><span>▧</span><b>មិនទាន់មានរូបភាពទេ</b><small>ជ្រើសរើសរូបភាពរហូតដល់ ១០ រូប</small></div>';
+  root.querySelector('[data-listing-image-picker]')?.classList.toggle('is-full',items.length>=10);
+  if(input)input.disabled=items.length>=10;
+}
+function bindListingImageAlbums() {
+  document.querySelectorAll('[data-listing-image-album]').forEach(root=>{
+    if(root.dataset.albumBound==='true')return;
+    listingImageAlbums.set(root,[]);
+    const input=root.querySelector('[data-listing-image-input]');
+    input?.addEventListener('change',()=>{
+      const items=listingImageAlbums.get(root)||[];
+      const allowed=new Set(['image/jpeg','image/png','image/webp']);
+      for(const file of Array.from(input.files||[])){
+        if(!allowed.has(file.type)){toast('សូមប្រើ JPG, PNG ឬ WEBP ប៉ុណ្ណោះ។','error');continue;}
+        if(file.size>8*1024*1024){toast('រូបភាពនីមួយៗមិនអាចធំជាង 8MB បានទេ។','error');continue;}
+        if(items.length>=10){toast('អាចដាក់រូបភាពបានអតិបរមា ១០ រូប។','error');break;}
+        items.push({file,previewUrl:URL.createObjectURL(file)});
+      }
+      listingImageAlbums.set(root,items);renderListingAlbum(root);input.value='';
+    });
+    root.querySelector('[data-listing-image-grid]')?.addEventListener('click',event=>{
+      const main=event.target.closest('[data-listing-image-main]');
+      const remove=event.target.closest('[data-listing-image-remove]');
+      const items=listingImageAlbums.get(root)||[];
+      if(main){const index=Number(main.dataset.listingImageMain);if(items[index])items.unshift(items.splice(index,1)[0]);}
+      if(remove){const index=Number(remove.dataset.listingImageRemove);const item=items[index];if(item?.previewUrl)URL.revokeObjectURL(item.previewUrl);items.splice(index,1);}
+      listingImageAlbums.set(root,items);renderListingAlbum(root);
+    });
+    root.dataset.albumBound='true';renderListingAlbum(root);
+  });
+}
+
 /* --------------------------------------------------------------------------
    Unified listing creation: jobs and real estate are isolated from products.
    Extend this registry as new marketplace categories are introduced.
@@ -2006,6 +2052,10 @@ async function submitNewListing(form, endpoint, kind) {
   if (submit?.disabled) return;
   const original = submit?.textContent || '';
   const data = new FormData(form);
+  const albumRoot = listingAlbumRoot(kind);
+  const albumItems = albumRoot ? (listingImageAlbums.get(albumRoot) || []) : [];
+  if (albumItems.length > 10) { toast('អាចដាក់រូបភាពបានអតិបរមា ១០ រូប។', 'error'); return; }
+  albumItems.forEach(item => data.append('images', item.file));
   if (!String(data.get('location') || '').trim() || !String(data.get('village_code') || '').trim()) {
     toast('សូមជ្រើសរើសទីតាំងរហូតដល់កម្រិតភូមិ។', 'error');
     return;
@@ -2024,6 +2074,7 @@ async function submitNewListing(form, endpoint, kind) {
   if (submit) { submit.disabled = true; submit.textContent = 'កំពុងបង្ហោះ...'; }
   try {
     const result = await api(endpoint, { method: 'POST', body: data });
+    revokeListingAlbum(kind);
     closeModal(kind === 'job' ? 'jobFormModal' : 'propertyFormModal');
     toast(kind === 'job' ? 'បានបង្ហោះប្រកាសការងារជោគជ័យ!' : 'បានបង្ហោះអចលនទ្រព្យជោគជ័យ!');
     state.activeListingType = kind === 'job' ? 'job' : 'real_estate';
@@ -2849,6 +2900,7 @@ function bindEvents() {
   $('productDetailType').addEventListener('change', () => renderProductSpecFields($('productCategory').value));
   $('jobCategory').addEventListener('change', () => { fillTaxonomySelect($('jobCategory'), $('jobSubcategory'), $('jobDetailType'), LISTING_TAXONOMY.jobs); renderListingSpecFields('job', $('jobCategory').value); });
   $('propertyCategory').addEventListener('change', () => { fillTaxonomySelect($('propertyCategory'), $('propertySubcategory'), $('propertyDetailType'), LISTING_TAXONOMY.properties); renderListingSpecFields('property', $('propertyCategory').value); });
+  bindListingImageAlbums();
   $('jobListingForm').addEventListener('submit', (event) => { event.preventDefault(); void submitNewListing(event.currentTarget, '/api/jobs', 'job'); });
   $('propertyListingForm').addEventListener('submit', (event) => { event.preventDefault(); void submitNewListing(event.currentTarget, '/api/real-estate', 'property'); });
   $('notificationBtn').addEventListener('click', (e) => { e.stopPropagation(); toggleDrop('notificationMenu'); });
