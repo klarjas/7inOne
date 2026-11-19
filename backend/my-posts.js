@@ -210,7 +210,7 @@ export function registerMyPostsRoutes(app, {
     try {
       if (type === 'product') {
         const { data: vendor } = await vendorFor(req.user.id);
-        if (!vendor) return fail(res,403,'Active store ownership required');
+        if (!vendor || vendor.status === 'blocked') return fail(res,403,'Active store ownership required');
         const { data: product, error } = await supabase.from('products')
           .select('id,vendor_id,product_images(id,telegram_message_id)')
           .eq('id',id).eq('vendor_id',vendor.id).maybeSingle();
