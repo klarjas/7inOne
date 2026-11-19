@@ -1225,8 +1225,8 @@ app.get('/api/marketplace/listings', async (req, res) => {
   try {
     const tasks = [];
     if (type === 'all' || type === 'product') {
-      const productFields = 'id,title,description,price,stock,category,location,condition,view_count,created_at,updated_at,renewed_at,vendor_id,product_images(id,file_id,image_url,sort_order),vendors!inner(id,store_name,status,store_logo_file_id)';
-      const legacyFields = 'id,title,description,price,stock,category,location,condition,view_count,created_at,updated_at,vendor_id,product_images(id,file_id,image_url,sort_order),vendors!inner(id,store_name,status,store_logo_file_id)';
+      const productFields = 'id,title,description,price,stock,category,location,condition,view_count,created_at,updated_at,renewed_at,vendor_id,product_images(id,file_id,image_url,sort_order),vendors!inner(id,user_id,store_name,status,store_logo_file_id)';
+      const legacyFields = 'id,title,description,price,stock,category,location,condition,view_count,created_at,updated_at,vendor_id,product_images(id,file_id,image_url,sort_order),vendors!inner(id,user_id,store_name,status,store_logo_file_id)';
       const runProducts = (legacy = false) => {
         let query = supabase.from('products').select(legacy ? legacyFields : productFields)
           .eq('status', 'active').in('vendors.status', ['approved','pending','rejected']).gt('stock', 0)
@@ -1310,7 +1310,26 @@ app.get('/api/marketplace/listings', async (req, res) => {
       return (data || []).map(row => ({ ...row, listing_type:'real_estate', real_estate_type:row.category, image_url:row.image_file_id?mediaProxyUrl(row.image_file_id,row.image_mime_type):null, image_urls:(Array.isArray(row.image_gallery)&&row.image_gallery.length?row.image_gallery.map(item=>mediaProxyUrl(item.file_id,item.mime_type)):row.image_file_id?[mediaProxyUrl(row.image_file_id,row.image_mime_type)]:[]), price_label:row.price, listing_subtitle:row.subcategory || row.detail_type || 'អចលនទ្រព្យ' }));
     })());
     const groups=await Promise.all(tasks);
-    const data=groups.flat().sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0)).slice(0,limit);
+    let data=groups.flat().sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0)).slice(0,limit);
+    const posterIds=[...new Set(data.map(row => row.listing_type === 'product' ? row.vendors?.user_id : row.user_id).filter(Boolean))];
+    const postersResult=posterIds.length
+      ? await supabase.from('profiles').select('id,display_name,avatar_url,avatar_file_id,avatar_path').in('id',posterIds)
+      : {data:[],error:null};
+    if(postersResult.error)throw postersResult.error;
+    const posters=new Map((postersResult.data||[]).map(profile=>[profile.id,{
+      user_id:profile.id,
+      display_name:profile.display_name || 'អ្នកប្រើប្រាស់',
+      avatar_url:profile.avatar_url ? normalizeMediaUrl(profile.avatar_url) : (profile.avatar_file_id ? mediaProxyUrl(profile.avatar_file_id) : publicMediaUrl(profile.avatar_path))
+    }]));
+    data=data.map(row=>{
+      const ownerId=row.listing_type==='product'?row.vendors?.user_id:row.user_id;
+      const poster=posters.get(ownerId)||null;
+      if(row.listing_type==='product'&&row.vendors){
+        const {user_id:_ownerId,...vendor}=row.vendors;
+        return {...row,vendors:vendor,poster};
+      }
+      return {...row,poster};
+    });
     res.set('Cache-Control','no-store');
     return res.json({data,total:data.length,limit,type});
   } catch(error) {
