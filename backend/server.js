@@ -1560,6 +1560,13 @@ app.get('/api/products/:id', async (req, res) => {
     await supabase.from('products').update({ view_count: nextViews }).eq('id', data.id);
     data.view_count = nextViews;
   }
+  const { data: listingDetails } = await supabase.from('product_listing_details')
+    .select('category,subcategory,detail_type,specifications,province_code,district_code,commune_code,village_code')
+    .eq('product_id', data.id).maybeSingle();
+  if (listingDetails) {
+    data.specifications = listingDetails.specifications || {};
+    data.listing_details = listingDetails;
+  }
   const trust = await ratingsFor([data.vendor_id]);
   data.seller_rating = trust[data.vendor_id]?.average ?? null;
   data.seller_review_count = trust[data.vendor_id]?.count ?? 0;
@@ -2725,6 +2732,55 @@ app.delete('/api/saved/:productId', authenticate, async (req, res) => {
   const { error } = await supabase.from('saved_products').delete().eq('user_id', req.user.id).eq('product_id', req.params.productId);
   if (error) return fail(res, 400, 'Could not remove saved product');
   res.json({ success: true });
+});
+
+
+const allowedSavedListingTypes = new Set(['product','job','real_estate']);
+async function verifyPublicListing(type, id) {
+  const table = type === 'product' ? 'products' : type === 'job' ? 'jobs' : 'property_listings';
+  let query = supabase.from(table).select('id').eq('id', id).eq('status','active');
+  const {data,error}=await query.maybeSingle();
+  if(error) throw error;
+  return data;
+}
+app.post('/api/listing-saves', authenticate, async (req,res) => {
+  const type=clean(req.body?.listing_type,20);
+  const id=clean(req.body?.id,80);
+  if(!allowedSavedListingTypes.has(type)||!id) return fail(res,400,'ប្រភេទប្រកាសមិនត្រឹមត្រូវ។');
+  try {
+    const listing=await verifyPublicListing(type,id);
+    if(!listing) return fail(res,404,'រកមិនឃើញប្រកាសនេះទេ។');
+    const {error}=await supabase.from('saved_listings').upsert({user_id:req.user.id,listing_type:type,listing_id:String(id)},{onConflict:'user_id,listing_type,listing_id'});
+    if(error) throw error;
+    return res.status(201).json({data:{saved:true}});
+  } catch(error) {
+    console.error('Listing save failed:',error.message);
+    return fail(res,500,'មិនអាចរក្សាទុកប្រកាសបានទេ។ សូមពិនិត្យ Migration។');
+  }
+});
+app.delete('/api/listing-saves/:type/:id', authenticate, async (req,res) => {
+  const type=clean(req.params.type,20), id=clean(req.params.id,80);
+  if(!allowedSavedListingTypes.has(type)||!id) return fail(res,400,'ប្រភេទប្រកាសមិនត្រឹមត្រូវ។');
+  const {error}=await supabase.from('saved_listings').delete().eq('user_id',req.user.id).eq('listing_type',type).eq('listing_id',id);
+  if(error) return fail(res,500,'មិនអាចដកប្រកាសចេញពី Saved បានទេ។');
+  return res.json({data:{saved:false}});
+});
+app.post('/api/listing-reports', authenticate, async (req,res) => {
+  const type=clean(req.body?.listing_type,20), id=clean(req.body?.id,80), reason=clean(req.body?.reason,1000);
+  if(!allowedSavedListingTypes.has(type)||!id||reason.length<3) return fail(res,400,'សូមបញ្ចូលមូលហេតុរាយការណ៍។');
+  try {
+    const listing=await verifyPublicListing(type,id);
+    if(!listing) return fail(res,404,'រកមិនឃើញប្រកាសនេះទេ។');
+    const {error}=await supabase.from('listing_reports').insert({reporter_id:req.user.id,listing_type:type,listing_id:String(id),reason});
+    if(error) {
+      if(error.code==='23505') return fail(res,409,'អ្នកបានរាយការណ៍ប្រកាសនេះរួចហើយ។');
+      throw error;
+    }
+    return res.status(201).json({data:{reported:true}});
+  } catch(error) {
+    console.error('Listing report failed:',error.message);
+    return fail(res,500,'មិនអាចផ្ញើរបាយការណ៍បានទេ។ សូមពិនិត្យ Migration។');
+  }
 });
 
 app.get('/api/vendors/:id/ratings', async (req, res) => {
