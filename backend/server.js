@@ -819,6 +819,41 @@ app.post('/api/social/posts', authenticate, upload.single('image'), async (req, 
     return fail(res, 500, 'Could not publish your photo. Please try again.');
   }
 });
+// Photo Stories are public for viewing and expire 24 hours after publishing.
+app.get('/api/social/stories', async (req, res) => {
+  if (!db(res)) return;
+  const { data, error } = await supabase.from('social_stories')
+    .select('id,user_id,image_file_id,created_at,expires_at,profiles!social_stories_user_id_fkey(display_name,avatar_url,avatar_file_id,avatar_path)')
+    .gt('expires_at', new Date().toISOString())
+    .order('created_at', { ascending: false }).limit(60);
+  if (error) { console.error('Social Stories load failed:', error.message); return fail(res, 500, 'Could not load Stories.'); }
+  return res.json({ data: (data || []).map(story => ({
+    id: story.id, user_id: story.user_id, image_url: telegramMediaUrl(story.image_file_id),
+    created_at: story.created_at, expires_at: story.expires_at,
+    profile: { display_name: story.profiles?.display_name || 'អ្នកប្រើប្រាស់',
+      avatar_url: story.profiles?.avatar_url || telegramMediaUrl(story.profiles?.avatar_file_id) || publicMediaUrl(story.profiles?.avatar_path) }
+  })) });
+});
+app.post('/api/social/stories', authenticate, upload.single('image'), async (req, res) => {
+  let uploaded = null;
+  try {
+    const invalid = imageUploadError(req.file, 8 * 1024 * 1024);
+    if (invalid) return fail(res, 400, invalid);
+    uploaded = await uploadToTelegram(req.file);
+    const createdAt = new Date();
+    const expiresAt = new Date(createdAt.getTime() + 24 * 60 * 60 * 1000);
+    const { data, error } = await supabase.from('social_stories')
+      .insert({ user_id: req.user.id, image_file_id: uploaded.fileId, image_message_id: uploaded.messageId, created_at: createdAt.toISOString(), expires_at: expiresAt.toISOString() })
+      .select('id,user_id,image_file_id,created_at,expires_at').single();
+    if (error) throw error;
+    return res.status(201).json({ data: { ...data, image_url: telegramMediaUrl(data.image_file_id), storage: 'telegram' } });
+  } catch (error) {
+    if (uploaded?.messageId) await deleteTelegramMessage(uploaded.messageId);
+    console.error('Social Story publish failed:', error.message);
+    return fail(res, 500, 'Could not publish your Story. Please try again.');
+  }
+});
+
 app.post('/api/social/posts/:id/like', authenticate, async (req, res) => {
   const postId = clean(req.params.id, 36);
   const { data: existing, error: lookupError } = await supabase.from('social_post_likes')
@@ -2363,6 +2398,23 @@ app.use((error, _req, res, _next) => {
 await nextApp.prepare();
 app.use((req, res) => nextHandler(req, res));
 app.listen(port, () => console.log(`7inOne full-stack service listening on ${port}`));
+async function cleanupExpiredSocialStories() {
+  if (!supabase) return;
+  try {
+    const { data: expired, error } = await supabase.from('social_stories')
+      .select('id,image_message_id').lte('expires_at', new Date().toISOString()).limit(100);
+    if (error) throw error;
+    if (!expired?.length) return;
+    for (const story of expired) await deleteTelegramMessage(story.image_message_id);
+    const ids = expired.map(story => story.id);
+    const { error: deleteError } = await supabase.from('social_stories').delete().in('id', ids);
+    if (deleteError) throw deleteError;
+  } catch (error) { console.warn('Expired Stories cleanup failed:', error.message); }
+}
+const socialStoryCleanupTimer = setInterval(() => { void cleanupExpiredSocialStories(); }, 15 * 60 * 1000);
+socialStoryCleanupTimer.unref?.();
+void cleanupExpiredSocialStories();
+
 const productLifecycleTimer=setInterval(()=>{void cleanupExpiredProducts()},60*60*1000);
 productLifecycleTimer.unref?.();
 void cleanupExpiredProducts();
