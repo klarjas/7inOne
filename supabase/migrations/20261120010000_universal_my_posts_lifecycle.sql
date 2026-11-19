@@ -24,8 +24,8 @@ drop policy if exists rentals_public_read_active on public.rentals;
 create policy rentals_public_read_active on public.rentals
   for select using (status = 'active' and (expires_at is null or expires_at > now()));
 
-drop policy if exists land_listings_public_read_active on public.land_listings;
-create policy land_listings_public_read_active on public.land_listings
+drop policy if exists land_public_read_active on public.land_listings;
+create policy land_public_read_active on public.land_listings
   for select using (status = 'active' and (expires_at is null or expires_at > now()));
 
 drop policy if exists house_sale_public_read_active on public.house_sale_listings;
