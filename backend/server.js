@@ -1881,7 +1881,7 @@ app.post('/api/me/media', authenticate, upload.single('file'), async (req, res) 
     return res.status(201).json({ data: normalized });
   } catch (error) {
     console.error('Profile media upload failed:', error.message);
-    return fail(res, 502, error.message || 'Could not upload profile image.');
+    return fail(res, 502, 'Could not upload profile image. Please try again.');
   }
 });
 
@@ -1909,12 +1909,13 @@ app.post('/api/vendors/register', authenticate, upload.single('document'), async
       return fail(res, 500, 'Could not save seller registration.');
     }
     if (uploaded && existing?.document_message_id && existing.document_message_id !== uploaded.messageId) await deleteTelegramMessage(existing.document_message_id);
-    const { document_file_id, ...safeVendor } = publicVendor(result.data);
-    return res.status(existing ? 200 : 201).json({ data: { ...safeVendor, document_url: document_file_id ? mediaProxyUrl(document_file_id) : null } });
+    const safeVendor = publicVendor(result.data);
+    const documentUrl = result.data.document_file_id ? mediaProxyUrl(result.data.document_file_id) : null;
+    return res.status(existing ? 200 : 201).json({ data: { ...safeVendor, document_url: documentUrl } });
   } catch (error) {
     if (uploaded?.messageId) await deleteTelegramMessage(uploaded.messageId);
     console.error('Seller registration failed:', error.message);
-    return fail(res, 502, error.message || 'Could not register seller.');
+    return fail(res, 502, 'Could not submit seller registration. Please try again.');
   }
 });
 app.patch('/api/vendor/profile', authenticate, upload.fields([{ name: 'logo', maxCount: 1 }, { name: 'cover', maxCount: 1 }]), async (req, res) => {
@@ -2068,7 +2069,7 @@ app.post('/api/products/:id/images', authenticate, upload.array('images', 10), a
       image_url: mediaProxyUrl(item.fileId), sort_order: (count || 0) + index
     }));
     const { data, error } = await supabase.from('product_images').insert(rows).select('id,product_id,file_id,telegram_message_id,image_url,sort_order');
-    if (error) throw new Error('Telegram uploads succeeded, but product image records could not be saved. Apply the Telegram media migration. ' + error.message);
+    if (error) throw new Error('Image uploads succeeded, but product image records could not be saved. Apply the Telegram media migration. ' + error.message);
     return res.status(201).json({ data: (data || []).map(image => ({
       id: image.id, product_id: image.product_id, sort_order: image.sort_order,
       image_url: image.file_id ? mediaProxyUrl(image.file_id) : image.image_url
@@ -2076,7 +2077,7 @@ app.post('/api/products/:id/images', authenticate, upload.array('images', 10), a
   } catch (error) {
     for (const item of uploaded) await deleteTelegramMessage(item.messageId);
     console.error('Product image upload failed:', error.message);
-    return fail(res, 502, error.message || 'Product image upload failed.');
+    return fail(res, 502, 'Product image upload failed. Please try again.');
   }
 });
 
