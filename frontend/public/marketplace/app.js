@@ -2487,6 +2487,8 @@ function bindEvents() {
 
   $('productForm').addEventListener('submit', async (e) => {
     e.preventDefault();
+    const saveButton = $('productSaveButton');
+    if (saveButton?.disabled) return;
     const id = $('editProductId').value;
     const selectedImages = (state.selectedProductImages || []).slice();
     const newImages = selectedImages.filter((item) => item.kind === 'new');
@@ -2504,6 +2506,12 @@ function bindEvents() {
       condition: $('productCondition').value, short_description: shortDesc,
       description: shortDesc + PRODUCT_DESC_SEPARATOR + fullDesc, stock: 1
     };
+    const originalSaveButtonHTML = saveButton?.innerHTML || '';
+    if (saveButton) {
+      saveButton.disabled = true;
+      saveButton.setAttribute('aria-busy', 'true');
+      saveButton.innerHTML = '<span class="product-save-spinner" aria-hidden="true"></span><span>កំពុងរក្សាទុក...</span>';
+    }
     try {
       const r = id
         ? await api('/api/products/' + encodeURIComponent(id), { method: 'PATCH', body: JSON.stringify(payload) })
@@ -2534,7 +2542,15 @@ function bindEvents() {
       closeModal('productFormModal');
       toast('បានរក្សាទុកទំនិញជោគជ័យ!');
       await Promise.all([renderSeller(), loadProducts()]);
-    } catch (err) { toast(err.message, 'error'); }
+    } catch (err) {
+      toast(err.message || 'មិនអាចរក្សាទុកទំនិញបានទេ។', 'error');
+    } finally {
+      if (saveButton) {
+        saveButton.disabled = false;
+        saveButton.removeAttribute('aria-busy');
+        saveButton.innerHTML = originalSaveButtonHTML;
+      }
+    }
   });
 
   $('sellerDashboardContent').addEventListener('click', async (e) => {
