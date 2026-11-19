@@ -5874,3 +5874,30 @@ body > footer {
 .listing-image-album .product-image-album{margin-top:10px}
 
 .marketplace-detail-gallery{display:grid;gap:9px;margin:0 0 14px}.marketplace-detail-gallery .marketplace-detail-image{display:block;width:100%;max-height:340px;object-fit:contain;border-radius:14px;background:#101822}.marketplace-detail-thumbs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px}.marketplace-detail-thumbs img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;background:#101822;border:1px solid #2A475E}
+
+
+/* Full-page detail layout for jobs and real-estate listings */
+.marketplace-listing-detail-page{width:100%;max-width:1120px;margin:0 auto}
+.marketplace-listing-detail-layout{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(320px,.9fr);gap:28px;align-items:start}
+.marketplace-listing-detail-media,.marketplace-listing-detail-info{min-width:0}
+.marketplace-listing-detail-media .marketplace-detail-gallery{display:grid;gap:12px}
+.marketplace-listing-detail-media .marketplace-detail-image{display:block;width:100%;max-height:620px;aspect-ratio:4/3;object-fit:contain;background:#f1f5f9;border-radius:16px}
+.marketplace-detail-thumbs{display:flex;flex-wrap:wrap;gap:9px}
+.marketplace-detail-thumbs button{width:76px;height:76px;padding:3px;border:1px solid #dbe2ea;border-radius:10px;background:#fff;overflow:hidden}
+.marketplace-detail-thumbs button.active{border:2px solid #3e4f64}
+.marketplace-detail-thumbs button img{width:100%;height:100%;object-fit:cover;border-radius:7px}
+.marketplace-detail-image-placeholder{display:grid;place-items:center;min-height:280px;border-radius:16px;background:#f1f5f9;color:#94a3b8}
+.marketplace-listing-detail-info{padding:4px 0}
+.marketplace-listing-detail-info h1{margin:12px 0 8px;font-size:clamp(22px,3vw,30px);font-weight:800;line-height:1.35;color:#172033}
+.marketplace-listing-detail-info .marketplace-detail-price{margin:10px 0;font-size:24px;font-weight:800;color:#16734b}
+.marketplace-listing-detail-info .marketplace-detail-location{display:flex;align-items:center;gap:6px;margin:8px 0 18px;color:#64748b;font-size:13px}
+.marketplace-listing-detail-info .marketplace-detail-facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:18px 0}
+.marketplace-listing-detail-info .marketplace-detail-facts p{display:flex;flex-direction:column;gap:5px;margin:0;padding:12px;border:1px solid #e2e8f0;border-radius:12px;background:#fff;font-size:12px}
+.marketplace-listing-detail-info .marketplace-detail-facts b{color:#64748b;font-weight:600}
+.marketplace-listing-detail-info .marketplace-detail-facts span{color:#172033;font-weight:700;overflow-wrap:anywhere}
+.marketplace-listing-detail-info .marketplace-detail-description{margin-top:18px;padding:16px;border:1px solid #e2e8f0;border-radius:14px;background:#fff}
+.marketplace-listing-detail-info .marketplace-detail-description h2{margin:0 0 10px;font-size:15px;font-weight:800;color:#172033}
+.marketplace-listing-detail-info .marketplace-detail-description p{white-space:pre-wrap;line-height:1.8;font-size:13px;color:#475569}
+.marketplace-listing-posted{margin-top:14px;color:#94a3b8;font-size:11px}
+@media(max-width:760px){.marketplace-listing-detail-layout{grid-template-columns:minmax(0,1fr);gap:20px}.marketplace-listing-detail-media .marketplace-detail-image{max-height:440px;aspect-ratio:4/3}.marketplace-listing-detail-info .marketplace-detail-facts{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:420px){.marketplace-listing-detail-info .marketplace-detail-facts{grid-template-columns:minmax(0,1fr)}}
