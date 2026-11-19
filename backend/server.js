@@ -1069,6 +1069,7 @@ const JOB_CATEGORIES = new Set(['it','office','sales','transport','hospitality',
 const PROPERTY_CATEGORIES = new Set(['house_sale','house_rent','condo_sale','apartment_rent','land','land_rent','commercial_sale','commercial_rent','room_rent','properties_wanted','agent_services','others_properties']);
 const listingText = (value, max = 5000) => clean(value, max);
 const listingObject = value => { if (value && typeof value === 'object' && !Array.isArray(value)) return value; if (typeof value === 'string') { try { const parsed = JSON.parse(value); return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {}; } catch {} } return {}; };
+const listingArray = value => { if (Array.isArray(value)) return value; if (typeof value === 'string') { try { const parsed = JSON.parse(value); return Array.isArray(parsed) ? parsed : []; } catch {} } return []; };
 app.post('/api/jobs', authenticate, upload.single('image'), async (req, res) => {
   if (!db(res)) return;
   const body = req.body || {};
@@ -1091,9 +1092,9 @@ app.post('/api/jobs', authenticate, upload.single('image'), async (req, res) => 
       salary_min:salaryMin,salary_max:salaryMax,salary_period:['hourly','daily','monthly','negotiable'].includes(body.salary_period)?body.salary_period:'monthly',
       employment_type:listingText(body.employment_type,40)||'full_time',work_schedule:listingText(body.work_schedule,120),
       days_off:listingText(body.days_off,120),experience:listingText(body.experience,120),education:listingText(body.education,120),
-      skills:Array.isArray(body.skills)?body.skills.map(v=>listingText(v,80)).filter(Boolean).slice(0,30):[],
-      languages:Array.isArray(body.languages)?body.languages.map(v=>listingText(v,60)).filter(Boolean).slice(0,20):[],
-      benefits:Array.isArray(body.benefits)?body.benefits.map(v=>listingText(v,120)).filter(Boolean).slice(0,30):[],
+      skills:listingArray(body.skills).map(v=>listingText(v,80)).filter(Boolean).slice(0,30),
+      languages:listingArray(body.languages).map(v=>listingText(v,60)).filter(Boolean).slice(0,20),
+      benefits:listingArray(body.benefits).map(v=>listingText(v,120)).filter(Boolean).slice(0,30),
       specifications:listingObject(body.specifications),
       image_file_id:uploaded?.fileId||null,image_message_id:uploaded?.messageId||null,image_mime_type:uploaded?.mimeType||null,status:'active'
     };
