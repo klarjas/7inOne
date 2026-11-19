@@ -1027,13 +1027,13 @@ app.get('/api/marketplace/listings', async (req, res) => {
       })());
       // House-sale records are stored separately from rental and land records.
       if (type === 'all' || propertyType === 'all' || propertyType === 'house_sale') tasks.push((async () => {
-        let query=supabase.from('rentals').select('id,user_id,title,description,short_description,category,property_type,location,address,rent_amount,rent_period,bedrooms,bathrooms,area_sqm,furnished,image_file_id,image_mime_type,status,created_at')
-          .eq('status','active').eq('property_type','house_sale').order('created_at',{ascending:false}).limit(limit);
+        let query=supabase.from('house_sale_listings').select('id,user_id,title,description,short_description,category,property_type,location,address,price,bedrooms,bathrooms,area_sqm,furnished,title_deed,image_file_id,image_mime_type,status,created_at')
+          .eq('status','active').order('created_at',{ascending:false}).limit(limit);
         if(q) query=query.or(`title.ilike.%${q}%,description.ilike.%${q}%,location.ilike.%${q}%`);
         const {data,error}=await query;
         if(error && ['42P01','PGRST205'].includes(error.code)) return [];
         if(error) throw error;
-        return (data||[]).map(row=>({...row,listing_type:'real_estate',real_estate_type:'house_sale',image_url:row.image_file_id?mediaProxyUrl(row.image_file_id,row.image_mime_type):null,price_label:row.rent_amount,listing_subtitle:'ផ្ទះលក់'}));
+        return (data||[]).map(row=>({...row,listing_type:'real_estate',real_estate_type:'house_sale',image_url:row.image_file_id?mediaProxyUrl(row.image_file_id,row.image_mime_type):null,price_label:row.price,listing_subtitle:'ផ្ទះលក់'}));
       })());
     }
     const groups=await Promise.all(tasks);
