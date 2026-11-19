@@ -95,6 +95,7 @@ const state = {
   favoritePending: new Set(),
   activeCategory: 'all',
   activeListingType: 'all',
+  activePropertyType: 'all',
   activeCondition: 'all',
   searchTerm: '',
   currentProduct: null,
@@ -926,15 +927,15 @@ async function submitSocialComment(form) {
 
 function marketplaceCard(item, index) {
   if (item.listing_type === 'product') return productCard(item, index);
-  const labels = { job: 'ការងារ', rent: 'ជួលអចលនទ្រព្យ', land: 'ដីលក់' };
+  const labels = { job: 'ការងារ', real_estate: 'អចលនទ្រព្យ' };
   const image = item.image_url || '';
   const period = item.listing_type === 'job'
     ? ({hourly:' / ម៉ោង',daily:' / ថ្ងៃ',monthly:' / ខែ',negotiable:''}[item.salary_period] || '')
-    : item.listing_type === 'rent'
+    : item.real_estate_type?.endsWith('_rent')
       ? ({daily:' / ថ្ងៃ',monthly:' / ខែ',yearly:' / ឆ្នាំ'}[item.rent_period] || '') : '';
   const price = item.listing_type === 'job'
     ? (item.price_label === 'ចរចា' ? 'ចរចាប្រាក់ខែ' : '$' + String(item.price_label).replace(' - ', ' - $') + period)
-    : money(item.price_label) + period;
+    : item.listing_type === 'real_estate' && item.price_label == null ? 'ទាក់ទងសួរតម្លៃ' : money(item.price_label) + period;
   const description = String(item.short_description || item.description || '').trim().split(/\s+/).slice(0, 28).join(' ');
   return `
   <article class="cd marketplace-extra-card" style="animation-delay:${Math.min(index, 12) * 30}ms">
@@ -963,7 +964,7 @@ function renderProducts() {
   });
   $('productGrid').innerHTML = list.map(marketplaceCard).join('');
   $('resultCount').textContent = `${list.length} ប្រកាស`;
-  const typeTitles = { all: 'ប្រកាសថ្មីៗទាំងអស់', product: 'ផលិតផល', job: 'ការងារ', rent: 'អចលនទ្រព្យជួល', land: 'ដីសម្រាប់លក់' };
+  const typeTitles = { all: 'ប្រកាសថ្មីៗទាំងអស់', product: 'ផលិតផល', job: 'ការងារ', real_estate: 'អចលនទ្រព្យ' };
   $('listingTitle').textContent = typeTitles[state.activeListingType] || typeTitles.all;
   $('listingSub').textContent = state.searchTerm ? `លទ្ធផលស្វែងរកសម្រាប់ «${esc(state.searchTerm)}»` : 'ផលិតផល ការងារ ផ្ទះជួល និងដីលក់ បង្ហាញតាមពេលបង្ហោះថ្មីបំផុត';
   $('emptyHome').classList.toggle('hidden', list.length > 0);
@@ -1035,11 +1036,20 @@ function setCategory(category) {
 }
 
 function setListingType(type) {
-  state.activeListingType = ['all','product','job','rent','land'].includes(type) ? type : 'all';
+  state.activeListingType = ['all','product','job','real_estate'].includes(type) ? type : 'all';
   state.activeCategory = 'all';
+  state.activePropertyType = 'all';
   $('searchCategory').value = 'all';
   document.querySelectorAll('[data-category]').forEach((b) => b.classList.toggle('active', b.dataset.category === 'all'));
   document.querySelectorAll('[data-listing-type]').forEach((b) => b.classList.toggle('active', b.dataset.listingType === state.activeListingType));
+  $('marketplacePropertyFilters')?.toggleAttribute('hidden', state.activeListingType !== 'real_estate');
+  document.querySelectorAll('[data-property-type]').forEach((b) => b.classList.toggle('active', b.dataset.propertyType === state.activePropertyType));
+  void loadProducts();
+}
+
+function setPropertyType(type) {
+  state.activePropertyType = ['all','land','house_sale','house_rent','room_rent'].includes(type) ? type : 'all';
+  document.querySelectorAll('[data-property-type]').forEach((b) => b.classList.toggle('active', b.dataset.propertyType === state.activePropertyType));
   void loadProducts();
 }
 
@@ -1049,15 +1059,15 @@ function openMarketplaceListing(type, id) {
   const modal = $('marketplaceListingModal');
   const body = $('marketplaceListingDetail');
   if (!modal || !body) return;
-  const labels = { job: 'ការងារ', rent: 'អចលនទ្រព្យជួល', land: 'ដីលក់' };
+  const labels = { job: 'ការងារ', real_estate: 'អចលនទ្រព្យ' };
   const image = item.image_url || '';
   const price = type === 'job'
     ? (item.price_label === 'ចរចា' ? 'ចរចាប្រាក់ខែ' : '$' + String(item.price_label).replace(' - ', ' - $'))
-    : money(item.price_label) + (type === 'rent' ? ({daily:' / ថ្ងៃ',monthly:' / ខែ',yearly:' / ឆ្នាំ'}[item.rent_period] || '') : '');
+    : money(item.price_label) + (item.real_estate_type?.endsWith('_rent') ? ({daily:' / ថ្ងៃ',monthly:' / ខែ',yearly:' / ឆ្នាំ'}[item.rent_period] || '') : '');
   const facts = type === 'job'
     ? [['ក្រុមហ៊ុន',item.company_name],['ប្រភេទការងារ',item.employment_type],['ចំនួនបុគ្គលិក',item.vacancies],['បទពិសោធន៍',item.experience],['ការអប់រំ',item.education],['ម៉ោងធ្វើការ',item.work_schedule]]
-    : type === 'rent'
-      ? [['ប្រភេទអចលនទ្រព្យ',item.property_type],['បន្ទប់គេង',item.bedrooms],['បន្ទប់ទឹក',item.bathrooms],['ទំហំ',item.area_sqm ? item.area_sqm + ' m²' : ''],['អាសយដ្ឋាន',item.address]]
+    : item.real_estate_type?.includes('rent') || item.real_estate_type === 'house_sale'
+      ? [['ប្រភេទអចលនទ្រព្យ',item.property_type || item.real_estate_type],['បន្ទប់គេង',item.bedrooms],['បន្ទប់ទឹក',item.bathrooms],['ទំហំ',item.area_sqm ? item.area_sqm + ' m²' : ''],['អាសយដ្ឋាន',item.address],['ប្លង់',item.title_deed]]
       : [['ប្រភេទដី',item.land_type],['ទំហំ',item.area_sqm ? item.area_sqm + ' m²' : ''],['ប្លង់',item.title_deed],['ផ្លូវចូល',item.road_access],['អាសយដ្ឋាន',item.address]];
   body.innerHTML = `${image ? `<img class="marketplace-detail-image" src="${esc(image)}" alt="${esc(item.title)}">` : ''}
     <span class="marketplace-type-badge">${labels[type] || ''}</span><h2>${esc(item.title)}</h2>
@@ -2318,6 +2328,9 @@ function bindEvents() {
   });
 
   // Search & Category Filters
+  document.querySelectorAll('[data-property-type]').forEach((button) => {
+    button.addEventListener('click', () => setPropertyType(button.dataset.propertyType));
+  });
   document.querySelectorAll('[data-listing-type]').forEach((button) => {
     button.addEventListener('click', () => setListingType(button.dataset.listingType));
   });
