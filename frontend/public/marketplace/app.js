@@ -85,6 +85,9 @@ const state = {
   products: [],
   productsRequestId: 0,
   socialPosts: [],
+  socialStories: [],
+  socialStoryPreviewUrl: null,
+  socialStoryViewerIndex: 0,
   socialCommentsOpen: new Set(),
   socialCommentsCache: new Map(),
   socialUploadPreviewUrl: null,
@@ -759,6 +762,71 @@ function syncSocialComposerIdentity() {
   if ($('socialComposerName')) $('socialComposerName').textContent = name;
   if (target) target.innerHTML = avatar ? `<img src="${esc(avatar)}" alt="">` : esc(Array.from(name)[0] || '7');
 }
+function renderSocialStories() {
+  const target = $('socialStoriesList');
+  if (!target) return;
+  const createCard = '<label class="social-story-create" for="socialStoryImage"><span class="social-story-create-icon">＋</span><b>បង្កើត Story</b></label>';
+  target.innerHTML = createCard + state.socialStories.map((story, index) => {
+    const profile = story.profile || {};
+    return `<button type="button" class="social-story-card" data-social-story-view="${index}" aria-label="មើល Story របស់ ${esc(profile.display_name || 'អ្នកប្រើប្រាស់')}">
+      <img class="social-story-photo" src="${esc(story.image_url)}" alt="" loading="lazy">
+      <span class="social-story-avatar">${socialProfileMarkup(profile)}</span>
+      <b>${esc(profile.display_name || 'អ្នកប្រើប្រាស់')}</b>
+    </button>`;
+  }).join('');
+}
+async function loadSocialStories() {
+  const target = $('socialStoriesList');
+  if (!target) return;
+  try {
+    const result = await api('/api/social/stories');
+    state.socialStories = Array.isArray(result.data) ? result.data : [];
+    renderSocialStories();
+  } catch (error) {
+    target.innerHTML = '<div class="social-feed-empty">មិនអាចផ្ទុក Stories បានទេ។</div><label class="social-story-create" for="socialStoryImage"><span class="social-story-create-icon">＋</span><b>បង្កើត Story</b></label>';
+  }
+}
+function clearSocialStoryImage() {
+  const input = $('socialStoryImage');
+  if (input) input.value = '';
+  if (state.socialStoryPreviewUrl) URL.revokeObjectURL(state.socialStoryPreviewUrl);
+  state.socialStoryPreviewUrl = null;
+  $('socialStoryPreview')?.classList.add('hidden');
+  $('socialStoryPreviewImage')?.removeAttribute('src');
+}
+async function publishSocialStory() {
+  if (!requireLogin()) return;
+  const file = $('socialStoryImage')?.files?.[0];
+  if (!file) { toast('សូមជ្រើសរើសរូបភាព Story។', 'error'); return; }
+  if (!['image/jpeg','image/png','image/webp'].includes(file.type) || file.size > 8 * 1024 * 1024) {
+    toast('សូមប្រើរូប JPG, PNG ឬ WEBP ដែលមានទំហំមិនលើស 8MB។', 'error'); return;
+  }
+  const button = $('socialStoryPublishBtn');
+  if (button) { button.disabled = true; button.textContent = 'កំពុងផុស...'; }
+  const form = new FormData();
+  form.append('image', file);
+  try {
+    await api('/api/social/stories', { method: 'POST', body: form });
+    clearSocialStoryImage();
+    await loadSocialStories();
+    toast('បានផុស Story ជោគជ័យ! Story នឹងបាត់ក្រោយ 24 ម៉ោង។');
+  } catch (error) { toast(error.message || 'មិនអាចផុស Story បានទេ។', 'error'); }
+  finally { if (button) { button.disabled = false; button.textContent = 'ផុស Story'; } }
+}
+function showSocialStory(index) {
+  if (!state.socialStories.length) return;
+  state.socialStoryViewerIndex = (index + state.socialStories.length) % state.socialStories.length;
+  const story = state.socialStories[state.socialStoryViewerIndex];
+  const profile = story.profile || {};
+  $('socialStoryViewerImage').src = story.image_url;
+  $('socialStoryViewerAuthor').innerHTML = socialProfileMarkup(profile) + '<b>' + esc(profile.display_name || 'អ្នកប្រើប្រាស់') + '</b>';
+  $('socialStoryViewerProgress').style.width = ((state.socialStoryViewerIndex + 1) / state.socialStories.length * 100) + '%';
+  $('socialStoryViewer').classList.remove('hidden');
+}
+function closeSocialStoryViewer() {
+  $('socialStoryViewer')?.classList.add('hidden');
+  $('socialStoryViewerImage')?.removeAttribute('src');
+}
 function renderSocialPosts() {
   const target = $('socialFeedList');
   if (!target) return;
@@ -894,6 +962,7 @@ async function loadProducts() {
     syncHomeHeroImagesFromProducts();
     void loadHomeVendorMedia();
     void loadSocialPosts();
+    void loadSocialStories();
   } catch (error) {
     // Keep the last successful catalogue visible during a temporary API/network failure.
     if (requestId !== state.productsRequestId) return;
@@ -2085,6 +2154,31 @@ function bindEvents() {
     const form = event.target.closest('[data-social-comment-form]');
     if (form) { event.preventDefault(); void submitSocialComment(form); }
   });
+
+  $('socialStoryImage')?.addEventListener('change', () => {
+    const file = $('socialStoryImage').files?.[0];
+    if (!file) { clearSocialStoryImage(); return; }
+    if (!['image/jpeg','image/png','image/webp'].includes(file.type) || file.size > 8 * 1024 * 1024) {
+      clearSocialStoryImage(); toast('សូមប្រើរូប JPG, PNG ឬ WEBP ដែលមានទំហំមិនលើស 8MB។', 'error'); return;
+    }
+    clearSocialStoryImage();
+    const url = URL.createObjectURL(file);
+    state.socialStoryPreviewUrl = url;
+    $('socialStoryPreviewImage').src = url;
+    $('socialStoryPreview').classList.remove('hidden');
+  });
+  $('socialStoryClearBtn')?.addEventListener('click', clearSocialStoryImage);
+  $('socialStoryPublishBtn')?.addEventListener('click', () => void publishSocialStory());
+  $('socialStoriesList')?.addEventListener('click', (event) => {
+    const card = event.target.closest('[data-social-story-view]');
+    if (card) showSocialStory(Number(card.dataset.socialStoryView));
+  });
+  $('socialStoryViewerClose')?.addEventListener('click', closeSocialStoryViewer);
+  $('socialStoryViewer')?.addEventListener('click', (event) => {
+    if (event.target.id === 'socialStoryViewer') closeSocialStoryViewer();
+  });
+  $('socialStoryViewerPrev')?.addEventListener('click', () => showSocialStory(state.socialStoryViewerIndex - 1));
+  $('socialStoryViewerNext')?.addEventListener('click', () => showSocialStory(state.socialStoryViewerIndex + 1));
 
   // Search & Category Filters
   $('searchForm').addEventListener('submit', (e) => {
