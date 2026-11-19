@@ -3022,7 +3022,7 @@ async function loadHomeVendorMedia(){
     const res=await api('/api/vendor-media');
     const rows=(res.data||[]).filter(row=>row.media_type==='video'&&String(row.media_url||'').startsWith('/api/media/video/'));
     if(!rows.length){section.classList.add('hidden');target.replaceChildren();return}
-    target.innerHTML=rows.map(row=>`<article class="home-vendor-media-card" data-short-video-url="${esc(row.media_url)}" data-short-store="${esc(row.store_name||'ហាងអ្នកលក់')}"><button class="home-vendor-media-open" type="button" aria-label="ពង្រីកវីដេអូ ${esc(row.store_name||'ហាងអ្នកលក់')}"><div class="home-vendor-media-player"><video src="${esc(row.media_url)}" muted autoplay loop playsinline preload="metadata"></video><span class="home-short-play-indicator" aria-hidden="true">▶</span></div></button><div class="home-vendor-media-store">${esc(row.store_name||'ហាងអ្នកលក់')}</div></article>`).join('');
+    target.innerHTML=rows.map(row=>`<article class="home-vendor-media-card" data-short-video-url="${esc(row.media_url)}" data-short-store="${esc(row.store_name||'ហាងអ្នកលក់')}"><button class="home-vendor-media-open" type="button" aria-label="ពង្រីកវីដេអូ ${esc(row.store_name||'ហាងអ្នកលក់')}"><div class="home-vendor-media-player"><video src="${esc(row.media_url)}" muted loop playsinline preload="metadata"></video><span class="home-short-play-indicator" aria-hidden="true">▶</span></div></button><div class="home-vendor-media-store">${esc(row.store_name||'ហាងអ្នកលក់')}</div></article>`).join('');
     const popup=$('homeShortsPopup'),popupVideo=$('homeShortsPopupFrame'),popupTitle=$('homeShortsPopupTitle');
     if(popup&&!target.dataset.popupBound){
       target.dataset.popupBound='1';
