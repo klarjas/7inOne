@@ -1691,7 +1691,7 @@ body{background:var(--page)!important;color:var(--ink);font-family:"Kantumruy Pr
 .home-vendor-media-list::-webkit-scrollbar{display:none}
 .home-vendor-media-card{display:block;flex:0 0 154px;min-width:0;color:inherit;text-decoration:none;scroll-snap-align:start}
 .home-vendor-media-player{position:relative;width:100%;aspect-ratio:9/16;overflow:hidden;border-radius:14px;background:#101010}
-.home-vendor-media-player iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.home-vendor-media-player iframe{position:absolute;inset:0;width:100%;height:100%;border:0;pointer-events:none!important}
 .home-vendor-media-store{display:block;margin-top:7px;min-width:0;overflow:hidden;color:#334155;font-size:11px;font-weight:700;text-overflow:ellipsis;white-space:nowrap}
 .seller-media-list{display:grid;gap:10px;margin-top:16px}
 .seller-media-item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;border:1px solid #E2E8F0;border-radius:12px;background:#fff}
