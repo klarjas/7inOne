@@ -1192,8 +1192,24 @@ function renderMarketplaceListingInProductDetail(item) {
   const price = isJob
     ? (item.price_label === 'ចរចា' ? 'ចរចាប្រាក់ខែ' : (item.price_label ? '$' + String(item.price_label).replace(' - ', ' - $') : 'ទាក់ទងសួរប្រាក់ខែ') + ({hourly:' / ម៉ោង',daily:' / ថ្ងៃ',monthly:' / ខែ',negotiable:''}[item.salary_period] || ''))
     : (item.price_label == null ? 'ទាក់ទងសួរតម្លៃ' : money(item.price_label) + (item.real_estate_type?.endsWith('_rent') ? ({daily:' / ថ្ងៃ',monthly:' / ខែ',yearly:' / ឆ្នាំ'}[item.rent_period] || '') : ''));
+  const displayJobValue = (key, value) => {
+    if (value === null || value === undefined || String(value).trim() === '') return '';
+    const raw = String(value).trim();
+    const maps = {
+      employment_type: { full_time: 'ពេញម៉ោង', part_time: 'ក្រៅម៉ោង', contract: 'តាមកិច្ចសន្យា', internship: 'កម្មសិក្សា', temporary: 'បណ្តោះអាសន្ន', freelance: 'ឯករាជ្យ' },
+      salary_period: { hourly: 'តាមម៉ោង', daily: 'តាមថ្ងៃ', monthly: 'ប្រចាំខែ', yearly: 'ប្រចាំឆ្នាំ', negotiable: 'ចរចា' },
+      work_schedule: { day: 'វេនថ្ងៃ', night: 'វេនយប់', rotating: 'ប្តូរវេន', flexible: 'បត់បែន' },
+      education: { none: 'មិនទាមទារ', primary: 'បឋមសិក្សា', secondary: 'មធ្យមសិក្សា', high_school: 'វិទ្យាល័យ', bachelor: 'បរិញ្ញាបត្រ', master: 'អនុបណ្ឌិត', phd: 'បណ្ឌិត' },
+      experience: { none: 'មិនទាមទារ', entry: 'មិនទាមទារបទពិសោធន៍', junior: 'កម្រិតដំបូង', mid: 'មធ្យម', senior: 'ជាន់ខ្ពស់' }
+    };
+    if (maps[key]?.[raw]) return maps[key][raw];
+    if (key === 'experience' && /^\\d+$/.test(raw)) return Number(raw) === 0 ? 'មិនទាមទារបទពិសោធន៍' : raw + ' ឆ្នាំ';
+    if (key === 'education' && /^\\d+$/.test(raw)) return 'ថ្នាក់ទី' + raw;
+    if (key === 'vacancies' && /^\\d+$/.test(raw)) return raw + ' នាក់';
+    return raw.replace(/_/g, ' ');
+  };
   const facts = isJob
-    ? [['ក្រុមហ៊ុន',item.company_name],['ប្រភេទការងារ',item.employment_type],['ប្រភេទរង',item.subcategory],['ចំនួនបុគ្គលិក',item.vacancies],['បទពិសោធន៍',item.experience],['ការអប់រំ',item.education],['ម៉ោងធ្វើការ',item.work_schedule],['ប្រភេទប្រាក់ខែ',item.salary_period]]
+    ? [['ក្រុមហ៊ុន',item.company_name],['ប្រភេទការងារ',displayJobValue('employment_type',item.employment_type)],['ប្រភេទរង',item.subcategory],['ចំនួនបុគ្គលិក',displayJobValue('vacancies',item.vacancies)],['បទពិសោធន៍',displayJobValue('experience',item.experience)],['ការអប់រំ',displayJobValue('education',item.education)],['ម៉ោងធ្វើការ',displayJobValue('work_schedule',item.work_schedule)],['ប្រភេទប្រាក់ខែ',displayJobValue('salary_period',item.salary_period)]]
     : [['ប្រភេទអចលនទ្រព្យ',item.property_type || item.real_estate_type],['ប្រភេទរង',item.subcategory],['បន្ទប់គេង',item.bedrooms],['បន្ទប់ទឹក',item.bathrooms],['ទំហំ',item.area_sqm ? item.area_sqm + ' m²' : ''],['ប្រភេទដី',item.land_type],['ប្លង់',item.title_deed],['ផ្លូវចូល',item.road_access],['អាសយដ្ឋាន',item.address]];
   const imageHtml = gallery.length
     ? `<div class="product-gallery-stage"><img class="product-listing-main-image" src="${esc(gallery[0])}" alt="${esc(item.title)}"></div>${gallery.length > 1 ? `<div class="product-gallery-thumbs">${gallery.map((url,index)=>`<button type="button" class="product-gallery-thumb ${index===0?'active':''}" data-shared-listing-image="${index}"><img src="${esc(url)}" alt="រូបភាព ${index+1}" loading="lazy"></button>`).join('')}</div>` : ''}`
@@ -1214,7 +1230,7 @@ function renderMarketplaceListingInProductDetail(item) {
           </ul>
           <section class="product-detail-description">
             <h2>${ic('file',18)} ព័ត៌មានលម្អិតអំពី${label}</h2>
-            <div class="product-spec-grid">${facts.filter(([,value])=>value!==null&&value!==undefined&&String(value).trim()!=='').map(([key,value])=>`<div><small>${esc(key)}</small><b>${esc(value)}</b></div>`).join('')}</div>
+            <ul class="listing-detail-list">${facts.filter(([,value])=>value!==null&&value!==undefined&&String(value).trim()!=='').map(([key,value])=>`<li><span>${esc(key)}</span><strong>${esc(value)}</strong></li>`).join('')}</ul>
             <p class="product-full-description">${esc(item.description || item.short_description || 'មិនទាន់មានការពិពណ៌នាលម្អិតទេ។')}</p>
           </section>
           <p class="product-meta-item">${esc(item.contact_phone || item.phone || '')}</p>
