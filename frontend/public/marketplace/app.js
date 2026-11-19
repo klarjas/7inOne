@@ -1904,6 +1904,7 @@ async function loadSellerChatConversation(scrollToBottom = false) {
   $('sellerChatHeaderTitle').textContent = otherName;
   $('sellerChatHeaderSubtitle').classList.add('hidden');
   $('sellerChatHeaderIdentity').classList.remove('hidden');
+  $('sellerChatHeaderDefault').classList.add('hidden');
   $('sellerChatHeaderAvatar').innerHTML = otherAvatar
     ? `<img src="${esc(otherAvatar)}" alt="${esc(otherName)}" class="h-full w-full rounded-full object-cover">`
     : `<span class="grid h-full w-full place-items-center text-slate-400">${ic(otherIsShop ? 'store' : 'user', 18)}</span>`;
