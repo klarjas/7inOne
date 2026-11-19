@@ -4211,3 +4211,9 @@ body > footer {
   }
 }
 
+/* Sky utility cleanup — keep these elements transparent and aligned with the dark theme. */
+.bg-sky-50{
+  background-color:transparent!important;
+  color:#66C0F4!important;
+  border-color:rgba(102,192,244,.35)!important;
+}
