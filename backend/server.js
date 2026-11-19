@@ -1384,7 +1384,7 @@ app.post('/api/jobs', authenticate, upload.fields([{name:'images',maxCount:10},{
       benefits:listingArray(body.benefits).map(v=>listingText(v,120)).filter(Boolean).slice(0,30),
       specifications:listingObject(body.specifications),
       image_file_id:primary?.fileId||null,image_message_id:primary?.messageId||null,image_mime_type:primary?.mimeType||null,
-      image_gallery:uploaded.map(item=>({file_id:item.fileId,message_id:item.messageId,mime_type:item.mimeType})),status:'active'
+      image_gallery:uploaded.map(item=>({file_id:item.fileId,message_id:item.messageId,mime_type:item.mimeType})),status:'active',expires_at:new Date(Date.now()+7*86400000).toISOString()
     };
     const {data,error}=await supabase.from('jobs').insert(row).select().single();
     if(error)throw error;
@@ -1423,7 +1423,7 @@ app.post('/api/real-estate', authenticate, upload.fields([{name:'images',maxCoun
       bathrooms:body.bathrooms===''||body.bathrooms==null?null:Math.max(0,Number(body.bathrooms)),
       specifications:listingObject(body.specifications),
       image_file_id:primary?.fileId||null,image_message_id:primary?.messageId||null,image_mime_type:primary?.mimeType||null,
-      image_gallery:uploaded.map(item=>({file_id:item.fileId,message_id:item.messageId,mime_type:item.mimeType})),status:'active'
+      image_gallery:uploaded.map(item=>({file_id:item.fileId,message_id:item.messageId,mime_type:item.mimeType})),status:'active',expires_at:new Date(Date.now()+7*86400000).toISOString()
     };
     const {data,error}=await supabase.from('property_listings').insert(row).select().single();
     if(error)throw error;
