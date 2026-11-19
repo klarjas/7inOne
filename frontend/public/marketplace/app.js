@@ -3020,9 +3020,10 @@ async function loadHomeVendorMedia() {
   try {
     const res=await api('/api/vendor-media'),rows=(res.data||[]).filter(row=>row.media_type==='video'&&youtubeVideoId(row.media_url));
     if(!rows.length){section.classList.add('hidden');target.replaceChildren();return}
-    target.innerHTML=rows.map(row=>{const id=youtubeVideoId(row.media_url);return `<article class="home-vendor-media-card" data-short-video-id="${esc(id)}" data-short-store="${esc(row.store_name||'ហាងអ្នកលក់')}"><button class="home-vendor-media-open" type="button" aria-label="ពង្រីកវីដេអូ ${esc(row.store_name||'ហាងអ្នកលក់')}"><div class="home-vendor-media-player">
+    target.innerHTML=rows.map(row=>{const id=youtubeVideoId(row.media_url);return `<article class="home-vendor-media-card" data-short-video-id="${esc(id)}" data-short-store="${esc(row.store_name||'ហាងអ្នកលក់')}"><button class="home-vendor-media-open" type="button" aria-label="ពង្រីកវីដេអូ ${esc(row.store_name||'ហាងអ្នកលក់')}"><div class="home-vendor-media-player"><div class="home-short-poster" style="background-image:url('https://i.ytimg.com/vi/${encodeURIComponent(id)}/hqdefault.jpg')" aria-hidden="true"><span class="home-short-poster-spinner"></span></div>
       <iframe src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&mute=1&loop=1&playlist=${encodeURIComponent(id)}&controls=0&disablekb=1&fs=0&iv_load_policy=3&rel=0&playsinline=1" title="Shorts ពី ${esc(row.store_name||'ហាងអ្នកលក់')}" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
       </div></button><div class="home-vendor-media-store">${esc(row.store_name||'ហាងអ្នកលក់')}</div></article>`}).join('');
+    target.querySelectorAll('.home-vendor-media-player iframe').forEach(frame=>frame.addEventListener('load',()=>frame.closest('.home-vendor-media-player')?.classList.add('is-ready'),{once:true}));
     section.classList.remove('hidden');
     const popup=$('homeShortsPopup'),popupFrame=$('homeShortsPopupFrame'),popupTitle=$('homeShortsPopupTitle');
     if(popup&&!target.dataset.popupBound){
@@ -3031,10 +3032,13 @@ async function loadHomeVendorMedia() {
         const trigger=event.target.closest('.home-vendor-media-open');if(!trigger)return;
         const card=trigger.closest('.home-vendor-media-card');const id=card?.dataset.shortVideoId;if(!id||!popupFrame)return;
         popupTitle.textContent=card.dataset.shortStore||'វីដេអូ';
+        const popupStage=popup?.querySelector('.home-shorts-popup-stage');
+        if(popupStage){popupStage.style.backgroundImage=`url(\"https://i.ytimg.com/vi/${encodeURIComponent(id)}/hqdefault.jpg\")`;popupStage.classList.add('is-loading');}
+        popupFrame.onload=()=>popupStage?.classList.remove('is-loading');
         popupFrame.src=`https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&controls=1&rel=0&playsinline=1`;
         if(!popup.open)popup.showModal();
       });
-      popup?.addEventListener('close',()=>{if(popupFrame)popupFrame.src='about:blank'});
+      popup?.addEventListener('close',()=>{if(popupFrame){popupFrame.onload=null;popupFrame.src='about:blank'}const stage=popup?.querySelector('.home-shorts-popup-stage');if(stage){stage.classList.remove('is-loading');stage.style.backgroundImage='none'}});
       popup?.addEventListener('click',event=>{if(event.target===popup)popup.close()});
       $('homeShortsPopupClose')?.addEventListener('click',()=>popup.close());
     }
