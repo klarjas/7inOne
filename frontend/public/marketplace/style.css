@@ -2036,7 +2036,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 #view-product .product-gallery-thumbs{justify-content:center;gap:10px!important;padding:14px 0!important}
 #view-product .product-gallery-thumb{width:58px;height:58px;flex-basis:58px;border:1px solid #2A475E;border-radius:12px;background:#16202D}
 #view-product .product-gallery-thumb.active{border:2px solid var(--accent)!important;transform:none!important}
-#view-product .product-detail-info{position:sticky;top:78px;gap:18px;padding:26px;border:1px solid #2A475E;border-radius:24px;background:#16202D;color:#C7D5E0;box-shadow:none;max-height:none;overflow:visible}
+#view-product .product-detail-info{position:sticky;top:78px;gap:18px;color:#C7D5E0;box-shadow:none;max-height:none;overflow:visible}
 #view-product .product-top-meta{color:var(--muted)!important;font-size:11px}
 #view-product .product-category-badge{background:#2A475E;color:#66C0F4;border-radius:980px}
 #view-product .product-detail-title{font-size:clamp(24px,2.6vw,34px);line-height:1.55;color:#FFFFFF;font-weight:700}
