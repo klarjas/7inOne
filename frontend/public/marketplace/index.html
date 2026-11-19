@@ -304,7 +304,11 @@
               <button id="homeShortsPopupClose" type="button" aria-label="បិទវីដេអូ">✕</button>
             </div>
             <div class="home-shorts-popup-stage">
-              <iframe id="homeShortsPopupFrame" title="វីដេអូ Shorts ពង្រីក" allow="autoplay; encrypted-media; picture-in-picture; web-share" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+              <video id="homeShortsPopupVideo" playsinline webkit-playsinline preload="none"></video>
+              <div class="home-shorts-popup-controls">
+                <button id="homeShortsPopupMute" type="button">សំឡេងបើក</button>
+                <span id="homeShortsPopupStatus" role="status">កំពុងរង់ចាំ...</span>
+              </div>
             </div>
           </dialog>
 
