@@ -1076,7 +1076,8 @@ app.get('/api/marketplace/listings', async (req, res) => {
 // Independent job and real-estate publishing APIs. Product routes and Telegram product-upload flow are not modified.
 const JOB_CATEGORIES = new Set(['it','office','sales','transport','hospitality','construction','education','healthcare','factory','agriculture','services','other']);
 const PROPERTY_CATEGORIES = new Set(['house_sale','house_rent','condo_sale','apartment_rent','land','land_rent','commercial_sale','commercial_rent','room_rent','properties_wanted','agent_services','others_properties']);
-const listingText = (value, max = 5000) => clean(value, max);\nconst listingObject = value => { if (value && typeof value === 'object' && !Array.isArray(value)) return value; if (typeof value === 'string') { try { const parsed = JSON.parse(value); return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {}; } catch {} } return {}; };
+const listingText = (value, max = 5000) => clean(value, max);
+const listingObject = value => { if (value && typeof value === 'object' && !Array.isArray(value)) return value; if (typeof value === 'string') { try { const parsed = JSON.parse(value); return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {}; } catch {} } return {}; };
 app.post('/api/jobs', authenticate, upload.single('image'), async (req, res) => {
   if (!db(res)) return;
   const body = req.body || {};
