@@ -1657,6 +1657,102 @@ function renderProductImageAlbum() {
   document.querySelector('.product-album-picker')?.classList.toggle('is-full', images.length >= 10);
   $('productImage').disabled = images.length >= 10;
 }
+
+/* --------------------------------------------------------------------------
+   Unified listing creation: jobs and real estate are isolated from products.
+   Extend this registry as new marketplace categories are introduced.
+   -------------------------------------------------------------------------- */
+const LISTING_TAXONOMY = {
+  jobs: {
+    it: { subs: ['Software & Development','IT Support & Networking','Design & Multimedia','Data & AI','Cybersecurity'], details: ['Frontend Developer','Backend Developer','Full Stack Developer','Mobile App Developer','UI/UX Designer','Graphic Designer','IT Support','Network Engineer','System Administrator','Data Analyst','AI Engineer','QA Tester','Cybersecurity Specialist'] },
+    office: { subs: ['រដ្ឋបាល','គណនេយ្យ និងហិរញ្ញវត្ថុ','ធនធានមនុស្ស','សេវាអតិថិជន'], details: ['Admin Officer','Receptionist','Accountant','Cashier','HR Officer','Data Entry','Customer Service'] },
+    sales: { subs: ['លក់រាយ','លក់ដុំ','ទីផ្សារឌីជីថល','អភិវឌ្ឍន៍អាជីវកម្ម'], details: ['Sales Representative','Sales Manager','Marketing Officer','Digital Marketing','Telemarketing','Business Development'] },
+    transport: { subs: ['ដឹកជញ្ជូន','បើកបរ','ឃ្លាំង និងភស្តុភារ'], details: ['Delivery Rider','Driver','Truck Driver','Logistics Officer','Warehouse Staff'] },
+    hospitality: { subs: ['ភោជនីយដ្ឋាន','សណ្ឋាគារ','ទេសចរណ៍'], details: ['Waiter / Waitress','Chef','Cook','Barista','Hotel Receptionist','Housekeeping','Tour Guide'] },
+    construction: { subs: ['សំណង់','វិស្វកម្ម','ស្ថាបត្យកម្ម'], details: ['Civil Engineer','Site Supervisor','Architect','Electrician','Plumber','Construction Worker'] },
+    education: { subs: ['បង្រៀន','គ្រប់គ្រងសាលា','បណ្តុះបណ្តាល'], details: ['English Teacher','Khmer Teacher','Math Teacher','School Administrator','Trainer'] },
+    healthcare: { subs: ['ពេទ្យ','គិលានុបដ្ឋាក','ឱសថស្ថាន'], details: ['Doctor','Nurse','Pharmacist','Medical Assistant','Lab Technician'] },
+    factory: { subs: ['ផលិតកម្ម','ត្រួតពិនិត្យគុណភាព','ថែទាំម៉ាស៊ីន'], details: ['Production Worker','Quality Control','Machine Operator','Factory Supervisor'] },
+    agriculture: { subs: ['កសិកម្ម','ចិញ្ចឹមសត្វ','កែច្នៃផលិតផល'], details: ['Farm Worker','Agronomist','Livestock Technician','Agriculture Supervisor'] },
+    services: { subs: ['សម្រស់','សម្អាត និងថែទាំ','សេវាកម្មទូទៅ'], details: ['Hair Stylist','Beautician','Nail Technician','Cleaner','Security Guard','Technician'] },
+    other: { subs: ['ការងារផ្សេងៗ'], details: ['General Worker','Other Position'] }
+  },
+  properties: {
+    house_sale: { subs: ['ផ្ទះល្វែង','ផ្ទះអាជីវកម្ម','វីឡា','ផ្ទះអាជីវកម្មលាយលំនៅដ្ឋាន'], details: ['ផ្ទះល្វែង','ផ្ទះអាជីវកម្ម','វីឡាកូនកាត់','វីឡាភ្លោះ','វីឡាទោល'] },
+    house_rent: { subs: ['ផ្ទះល្វែង','វីឡា','ផ្ទះអាជីវកម្ម'], details: ['ផ្ទះល្វែង','វីឡា','ផ្ទះអាជីវកម្ម'] },
+    condo_sale: { subs: ['Studio','1 Bedroom','2 Bedrooms','3+ Bedrooms'], details: ['Condo Studio','Condo 1BR','Condo 2BR','Condo 3BR+','Penthouse'] },
+    apartment_rent: { subs: ['Studio','1 Bedroom','2 Bedrooms','3+ Bedrooms'], details: ['Apartment Studio','Apartment 1BR','Apartment 2BR','Apartment 3BR+'] },
+    land: { subs: ['ដីលំនៅដ្ឋាន','ដីកសិកម្ម','ដីពាណិជ្ជកម្ម','ដីឧស្សាហកម្ម'], details: ['ដីក្នុងក្រុង','ដីជាយក្រុង','ដីចម្ការ','ដីផ្លូវធំ'] },
+    land_rent: { subs: ['ដីកសិកម្ម','ដីពាណិជ្ជកម្ម','ដីឧស្សាហកម្ម'], details: ['ដីចម្ការ','ដីឃ្លាំង','ដីពាណិជ្ជកម្ម'] },
+    commercial_sale: { subs: ['អគារការិយាល័យ','ហាង','ឃ្លាំង','ដីពាណិជ្ជកម្ម'], details: ['Office Building','Shop House','Warehouse','Commercial Building'] },
+    commercial_rent: { subs: ['ការិយាល័យ','ហាង','ឃ្លាំង','ទីតាំងអាជីវកម្ម'], details: ['Office Space','Retail Shop','Warehouse','Commercial Space'] },
+    room_rent: { subs: ['បន្ទប់ធម្មតា','បន្ទប់មានម៉ាស៊ីនត្រជាក់','បន្ទប់ស្ទូឌីយោ'], details: ['Single Room','Double Room','Studio Room','Shared Room'] },
+    properties_wanted: { subs: ['ចង់ទិញ','ចង់ជួល','ដី','ផ្ទះ','ខុនដូ'], details: ['Buyer Request','Tenant Request','Land Wanted','House Wanted','Condo Wanted'] },
+    agent_services: { subs: ['ភ្នាក់ងារលក់','ភ្នាក់ងារជួល','គ្រប់គ្រងអចលនទ្រព្យ'], details: ['Sales Agent','Rental Agent','Property Management'] },
+    others_properties: { subs: ['អចលនទ្រព្យផ្សេងៗ'], details: ['Other Property'] }
+  }
+};
+function fillTaxonomySelect(categorySelect, subSelect, detailSelect, registry) {
+  const entry = registry[categorySelect.value];
+  const setOptions = (select, placeholder, values) => {
+    select.innerHTML = '<option value="">' + placeholder + '</option>' + (values || []).map(value => '<option value="' + esc(value) + '">' + esc(value) + '</option>').join('');
+  };
+  setOptions(subSelect, 'ជ្រើសរើសផ្នែករង', entry?.subs || []);
+  setOptions(detailSelect, 'ជ្រើសរើសប្រភេទលម្អិត', entry?.details || []);
+}
+function openListingTypeChooser() { openModal('listingTypeModal'); }
+function openJobListingForm() {
+  $('jobListingForm').reset();
+  fillTaxonomySelect($('jobCategory'), $('jobSubcategory'), $('jobDetailType'), LISTING_TAXONOMY.jobs);
+  $('jobSpecificationFields').innerHTML = '';
+  openModal('jobFormModal');
+}
+function openPropertyListingForm() {
+  $('propertyListingForm').reset();
+  fillTaxonomySelect($('propertyCategory'), $('propertySubcategory'), $('propertyDetailType'), LISTING_TAXONOMY.properties);
+  $('propertySpecificationFields').innerHTML = '';
+  openModal('propertyFormModal');
+}
+function collectListingSpecs(form, extraFields) {
+  const specs = {};
+  for (const input of form.querySelectorAll('[data-listing-spec]')) {
+    const value = String(input.value || '').trim();
+    if (value) specs[input.dataset.listingSpec] = value;
+  }
+  return specs;
+}
+async function submitNewListing(form, endpoint, kind) {
+  const submit = form.querySelector('button[type="submit"]');
+  if (submit?.disabled) return;
+  const original = submit?.textContent || '';
+  const data = new FormData(form);
+  const skills = String(data.get('skills_text') || '').split(',').map(v => v.trim()).filter(Boolean);
+  const benefits = String(data.get('benefits_text') || '').split(',').map(v => v.trim()).filter(Boolean);
+  data.delete('skills_text'); data.delete('benefits_text');
+  data.set('specifications', JSON.stringify(collectListingSpecs(form)));
+  if (kind === 'job') {
+    data.set('skills', JSON.stringify(skills));
+    data.set('benefits', JSON.stringify(benefits));
+  }
+  if (kind === 'property' && ['properties_wanted','agent_services','others_properties'].includes(String(data.get('category')))) {
+    if (!data.get('price')) data.set('price', '');
+  }
+  if (submit) { submit.disabled = true; submit.textContent = 'កំពុងបង្ហោះ...'; }
+  try {
+    const result = await api(endpoint, { method: 'POST', body: data });
+    closeModal(kind === 'job' ? 'jobFormModal' : 'propertyFormModal');
+    toast(kind === 'job' ? 'បានបង្ហោះប្រកាសការងារជោគជ័យ!' : 'បានបង្ហោះអចលនទ្រព្យជោគជ័យ!');
+    state.activeListingType = kind === 'job' ? 'job' : 'real_estate';
+    state.activeCategory = 'all'; state.activePropertyType = 'all';
+    syncMarketplaceCategoryGroups();
+    await loadProducts();
+  } catch (error) {
+    toast(error.message || 'មិនអាចបង្ហោះប្រកាសបានទេ។', 'error');
+  } finally {
+    if (submit) { submit.disabled = false; submit.textContent = original; }
+  }
+}
+
 function renderProductForm(product = null) {
   if (!isSellerAccount()) { openSellerModal(); return; }
   revokeProductImagePreviews();
@@ -2441,10 +2537,24 @@ function bindEvents() {
   });
 
   // Header & Navigation
-  $('postAdBtn').addEventListener('click', () => { if (requireLogin()) isSellerAccount() ? renderProductForm() : openSellerModal(); });
+
+  $('postAdBtn').addEventListener('click', () => { if (requireLogin()) openListingTypeChooser(); });
   $('mobilePostBtn').addEventListener('click', () => $('postAdBtn').click());
   $('mobileMarketPost')?.addEventListener('click', () => $('postAdBtn').click());
   $('heroPostBtn').addEventListener('click', () => $('postAdBtn').click());
+  document.querySelectorAll('[data-create-kind]').forEach((button) => button.addEventListener('click', () => {
+    const kind = button.dataset.createKind;
+    closeModal('listingTypeModal');
+    if (kind === 'product') {
+      if (isSellerAccount()) renderProductForm();
+      else openSellerModal();
+    } else if (kind === 'job') openJobListingForm();
+    else if (kind === 'real_estate') openPropertyListingForm();
+  }));
+  $('jobCategory').addEventListener('change', () => fillTaxonomySelect($('jobCategory'), $('jobSubcategory'), $('jobDetailType'), LISTING_TAXONOMY.jobs));
+  $('propertyCategory').addEventListener('change', () => fillTaxonomySelect($('propertyCategory'), $('propertySubcategory'), $('propertyDetailType'), LISTING_TAXONOMY.properties));
+  $('jobListingForm').addEventListener('submit', (event) => { event.preventDefault(); void submitNewListing(event.currentTarget, '/api/jobs', 'job'); });
+  $('propertyListingForm').addEventListener('submit', (event) => { event.preventDefault(); void submitNewListing(event.currentTarget, '/api/real-estate', 'property'); });
   $('notificationBtn').addEventListener('click', (e) => { e.stopPropagation(); toggleDrop('notificationMenu'); });
   $('profileMenuBtn').addEventListener('click', (e) => { e.stopPropagation(); toggleDrop('profileMenu'); });
   document.addEventListener('click', (e) => {
