@@ -4585,3 +4585,52 @@ body > footer {
   aspect-ratio: 9 / 16;
   object-fit: contain;
 }
+
+
+/* 7inOne photo Stories — right community rail */
+#view-home .social-stories-panel {
+  margin: 0 0 12px;
+  padding: 12px;
+  border: 1px solid #2A475E;
+  border-radius: 15px;
+  background: #16202D;
+  color: #C7D5E0;
+}
+#view-home .social-stories-heading { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px; }
+#view-home .social-stories-heading b { color:#fff; font-size:13px; }
+#view-home .social-stories-heading small { color:#8F98A0; font-size:9px; }
+#view-home .social-stories-list { display:flex; gap:8px; overflow-x:auto; padding:2px 1px 6px; scrollbar-width:thin; }
+#view-home .social-story-create,
+#view-home .social-story-card { position:relative; display:flex; flex:0 0 92px; width:92px; height:142px; overflow:hidden; flex-direction:column; align-items:center; justify-content:flex-end; border:1px solid #2A475E; border-radius:11px; background:#101822; cursor:pointer; }
+#view-home .social-story-create { justify-content:center; gap:8px; color:#C7D5E0; }
+#view-home .social-story-create-icon { display:grid; width:34px; height:34px; place-items:center; border-radius:50%; background:#203D55; color:#66C0F4; font-size:25px; }
+#view-home .social-story-create b { font-size:10px; }
+#view-home .social-story-card { padding:0; text-align:left; }
+#view-home .social-story-photo { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+#view-home .social-story-card::after { content:""; position:absolute; inset:35% 0 0; background:linear-gradient(transparent,rgba(0,0,0,.82)); }
+#view-home .social-story-avatar { position:absolute; z-index:1; top:8px; left:8px; width:30px; height:30px; overflow:hidden; border:2px solid #66C0F4; border-radius:50%; background:#203D55; }
+#view-home .social-story-avatar .social-avatar { width:100%; height:100%; border:0; }
+#view-home .social-story-card>b { position:relative; z-index:1; width:100%; padding:0 7px 9px; color:#fff; font-size:9px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+#view-home .social-story-preview { margin-top:9px; padding:8px; border:1px solid #2A475E; border-radius:10px; background:#101822; }
+#view-home .social-story-preview img { display:block; width:100%; max-height:190px; aspect-ratio:9/16; object-fit:contain; }
+#view-home .social-story-preview>div { display:flex; gap:8px; margin-top:8px; }
+#view-home .social-story-preview button { flex:1; padding:8px; border-radius:8px; background:#203D55; color:#C7D5E0; font-size:10px; }
+#view-home #socialStoryPublishBtn { background:linear-gradient(135deg,#3D83B5,#66C0F4); color:#102131; font-weight:800; }
+#view-home .social-story-preview button:disabled { opacity:.55; }
+#view-home .social-story-viewer { position:fixed; z-index:100000; inset:0; display:flex; align-items:center; justify-content:center; gap:12px; padding:20px; background:rgba(4,9,15,.96); }
+#view-home .social-story-viewer.hidden { display:none; }
+#view-home .social-story-viewer-content { position:relative; width:min(420px,calc(100vw - 90px)); height:min(82vh,760px); overflow:hidden; border-radius:14px; background:#101822; }
+#view-home .social-story-viewer-content>img { width:100%; height:100%; object-fit:contain; }
+#view-home .social-story-viewer-progress { position:absolute; z-index:2; top:10px; left:10px; right:10px; height:3px; border-radius:5px; background:rgba(255,255,255,.35); }
+#view-home .social-story-viewer-progress span { display:block; height:100%; border-radius:5px; background:#fff; }
+#view-home .social-story-viewer-author { position:absolute; z-index:2; top:22px; left:12px; display:flex; align-items:center; gap:8px; color:#fff; font-size:12px; text-shadow:0 1px 3px #000; }
+#view-home .social-story-viewer-author .social-avatar { width:30px; height:30px; flex-basis:30px; border:2px solid #66C0F4; }
+#view-home .social-story-viewer-close,
+#view-home .social-story-viewer-nav { display:grid; place-items:center; width:38px; height:38px; border:0; border-radius:50%; background:rgba(255,255,255,.12); color:#fff; font-size:28px; }
+#view-home .social-story-viewer-close { position:absolute; top:18px; right:18px; z-index:3; }
+#view-home .social-story-viewer-nav { flex:0 0 38px; }
+@media(max-width:520px) {
+  #view-home .social-story-viewer { gap:5px; padding:8px; }
+  #view-home .social-story-viewer-content { width:calc(100vw - 92px); height:78vh; }
+  #view-home .social-story-viewer-nav { width:30px; height:30px; flex-basis:30px; }
+}
