@@ -1848,10 +1848,12 @@ async function loadCambodiaGeo() {
 function locationOptionLabel(kh, en) { return kh + (en ? ' · ' + en : ''); }
 async function initCambodiaLocationPicker(root, legacyLocation = '') {
   if (!root) return;
-  const selects = Object.fromEntries(['province','district','commune','village'].map(level => [level, root.querySelector('[data-location-level="' + level + '"]')]));
+  const levels = ['province','district','commune','village'];
+  const selects = Object.fromEntries(levels.map(level => [level, root.querySelector('[data-location-level="' + level + '"]')]));
   const locationInput = root.querySelector('[data-location-value]') || root.querySelector('#productLocation');
-  const codeInputs = Object.fromEntries(['province','district','commune','village'].map(level => [level, root.querySelector('[data-location-code="' + level + '"]') || root.querySelector('#product' + level[0].toUpperCase() + level.slice(1) + 'Code')]));
+  const codeInputs = Object.fromEntries(levels.map(level => [level, root.querySelector('[data-location-code="' + level + '"]') || root.querySelector('#product' + level[0].toUpperCase() + level.slice(1) + 'Code')]));
   const summary = root.querySelector('[data-location-summary]');
+  const defaultCheckbox = root.querySelector('[data-location-default]');
   if (legacyLocation && locationInput && !locationInput.value) locationInput.value = legacyLocation;
   for (const select of Object.values(selects)) if (select) select.disabled = true;
   try {
@@ -1866,13 +1868,15 @@ async function initCambodiaLocationPicker(root, legacyLocation = '') {
       select.innerHTML = '<option value="">' + label + '</option>' + items.map(item => '<option value="' + esc(item.code) + '">' + esc(locationOptionLabel(item.kh,item.en)) + '</option>').join('');
       select.disabled = false;
     };
-    fill(selects.province, 'ជ្រើសរើសរាជធានី/ខេត្ត', unique(rows,'province_code','province_kh','province_en'));
+    const provinceItems = unique(rows,'province_code','province_kh','province_en');
+    fill(selects.province, 'ជ្រើសរើសរាជធានី/ខេត្ត', provinceItems);
+    let savedLocation = state.me?.profile?.default_location || null;
+    const selectedRows = () => Object.fromEntries(levels.map(level => [
+      level, rows.find(row => row[level + '_code'] === (selects[level]?.value || '')) || null
+    ]));
     const updateLocation = () => {
-      const selected = {};
-      for (const level of ['province','district','commune','village']) {
-        selected[level] = rows.find(row => row[level + '_code'] === (selects[level]?.value || '')) || null;
-      }
-      ['province','district','commune','village'].forEach(level => {
+      const selected = selectedRows();
+      levels.forEach(level => {
         if (codeInputs[level]) codeInputs[level].value = selects[level]?.value || '';
       });
       if (selected.village && selected.commune && selected.district && selected.province) {
@@ -1883,6 +1887,27 @@ async function initCambodiaLocationPicker(root, legacyLocation = '') {
         if (locationInput) locationInput.value = '';
         if (summary) summary.textContent = 'សូមជ្រើសរើសរាជធានី/ខេត្ត → ស្រុក/ខណ្ឌ → ឃុំ/សង្កាត់ → ភូមិ';
       }
+      if (defaultCheckbox) {
+        defaultCheckbox.checked = Boolean(savedLocation && levels.every(level =>
+          String(savedLocation[level + '_code'] || '') === String(selects[level]?.value || '')
+        ) && levels.every(level => Boolean(selects[level]?.value)));
+      }
+    };
+    const applySavedLocation = (saved) => {
+      if (!saved || !levels.every(level => saved[level + '_code'])) return false;
+      if (!provinceItems.some(item => item.code === String(saved.province_code))) return false;
+      selects.province.value = String(saved.province_code);
+      fill(selects.district, 'ជ្រើសរើសស្រុក/ខណ្ឌ', unique(rows.filter(r => r.province_code === selects.province.value),'district_code','district_kh','district_en'));
+      if (!Array.from(selects.district.options).some(option => option.value === String(saved.district_code))) return false;
+      selects.district.value = String(saved.district_code);
+      fill(selects.commune, 'ជ្រើសរើសឃុំ/សង្កាត់', unique(rows.filter(r => r.district_code === selects.district.value),'commune_code','commune_kh','commune_en'));
+      if (!Array.from(selects.commune.options).some(option => option.value === String(saved.commune_code))) return false;
+      selects.commune.value = String(saved.commune_code);
+      fill(selects.village, 'ជ្រើសរើសភូមិ', unique(rows.filter(r => r.commune_code === selects.commune.value),'village_code','village_kh','village_en'));
+      if (!Array.from(selects.village.options).some(option => option.value === String(saved.village_code))) return false;
+      selects.village.value = String(saved.village_code);
+      updateLocation();
+      return true;
     };
     if (root.dataset.locationBound !== 'true') {
       selects.province?.addEventListener('change', () => {
@@ -1899,8 +1924,49 @@ async function initCambodiaLocationPicker(root, legacyLocation = '') {
         updateLocation();
       });
       selects.village?.addEventListener('change', updateLocation);
+      defaultCheckbox?.addEventListener('change', async () => {
+        if (!defaultCheckbox.checked) {
+          if (!state.session) return;
+          try {
+            await api('/api/me/default-location', { method: 'PATCH', body: JSON.stringify({ default_location: null }) });
+            savedLocation = null;
+            if (state.me?.profile) state.me.profile.default_location = null;
+            toast('បានដកទីតាំងលំនាំដើមចេញ។');
+          } catch (error) {
+            defaultCheckbox.checked = true;
+            toast(error.message || 'មិនអាចដកទីតាំងលំនាំដើមបានទេ។', 'error');
+          }
+          return;
+        }
+        if (!requireLogin()) { defaultCheckbox.checked = false; return; }
+        const selected = selectedRows();
+        if (!selected.village || !selected.commune || !selected.district || !selected.province) {
+          defaultCheckbox.checked = false;
+          toast('សូមជ្រើសរើសទីតាំងដល់កម្រិតភូមិជាមុនសិន។', 'error');
+          return;
+        }
+        const nextDefault = {
+          province_code: selects.province.value,
+          district_code: selects.district.value,
+          commune_code: selects.commune.value,
+          village_code: selects.village.value,
+          location: locationInput?.value || ''
+        };
+        try {
+          await api('/api/me/default-location', { method: 'PATCH', body: JSON.stringify({ default_location: nextDefault }) });
+          savedLocation = nextDefault;
+          if (state.me?.profile) state.me.profile.default_location = nextDefault;
+          defaultCheckbox.checked = true;
+          toast('បានរក្សាទុកទីតាំងលំនាំដើមជោគជ័យ!');
+        } catch (error) {
+          defaultCheckbox.checked = false;
+          toast(error.message || 'មិនអាចរក្សាទុកទីតាំងលំនាំដើមបានទេ។', 'error');
+        }
+      });
       root.dataset.locationBound = 'true';
     }
+    if (!legacyLocation && !locationInput?.value) applySavedLocation(savedLocation);
+    else updateLocation();
     root.dataset.locationReady = 'true';
   } catch (error) {
     if (summary) summary.textContent = error.message || 'មិនអាចផ្ទុកទីតាំងបានទេ។';
