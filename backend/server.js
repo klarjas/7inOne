@@ -244,6 +244,7 @@ async function deleteTelegramMessage(messageId) {
 registerSupportChat(app, { supabase, authenticate, requireAdmin, telegram, telegramStorageChatId, deleteTelegramMessage, clean, fail });
 registerSellerChat(app, { supabase, authenticate, requireVendor, upload, telegram, telegramStorageChatId, clean, fail, productPublicMaxAgeMs: PRODUCT_PUBLIC_MAX_AGE_MS });
 const mediaProxyUrl = fileId => fileId ? `/api/media/image/${encodeURIComponent(fileId)}` : null;
+const normalizeMediaUrl = value => String(value || '').replace('/api/media/telegram/', '/api/media/image/');
 function publicMediaUrl(path) {
   if (!path || !supabase) return null;
   return supabase.storage.from('profile-media').getPublicUrl(path).data.publicUrl;
@@ -255,7 +256,7 @@ function withoutStorageFields(record) {
 function publicVendor(vendor) {
   if (!vendor) return vendor;
   const safeVendor = withoutStorageFields(vendor);
-  return { ...safeVendor, store_logo_url: vendor.store_logo_file_id ? mediaProxyUrl(vendor.store_logo_file_id) : (vendor.store_logo_url || null), store_cover_url: vendor.store_cover_file_id ? mediaProxyUrl(vendor.store_cover_file_id) : (vendor.store_cover_url || null) };
+  return { ...safeVendor, store_logo_url: vendor.store_logo_file_id ? mediaProxyUrl(vendor.store_logo_file_id) : normalizeMediaUrl(vendor.store_logo_url), store_cover_url: vendor.store_cover_file_id ? mediaProxyUrl(vendor.store_cover_file_id) : normalizeMediaUrl(vendor.store_cover_url) };
 }
 function publicProduct(product) {
   return {
@@ -265,7 +266,7 @@ function publicProduct(product) {
     vendors: Array.isArray(product.vendors) ? product.vendors.map(publicVendor) : publicVendor(product.vendors),
     product_images: (product.product_images || []).map(image => ({
       id: image.id, sort_order: image.sort_order,
-      image_url: image.file_id ? mediaProxyUrl(image.file_id) : image.image_url
+      image_url: image.file_id ? mediaProxyUrl(image.file_id) : normalizeMediaUrl(image.image_url)
     })).sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0))
   };
 }
@@ -592,12 +593,12 @@ async function getSiteBranding({ includeStorage = false } = {}){
   const faviconUrl=faviconFileId?'/api/site/favicon?v='+encodeURIComponent(faviconVersion):clean(value.faviconUrl,2000);
   const heroImages=(Array.isArray(value.heroImages)?value.heroImages:[]).slice(0,3).map(image=>{
     const fileId=clean(image?.fileId||image?.file_id,2048);
-    return {url:fileId?mediaProxyUrl(fileId):clean(image?.url||image?.imageUrl,2000),...(includeStorage?{fileId}: {})};
+    return {url:fileId?mediaProxyUrl(fileId):normalizeMediaUrl(clean(image?.url||image?.imageUrl,2000)),...(includeStorage?{fileId}: {})};
   }).filter(image=>image.url);
   return {siteLogoUrl,faviconUrl,siteTitle:clean(value.siteTitle,80)||DEFAULT_SITE_BRANDING.siteTitle,siteSubtitle:clean(value.siteSubtitle,120)||DEFAULT_SITE_BRANDING.siteSubtitle,heroBadge:clean(value.heroBadge,100)||DEFAULT_SITE_BRANDING.heroBadge,heroTitle:clean(value.heroTitle,160)||DEFAULT_SITE_BRANDING.heroTitle,heroSubtitle:clean(value.heroSubtitle,600)||DEFAULT_SITE_BRANDING.heroSubtitle,heroImages,sidePosters:Object.fromEntries(['top','middle','tall'].map(slot=>{
     const item=value.sidePosters?.[slot];if(!item||typeof item!=='object')return [slot,null];
     const fileId=clean(item.fileId||item.file_id,2048);
-    return [slot,{url:fileId?mediaProxyUrl(fileId):clean(item.url,2000),...(includeStorage?{fileId}: {}),link:clean(item.link,2000),enabled:item.enabled!==false,alt:clean(item.alt,120)}];
+    return [slot,{url:fileId?mediaProxyUrl(fileId):normalizeMediaUrl(clean(item.url,2000)),...(includeStorage?{fileId}: {}),link:clean(item.link,2000),enabled:item.enabled!==false,alt:clean(item.alt,120)}];
   }).filter(([,item])=>item?.url))};
 }
 app.get('/api/config', async (_req, res) => {
@@ -621,10 +622,10 @@ app.patch('/api/admin/settings', authenticate, requireAdmin, async (req, res) =>
   res.json({ data: settings });
 });
 app.get('/api/site/logo', async (_req,res)=>{
-  try{if(!supabase)return fail(res,503,'Website logo is unavailable.');const {data,error}=await supabase.from('site_settings').select('value').eq('key','site_branding').maybeSingle();if(error)throw error;const value=data?.value||{};const fileId=clean(value.siteLogoFileId,2048)||(value.siteLogoFileId&&value.siteLogoFileId===value.faviconFileId?clean(value.faviconFileId,2048):'');if(!fileId)return res.status(404).end();return await streamTelegramFile(fileId,res,clean(value.siteLogoMimeType,80)||(value.siteLogoFileId&&value.siteLogoFileId===value.faviconFileId?clean(value.faviconMimeType,80):'')||'image/png','inline','public, max-age=300, stale-while-revalidate=3600')}catch(error){console.error('Website logo proxy failed:',error.message);return fail(res,502,'Could not retrieve website logo from Telegram.')}
+  try{if(!supabase)return fail(res,503,'Website logo is unavailable.');const {data,error}=await supabase.from('site_settings').select('value').eq('key','site_branding').maybeSingle();if(error)throw error;const value=data?.value||{};const fileId=clean(value.siteLogoFileId,2048)||(value.siteLogoFileId&&value.siteLogoFileId===value.faviconFileId?clean(value.faviconFileId,2048):'');if(!fileId)return res.status(404).end();return await streamTelegramFile(fileId,res,clean(value.siteLogoMimeType,80)||(value.siteLogoFileId&&value.siteLogoFileId===value.faviconFileId?clean(value.faviconMimeType,80):'')||'image/png','inline','public, max-age=300, stale-while-revalidate=3600')}catch(error){console.error('Website logo proxy failed:',error.message);return fail(res,502,'Could not load website logo.')}
 });
 app.get('/api/site/favicon', async (_req,res)=>{
-  try{if(!supabase)return fail(res,503,'Website favicon is unavailable.');const {data,error}=await supabase.from('site_settings').select('value').eq('key','site_branding').maybeSingle();if(error)throw error;const value=data?.value||{};const fileId=clean(value.faviconFileId,2048)||(value.faviconFileId&&value.faviconFileId===value.siteLogoFileId?clean(value.siteLogoFileId,2048):'');if(!fileId)return res.status(404).end();return await streamTelegramFile(fileId,res,clean(value.faviconMimeType,80)||(value.faviconFileId&&value.faviconFileId===value.siteLogoFileId?clean(value.siteLogoMimeType,80):'')||'image/png','inline','public, max-age=300, stale-while-revalidate=3600')}catch(error){console.error('Website favicon proxy failed:',error.message);return fail(res,502,'Could not retrieve website favicon from Telegram.')}
+  try{if(!supabase)return fail(res,503,'Website favicon is unavailable.');const {data,error}=await supabase.from('site_settings').select('value').eq('key','site_branding').maybeSingle();if(error)throw error;const value=data?.value||{};const fileId=clean(value.faviconFileId,2048)||(value.faviconFileId&&value.faviconFileId===value.siteLogoFileId?clean(value.siteLogoFileId,2048):'');if(!fileId)return res.status(404).end();return await streamTelegramFile(fileId,res,clean(value.faviconMimeType,80)||(value.faviconFileId&&value.faviconFileId===value.siteLogoFileId?clean(value.siteLogoMimeType,80):'')||'image/png','inline','public, max-age=300, stale-while-revalidate=3600')}catch(error){console.error('Website favicon proxy failed:',error.message);return fail(res,502,'Could not load website favicon.')}
 });
 app.post('/api/admin/favicon', authenticate, requireAdmin, upload.single('file'), async (req,res)=>{
   let uploaded=null;
@@ -724,7 +725,7 @@ app.get(['/api/media/image/:mediaId', '/api/media/telegram/:fileId'], telegramMe
     return await streamTelegramFile(fileId, res, safeMime);
   } catch (error) {
     console.error('Telegram media proxy error:', error.message);
-    return fail(res, 502, error.message || 'Could not retrieve Telegram media.');
+    return fail(res, 502, 'Could not load this image. Please try again.');
   }
 });
 
@@ -805,7 +806,7 @@ app.get('/api/social/posts', async (req, res) => {
     id: post.id, user_id: post.user_id, caption: post.caption,
     image_url: mediaProxyUrl(post.image_file_id), created_at: post.created_at,
     profile: { display_name: post.profiles?.display_name || 'អ្នកប្រើប្រាស់',
-      avatar_url: post.profiles?.avatar_url || mediaProxyUrl(post.profiles?.avatar_file_id) || publicMediaUrl(post.profiles?.avatar_path) },
+      avatar_url: normalizeMediaUrl(post.profiles?.avatar_url) || mediaProxyUrl(post.profiles?.avatar_file_id) || publicMediaUrl(post.profiles?.avatar_path) },
     like_count: post.social_post_likes?.length || 0,
     comment_count: post.social_post_comments?.length || 0,
     liked_by_me: Boolean(viewerId && post.social_post_likes?.some(like => like.user_id === viewerId))
@@ -841,7 +842,7 @@ app.get('/api/social/stories', async (req, res) => {
     id: story.id, user_id: story.user_id, image_url: mediaProxyUrl(story.image_file_id),
     created_at: story.created_at, expires_at: story.expires_at,
     profile: { display_name: story.profiles?.display_name || 'អ្នកប្រើប្រាស់',
-      avatar_url: story.profiles?.avatar_url || mediaProxyUrl(story.profiles?.avatar_file_id) || publicMediaUrl(story.profiles?.avatar_path) }
+      avatar_url: normalizeMediaUrl(story.profiles?.avatar_url) || mediaProxyUrl(story.profiles?.avatar_file_id) || publicMediaUrl(story.profiles?.avatar_path) }
   })) });
 });
 app.post('/api/social/stories', authenticate, upload.single('image'), async (req, res) => {
@@ -1835,7 +1836,7 @@ app.get('/api/me', authenticate, async (req, res) => {
     supabase.from('profiles').select('*').eq('id', req.user.id).maybeSingle(),
     vendorFor(req.user.id)
   ]);
-  const normalized = profile ? { ...withoutStorageFields(profile), avatar_url: profile.avatar_url || mediaProxyUrl(profile.avatar_file_id) || publicMediaUrl(profile.avatar_path), cover_url: profile.cover_url || mediaProxyUrl(profile.cover_file_id) || publicMediaUrl(profile.cover_path) } : null;
+  const normalized = profile ? { ...withoutStorageFields(profile), avatar_url: normalizeMediaUrl(profile.avatar_url) || mediaProxyUrl(profile.avatar_file_id) || publicMediaUrl(profile.avatar_path), cover_url: normalizeMediaUrl(profile.cover_url) || mediaProxyUrl(profile.cover_file_id) || publicMediaUrl(profile.cover_path) } : null;
   const safeVendor = vendor ? publicVendor(vendor) : null;
   res.json({ data: { user: { id: req.user.id, email: req.user.email, phone: req.user.phone || null }, profile: normalized, vendor: safeVendor, isAdmin: profile?.role === 'admin' } });
 });
@@ -1849,7 +1850,7 @@ app.patch('/api/me', authenticate, async (req, res) => {
   if (!Object.keys(patch).length) return fail(res, 400, 'No profile fields supplied');
   const { data, error } = await supabase.from('profiles').update(patch).eq('id', req.user.id).select().single();
   if (error) return fail(res, 400, 'Could not update profile');
-  res.json({ data: { ...withoutStorageFields(data), avatar_url: data.avatar_url || mediaProxyUrl(data.avatar_file_id) || publicMediaUrl(data.avatar_path), cover_url: data.cover_url || mediaProxyUrl(data.cover_file_id) || publicMediaUrl(data.cover_path) } });
+  res.json({ data: { ...withoutStorageFields(data), avatar_url: normalizeMediaUrl(data.avatar_url) || mediaProxyUrl(data.avatar_file_id) || publicMediaUrl(data.cover_path) } });
 });
 app.post('/api/me/media', authenticate, upload.single('file'), async (req, res) => {
   try {
@@ -1869,14 +1870,14 @@ app.post('/api/me/media', authenticate, upload.single('file'), async (req, res) 
     if (error) {
       await deleteTelegramMessage(uploaded.messageId);
       console.error('Profile Telegram media DB update failed:', error.message);
-      return fail(res, 500, 'Image uploaded to Telegram but could not be saved to the profile database. Apply the Telegram media migration.');
+      return fail(res, 500, 'Image was uploaded but could not be saved to your profile. Please try again.');
     }
     const oldMessageId = type === 'avatar' ? prior?.avatar_message_id : prior?.cover_message_id;
     if (oldMessageId && oldMessageId !== uploaded.messageId) await deleteTelegramMessage(oldMessageId);
     const normalized = {
       ...withoutStorageFields(data),
-      avatar_url: data.avatar_url || mediaProxyUrl(data.avatar_file_id) || publicMediaUrl(data.avatar_path),
-      cover_url: data.cover_url || mediaProxyUrl(data.cover_file_id) || publicMediaUrl(data.cover_path)
+      avatar_url: normalizeMediaUrl(data.avatar_url) || mediaProxyUrl(data.avatar_file_id) || publicMediaUrl(data.avatar_path),
+      cover_url: normalizeMediaUrl(data.cover_url) || mediaProxyUrl(data.cover_file_id) || publicMediaUrl(data.cover_path)
     };
     return res.status(201).json({ data: normalized });
   } catch (error) {
