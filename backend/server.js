@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { createClient } from '@supabase/supabase-js';
 import { registerSupportChat } from './support-chat.js';
 import { registerSellerChat } from './seller-chat.js';
-import { randomUUID, randomBytes, randomInt, createHash, createHmac, timingSafeEqual } from 'node:crypto';
+import { randomUUID, randomBytes, randomInt, createHash, createHmac, timingSafeEqual, createCipheriv, createDecipheriv } from 'node:crypto';
 
 const app = express();
 const port = Number(process.env.PORT || 10000);
@@ -242,9 +242,42 @@ async function deleteTelegramMessage(messageId) {
 }
 
 registerSupportChat(app, { supabase, authenticate, requireAdmin, telegram, telegramStorageChatId, deleteTelegramMessage, clean, fail });
-registerSellerChat(app, { supabase, authenticate, requireVendor, upload, telegram, telegramStorageChatId, clean, fail, productPublicMaxAgeMs: PRODUCT_PUBLIC_MAX_AGE_MS });
-const mediaProxyUrl = fileId => fileId ? `/api/media/image/${encodeURIComponent(fileId)}` : null;
-const normalizeMediaUrl = value => String(value || '').replace('/api/media/telegram/', '/api/media/image/');
+const mediaEncryptionKey = () => createHash('sha256').update(String(serviceKey || process.env.TELEGRAM_BOT_TOKEN || '')).digest();
+function encodeMediaToken(fileId) {
+  const value = String(fileId || '');
+  if (!value) return '';
+  const key = mediaEncryptionKey();
+  const iv = createHmac('sha256', key).update('7inone-media:' + value).digest().subarray(0, 12);
+  const cipher = createCipheriv('aes-256-gcm', key, iv);
+  const encrypted = Buffer.concat([cipher.update(value, 'utf8'), cipher.final()]);
+  return Buffer.concat([iv, cipher.getAuthTag(), encrypted]).toString('base64url');
+}
+function decodeMediaToken(token) {
+  const packed = Buffer.from(String(token || ''), 'base64url');
+  if (packed.length < 29) throw new Error('Invalid media reference.');
+  const key = mediaEncryptionKey();
+  const iv = packed.subarray(0, 12), tag = packed.subarray(12, 28), encrypted = packed.subarray(28);
+  const decipher = createDecipheriv('aes-256-gcm', key, iv);
+  decipher.setAuthTag(tag);
+  const value = Buffer.concat([decipher.update(encrypted), decipher.final()]).toString('utf8');
+  const expectedIv = createHmac('sha256', key).update('7inone-media:' + value).digest().subarray(0, 12);
+  if (!timingSafeEqual(iv, expectedIv)) throw new Error('Invalid media reference.');
+  return value;
+}
+const mediaProxyUrl = fileId => fileId ? '/api/media/image/' + encodeURIComponent(encodeMediaToken(fileId)) : null;
+function normalizeMediaUrl(value) {
+  const raw = String(value || '');
+  const parts = raw.split('?');
+  const pathname = parts.shift();
+  const query = parts.length ? '?' + parts.join('?') : '';
+  const match = pathname.match(/\/api\/media\/(?:telegram|image)\/([^/]+)$/);
+  if (!match) return raw;
+  let segment;
+  try { segment = decodeURIComponent(match[1]); } catch { return raw; }
+  let fileId = segment;
+  try { fileId = decodeMediaToken(segment); } catch {}
+  return (mediaProxyUrl(fileId) || '') + query;
+}
 function publicMediaUrl(path) {
   if (!path || !supabase) return null;
   return supabase.storage.from('profile-media').getPublicUrl(path).data.publicUrl;
@@ -270,6 +303,8 @@ function publicProduct(product) {
     })).sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0))
   };
 }
+registerSellerChat(app, { supabase, authenticate, requireVendor, upload, telegram, telegramStorageChatId, clean, fail, productPublicMaxAgeMs: PRODUCT_PUBLIC_MAX_AGE_MS, mediaProxyUrl });
+
 async function fetchTelegramWithRetry(url, options, stage, maxAttempts = 3) {
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     let response;
@@ -716,7 +751,7 @@ const telegramMediaRateLimit = rateLimit({ windowMs: 60_000, limit: 600, standar
 app.get(['/api/media/image/:mediaId', '/api/media/telegram/:fileId'], telegramMediaRateLimit, async (req, res) => {
   try {
     if (!process.env.TELEGRAM_BOT_TOKEN) return fail(res, 503, 'Image service is temporarily unavailable. Please try again later.');
-    const fileId = clean(req.params.mediaId || req.params.fileId, 2048);
+    const fileId = clean(req.params.fileId ? req.params.fileId : decodeMediaToken(req.params.mediaId), 2048);
     if (!fileId) return fail(res, 400, 'Invalid image reference.');
     const requestedMime = clean(req.query.mime, 60).toLowerCase();
     const safeAudioMimes = new Set(['audio/webm','audio/ogg','audio/mp4','audio/mpeg','audio/wav','audio/x-wav']);
