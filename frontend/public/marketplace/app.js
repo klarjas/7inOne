@@ -3320,7 +3320,7 @@ function bindEvents() {
   $('postAdBtn').addEventListener('click', () => { if (requireLogin()) openListingTypeChooser(); });
   $('mobilePostBtn').addEventListener('click', () => $('postAdBtn').click());
   $('mobileMarketPost')?.addEventListener('click', () => $('postAdBtn').click());
-  $('heroPostBtn').addEventListener('click', () => $('postAdBtn').click());
+  $('heroPostBtn')?.addEventListener('click', () => $('postAdBtn')?.click());
   document.querySelectorAll('[data-create-kind]').forEach((button) => button.addEventListener('click', () => {
     const kind = button.dataset.createKind;
     closeModal('listingTypeModal');
