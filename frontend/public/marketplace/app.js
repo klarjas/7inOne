@@ -3019,7 +3019,7 @@ async function loadHomeVendorMedia() {
     if(!rows.length){section.classList.add('hidden');return}
     target.innerHTML=rows.map(row=>{const id=youtubeVideoId(row.media_url);return `<article class="home-vendor-media-card"><div class="home-vendor-media-player">
       <iframe src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?rel=0&playsinline=1" title="YouTube Shorts ពី ${esc(row.store_name||'ហាងអ្នកលក់')}" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
-      </div><div class="home-vendor-media-store"><span>${esc(String(row.store_name||'ហ').slice(0,1))}</span><span>${esc(row.store_name||'ហាងអ្នកលក់')}</span><span class="verified-store-mini" aria-label="បានផ្ទៀងផ្ទាត់">✓</span></div></article>`}).join('');
+      </div><div class="home-vendor-media-store"><span>${esc(row.store_name||'ហាងអ្នកលក់')}</span></div></article>`}).join('');
     section.classList.remove('hidden');
     const move=dir=>{const card=target.querySelector('.home-vendor-media-card');if(!card)return;const max=Math.max(0,target.scrollWidth-target.clientWidth),step=card.getBoundingClientRect().width+12;if(dir>0&&target.scrollLeft>=max-8)target.scrollTo({left:0,behavior:'smooth'});else if(dir<0&&target.scrollLeft<=8)target.scrollTo({left:max,behavior:'smooth'});else target.scrollBy({left:step*dir,behavior:'smooth'})};
     if ($('homeVendorMediaPrev')) $('homeVendorMediaPrev').onclick=()=>move(-1); if ($('homeVendorMediaNext')) $('homeVendorMediaNext').onclick=()=>move(1);
