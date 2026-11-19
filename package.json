@@ -13,7 +13,7 @@
   "scripts": {
     "build": "npm run build --workspace frontend",
     "start": "node backend/server.js",
-    "check": "node --check backend/server.js",
+    "check": "node --check backend/server.js && node --check backend/my-posts.js && node --check frontend/public/marketplace/app.js",
     "prebuild": "node scripts/build-marketplace-css.mjs"
   },
   "devDependencies": {
