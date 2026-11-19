@@ -5489,3 +5489,63 @@ body > footer {
   line-height: 1.65;
   overflow-wrap: anywhere;
 }
+
+
+/* Search field and icon proportion fix — CSS only; preserve header position. */
+#searchForm {
+  min-height: 40px;
+  align-items: center;
+  gap: 0;
+  padding: 2px 4px;
+}
+
+#searchForm #searchCategory {
+  height: 34px;
+  align-self: center;
+  padding-left: 10px;
+  padding-right: 10px;
+  line-height: 1;
+}
+
+#searchForm #searchIcon {
+  display: flex !important;
+  flex: 0 0 30px;
+  align-items: center;
+  justify-content: center;
+  margin-left: 5px;
+  color: #8F98A0;
+  line-height: 0;
+}
+
+#searchForm #searchIcon svg {
+  display: block;
+  width: 17px;
+  height: 17px;
+  flex: 0 0 17px;
+}
+
+#searchForm #searchInput {
+  min-width: 0;
+  height: 34px !important;
+  padding-left: 7px;
+  padding-right: 8px;
+  line-height: 1.4;
+}
+
+#searchForm #searchBtn {
+  display: grid;
+  flex: 0 0 34px;
+  width: 34px !important;
+  height: 34px !important;
+  place-items: center;
+  margin-left: 3px;
+  border-radius: 50% !important;
+  padding: 0;
+}
+
+#searchForm #searchBtn svg {
+  display: block;
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+}
