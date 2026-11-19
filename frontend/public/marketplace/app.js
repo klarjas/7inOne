@@ -1204,7 +1204,6 @@ async function openProduct(id, options = {}) {
   }
 }
 
-function renderMarketplaceListingInProductDetail(item) {
 function extractGoogleMapEmbedUrl(rawUrl, fallbackLocation = '') {
   const raw = String(rawUrl || '').trim();
   const fallback = String(fallbackLocation || '').trim();
