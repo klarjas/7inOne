@@ -3040,7 +3040,36 @@ async function loadHomeVendorMedia(){
     if(state.homeVendorMediaTimer)clearInterval(state.homeVendorMediaTimer);let paused=false;
     target.onpointerenter=()=>{paused=true};target.onpointerleave=()=>{paused=false};target.onfocusin=()=>{paused=true};target.onfocusout=()=>{paused=false};
     state.homeVendorMediaTimer=setInterval(()=>{if(!paused&&!document.hidden&&rows.length>1)move(1)},5000);
-    target.querySelectorAll('video').forEach(video=>video.play().catch(()=>{}));section.classList.remove('hidden');
+    // Play only Shorts that are actually visible in the viewport; pause them when scrolled away.
+    target._shortsVisibilityObserver?.disconnect();
+    if ('IntersectionObserver' in window) {
+      target._shortsVisibilityObserver = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          const video = entry.target;
+          if (document.hidden || !entry.isIntersecting || entry.intersectionRatio < 0.2) {
+            video.pause();
+            return;
+          }
+          video.muted = true;
+          video.loop = true;
+          video.playsInline = true;
+          video.play().catch(() => {});
+        });
+      }, { threshold: [0, 0.2, 0.5] });
+      target.querySelectorAll('video').forEach(video => target._shortsVisibilityObserver.observe(video));
+    } else {
+      target.querySelectorAll('video').forEach(video => { video.muted = true; video.loop = true; video.play().catch(() => {}); });
+    }
+    if (!target.dataset.shortsVisibilityBound) {
+      target.dataset.shortsVisibilityBound = '1';
+      document.addEventListener('visibilitychange', () => {
+        target.querySelectorAll('video').forEach(video => {
+          if (document.hidden) video.pause();
+          else if (video.getBoundingClientRect().bottom > 0 && video.getBoundingClientRect().top < window.innerHeight) video.play().catch(() => {});
+        });
+      });
+    }
+    section.classList.remove('hidden');
   }catch{section.classList.add('hidden')}
 }
 async function loadSellerMediaSettings(){
