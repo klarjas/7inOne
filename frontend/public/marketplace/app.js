@@ -3039,9 +3039,9 @@ async function loadHomeVendorMedia(){
   const openPopup=async(videoUrl,storeName)=>{
    if(!popup||!popupVideo)return;
    popupTitle.textContent=storeName||'វីដេអូ';
-   popupVideo.pause();popupVideo.removeAttribute('src');popupVideo.load();popupVideo.muted=false;
+   popupVideo.pause();popupVideo.removeAttribute('src');popupVideo.load();popupVideo.muted=true;
    const mute=$('homeShortsPopupMute'),status=$('homeShortsPopupStatus');
-   if(mute)mute.textContent='សំឡេងបើក';
+   if(mute)mute.textContent='សំឡេងបិទ';
    if(status)status.textContent='កំពុងផ្ទុកវីដេអូ...';
    if(!popup.open)popup.showModal();
    try{
