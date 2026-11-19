@@ -719,8 +719,7 @@ function productCard(p, index) {
   const secondImage = images[1]?.image_url || '';
   const saved = state.savedIds.has(p.id);
   const vendorName = p.vendors?.store_name || 'ហាងអ្នកលក់';
-  const vendorLogo = p.poster?.avatar_url || p.vendors?.store_logo_url || '';
-  const posterName = p.poster?.display_name || vendorName;
+  const vendorLogo = p.vendors?.store_logo_url || '';
   const verified = p.vendors?.status === 'approved';
   const description = productDescriptionParts(p).short;
 
@@ -741,11 +740,11 @@ function productCard(p, index) {
       <p class="pr"><span>${money(p.price)}</span></p>
       ${description ? `<p class="cd-description">${esc(description)}</p>` : ''}
       <div class="sh">
-        <span class="sp" role="img" aria-label="រូប Profile អ្នកផុស">
+        <span class="sp" role="img" aria-label="រូប Logo ហាង">
           <span class="sp-fallback">${ic('user', 15)}</span>
-          ${vendorLogo ? `<img src="${esc(vendorLogo)}" alt="${esc(posterName)}" loading="lazy" decoding="async">` : ''}
+          ${vendorLogo ? `<img src="${esc(vendorLogo)}" alt="${esc(vendorName)}" loading="lazy" decoding="async">` : ''}
         </span>
-        <button type="button" class="sn text-left hover:underline" data-action="store" data-vendor-id="${esc(p.vendor_id)}">${esc(posterName)}</button>
+        <button type="button" class="sn text-left hover:underline" data-action="store" data-vendor-id="${esc(p.vendor_id)}">${esc(vendorName)}</button>
         ${verified ? verifiedStoreBadge(p.vendor_id) : ''}
       </div>
       <p class="mt">
