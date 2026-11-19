@@ -4241,3 +4241,38 @@ body > footer {
   color: #66C0F4 !important;
   border: 1px solid rgba(102, 192, 244, .35);
 }
+
+/* Profile activity tabs — transparent Steam Dark style with blue active state */
+#view-profile .account-panel .tab {
+  background: transparent !important;
+  color: #8F98A0 !important;
+  border: 1px solid transparent !important;
+  transition: background .2s ease, color .2s ease, border-color .2s ease;
+}
+#view-profile .account-panel .tab:hover {
+  background: rgba(102, 192, 244, .10) !important;
+  color: #66C0F4 !important;
+  border-color: rgba(102, 192, 244, .25) !important;
+}
+#view-profile .account-panel .tab.active,
+#view-profile .account-panel .tab.is-active {
+  background: #203244 !important;
+  color: #66C0F4 !important;
+  border-color: rgba(102, 192, 244, .35) !important;
+}
+
+/* Top profile action button — use the same gradient as its hover state */
+#view-profile #profileApplyTop {
+  background: linear-gradient(135deg, #316282, #3D83B5) !important;
+  border: 1px solid #66C0F4 !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 6px 18px rgba(43, 116, 184, .18);
+  transition: background .2s ease, border-color .2s ease, transform .2s ease;
+}
+#view-profile #profileApplyTop:hover {
+  background: linear-gradient(135deg, #3D83B5, #66C0F4) !important;
+  border-color: #8AD2FF !important;
+}
+#view-profile #profileApplyTop:active {
+  transform: scale(.985);
+}
