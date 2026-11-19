@@ -4634,3 +4634,37 @@ body > footer {
   #view-home .social-story-viewer-content { width:calc(100vw - 92px); height:78vh; }
   #view-home .social-story-viewer-nav { width:30px; height:30px; flex-basis:30px; }
 }
+
+
+/* Force the homepage community rail to remain visible on wide desktop layouts */
+@media (min-width: 1200px) {
+  #view-home .home-layout-shell,
+  #view-home .amazon-store-body {
+    display: grid !important;
+    grid-template-columns: 218px minmax(0, 1fr) 292px !important;
+    column-gap: 16px !important;
+  }
+  #view-home .home-main-content {
+    display: contents !important;
+  }
+  #view-home aside.home-promo-rail.home-social-rail {
+    display: flex !important;
+    flex-direction: column !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    grid-column: 3 !important;
+    grid-row: 1 / span 12 !important;
+    align-self: start !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    position: sticky !important;
+    top: 92px !important;
+    max-height: calc(100vh - 108px) !important;
+    overflow-y: auto !important;
+  }
+  #view-home aside.home-promo-rail.home-social-rail .home-social-feed {
+    display: block !important;
+    width: 100% !important;
+    visibility: visible !important;
+  }
+}
