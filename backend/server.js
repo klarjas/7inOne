@@ -765,22 +765,39 @@ function extractCambodiaGeoRowsServer(payload) {
   }
   return [];
 }
-async function fetchOfficialCambodiaGeoRows() {
-  const all = [];
-  const pageSize = 200;
-  let completed = false;
-  for (let page = 1; page <= 100; page += 1) {
-    const url = 'https://data.mef.gov.kh/api/v1/public-datasets/pd_68e370856a965e00074a5e7b/json?page=' + page + '&page_size=' + pageSize;
-    const response = await fetch(url, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(20000) });
-    if (!response.ok) throw new Error('DataEF returned HTTP ' + response.status);
-    const payload = await response.json();
-    const rows = extractCambodiaGeoRowsServer(payload);
-    if (!rows.length) { completed = true; break; }
-    all.push(...rows);
-    if (rows.length < pageSize) { completed = true; break; }
+function parseCambodiaCsv(text) {
+  const input = String(text || '').replace(/^\uFEFF/, '');
+  const records = [];
+  let row = [], field = '', quoted = false;
+  for (let i = 0; i < input.length; i += 1) {
+    const char = input[i];
+    if (quoted) {
+      if (char === '"' && input[i + 1] === '"') { field += '"'; i += 1; }
+      else if (char === '"') quoted = false;
+      else field += char;
+    } else if (char === '"' && field.length === 0) {
+      quoted = true;
+    } else if (char === ',') {
+      row.push(field); field = '';
+    } else if (char === '\n' || char === '\r') {
+      if (char === '\r' && input[i + 1] === '\n') i += 1;
+      row.push(field); field = '';
+      if (row.some(value => String(value).trim() !== '')) records.push(row);
+      row = [];
+    } else {
+      field += char;
+    }
   }
-  if (!completed || !all.length) throw new Error('Official Cambodia location data could not be fully retrieved.');
-  const normalized = all.map(row => ({
+  if (field.length || row.length) {
+    row.push(field);
+    if (row.some(value => String(value).trim() !== '')) records.push(row);
+  }
+  if (!records.length) return [];
+  const headers = records.shift().map(value => String(value).trim());
+  return records.map(values => Object.fromEntries(headers.map((header, index) => [header, String(values[index] ?? '').trim()])));
+}
+function normalizeCambodiaGeoRow(row) {
+  return {
     province_code: String(row.province_code || '').trim(),
     province_kh: String(row.province_kh || '').trim(),
     province_en: String(row.province_en || '').trim(),
@@ -793,9 +810,89 @@ async function fetchOfficialCambodiaGeoRows() {
     village_code: String(row.village_code || '').trim(),
     village_kh: String(row.village_kh || '').trim(),
     village_en: String(row.village_en || '').trim()
-  })).filter(row => row.province_code && row.district_code && row.commune_code && row.village_code && row.village_kh);
-  if (!normalized.length) throw new Error('DataEF returned an unexpected location data format.');
+  };
+}
+function findCambodiaCsvDownloadUrl(payload) {
+  const visited = new Set();
+  const visit = value => {
+    if (!value || typeof value !== 'object' || visited.has(value)) return null;
+    visited.add(value);
+    if (Array.isArray(value)) {
+      for (const item of value) { const found = visit(item); if (found) return found; }
+      return null;
+    }
+    const name = String(value.name || value.file_name || value.filename || '').toLowerCase();
+    const format = String(value.format || value.file_format || '').toLowerCase();
+    const candidate = value.url || value.download_url || value.file_url;
+    if (candidate && (name.includes('cambodiageographicallist2025') || format === 'csv' || /\.csv(?:\?|$)/i.test(String(candidate)))) {
+      try { return new URL(String(candidate), 'https://data.mef.gov.kh').toString(); } catch {}
+    }
+    for (const child of Object.values(value)) { const found = visit(child); if (found) return found; }
+    return null;
+  };
+  return visit(payload);
+}
+async function fetchCambodiaCsv(url, label) {
+  const response = await fetch(url, { headers: { Accept: 'text/csv,application/octet-stream;q=0.9,*/*;q=0.8' }, signal: AbortSignal.timeout(30000) });
+  if (!response.ok) throw new Error(label + ' returned HTTP ' + response.status);
+  const text = await response.text();
+  if (!text || !/province_code/.test(text.slice(0, 500))) throw new Error(label + ' returned an invalid CSV file.');
+  return parseCambodiaCsv(text);
+}
+async function fetchCambodiaGeoFromOfficialDownload() {
+  const metadataUrl = 'https://data.mef.gov.kh/api/v1/public-datasets/pd_68e370856a965e00074a5e7b/file';
+  const response = await fetch(metadataUrl, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(15000) });
+  if (!response.ok) throw new Error('DataEF file metadata returned HTTP ' + response.status);
+  const metadata = await response.json();
+  const downloadUrl = findCambodiaCsvDownloadUrl(metadata);
+  if (!downloadUrl) throw new Error('DataEF did not provide a Cambodia CSV download URL.');
+  const rows = await fetchCambodiaCsv(downloadUrl, 'DataEF CSV download');
+  const normalized = rows.map(normalizeCambodiaGeoRow)
+    .filter(row => row.province_code && row.district_code && row.commune_code && row.village_code && row.village_kh);
+  if (!normalized.length) throw new Error('DataEF CSV has no valid village records.');
   return normalized;
+}
+async function fetchCambodiaGeoFromCsvMirror() {
+  // CSV mirror contains the four 2025 administrative tables sourced from DataEF.
+  // Used only when DataEF's download endpoint is rate-limited or unavailable.
+  const base = 'https://raw.githubusercontent.com/bsthen/CambodiaGeoAPI/main/data/';
+  const files = await Promise.all([
+    fetchCambodiaCsv(base + 'CambodiaProvinceList2025.csv', 'Province CSV'),
+    fetchCambodiaCsv(base + 'CambodiaDistrictList2025.csv', 'District CSV'),
+    fetchCambodiaCsv(base + 'CambodiaCommuneList2025.csv', 'Commune CSV'),
+    fetchCambodiaCsv(base + 'CambodiaVillagesList2025.csv', 'Village CSV')
+  ]);
+  const [provinces, districts, communes, villages] = files;
+  const provinceByCode = new Map(provinces.map(row => [row.province_code, row]));
+  const districtByCode = new Map(districts.map(row => [row.district_code, row]));
+  const communeByCode = new Map(communes.map(row => [row.commune_code, row]));
+  const normalized = villages.map(village => {
+    const province = provinceByCode.get(village.province_code) || {};
+    const district = districtByCode.get(village.district_code) || {};
+    const commune = communeByCode.get(village.commune_code) || {};
+    return normalizeCambodiaGeoRow({
+      province_code: village.province_code, province_kh: province.province_kh, province_en: province.province_en,
+      district_code: village.district_code, district_kh: district.district_kh, district_en: district.district_en,
+      commune_code: village.commune_code, commune_kh: commune.commune_kh, commune_en: commune.commune_en,
+      village_code: village.village_code, village_kh: village.village_kh, village_en: village.village_en
+    });
+  }).filter(row => row.province_code && row.district_code && row.commune_code && row.village_code && row.village_kh);
+  if (!normalized.length || normalized.length !== villages.length) {
+    throw new Error('CSV mirror is incomplete: could not match every village to its province, district and commune.');
+  }
+  return normalized;
+}
+async function fetchOfficialCambodiaGeoRows() {
+  try {
+    const rows = await fetchCambodiaGeoFromOfficialDownload();
+    console.log('Cambodia location CSV downloaded from DataEF:', rows.length, 'village rows');
+    return rows;
+  } catch (error) {
+    console.warn('DataEF CSV download unavailable; using DataEF-sourced CSV mirror:', clean(error.message, 240));
+    const rows = await fetchCambodiaGeoFromCsvMirror();
+    console.log('Cambodia location CSV mirror loaded:', rows.length, 'village rows');
+    return rows;
+  }
 }
 async function downloadTelegramDocumentBuffer(fileId) {
   const filePath = await lookupTelegramFilePath(fileId);
