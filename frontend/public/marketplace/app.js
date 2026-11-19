@@ -195,7 +195,10 @@ const state = {
   chatLoadedMessages: [],
   chatPendingMedia: [],
   chatDraftProduct: null,
-  chatConversation: null
+  chatConversation: null,
+  chatInboxTab: 'shop',
+  chatOnlineUserIds: new Set(),
+  chatUserPresenceTimer: null
 };
 
 /* --------------------------------------------------------------------------
@@ -2486,23 +2489,75 @@ function renderSellerChatMessages(messages, forceScroll = false) {
 function renderSellerChatInbox() {
   const target = $('sellerChatInboxList');
   if (!target) return;
-  const total = state.chatInbox.reduce((sum, row) => sum + Number(row.unread_count || 0), 0);
+  const shopChats = state.chatInbox.filter(chat => chat.chat_type !== 'personal');
+  const personalChats = state.chatInbox.filter(chat => chat.chat_type === 'personal');
+  const shopUnread = shopChats.reduce((sum, row) => sum + Number(row.unread_count || 0), 0);
+  const personalUnread = personalChats.reduce((sum, row) => sum + Number(row.unread_count || 0), 0);
+  const total = shopUnread + personalUnread;
   const badge = $('sellerChatUnreadBadge');
   badge.textContent = total > 99 ? '99+' : String(total);
   badge.classList.toggle('hidden', !total);
 
-  target.innerHTML = state.chatInbox.map((chat) => {
-    // Show the other participant: shop identity to buyers, personal identity to shop owners.
-    const otherIsShop = String(chat.other_role || '').toLowerCase() === 'seller';
-    const displayName = otherIsShop
-      ? (chat.vendor?.store_name || 'ហាងអ្នកលក់')
-      : (chat.buyer?.display_name || chat.other_name || 'អ្នកប្រើប្រាស់');
-    const avatarUrl = otherIsShop ? chat.vendor?.store_logo_url : chat.buyer?.avatar_url;
-    const img = avatarUrl
-      ? `<img src="${esc(avatarUrl)}" alt="${esc(displayName)}" class="h-11 w-11 shrink-0 rounded-full object-cover">`
-      : `<span class="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-slate-100 text-slate-400">${ic(otherIsShop ? 'store' : 'user', 20)}</span>`;
-    return `<button type="button" data-unified-chat="${esc(chat.id)}" class="seller-chat-inbox-item ${Number(chat.unread_count) > 0 ? 'unread' : ''}">${img}<span class="min-w-0 flex-1"><b class="block truncate">${esc(displayName)}</b><small class="block truncate text-slate-400">${esc(chat.last_message_preview || 'ចុចដើម្បីបើកសន្ទនា')}</small></span>${Number(chat.unread_count) > 0 ? `<span class="rounded-full bg-emerald-700 px-2 py-0.5 text-[10px] font-bold text-white">${Number(chat.unread_count)}</span>` : ''}</button>`;
-  }).join('') || '<p class="py-8 text-center text-xs text-slate-400">មិនទាន់មានសន្ទនាទេ។</p>';
+  const shopTab = $('sellerChatShopTab');
+  const personalTab = $('sellerChatPersonalTab');
+  if (shopTab) {
+    shopTab.classList.toggle('active', state.chatInboxTab === 'shop');
+    shopTab.setAttribute('aria-selected', String(state.chatInboxTab === 'shop'));
+    $('sellerChatShopCount').textContent = shopUnread > 99 ? '99+' : String(shopChats.length);
+  }
+  if (personalTab) {
+    personalTab.classList.toggle('active', state.chatInboxTab === 'personal');
+    personalTab.setAttribute('aria-selected', String(state.chatInboxTab === 'personal'));
+    $('sellerChatPersonalCount').textContent = personalUnread > 99 ? '99+' : String(personalChats.length);
+  }
+
+  const visibleChats = state.chatInboxTab === 'personal' ? personalChats : shopChats;
+  target.innerHTML = visibleChats.map((chat) => {
+    const isPersonal = chat.chat_type === 'personal';
+    const otherIsShop = !isPersonal && String(chat.other_role || '').toLowerCase() === 'seller';
+    const displayName = isPersonal
+      ? (chat.recipient?.display_name || chat.buyer?.display_name || chat.other_name || 'អ្នកប្រើប្រាស់')
+      : (otherIsShop ? (chat.vendor?.store_name || 'ហាងអ្នកលក់') : (chat.buyer?.display_name || chat.other_name || 'អ្នកប្រើប្រាស់'));
+    const avatarUrl = isPersonal
+      ? (chat.buyer?.avatar_url || chat.recipient?.avatar_url)
+      : (otherIsShop ? chat.vendor?.store_logo_url : chat.buyer?.avatar_url);
+    const online = Boolean(chat.other_user_id && state.chatOnlineUserIds.has(String(chat.other_user_id)));
+    const avatar = avatarUrl
+      ? `<img src="${esc(avatarUrl)}" alt="${esc(displayName)}" class="h-11 w-11 rounded-full object-cover">`
+      : `<span class="grid h-11 w-11 place-items-center rounded-full bg-slate-100 text-slate-400">${ic(isPersonal ? 'user' : (otherIsShop ? 'store' : 'user'), 20)}</span>`;
+    const img = `<span class="seller-chat-avatar-wrap">${avatar}${online ? '<i class="seller-chat-online-dot" title="Online" aria-label="Online"></i>' : ''}</span>`;
+    const kind = isPersonal ? 'បុគ្គល' : 'ហាង';
+    return `<button type="button" data-unified-chat="${esc(chat.id)}" class="seller-chat-inbox-item ${Number(chat.unread_count) > 0 ? 'unread' : ''}">${img}<span class="min-w-0 flex-1"><b class="block truncate">${esc(displayName)}</b><small class="block truncate text-slate-400">${esc(kind)} · ${esc(chat.last_message_preview || 'ចុចដើម្បីបើកសន្ទនា')}</small></span>${Number(chat.unread_count) > 0 ? `<span class="rounded-full bg-emerald-700 px-2 py-0.5 text-[10px] font-bold text-white">${Number(chat.unread_count)}</span>` : ''}</button>`;
+  }).join('') || `<p class="py-8 text-center text-xs text-slate-400">${state.chatInboxTab === 'personal' ? 'មិនទាន់មានសន្ទនាបុគ្គលទេ។' : 'មិនទាន់មានសន្ទនាជាមួយហាងទេ។'}</p>`;
+}
+
+async function loadChatOnlineUsers() {
+  if (!state.session) return;
+  try {
+    const result = await api('/api/chat/online');
+    state.chatOnlineUserIds = new Set((result.data?.user_ids || []).map(String));
+    renderSellerChatInbox();
+  } catch (error) {
+    console.warn('Chat online status refresh failed:', error.message);
+  }
+}
+
+async function syncChatUserPresence() {
+  if (!state.session) {
+    if (state.chatUserPresenceTimer) clearInterval(state.chatUserPresenceTimer);
+    state.chatUserPresenceTimer = null;
+    return;
+  }
+  const send = () => {
+    if (!state.session || document.hidden) return;
+    fetch('/api/chat/presence', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + state.session.access_token },
+      cache: 'no-store'
+    }).catch(() => {});
+  };
+  send();
+  if (!state.chatUserPresenceTimer) state.chatUserPresenceTimer = window.setInterval(send, 25_000);
 }
 
 async function loadUnifiedSellerChatInbox() {
@@ -2510,6 +2565,7 @@ async function loadUnifiedSellerChatInbox() {
   try {
     const res = await api('/api/seller-chat/inbox');
     state.chatInbox = res.data || [];
+    await loadChatOnlineUsers();
     renderSellerChatInbox();
   } catch (err) {
     console.warn('Chat inbox load failed:', err.message);
@@ -2826,6 +2882,7 @@ async function loadHomeVendorMedia() {
 }
 
 async function syncVendorPresence() {
+  void syncChatUserPresence();
   const nextId = state.session && !document.hidden && state.me?.vendor?.status === 'approved' ? String(state.me.vendor.id || '') : '';
   if (nextId) {
     try { await fetch('/api/vendor/presence?tab_id=' + encodeURIComponent(state.vendorPresenceTabId), { method: 'POST', headers: { Authorization: 'Bearer ' + state.session.access_token } }); } catch {}
@@ -3378,6 +3435,14 @@ function bindEvents() {
   $('sellerChatClose').addEventListener('click', minimizeSellerChatPanel);
   $('sellerChatHeaderBack').addEventListener('click', () => void openSellerChatInbox());
   $('sellerChatInboxRefresh').addEventListener('click', () => void loadUnifiedSellerChatInbox());
+  $('sellerChatShopTab')?.addEventListener('click', () => {
+    state.chatInboxTab = 'shop';
+    renderSellerChatInbox();
+  });
+  $('sellerChatPersonalTab')?.addEventListener('click', () => {
+    state.chatInboxTab = 'personal';
+    renderSellerChatInbox();
+  });
   $('sellerChatInboxList').addEventListener('click', (e) => {
     const btn = e.target.closest('[data-unified-chat]');
     if (btn) void openSellerChat(btn.dataset.unifiedChat);
