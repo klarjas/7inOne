@@ -333,48 +333,55 @@
           </div>
         </div>
 
-        <!-- Right Social Feed Rail: posting stays on homepage, no admin page needed -->
-        <aside class="home-promo-rail home-social-rail" id="homePromoRail" aria-label="សហគមន៍ 7inOne">
-          <section class="home-social-feed" id="homeSocialFeed" aria-label="សហគមន៍ 7inOne">
-            <section class="social-stories-panel" aria-label="Stories 7inOne">
-              <div class="social-stories-heading"><b>Stories</b><small>បាត់បង់ក្រោយ 24 ម៉ោង</small></div>
-              <div class="social-stories-list" id="socialStoriesList">
-                <label class="social-story-create" for="socialStoryImage">
-                  <span class="social-story-create-icon">＋</span><b>បង្កើត Story</b>
-                </label>
+        <!-- Jobs panel replaces the homepage Community Photo Feed UI. -->
+        <aside class="home-promo-rail home-jobs-rail" id="homeJobsRail" aria-label="ការងារ 7inOne">
+          <section class="jobs-panel" aria-label="បញ្ជីការងារ">
+            <div class="jobs-panel-heading">
+              <div>
+                <span class="jobs-panel-kicker">7INONE CAREERS</span>
+                <h2>ការងារ</h2>
+                <p>ស្វែងរកឱកាសការងារនៅកម្ពុជា</p>
               </div>
-              <input id="socialStoryImage" type="file" accept="image/jpeg,image/png,image/webp" hidden />
-              <div class="social-story-preview hidden" id="socialStoryPreview">
-                <img id="socialStoryPreviewImage" alt="Story preview" />
-                <div><button type="button" id="socialStoryClearBtn">លុប</button><button type="button" id="socialStoryPublishBtn">ផុស Story</button></div>
-              </div>
-            </section>
-            <section class="social-composer" aria-label="បង្កើតការផុស">
-              <div class="social-rail-heading"><div><span class="social-kicker">7INONE COMMUNITY</span><h2>សហគមន៍អ្នកប្រើប្រាស់</h2></div><span class="social-live-dot"></span></div>
-              <div class="social-compose-user"><span class="social-avatar" id="socialComposerAvatar">7</span><div><b id="socialComposerName">អ្នកប្រើប្រាស់</b><small>ចែករំលែករូបភាពជាមួយសហគមន៍</small></div></div>
-              <textarea id="socialPostCaption" maxlength="500" placeholder="តើអ្នកចង់ចែករំលែកអ្វី?"></textarea>
-              <label class="social-upload-trigger" for="socialPostImage"><span>＋</span><span>ជ្រើសរើសរូបភាព</span><small>9:16</small></label>
-              <input id="socialPostImage" type="file" accept="image/jpeg,image/png,image/webp" hidden />
-              <div class="social-upload-preview hidden" id="socialUploadPreview"><img id="socialUploadPreviewImage" alt="រូបភាពមុនពេលផុស" /><button type="button" id="socialClearImage" aria-label="លុបរូបភាព">×</button></div>
-              <button class="social-publish-btn" id="socialPublishBtn" type="button">ផុសរូបភាព</button>
-              <p class="social-compose-note">រូបភាព JPG, PNG ឬ WEBP · មិនលើស 8MB</p>
-            </section>
-            <div class="social-feed-heading"><h3>ការផុសថ្មីៗ</h3><button type="button" id="socialRefreshBtn" aria-label="ផ្ទុកការផុសឡើងវិញ">↻</button></div>
-            <div class="social-feed-list" id="socialFeedList"><div class="social-feed-loading">កំពុងផ្ទុកការផុស...</div></div>
-          </section>
-          <div class="social-story-viewer hidden" id="socialStoryViewer" role="dialog" aria-modal="true" aria-label="មើល Story">
-            <button type="button" class="social-story-viewer-close" id="socialStoryViewerClose" aria-label="បិទ">×</button>
-            <button type="button" class="social-story-viewer-nav prev" id="socialStoryViewerPrev" aria-label="Story មុន">‹</button>
-            <div class="social-story-viewer-content">
-              <div class="social-story-viewer-progress"><span id="socialStoryViewerProgress"></span></div>
-              <div class="social-story-viewer-author" id="socialStoryViewerAuthor"></div>
-              <img id="socialStoryViewerImage" alt="Story" />
+              <span class="jobs-panel-icon" aria-hidden="true">↗</span>
             </div>
-            <button type="button" class="social-story-viewer-nav next" id="socialStoryViewerNext" aria-label="Story បន្ទាប់">›</button>
-          </div>
-          <div class="home-promo-slot tall" data-promo-slot="tall">
-            <div class="home-promo-placeholder"><b>7inOne Promotion</b><span>ការផ្តល់ជូនពិសេស</span></div>
-          </div>
+            <label class="jobs-search">
+              <span aria-hidden="true">⌕</span>
+              <input id="jobsSearchInput" type="search" placeholder="ស្វែងរកការងារ ឬក្រុមហ៊ុន..." autocomplete="off">
+            </label>
+            <div class="jobs-filter-heading">
+              <b>ប្រភេទការងារ</b>
+              <button type="button" data-job-category="all" class="is-active">ទាំងអស់</button>
+            </div>
+            <div class="jobs-category-list" id="jobsCategoryList">
+              <button type="button" data-job-category="all" class="is-active">ការងារទាំងអស់</button>
+              <button type="button" data-job-category="it">IT &amp; Technology</button>
+              <button type="button" data-job-category="office">Office &amp; Administration</button>
+              <button type="button" data-job-category="sales">Sales &amp; Marketing</button>
+              <button type="button" data-job-category="transport">Transport &amp; Delivery</button>
+              <button type="button" data-job-category="hospitality">Restaurant &amp; Hotel</button>
+              <button type="button" data-job-category="construction">Construction &amp; Engineering</button>
+              <button type="button" data-job-category="education">Education</button>
+              <button type="button" data-job-category="healthcare">Healthcare</button>
+              <button type="button" data-job-category="factory">Factory &amp; Manufacturing</button>
+              <button type="button" data-job-category="agriculture">Agriculture</button>
+              <button type="button" data-job-category="services">Beauty &amp; Services</button>
+              <button type="button" data-job-category="other">Other Jobs</button>
+            </div>
+            <div class="jobs-results-heading">
+              <div><b>ការងារទាំងអស់</b><small id="jobsResultCount">0 ការងារ</small></div>
+              <span>ថ្មីៗ</span>
+            </div>
+            <div class="jobs-list" id="jobsList" aria-live="polite">
+              <div class="jobs-empty-state">
+                <span aria-hidden="true">▤</span>
+                <b>មិនទាន់មានការងារបង្ហោះទេ</b>
+                <p>ការងារថ្មីៗនឹងបង្ហាញនៅទីនេះ នៅពេលនិយោជកចាប់ផ្តើមប្រកាសជ្រើសរើសបុគ្គលិក។</p>
+              </div>
+            </div>
+            <div class="home-promo-slot tall jobs-promo-slot" data-promo-slot="tall">
+              <div class="home-promo-placeholder"><b>7inOne Promotion</b><span>ការផ្តល់ជូនពិសេស</span></div>
+            </div>
+          </section>
         </aside>
 
       </div>
