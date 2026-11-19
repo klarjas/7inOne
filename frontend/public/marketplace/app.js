@@ -1692,6 +1692,47 @@ const LISTING_TAXONOMY = {
     others_properties: { subs: ['អចលនទ្រព្យផ្សេងៗ'], details: ['Other Property'] }
   }
 };
+
+const LISTING_SPEC_FIELDS = {
+  jobs: {
+    it: ['ជំនាញបច្ចេកទេស','ភាសាកម្មវិធី','កម្រិតជំនាញ','Remote / On-site'],
+    office: ['កម្មវិធីដែលប្រើ','ជំនាញការិយាល័យ','ភាសា','បទពិសោធន៍'],
+    sales: ['ផលិតផល / សេវាកម្ម','គោលដៅលក់','ភាសា','បទពិសោធន៍'],
+    transport: ['ប្រភេទបណ្ណបើកបរ','ប្រភេទយានយន្ត','តំបន់ដឹកជញ្ជូន','បទពិសោធន៍'],
+    hospitality: ['ជំនាញ','ភាសា','វេនការងារ','បទពិសោធន៍'],
+    construction: ['ជំនាញបច្ចេកទេស','វិញ្ញាបនបត្រ','គម្រោងធ្លាប់ធ្វើ','បទពិសោធន៍'],
+    education: ['មុខវិជ្ជាបង្រៀន','កម្រិតសិក្សា','ភាសាបង្រៀន','វិញ្ញាបនបត្រ'],
+    healthcare: ['ជំនាញឯកទេស','អាជ្ញាបណ្ណ','បទពិសោធន៍','វេនការងារ'],
+    factory: ['ជំនាញម៉ាស៊ីន','វេនការងារ','បទពិសោធន៍','សុវត្ថិភាពការងារ'],
+    agriculture: ['ប្រភេទដំណាំ / សត្វ','ជំនាញបច្ចេកទេស','ទីតាំងការងារ','បទពិសោធន៍'],
+    services: ['ជំនាញសេវាកម្ម','ឧបករណ៍ប្រើប្រាស់','បទពិសោធន៍','ម៉ោងធ្វើការ'],
+    other: ['ជំនាញដែលត្រូវការ','លក្ខខណ្ឌបន្ថែម']
+  },
+  properties: {
+    house_sale: ['ប្រភេទផ្ទះ','ចំនួនជាន់','ទំហំដី (m²)','ទំហំសំណង់ (m²)','ប្លង់កម្មសិទ្ធិ','ចំណតរថយន្ត'],
+    house_rent: ['ប្រភេទផ្ទះ','ចំនួនជាន់','គ្រឿងសង្ហារិម','ចំណតរថយន្ត','ប្រាក់កក់'],
+    condo_sale: ['ជាន់ទី','ទំហំយូនីត (m²)','គ្រឿងសង្ហារិម','អគាររួមមាន','ប្លង់កម្មសិទ្ធិ'],
+    apartment_rent: ['ជាន់ទី','ទំហំបន្ទប់ (m²)','គ្រឿងសង្ហារិម','សេវារួមមាន','ប្រាក់កក់'],
+    land: ['ទំហំមុខដី','ទំហំបណ្តោយ','ប្រភេទប្លង់','ផ្លូវចូល','ប្រភេទដី'],
+    land_rent: ['ទំហំមុខដី','ទំហំបណ្តោយ','ផ្លូវចូល','គោលបំណងជួល'],
+    commercial_sale: ['ប្រភេទអាជីវកម្ម','ទំហំសំណង់','ចំនួនជាន់','ចំណត','ប្លង់កម្មសិទ្ធិ'],
+    commercial_rent: ['ប្រភេទអាជីវកម្ម','ទំហំសំណង់','ចំនួនជាន់','ចំណត','ប្រាក់កក់'],
+    room_rent: ['ទំហំបន្ទប់','ជាន់ទី','គ្រឿងសង្ហារិម','បន្ទប់ទឹកផ្ទាល់ខ្លួន','ច្បាប់ស្នាក់នៅ'],
+    properties_wanted: ['ថវិកាអតិបរមា','តំបន់ដែលចង់បាន','ប្រភេទដែលត្រូវការ','ពេលវេលាត្រូវការ'],
+    agent_services: ['ប្រភេទសេវាកម្ម','តំបន់បម្រើសេវា','កម្រៃជើងសារ','បទពិសោធន៍'],
+    others_properties: ['ប្រភេទអចលនទ្រព្យ','ទំហំ','លក្ខណៈពិសេស']
+  }
+};
+function renderListingSpecFields(kind, category) {
+  const target = $(kind === 'job' ? 'jobSpecificationFields' : 'propertySpecificationFields');
+  const fields = LISTING_SPEC_FIELDS[kind === 'job' ? 'jobs' : 'properties'][category] || [];
+  target.innerHTML = fields.length
+    ? '<h3 class="sm:col-span-2 text-xs font-bold text-slate-300">លក្ខណៈសម្បត្តិលម្អិត</h3>' + fields.map((label, index) =>
+        '<label><span class="label">' + esc(label) + '</span><input class="field" data-listing-spec="' + esc('spec_' + index) + '" placeholder="' + esc(label) + '"></label>'
+      ).join('')
+    : '';
+}
+
 function fillTaxonomySelect(categorySelect, subSelect, detailSelect, registry) {
   const entry = registry[categorySelect.value];
   const setOptions = (select, placeholder, values) => {
@@ -1744,7 +1785,7 @@ async function submitNewListing(form, endpoint, kind) {
     toast(kind === 'job' ? 'បានបង្ហោះប្រកាសការងារជោគជ័យ!' : 'បានបង្ហោះអចលនទ្រព្យជោគជ័យ!');
     state.activeListingType = kind === 'job' ? 'job' : 'real_estate';
     state.activeCategory = 'all'; state.activePropertyType = 'all';
-    syncMarketplaceCategoryGroups();
+    updateMarketplaceCategoryHeading();
     await loadProducts();
   } catch (error) {
     toast(error.message || 'មិនអាចបង្ហោះប្រកាសបានទេ។', 'error');
@@ -2551,8 +2592,8 @@ function bindEvents() {
     } else if (kind === 'job') openJobListingForm();
     else if (kind === 'real_estate') openPropertyListingForm();
   }));
-  $('jobCategory').addEventListener('change', () => fillTaxonomySelect($('jobCategory'), $('jobSubcategory'), $('jobDetailType'), LISTING_TAXONOMY.jobs));
-  $('propertyCategory').addEventListener('change', () => fillTaxonomySelect($('propertyCategory'), $('propertySubcategory'), $('propertyDetailType'), LISTING_TAXONOMY.properties));
+  $('jobCategory').addEventListener('change', () => { fillTaxonomySelect($('jobCategory'), $('jobSubcategory'), $('jobDetailType'), LISTING_TAXONOMY.jobs); renderListingSpecFields('job', $('jobCategory').value); });
+  $('propertyCategory').addEventListener('change', () => { fillTaxonomySelect($('propertyCategory'), $('propertySubcategory'), $('propertyDetailType'), LISTING_TAXONOMY.properties); renderListingSpecFields('property', $('propertyCategory').value); });
   $('jobListingForm').addEventListener('submit', (event) => { event.preventDefault(); void submitNewListing(event.currentTarget, '/api/jobs', 'job'); });
   $('propertyListingForm').addEventListener('submit', (event) => { event.preventDefault(); void submitNewListing(event.currentTarget, '/api/real-estate', 'property'); });
   $('notificationBtn').addEventListener('click', (e) => { e.stopPropagation(); toggleDrop('notificationMenu'); });
