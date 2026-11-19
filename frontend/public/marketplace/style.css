@@ -6006,13 +6006,3 @@ body > footer {
 .listing-poster-chat{display:inline-flex;flex:0 0 auto;align-items:center;justify-content:center;gap:7px;padding:9px 13px;border:1px solid #344256;border-radius:999px;background:#202D3D;color:#B7C5D8;font-size:11px;font-weight:750;transition:background .18s ease,border-color .18s ease}
 .listing-poster-chat:hover{border-color:#66C0F4;background:#203244;color:#66C0F4}
 @media(max-width:520px){.listing-poster-detail{gap:9px}.listing-poster-detail-avatar{width:38px;height:38px;flex-basis:38px}.listing-poster-chat{gap:5px;padding:8px 10px;font-size:10px}}
-
-
-/* Chat inbox tabs and subtle online presence indicator */
-.seller-chat-inbox-tabs{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin:10px 0 12px;padding:4px;border-radius:12px;background:#F1F5F9}
-.seller-chat-inbox-tab{display:flex;align-items:center;justify-content:center;gap:7px;min-height:36px;padding:7px 10px;border:0;border-radius:9px;background:transparent;color:#64748B;font-size:11px;font-weight:700;transition:background .18s,color .18s}
-.seller-chat-inbox-tab span{min-width:18px;padding:2px 5px;border-radius:999px;background:rgba(100,116,139,.12);font-size:9px;line-height:1.3}
-.seller-chat-inbox-tab.active{background:#fff;color:#0F766E;box-shadow:0 1px 3px rgba(15,23,42,.10)}
-.seller-chat-inbox-tab.active span{background:#CCFBF1;color:#0F766E}
-.seller-chat-avatar-wrap{position:relative;display:inline-flex;width:44px;height:44px;flex:0 0 44px}
-.seller-chat-online-dot{position:absolute;right:0;bottom:0;width:11px;height:11px;border:2px solid #fff;border-radius:50%;background:#22C55E;box-shadow:0 0 0 1px rgba(34,197,94,.12)}
