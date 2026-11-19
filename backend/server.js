@@ -243,15 +243,19 @@ async function deleteTelegramMessage(messageId) {
 
 registerSupportChat(app, { supabase, authenticate, requireAdmin, telegram, telegramStorageChatId, deleteTelegramMessage, clean, fail });
 registerSellerChat(app, { supabase, authenticate, requireVendor, upload, telegram, telegramStorageChatId, clean, fail, productPublicMaxAgeMs: PRODUCT_PUBLIC_MAX_AGE_MS });
-const telegramMediaUrl = fileId => fileId ? `/api/media/telegram/${encodeURIComponent(fileId)}` : null;
+const mediaProxyUrl = fileId => fileId ? `/api/media/image/${encodeURIComponent(fileId)}` : null;
 function publicMediaUrl(path) {
   if (!path || !supabase) return null;
   return supabase.storage.from('profile-media').getPublicUrl(path).data.publicUrl;
 }
+function withoutStorageFields(record) {
+  if (!record || typeof record !== 'object' || Array.isArray(record)) return record;
+  return Object.fromEntries(Object.entries(record).filter(([key]) => !/(?:file_id|message_id|telegram|storage|document_path)/i.test(key)));
+}
 function publicVendor(vendor) {
   if (!vendor) return vendor;
-  const { store_logo_file_id: logoFileId, ...safeVendor } = vendor;
-  return { ...safeVendor, store_logo_url: logoFileId ? telegramMediaUrl(logoFileId) : null };
+  const safeVendor = withoutStorageFields(vendor);
+  return { ...safeVendor, store_logo_url: vendor.store_logo_file_id ? mediaProxyUrl(vendor.store_logo_file_id) : (vendor.store_logo_url || null), store_cover_url: vendor.store_cover_file_id ? mediaProxyUrl(vendor.store_cover_file_id) : (vendor.store_cover_url || null) };
 }
 function publicProduct(product) {
   return {
@@ -261,7 +265,7 @@ function publicProduct(product) {
     vendors: Array.isArray(product.vendors) ? product.vendors.map(publicVendor) : publicVendor(product.vendors),
     product_images: (product.product_images || []).map(image => ({
       id: image.id, sort_order: image.sort_order,
-      image_url: image.file_id ? telegramMediaUrl(image.file_id) : image.image_url
+      image_url: image.file_id ? mediaProxyUrl(image.file_id) : image.image_url
     })).sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0))
   };
 }
@@ -573,7 +577,7 @@ const DEFAULT_SITE_BRANDING = {
   heroTitle: 'ទិញលក់ងាយៗ នៅជិតអ្នក',
   heroSubtitle: 'ស្វែងរកទំនិញដែលអ្នកស្រឡាញ់ ឬដាក់លក់របស់ដែលអ្នកមិនប្រើ។ ភ្ជាប់អ្នកទិញ និងអ្នកលក់នៅទូទាំងប្រទេសកម្ពុជា។'
 };
-async function getSiteBranding(){
+async function getSiteBranding({ includeStorage = false } = {}){
   const defaults = { ...DEFAULT_SITE_BRANDING, siteLogoUrl: '', faviconUrl: '', heroImages: [], sidePosters: {} };
   if(!supabase)return defaults;
   const {data,error}=await supabase.from('site_settings').select('value,updated_at').eq('key','site_branding').maybeSingle();
@@ -588,12 +592,12 @@ async function getSiteBranding(){
   const faviconUrl=faviconFileId?'/api/site/favicon?v='+encodeURIComponent(faviconVersion):clean(value.faviconUrl,2000);
   const heroImages=(Array.isArray(value.heroImages)?value.heroImages:[]).slice(0,3).map(image=>{
     const fileId=clean(image?.fileId||image?.file_id,2048);
-    return {url:fileId?telegramMediaUrl(fileId):clean(image?.url||image?.imageUrl,2000),fileId};
+    return {url:fileId?mediaProxyUrl(fileId):clean(image?.url||image?.imageUrl,2000),...(includeStorage?{fileId}: {})};
   }).filter(image=>image.url);
   return {siteLogoUrl,faviconUrl,siteTitle:clean(value.siteTitle,80)||DEFAULT_SITE_BRANDING.siteTitle,siteSubtitle:clean(value.siteSubtitle,120)||DEFAULT_SITE_BRANDING.siteSubtitle,heroBadge:clean(value.heroBadge,100)||DEFAULT_SITE_BRANDING.heroBadge,heroTitle:clean(value.heroTitle,160)||DEFAULT_SITE_BRANDING.heroTitle,heroSubtitle:clean(value.heroSubtitle,600)||DEFAULT_SITE_BRANDING.heroSubtitle,heroImages,sidePosters:Object.fromEntries(['top','middle','tall'].map(slot=>{
     const item=value.sidePosters?.[slot];if(!item||typeof item!=='object')return [slot,null];
     const fileId=clean(item.fileId||item.file_id,2048);
-    return [slot,{url:fileId?telegramMediaUrl(fileId):clean(item.url,2000),fileId,link:clean(item.link,2000),enabled:item.enabled!==false,alt:clean(item.alt,120)}];
+    return [slot,{url:fileId?mediaProxyUrl(fileId):clean(item.url,2000),...(includeStorage?{fileId}: {}),link:clean(item.link,2000),enabled:item.enabled!==false,alt:clean(item.alt,120)}];
   }).filter(([,item])=>item?.url))};
 }
 app.get('/api/config', async (_req, res) => {
@@ -636,7 +640,7 @@ app.post('/api/admin/favicon', authenticate, requireAdmin, upload.single('file')
     const oldMessageId=clean(old.faviconMessageId,40);
     if(oldMessageId&&oldMessageId!==uploaded.messageId&&oldMessageId!==clean(old.siteLogoMessageId,40))await deleteTelegramMessage(oldMessageId);
     res.set('Cache-Control','no-store');
-    return res.status(201).json({data:{...(await getSiteBranding()),storage:'telegram'}});
+    return res.status(201).json({data:{...(await getSiteBranding({includeStorage:true})),storage:'telegram'}});
   }catch(error){
     if(uploaded?.messageId)await deleteTelegramMessage(uploaded.messageId);
     console.error('Website favicon upload failed:',error.message);
@@ -656,7 +660,7 @@ app.patch('/api/admin/branding', authenticate, requireAdmin, upload.fields([{nam
     const prior=priorRow?.value||{},priorLogoId=clean(prior.siteLogoFileId,2048)||(prior.siteLogoFileId&&prior.siteLogoFileId===prior.faviconFileId?clean(prior.faviconFileId,2048):''),priorFaviconId=clean(prior.faviconFileId,2048)||(prior.faviconFileId&&prior.faviconFileId===prior.siteLogoFileId?clean(prior.siteLogoFileId,2048):'');
     const newLogo=logo?await uploadToTelegram(logo):null;if(newLogo)newlyUploaded.push(newLogo);
     const newFavicon=favicon?await uploadToTelegram(favicon):null;if(newFavicon)newlyUploaded.push(newFavicon);
-    const newHero=[];for(const file of bannerFiles){const image=await uploadToTelegram(file);newlyUploaded.push(image);newHero.push({fileId:image.fileId,messageId:image.messageId,mimeType:image.mimeType,url:telegramMediaUrl(image.fileId)})}
+    const newHero=[];for(const file of bannerFiles){const image=await uploadToTelegram(file);newlyUploaded.push(image);newHero.push({fileId:image.fileId,messageId:image.messageId,mimeType:image.mimeType,url:mediaProxyUrl(image.fileId)})}
     const priorPosters=prior.sidePosters&&typeof prior.sidePosters==='object'?prior.sidePosters:{},newSidePosters={};
     for(const slot of ['top','middle','tall']){
       const key=slot[0].toUpperCase()+slot.slice(1),file=posterFiles[slot],old=priorPosters[slot]||{},clear=String(req.body['clearPoster'+key]||'')==='true';
@@ -685,7 +689,7 @@ app.patch('/api/admin/branding', authenticate, requireAdmin, upload.fields([{nam
       const old=priorPosters[slot],next=newSidePosters[slot];
       if(old?.messageId&&old.messageId!==next?.messageId)await deleteTelegramMessage(clean(old.messageId,40));
     }
-    res.set('Cache-Control','no-store');return res.status(200).json({data:await getSiteBranding()});
+    res.set('Cache-Control','no-store');return res.status(200).json({data:await getSiteBranding({includeStorage:true})});
   }catch(error){for(const image of newlyUploaded)await deleteTelegramMessage(image.messageId);console.error('Site branding save failed:',error.message);return fail(res,500,'Could not save Brand & Banner settings. Check Telegram storage and Supabase settings.')}
 });
 app.use('/api', async (req, res, nextMiddleware) => {
@@ -708,10 +712,10 @@ app.use('/api', async (req, res, nextMiddleware) => {
 // Image traffic is isolated from the normal API budget so catalogue grids do not consume the API quota.
 const telegramMediaRateLimit = rateLimit({ windowMs: 60_000, limit: 600, standardHeaders: 'draft-8', legacyHeaders: false });
 // Permanent backend media URLs; Telegram file paths are cached briefly and refreshed when stale.
-app.get('/api/media/telegram/:fileId', telegramMediaRateLimit, async (req, res) => {
+app.get(['/api/media/image/:mediaId', '/api/media/telegram/:fileId'], telegramMediaRateLimit, async (req, res) => {
   try {
     if (!process.env.TELEGRAM_BOT_TOKEN) return fail(res, 503, 'Telegram media is unavailable: TELEGRAM_BOT_TOKEN is not configured.');
-    const fileId = clean(req.params.fileId, 2048);
+    const fileId = clean(req.params.mediaId || req.params.fileId, 2048);
     if (!fileId) return fail(res, 400, 'Invalid Telegram file ID.');
     const requestedMime = clean(req.query.mime, 60).toLowerCase();
     const safeAudioMimes = new Set(['audio/webm','audio/ogg','audio/mp4','audio/mpeg','audio/wav','audio/x-wav']);
@@ -784,7 +788,7 @@ app.get('/api/vendor-media',async(_req,res)=>{
  if(!db(res))return;
  const {data,error}=await supabase.from('vendor_media_links').select('id,vendor_id,media_url,media_type,created_at,vendors!inner(id,store_name,store_logo_file_id,status)').eq('is_active',true).in('vendors.status',['approved','pending','rejected']).order('updated_at',{ascending:false}).limit(30);
  if(error)return fail(res,500,'Could not load Live / Video links');
- return res.json({data:(data||[]).map(row=>({id:row.id,vendor_id:row.vendor_id,media_url:row.media_url,media_type:row.media_type,created_at:row.created_at,store_name:row.vendors?.store_name||'ហាងអ្នកលក់',store_logo_url:row.vendors?.store_logo_file_id?telegramMediaUrl(row.vendors.store_logo_file_id):null}))});
+ return res.json({data:(data||[]).map(row=>({id:row.id,vendor_id:row.vendor_id,media_url:row.media_url,media_type:row.media_type,created_at:row.created_at,store_name:row.vendors?.store_name||'ហាងអ្នកលក់',store_logo_url:row.vendors?.store_logo_file_id?mediaProxyUrl(row.vendors.store_logo_file_id):null}))});
 });
 
 // Community photo posts, likes and comments.
@@ -799,9 +803,9 @@ app.get('/api/social/posts', async (req, res) => {
   if (token) { try { const { data: auth } = await supabase.auth.getUser(token); viewerId = auth?.user?.id || null; } catch {} }
   return res.json({ data: (data || []).map(post => ({
     id: post.id, user_id: post.user_id, caption: post.caption,
-    image_url: telegramMediaUrl(post.image_file_id), created_at: post.created_at,
+    image_url: mediaProxyUrl(post.image_file_id), created_at: post.created_at,
     profile: { display_name: post.profiles?.display_name || 'អ្នកប្រើប្រាស់',
-      avatar_url: post.profiles?.avatar_url || telegramMediaUrl(post.profiles?.avatar_file_id) || publicMediaUrl(post.profiles?.avatar_path) },
+      avatar_url: post.profiles?.avatar_url || mediaProxyUrl(post.profiles?.avatar_file_id) || publicMediaUrl(post.profiles?.avatar_path) },
     like_count: post.social_post_likes?.length || 0,
     comment_count: post.social_post_comments?.length || 0,
     liked_by_me: Boolean(viewerId && post.social_post_likes?.some(like => like.user_id === viewerId))
@@ -818,7 +822,7 @@ app.post('/api/social/posts', authenticate, upload.single('image'), async (req, 
       .insert({ user_id: req.user.id, caption, image_file_id: uploaded.fileId, image_message_id: uploaded.messageId })
       .select('id,user_id,caption,image_file_id,created_at').single();
     if (error) throw error;
-    return res.status(201).json({ data: { ...data, image_url: telegramMediaUrl(data.image_file_id) } });
+    return res.status(201).json({ data: { id: data.id, user_id: data.user_id, caption: data.caption, created_at: data.created_at, image_url: mediaProxyUrl(data.image_file_id) } });
   } catch (error) {
     if (uploaded?.messageId) await deleteTelegramMessage(uploaded.messageId);
     console.error('Social post publish failed:', error.message);
@@ -834,10 +838,10 @@ app.get('/api/social/stories', async (req, res) => {
     .order('created_at', { ascending: false }).limit(60);
   if (error) { console.error('Social Stories load failed:', error.message); return fail(res, 500, 'Could not load Stories.'); }
   return res.json({ data: (data || []).map(story => ({
-    id: story.id, user_id: story.user_id, image_url: telegramMediaUrl(story.image_file_id),
+    id: story.id, user_id: story.user_id, image_url: mediaProxyUrl(story.image_file_id),
     created_at: story.created_at, expires_at: story.expires_at,
     profile: { display_name: story.profiles?.display_name || 'អ្នកប្រើប្រាស់',
-      avatar_url: story.profiles?.avatar_url || telegramMediaUrl(story.profiles?.avatar_file_id) || publicMediaUrl(story.profiles?.avatar_path) }
+      avatar_url: story.profiles?.avatar_url || mediaProxyUrl(story.profiles?.avatar_file_id) || publicMediaUrl(story.profiles?.avatar_path) }
   })) });
 });
 app.post('/api/social/stories', authenticate, upload.single('image'), async (req, res) => {
@@ -852,7 +856,7 @@ app.post('/api/social/stories', authenticate, upload.single('image'), async (req
       .insert({ user_id: req.user.id, image_file_id: uploaded.fileId, image_message_id: uploaded.messageId, created_at: createdAt.toISOString(), expires_at: expiresAt.toISOString() })
       .select('id,user_id,image_file_id,created_at,expires_at').single();
     if (error) throw error;
-    return res.status(201).json({ data: { ...data, image_url: telegramMediaUrl(data.image_file_id), storage: 'telegram' } });
+    return res.status(201).json({ data: { id: data.id, user_id: data.user_id, created_at: data.created_at, expires_at: data.expires_at, image_url: mediaProxyUrl(data.image_file_id) } });
   } catch (error) {
     if (uploaded?.messageId) await deleteTelegramMessage(uploaded.messageId);
     console.error('Social Story publish failed:', error.message);
@@ -1831,8 +1835,8 @@ app.get('/api/me', authenticate, async (req, res) => {
     supabase.from('profiles').select('*').eq('id', req.user.id).maybeSingle(),
     vendorFor(req.user.id)
   ]);
-  const normalized = profile ? { ...profile, avatar_url: profile.avatar_url || telegramMediaUrl(profile.avatar_file_id) || publicMediaUrl(profile.avatar_path), cover_url: profile.cover_url || telegramMediaUrl(profile.cover_file_id) || publicMediaUrl(profile.cover_path) } : null;
-  const safeVendor = vendor ? Object.fromEntries(Object.entries(vendor).filter(([key]) => key !== 'document_path')) : null;
+  const normalized = profile ? { ...withoutStorageFields(profile), avatar_url: profile.avatar_url || mediaProxyUrl(profile.avatar_file_id) || publicMediaUrl(profile.avatar_path), cover_url: profile.cover_url || mediaProxyUrl(profile.cover_file_id) || publicMediaUrl(profile.cover_path) } : null;
+  const safeVendor = vendor ? publicVendor(vendor) : null;
   res.json({ data: { user: { id: req.user.id, email: req.user.email, phone: req.user.phone || null }, profile: normalized, vendor: safeVendor, isAdmin: profile?.role === 'admin' } });
 });
 app.patch('/api/me', authenticate, async (req, res) => {
@@ -1845,7 +1849,7 @@ app.patch('/api/me', authenticate, async (req, res) => {
   if (!Object.keys(patch).length) return fail(res, 400, 'No profile fields supplied');
   const { data, error } = await supabase.from('profiles').update(patch).eq('id', req.user.id).select().single();
   if (error) return fail(res, 400, 'Could not update profile');
-  res.json({ data: { ...data, avatar_url: data.avatar_url || telegramMediaUrl(data.avatar_file_id) || publicMediaUrl(data.avatar_path), cover_url: data.cover_url || telegramMediaUrl(data.cover_file_id) || publicMediaUrl(data.cover_path) } });
+  res.json({ data: { ...withoutStorageFields(data), avatar_url: data.avatar_url || mediaProxyUrl(data.avatar_file_id) || publicMediaUrl(data.avatar_path), cover_url: data.cover_url || mediaProxyUrl(data.cover_file_id) || publicMediaUrl(data.cover_path) } });
 });
 app.post('/api/me/media', authenticate, upload.single('file'), async (req, res) => {
   try {
@@ -1857,7 +1861,7 @@ app.post('/api/me/media', authenticate, upload.single('file'), async (req, res) 
       .select('avatar_file_id,avatar_message_id,cover_file_id,cover_message_id,avatar_path,cover_path')
       .eq('id', req.user.id).maybeSingle();
     const uploaded = await uploadToTelegram(file);
-    const url = telegramMediaUrl(uploaded.fileId);
+    const url = mediaProxyUrl(uploaded.fileId);
     const patch = type === 'avatar'
       ? { avatar_file_id: uploaded.fileId, avatar_message_id: uploaded.messageId, avatar_url: url, avatar_path: null }
       : { cover_file_id: uploaded.fileId, cover_message_id: uploaded.messageId, cover_url: url, cover_path: null };
@@ -1870,9 +1874,9 @@ app.post('/api/me/media', authenticate, upload.single('file'), async (req, res) 
     const oldMessageId = type === 'avatar' ? prior?.avatar_message_id : prior?.cover_message_id;
     if (oldMessageId && oldMessageId !== uploaded.messageId) await deleteTelegramMessage(oldMessageId);
     const normalized = {
-      ...data,
-      avatar_url: data.avatar_url || telegramMediaUrl(data.avatar_file_id) || publicMediaUrl(data.avatar_path),
-      cover_url: data.cover_url || telegramMediaUrl(data.cover_file_id) || publicMediaUrl(data.cover_path)
+      ...withoutStorageFields(data),
+      avatar_url: data.avatar_url || mediaProxyUrl(data.avatar_file_id) || publicMediaUrl(data.avatar_path),
+      cover_url: data.cover_url || mediaProxyUrl(data.cover_file_id) || publicMediaUrl(data.cover_path)
     };
     return res.status(201).json({ data: normalized });
   } catch (error) {
@@ -1897,7 +1901,7 @@ app.post('/api/vendors/register', authenticate, upload.single('document'), async
     if (existing && !file) return fail(res, 400, 'Upload a verification document to request verification.');
     if (file) uploaded = await uploadToTelegram(file);
     const values = { user_id: req.user.id, store_name, description, contact_phone, address, status: 'pending', reviewed_at: null, review_note: null };
-    if (uploaded) Object.assign(values, { document_path: null, document_file_id: uploaded.fileId, document_message_id: uploaded.messageId, document_mime_type: uploaded.mimeType, document_url: telegramMediaUrl(uploaded.fileId) });
+    if (uploaded) Object.assign(values, { document_path: null, document_file_id: uploaded.fileId, document_message_id: uploaded.messageId, document_mime_type: uploaded.mimeType, document_url: mediaProxyUrl(uploaded.fileId) });
     const result = existing ? await supabase.from('vendors').update(values).eq('id', existing.id).select().single() : await supabase.from('vendors').insert(values).select().single();
     if (result.error) {
       if (uploaded?.messageId) await deleteTelegramMessage(uploaded.messageId);
@@ -1905,8 +1909,8 @@ app.post('/api/vendors/register', authenticate, upload.single('document'), async
       return fail(res, 500, 'Could not save seller registration.');
     }
     if (uploaded && existing?.document_message_id && existing.document_message_id !== uploaded.messageId) await deleteTelegramMessage(existing.document_message_id);
-    const { document_file_id, document_message_id, ...safeVendor } = result.data;
-    return res.status(existing ? 200 : 201).json({ data: { ...safeVendor, document_url: document_file_id ? telegramMediaUrl(document_file_id) : null } });
+    const { document_file_id, ...safeVendor } = publicVendor(result.data);
+    return res.status(existing ? 200 : 201).json({ data: { ...safeVendor, document_url: document_file_id ? mediaProxyUrl(document_file_id) : null } });
   } catch (error) {
     if (uploaded?.messageId) await deleteTelegramMessage(uploaded.messageId);
     console.error('Seller registration failed:', error.message);
@@ -1932,7 +1936,7 @@ app.patch('/api/vendor/profile', authenticate, upload.fields([{ name: 'logo', ma
     if (error) throw error;
     if (logoMedia && vendor.store_logo_message_id) await deleteTelegramMessage(vendor.store_logo_message_id);
     if (coverMedia && vendor.store_cover_message_id) await deleteTelegramMessage(vendor.store_cover_message_id);
-    return res.json({ data: { ...data, store_logo_url: data.store_logo_file_id ? telegramMediaUrl(data.store_logo_file_id) : null, store_cover_url: data.store_cover_file_id ? telegramMediaUrl(data.store_cover_file_id) : null } });
+    return res.json({ data: publicVendor(data) });
   } catch (error) {
     for (const item of uploaded) await deleteTelegramMessage(item.messageId);
     console.error('Seller shop profile update failed:', error.message);
@@ -1948,7 +1952,7 @@ app.get('/api/vendor/products', authenticate, async (req, res) => {
     .select('*,renewed_at,product_images(id,file_id,image_url,telegram_message_id,sort_order)')
     .eq('vendor_id', vendor.id).order('created_at', { ascending: false });
   if (error) return fail(res, 500, 'Could not load vendor products');
-  res.json({ data: (data || []).map(publicProduct), vendor: { ...vendor, store_logo_url: vendor.store_logo_file_id ? telegramMediaUrl(vendor.store_logo_file_id) : null, store_cover_url: vendor.store_cover_file_id ? telegramMediaUrl(vendor.store_cover_file_id) : null } });
+  res.json({ data: (data || []).map(publicProduct), vendor: publicVendor(vendor) });
 });
 app.post('/api/products', authenticate, async (req, res) => {
   const title = clean(req.body.title, 160);
@@ -2061,12 +2065,13 @@ app.post('/api/products/:id/images', authenticate, upload.array('images', 10), a
     for (const file of files) uploaded.push(await uploadToTelegram(file, 20 * 1024 * 1024));
     const rows = uploaded.map((item, index) => ({
       product_id: product.id, telegram_message_id: item.messageId, file_id: item.fileId,
-      image_url: telegramMediaUrl(item.fileId), sort_order: (count || 0) + index
+      image_url: mediaProxyUrl(item.fileId), sort_order: (count || 0) + index
     }));
     const { data, error } = await supabase.from('product_images').insert(rows).select('id,product_id,file_id,telegram_message_id,image_url,sort_order');
     if (error) throw new Error('Telegram uploads succeeded, but product image records could not be saved. Apply the Telegram media migration. ' + error.message);
     return res.status(201).json({ data: (data || []).map(image => ({
-      ...image, image_url: image.file_id ? telegramMediaUrl(image.file_id) : image.image_url
+      id: image.id, product_id: image.product_id, sort_order: image.sort_order,
+      image_url: image.file_id ? mediaProxyUrl(image.file_id) : image.image_url
     })) });
   } catch (error) {
     for (const item of uploaded) await deleteTelegramMessage(item.messageId);
@@ -2170,8 +2175,8 @@ app.get('/api/vendors/:id/ratings', async (req, res) => {
   res.json({ data: {
     id: vendor.id, store_name: vendor.store_name, description: vendor.description, created_at: vendor.created_at,
     status: vendor.status, verified: vendor.status === 'approved', store_location: vendor.store_location || vendor.address || null,
-    store_logo_url: vendor.store_logo_file_id ? telegramMediaUrl(vendor.store_logo_file_id) : null,
-    store_cover_url: vendor.store_cover_file_id ? telegramMediaUrl(vendor.store_cover_file_id) : null,
+    store_logo_url: vendor.store_logo_file_id ? mediaProxyUrl(vendor.store_logo_file_id) : null,
+    store_cover_url: vendor.store_cover_file_id ? mediaProxyUrl(vendor.store_cover_file_id) : null,
     profile: { display_name: profile.display_name, province: profile.province, bio: profile.bio, avatar_url: publicMediaUrl(profile.avatar_path) },
     rating: trust[vendor.id]?.average ?? null, review_count: trust[vendor.id]?.count ?? 0,
     distribution: trust[vendor.id]?.distribution ?? [0,0,0,0,0],
