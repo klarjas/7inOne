@@ -5703,3 +5703,43 @@ body > footer {
     padding-top: 20px !important;
   }
 }
+
+
+/* Live website visitor counter beside the header post action. */
+.site-online-counter{
+  display:inline-flex;
+  flex:0 0 auto;
+  align-items:center;
+  gap:6px;
+  min-height:36px;
+  padding:5px 9px;
+  border:1px solid #2A475E;
+  border-radius:999px;
+  background:#101822;
+  color:#C7D5E0;
+}
+.site-online-icon{
+  display:grid;
+  width:19px;
+  height:19px;
+  flex:0 0 19px;
+  place-items:center;
+  color:#35D07F;
+  animation:siteOnlinePulse 1.8s ease-in-out infinite;
+}
+.site-online-icon svg{display:block;width:100%;height:100%;overflow:visible}
+.site-online-copy{display:flex;align-items:baseline;gap:4px;line-height:1}
+.site-online-copy b{color:#D8FBE8;font-size:12px;font-weight:800;font-variant-numeric:tabular-nums}
+.site-online-copy small{color:#8F98A0;font-size:9px;font-weight:650}
+@keyframes siteOnlinePulse{
+  0%,100%{opacity:1;filter:drop-shadow(0 0 1px rgba(53,208,127,.2))}
+  50%{opacity:.62;filter:drop-shadow(0 0 6px rgba(53,208,127,.95))}
+}
+@media(max-width:639px){
+  .site-online-counter{min-height:34px;gap:4px;padding:4px 7px}
+  .site-online-icon{width:17px;height:17px;flex-basis:17px}
+  .site-online-copy{gap:3px}
+  .site-online-copy b{font-size:11px}
+  .site-online-copy small{font-size:8px}
+}
+@media(prefers-reduced-motion:reduce){.site-online-icon{animation:none}}
