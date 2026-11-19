@@ -3020,10 +3020,24 @@ async function loadHomeVendorMedia() {
   try {
     const res=await api('/api/vendor-media'),rows=(res.data||[]).filter(row=>row.media_type==='video'&&youtubeVideoId(row.media_url));
     if(!rows.length){section.classList.add('hidden');target.replaceChildren();return}
-    target.innerHTML=rows.map(row=>{const id=youtubeVideoId(row.media_url);return `<article class="home-vendor-media-card"><div class="home-vendor-media-player">
+    target.innerHTML=rows.map(row=>{const id=youtubeVideoId(row.media_url);return `<article class="home-vendor-media-card" data-short-video-id="${esc(id)}" data-short-store="${esc(row.store_name||'ហាងអ្នកលក់')}"><button class="home-vendor-media-open" type="button" aria-label="ពង្រីកវីដេអូ ${esc(row.store_name||'ហាងអ្នកលក់')}"><div class="home-vendor-media-player">
       <iframe src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&mute=1&loop=1&playlist=${encodeURIComponent(id)}&controls=0&disablekb=1&fs=0&iv_load_policy=3&rel=0&playsinline=1" title="Shorts ពី ${esc(row.store_name||'ហាងអ្នកលក់')}" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
-      </div><div class="home-vendor-media-store">${esc(row.store_name||'ហាងអ្នកលក់')}</div></article>`}).join('');
+      </div></button><div class="home-vendor-media-store">${esc(row.store_name||'ហាងអ្នកលក់')}</div></article>`}).join('');
     section.classList.remove('hidden');
+    const popup=$('homeShortsPopup'),popupFrame=$('homeShortsPopupFrame'),popupTitle=$('homeShortsPopupTitle');
+    if(popup&&!target.dataset.popupBound){
+      target.dataset.popupBound='1';
+      target.addEventListener('click',event=>{
+        const trigger=event.target.closest('.home-vendor-media-open');if(!trigger)return;
+        const card=trigger.closest('.home-vendor-media-card');const id=card?.dataset.shortVideoId;if(!id||!popupFrame)return;
+        popupTitle.textContent=card.dataset.shortStore||'វីដេអូ';
+        popupFrame.src=`https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&controls=1&rel=0&playsinline=1`;
+        if(!popup.open)popup.showModal();
+      });
+      popup?.addEventListener('close',()=>{if(popupFrame)popupFrame.src='about:blank'});
+      popup?.addEventListener('click',event=>{if(event.target===popup)popup.close()});
+      $('homeShortsPopupClose')?.addEventListener('click',()=>popup.close());
+    }
     const move=dir=>{const card=target.querySelector('.home-vendor-media-card');if(!card)return;const max=Math.max(0,target.scrollWidth-target.clientWidth),step=card.getBoundingClientRect().width+12;if(dir>0&&target.scrollLeft>=max-8)target.scrollTo({left:0,behavior:'smooth'});else if(dir<0&&target.scrollLeft<=8)target.scrollTo({left:max,behavior:'smooth'});else target.scrollBy({left:step*dir,behavior:'smooth'})};
     if(state.homeVendorMediaTimer)clearInterval(state.homeVendorMediaTimer);let paused=false;
     target.onpointerenter=()=>{paused=true};target.onpointerleave=()=>{paused=false};target.onfocusin=()=>{paused=true};target.onfocusout=()=>{paused=false};

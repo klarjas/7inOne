@@ -1692,6 +1692,16 @@ body{background:var(--page)!important;color:var(--ink);font-family:"Kantumruy Pr
 .home-vendor-media-card{display:block;flex:0 0 154px;min-width:0;color:inherit;text-decoration:none;scroll-snap-align:start}
 .home-vendor-media-player{position:relative;width:100%;aspect-ratio:9/16;overflow:hidden;border-radius:14px;background:#101010}
 .home-vendor-media-player iframe{position:absolute;inset:0;width:100%;height:100%;border:0;pointer-events:none!important}
+.home-vendor-media-open{display:block;width:100%;padding:0;border:0;background:transparent;text-align:inherit;cursor:zoom-in}
+.home-vendor-media-open:focus-visible{outline:2px solid #64748b;outline-offset:3px;border-radius:14px}
+.home-shorts-popup{width:min(92vw,520px);max-width:520px;max-height:92dvh;padding:0;border:1px solid #334155;border-radius:18px;background:#09090b;color:#fff;overflow:hidden}
+.home-shorts-popup::backdrop{background:rgba(0,0,0,.82);backdrop-filter:blur(5px)}
+.home-shorts-popup-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;font-size:14px}
+.home-shorts-popup-head strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.home-shorts-popup-head button{width:34px;height:34px;flex:0 0 34px;border:1px solid #475569;border-radius:50%;background:#18181b;color:#fff;font-size:18px;cursor:pointer}
+.home-shorts-popup-stage{width:100%;height:min(78dvh,780px);background:#000}
+.home-shorts-popup-stage iframe{display:block;width:100%;height:100%;border:0}
+@media(max-width:520px){.home-shorts-popup{width:94vw;max-width:none;border-radius:14px}.home-shorts-popup-stage{height:min(76dvh,720px)}}
 .home-vendor-media-store{display:block;margin-top:7px;min-width:0;overflow:hidden;color:#334155;font-size:11px;font-weight:700;text-overflow:ellipsis;white-space:nowrap}
 .seller-media-list{display:grid;gap:10px;margin-top:16px}
 .seller-media-item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;border:1px solid #E2E8F0;border-radius:12px;background:#fff}
