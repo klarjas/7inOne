@@ -199,7 +199,7 @@ export function registerSellerChat(app, { supabase, authenticate, requireVendor,
 
       if (!body) return fail(res, 400, 'សូមសរសេរសារជាមុនសិន។');
       const message = await saveMessage(conversation, req.user.id, conversation.current_role, { body, message_type: 'text' }, body);
-      return res.status(201).json({ data: { message } });
+      return res.status(201).json({ data: { message: publicMessage(message) } });
     } catch (error) { console.error('Seller chat send failed:', error.message); return fail(res, 500, 'មិនអាចផ្ញើសារបានទេ។'); }
   });
 
@@ -229,7 +229,7 @@ export function registerSellerChat(app, { supabase, authenticate, requireVendor,
         body: '🎤 សារសំឡេង', message_type: 'voice', telegram_file_id: media.file_id,
         telegram_message_id: stored.message_id, mime_type: mimeType, duration_seconds: duration
       }, '🎤 សារសំឡេង · ' + duration + ' វិនាទី');
-      return res.status(201).json({ data: { message } });
+      return res.status(201).json({ data: { message: publicMessage(message) } });
     } catch (error) { console.error('Seller voice upload failed:', error.message); return fail(res, 502, 'មិនអាចផ្ញើសំឡេងបានទេ។ សូមសាកល្បងម្ដងទៀត។'); }
   });
   app.post('/api/seller-chat/conversations/:id/image', authenticate, upload.single('image'), async (req, res) => {
@@ -258,7 +258,7 @@ export function registerSellerChat(app, { supabase, authenticate, requireVendor,
       const message = await saveMessage(conversation, req.user.id, conversation.current_role, {
         body: '📷 រូបភាព', message_type: 'image', telegram_file_id: media.file_id, telegram_message_id: stored.message_id, mime_type: mimeType
       }, '📷 រូបភាព');
-      return res.status(201).json({ data: { message } });
+      return res.status(201).json({ data: { message: publicMessage(message) } });
     } catch (error) { console.error('Seller chat image upload failed:', error.message); return fail(res, 502, 'មិនអាចផ្ញើរូបភាពបានទេ។ សូមសាកល្បងម្ដងទៀត។'); }
   });
 
@@ -274,7 +274,7 @@ export function registerSellerChat(app, { supabase, authenticate, requireVendor,
       if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || Math.abs(latitude)>90 || Math.abs(longitude)>180) return fail(res, 400, 'ទីតាំង GPS មិនត្រឹមត្រូវទេ។');
       const body = JSON.stringify({ latitude, longitude, accuracy: Number.isFinite(Number(req.body?.accuracy)) ? Math.max(0, Math.min(100000, Number(req.body.accuracy))) : null });
       const message = await saveMessage(conversation, req.user.id, conversation.current_role, { body, message_type: 'location' }, '📍 ទីតាំង Google Maps');
-      return res.status(201).json({ data: { message } });
+      return res.status(201).json({ data: { message: publicMessage(message) } });
     } catch (error) { console.error('Seller chat location send failed:', error.message); return fail(res, 500, 'មិនអាចផ្ញើទីតាំងបានទេ។'); }
   });
 
