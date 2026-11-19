@@ -218,7 +218,7 @@ export function registerSellerChat(app, { supabase, authenticate, requireVendor,
       const duration = Number.isFinite(requestedDuration) ? Math.max(1, Math.min(180, Math.round(requestedDuration))) : 1;
       const mimeType = String(file.mimetype).split(';')[0].toLowerCase();
       const chatId = telegramStorageChatId();
-      if (!process.env.TELEGRAM_BOT_TOKEN || !chatId) return fail(res, 503, 'មិនទាន់កំណត់ Telegram Storage សម្រាប់សារសំឡេងទេ។');
+      if (!process.env.TELEGRAM_BOT_TOKEN || !chatId) return fail(res, 503, 'សេវាផ្ញើសំឡេងមិនទាន់រួចរាល់ទេ។ សូមសាកល្បងម្ដងទៀត។');
       const form = new FormData();
       form.append('chat_id', chatId);
       const ext = file.mimetype.includes('ogg') ? 'ogg' : file.mimetype.includes('mp4') ? 'm4a' : file.mimetype.includes('mpeg') ? 'mp3' : file.mimetype.includes('wav') ? 'wav' : 'webm';
@@ -231,7 +231,7 @@ export function registerSellerChat(app, { supabase, authenticate, requireVendor,
         telegram_message_id: stored.message_id, mime_type: mimeType, duration_seconds: duration
       }, '🎤 សារសំឡេង · ' + duration + ' វិនាទី');
       return res.status(201).json({ data: { message } });
-    } catch (error) { console.error('Seller voice upload failed:', error.message); return fail(res, 502, 'មិនអាចរក្សាទុក ឬផ្ញើសំឡេងទៅ Telegram បានទេ។'); }
+    } catch (error) { console.error('Seller voice upload failed:', error.message); return fail(res, 502, 'មិនអាចផ្ញើសំឡេងបានទេ។ សូមសាកល្បងម្ដងទៀត។'); }
   });
   app.post('/api/seller-chat/conversations/:id/image', authenticate, upload.single('image'), async (req, res) => {
     try {
@@ -249,7 +249,7 @@ export function registerSellerChat(app, { supabase, authenticate, requireVendor,
       if (!file || !signatures[mimeType] || !file.buffer?.length) return fail(res, 400, 'សូមផ្ញើរូប JPG, PNG ឬ WEBP ត្រឹមត្រូវ។');
       if (file.size > 8 * 1024 * 1024) return fail(res, 413, 'រូបភាពមិនអាចលើស 8MB បានទេ។');
       const chatId = telegramStorageChatId();
-      if (!process.env.TELEGRAM_BOT_TOKEN || !chatId) return fail(res, 503, 'មិនទាន់កំណត់ Telegram Storage សម្រាប់រូបភាពទេ។');
+      if (!process.env.TELEGRAM_BOT_TOKEN || !chatId) return fail(res, 503, 'សេវាផ្ញើរូបភាពមិនទាន់រួចរាល់ទេ។ សូមសាកល្បងម្ដងទៀត។');
       const form = new FormData();
       form.append('chat_id', chatId);
       form.append('document', new Blob([file.buffer], { type: mimeType }), '7inone-chat-' + Date.now() + (mimeType==='image/png'?'.png':mimeType==='image/webp'?'.webp':'.jpg'));
@@ -260,7 +260,7 @@ export function registerSellerChat(app, { supabase, authenticate, requireVendor,
         body: '📷 រូបភាព', message_type: 'image', telegram_file_id: media.file_id, telegram_message_id: stored.message_id, mime_type: mimeType
       }, '📷 រូបភាព');
       return res.status(201).json({ data: { message } });
-    } catch (error) { console.error('Seller chat image upload failed:', error.message); return fail(res, 502, 'មិនអាចរក្សាទុក ឬផ្ញើរូបភាពទៅ Telegram បានទេ។'); }
+    } catch (error) { console.error('Seller chat image upload failed:', error.message); return fail(res, 502, 'មិនអាចផ្ញើរូបភាពបានទេ។ សូមសាកល្បងម្ដងទៀត។'); }
   });
 
   app.post('/api/seller-chat/conversations/:id/location', authenticate, async (req, res) => {
