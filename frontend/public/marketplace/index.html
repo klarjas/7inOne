@@ -25,13 +25,22 @@
       var decodeRouteId = function (val) {
         try { return decodeURIComponent(val); } catch (e) { return val; }
       };
-      var productId = hashView === 'product' ? decodeRouteId(parts.slice(1).join('/')) : '';
+      var listingType = hashView === 'product' && ['job', 'real_estate'].includes(parts[1]) ? parts[1] : '';
+      var listingId = listingType ? decodeRouteId(parts[2] || '') : '';
+      var productId = hashView === 'product' && !listingType ? decodeRouteId(parts.slice(1).join('/')) : '';
       var storeId = hashView === 'store' ? decodeRouteId(parts.slice(1).join('/')) : '';
 
       try {
         fromStorage = sessionStorage.getItem('ecomstore.activeView') || '';
-        if (!productId && (hashView === 'product' || fromStorage === 'product')) {
-          productId = sessionStorage.getItem('ecomstore.currentProductId') || '';
+        if (!listingType && !productId && (hashView === 'product' || fromStorage === 'product')) {
+          var storedListingType = sessionStorage.getItem('ecomstore.currentListingType') || '';
+          var storedListingId = sessionStorage.getItem('ecomstore.currentListingId') || '';
+          if (['job', 'real_estate'].includes(storedListingType) && storedListingId) {
+            listingType = storedListingType;
+            listingId = storedListingId;
+          } else {
+            productId = sessionStorage.getItem('ecomstore.currentProductId') || '';
+          }
         }
         if (!storeId && (hashView === 'store' || fromStorage === 'store')) {
           storeId = sessionStorage.getItem('ecomstore.currentStoreId') || '';
@@ -39,11 +48,13 @@
       } catch (e) {}
 
       var initial = allowed.includes(hashView) ? hashView : (allowed.includes(fromStorage) ? fromStorage : 'home');
-      if (initial === 'product' && !productId) initial = 'home';
+      if (initial === 'product' && !productId && !(listingType && listingId)) initial = 'home';
       if (initial === 'store' && !storeId) initial = 'home';
 
       document.documentElement.dataset.initialView = initial;
       document.documentElement.dataset.initialProductId = productId;
+      document.documentElement.dataset.initialListingType = listingType;
+      document.documentElement.dataset.initialListingId = listingId;
       document.documentElement.dataset.initialStoreId = storeId;
       document.documentElement.classList.add('route-restoring');
     })();
