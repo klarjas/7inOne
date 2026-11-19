@@ -5866,16 +5866,3 @@ body > footer {
   .site-online-value small{font-size:8px}
 }
 
-
-/* Global button surface color requested: #3e4f64 */
-button,
-button.brand-gradient,
-button[class*="bg-"]{
-  background:#3e4f64 !important;
-  background-image:none !important;
-}
-button:hover:not(:disabled),
-button:focus-visible:not(:disabled){
-  background:#3e4f64 !important;
-  background-image:none !important;
-}
