@@ -84,6 +84,11 @@ const state = {
   // Marketplace
   products: [],
   productsRequestId: 0,
+  jobs: [],
+  jobsRequestId: 0,
+  activeJobCategory: 'all',
+  activeJobSubcategory: 'all',
+  jobsSort: 'newest',
   socialPosts: [],
   socialStories: [],
   socialStoryPreviewUrl: null,
@@ -2822,31 +2827,133 @@ function initIcons() {
   document.querySelectorAll('.close-btn').forEach((b) => { b.innerHTML = ic('x', 16); });
 }
 
+function jobsSalaryValue(job) {
+  const min = Number(job.salary_min);
+  const max = Number(job.salary_max);
+  if (Number.isFinite(min) && job.salary_min !== null && job.salary_min !== '') return min;
+  if (Number.isFinite(max) && job.salary_max !== null && job.salary_max !== '') return max;
+  return null;
+}
+
+function renderJobs() {
+  const root = $('jobsList');
+  if (!root) return;
+  const query = $('jobsSearchInput')?.value?.trim() || '';
+  const category = state.activeJobCategory || 'all';
+  const subcategory = state.activeJobSubcategory || 'all';
+  const sort = state.jobsSort || 'newest';
+  let jobs = (state.jobs || []).filter(job => subcategory === 'all' || String(job.subcategory || '') === subcategory);
+  if (sort === 'salary_asc' || sort === 'salary_desc') {
+    jobs.sort((a,b) => {
+      const av = jobsSalaryValue(a), bv = jobsSalaryValue(b);
+      if (av === null && bv === null) return 0;
+      if (av === null) return 1;
+      if (bv === null) return -1;
+      return sort === 'salary_asc' ? av - bv : bv - av;
+    });
+  } else {
+    jobs.sort((a,b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+  }
+  const heading = document.querySelector('.jobs-results-heading b');
+  if (heading) {
+    const active = $('jobsCategoryList')?.querySelector('[data-job-category].is-active');
+    heading.textContent = category === 'all' ? 'ការងារទាំងអស់' : (active?.textContent?.trim() || 'ការងារ');
+  }
+  const count = $('jobsResultCount');
+  if (count) count.textContent = jobs.length + ' ការងារ';
+  if (!jobs.length) {
+    root.innerHTML = `<div class="jobs-empty-state"><span aria-hidden="true">▤</span><b>មិនមានការងារត្រូវនឹងលក្ខខណ្ឌទេ</b><p>${query ? 'សូមសាកល្បងពាក្យស្វែងរកផ្សេង។' : 'ការងារថ្មីៗនឹងបង្ហាញនៅទីនេះ នៅពេលមានការប្រកាស។'}</p></div>`;
+    return;
+  }
+  root.innerHTML = jobs.map(job => {
+    const image = job.image_url || job.image_urls?.[0] || '';
+    const salary = job.price_label === 'ចរចា' ? 'ចរចាប្រាក់ខែ' : (job.price_label ? '$' + String(job.price_label).replace(' - ', ' - $') : 'ទាក់ទងសួរប្រាក់ខែ');
+    return `<button type="button" class="jobs-result-card" data-job-open="${esc(job.id)}">
+      <span class="jobs-result-image">${image ? `<img src="${esc(image)}" alt="" loading="lazy">` : ic('briefcase',22)}</span>
+      <span class="jobs-result-content">
+        <b>${esc(job.title || 'ការងារ')}</b>
+        <small>${esc(job.company_name || 'និយោជក')} · ${esc(job.location || 'កម្ពុជា')}</small>
+        <strong>${esc(salary)}${({hourly:' / ម៉ោង',daily:' / ថ្ងៃ',monthly:' / ខែ'}[job.salary_period] || '')}</strong>
+      </span>
+      <span class="jobs-result-arrow">${ic('chevronright',16)}</span>
+    </button>`;
+  }).join('');
+}
+
+async function loadJobs() {
+  const requestId = ++state.jobsRequestId;
+  const params = new URLSearchParams({ limit: '50', type: 'job' });
+  const query = $('jobsSearchInput')?.value?.trim() || '';
+  if (query) params.set('q', query);
+  if (state.activeJobCategory && state.activeJobCategory !== 'all') params.set('category', state.activeJobCategory);
+  const root = $('jobsList');
+  if (root) root.setAttribute('aria-busy','true');
+  try {
+    const result = await api('/api/marketplace/listings?' + params.toString());
+    if (requestId !== state.jobsRequestId) return;
+    state.jobs = Array.isArray(result.data) ? result.data : [];
+    renderJobs();
+  } catch (error) {
+    if (requestId !== state.jobsRequestId) return;
+    state.jobs = [];
+    renderJobs();
+    toast('មិនអាចទាញយកការងារបានទេ៖ ' + error.message, 'error');
+  } finally {
+    if (requestId === state.jobsRequestId && root) root.setAttribute('aria-busy','false');
+  }
+}
+
+function renderJobSubcategories() {
+  const root = $('jobsSubcategoryList');
+  if (!root) return;
+  const category = state.activeJobCategory;
+  const subs = category === 'all' ? [] : (LISTING_TAXONOMY.jobs[category]?.subs || []);
+  if (!subs.length) {
+    root.hidden = true;
+    root.innerHTML = '';
+    state.activeJobSubcategory = 'all';
+    return;
+  }
+  root.hidden = false;
+  root.innerHTML = ['all', ...subs].map((value,index) => {
+    const label = index === 0 ? 'ទាំងអស់' : value;
+    const selected = state.activeJobSubcategory === value;
+    return `<button type="button" data-job-subcategory="${esc(value)}" class="${selected ? 'is-active' : ''}">${esc(label)}</button>`;
+  }).join('');
+}
+
 function bindEvents() {
-  // Jobs panel category and keyword filters (UI only; data API will be added separately).
+  // Jobs category, subcategory, keyword and salary sorting filters.
   const jobsSearch = $('jobsSearchInput');
   const jobsCategories = $('jobsCategoryList');
-  if (jobsCategories) {
-    jobsCategories.addEventListener('click', (event) => {
-      const button = event.target.closest('[data-job-category]');
-      if (!button) return;
-      jobsCategories.querySelectorAll('[data-job-category]').forEach((item) => {
-        item.classList.toggle('is-active', item === button);
-      });
-      const selected = button.dataset.jobCategory || 'all';
-      const heading = document.querySelector('.jobs-results-heading b');
-      if (heading) heading.textContent = selected === 'all' ? 'ការងារទាំងអស់' : button.textContent.trim();
-    });
-  }
+  jobsCategories?.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-job-category]');
+    if (!button) return;
+    state.activeJobCategory = button.dataset.jobCategory || 'all';
+    state.activeJobSubcategory = 'all';
+    jobsCategories.querySelectorAll('[data-job-category]').forEach(item => item.classList.toggle('is-active', item === button));
+    renderJobSubcategories();
+    void loadJobs();
+  });
+  $('jobsSubcategoryList')?.addEventListener('click', event => {
+    const button = event.target.closest('[data-job-subcategory]');
+    if (!button) return;
+    state.activeJobSubcategory = button.dataset.jobSubcategory || 'all';
+    $('jobsSubcategoryList').querySelectorAll('[data-job-subcategory]').forEach(item => item.classList.toggle('is-active', item === button));
+    renderJobs();
+  });
+  $('jobsSortSelect')?.addEventListener('change', event => {
+    state.jobsSort = event.target.value || 'newest';
+    renderJobs();
+  });
   jobsSearch?.addEventListener('input', () => {
-    const query = jobsSearch.value.trim();
-    const empty = $('jobsList')?.querySelector('.jobs-empty-state');
-    if (empty) {
-      const message = empty.querySelector('p');
-      if (message) message.textContent = query
-        ? 'មិនទាន់មានលទ្ធផលសម្រាប់ពាក្យស្វែងរកនេះទេ។'
-        : 'ការងារថ្មីៗនឹងបង្ហាញនៅទីនេះ នៅពេលនិយោជកចាប់ផ្តើមប្រកាសជ្រើសរើសបុគ្គលិក។';
-    }
+    clearTimeout(window.jobsSearchWait);
+    window.jobsSearchWait = setTimeout(() => void loadJobs(), 300);
+  });
+  $('jobsList')?.addEventListener('click', event => {
+    const card = event.target.closest('[data-job-open]');
+    if (!card) return;
+    void openMarketplaceListing('job', card.dataset.jobOpen);
   });
 
   // Search & Category Filters
@@ -3613,7 +3720,7 @@ async function boot() {
     state.routeAccessReady = true;
 
     // Always load the public storefront even if session restoration or profile lookup fails.
-    const tasks = [loadProducts()];
+    const tasks = [loadProducts(), loadJobs()];
     if (initialView === 'product' && initialProductId) tasks.push(openProduct(initialProductId, { preserveScroll: true }));
     else if (initialView === 'store' && initialStoreId) tasks.push(openStorefront(initialStoreId, { preserveScroll: true }));
     else tasks.push(showView(initialView, { preserveScroll: true }));
