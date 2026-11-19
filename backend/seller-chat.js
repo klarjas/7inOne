@@ -150,7 +150,7 @@ export function registerSellerChat(app, { supabase, authenticate, requireVendor,
         productCards=(messages||[]).map(message=>{
           if(message.message_type!=='product')return message;
           const product=productMap.get(message.product_id),image=imageMap.get(message.product_id);
-          return {...message,product:product?{...product,image_url:image?.file_id?mediaProxyUrl(image.file_id):image?.image_url||''}:null};
+          return {...message,product:product?{...product,image_url:image?.file_id?mediaProxyUrl(image.file_id):String(image?.image_url||'').replace('/api/media/telegram/','/api/media/image/')}:null};
         });
       }
       const unreadField=conversation.current_role==='buyer'?'unread_buyer_count':'unread_seller_count';
