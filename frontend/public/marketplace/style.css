@@ -4548,3 +4548,40 @@ body > footer {
   #view-home .home-social-feed .social-composer { padding: 12px; }
   #view-home .home-social-feed .social-feed-card { padding: 11px; }
 }
+
+
+/* Restore the original right-side community rail position */
+@media (min-width: 1101px) {
+  #view-home .home-layout-shell,
+  #view-home .amazon-store-body {
+    grid-template-columns: 218px minmax(0, 1fr) 292px !important;
+    column-gap: 16px !important;
+  }
+  #view-home .home-social-rail {
+    grid-column: 3 !important;
+    grid-row: 2 / span 12 !important;
+    position: sticky;
+    top: 92px;
+    max-height: calc(100vh - 108px);
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #2A475E transparent;
+    padding: 0 2px 14px;
+  }
+}
+@media (max-width: 1100px) {
+  #view-home .home-social-rail {
+    grid-column: 1 / -1 !important;
+    grid-row: 999 !important;
+    position: static;
+    max-height: none;
+    overflow: visible;
+    margin-top: 18px;
+  }
+}
+#view-home .home-social-rail .social-post-image {
+  width: 100%;
+  max-height: 520px;
+  aspect-ratio: 9 / 16;
+  object-fit: contain;
+}
