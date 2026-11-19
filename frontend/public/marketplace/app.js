@@ -3022,7 +3022,7 @@ async function loadHomeVendorMedia(){
     const res=await api('/api/vendor-media');
     const rows=(res.data||[]).filter(row=>row.media_type==='video'&&String(row.media_url||'').startsWith('/api/media/video/'));
     if(!rows.length){section.classList.add('hidden');target.replaceChildren();return}
-    target.innerHTML=rows.map(row=>`<article class="home-vendor-media-card" data-short-video-url="${esc(row.media_url)}" data-short-store="${esc(row.store_name||'ហាងអ្នកលក់')}"><button class="home-vendor-media-open" type="button" aria-label="ពង្រីកវីដេអូ ${esc(row.store_name||'ហាងអ្នកលក់')}"><div class="home-vendor-media-player"><video src="${esc(row.media_url)}" muted autoplay loop playsinline preload="metadata"></video><span class="home-short-play-indicator" aria-hidden="true">▶</span></div></button><div class="home-vendor-media-store">${esc(row.store_name||'ហាងអ្នកលក់')}</div></article>`).join('');
+    target.innerHTML=rows.map(row=>`<article class="home-vendor-media-card" data-short-video-url="${esc(row.media_url)}" data-short-store="${esc(row.store_name||'ហាងអ្នកលក់')}"><button class="home-vendor-media-open" type="button" aria-label="ពង្រីកវីដេអូ ${esc(row.store_name||'ហាងអ្នកលក់')}"><div class="home-vendor-media-player"><video src="${esc(row.media_url)}" muted loop playsinline preload="metadata"></video><span class="home-short-play-indicator" aria-hidden="true">▶</span></div></button><div class="home-vendor-media-store">${esc(row.store_name||'ហាងអ្នកលក់')}</div></article>`).join('');
     const popup=$('homeShortsPopup'),popupVideo=$('homeShortsPopupFrame'),popupTitle=$('homeShortsPopupTitle');
     if(popup&&!target.dataset.popupBound){
       target.dataset.popupBound='1';
@@ -3040,7 +3040,36 @@ async function loadHomeVendorMedia(){
     if(state.homeVendorMediaTimer)clearInterval(state.homeVendorMediaTimer);let paused=false;
     target.onpointerenter=()=>{paused=true};target.onpointerleave=()=>{paused=false};target.onfocusin=()=>{paused=true};target.onfocusout=()=>{paused=false};
     state.homeVendorMediaTimer=setInterval(()=>{if(!paused&&!document.hidden&&rows.length>1)move(1)},5000);
-    target.querySelectorAll('video').forEach(video=>video.play().catch(()=>{}));section.classList.remove('hidden');
+    // Play only Shorts that are actually visible in the viewport; pause them when scrolled away.
+    target._shortsVisibilityObserver?.disconnect();
+    if ('IntersectionObserver' in window) {
+      target._shortsVisibilityObserver = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          const video = entry.target;
+          if (document.hidden || !entry.isIntersecting || entry.intersectionRatio < 0.2) {
+            video.pause();
+            return;
+          }
+          video.muted = true;
+          video.loop = true;
+          video.playsInline = true;
+          video.play().catch(() => {});
+        });
+      }, { threshold: [0, 0.2, 0.5] });
+      target.querySelectorAll('video').forEach(video => target._shortsVisibilityObserver.observe(video));
+    } else {
+      target.querySelectorAll('video').forEach(video => { video.muted = true; video.loop = true; video.play().catch(() => {}); });
+    }
+    if (!target.dataset.shortsVisibilityBound) {
+      target.dataset.shortsVisibilityBound = '1';
+      document.addEventListener('visibilitychange', () => {
+        target.querySelectorAll('video').forEach(video => {
+          if (document.hidden) video.pause();
+          else if (video.getBoundingClientRect().bottom > 0 && video.getBoundingClientRect().top < window.innerHeight) video.play().catch(() => {});
+        });
+      });
+    }
+    section.classList.remove('hidden');
   }catch{section.classList.add('hidden')}
 }
 async function loadSellerMediaSettings(){
