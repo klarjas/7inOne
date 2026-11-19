@@ -1563,6 +1563,15 @@ app.get('/api/products/:id', async (req, res) => {
   const trust = await ratingsFor([data.vendor_id]);
   data.seller_rating = trust[data.vendor_id]?.average ?? null;
   data.seller_review_count = trust[data.vendor_id]?.count ?? 0;
+  const ownerId = data.vendors?.user_id;
+  if (ownerId) {
+    const { data: profile } = await supabase.from('profiles').select('id,display_name,avatar_url,avatar_file_id,avatar_path').eq('id', ownerId).maybeSingle();
+    data.poster = profile ? {
+      user_id: profile.id,
+      display_name: profile.display_name || 'អ្នកប្រើប្រាស់',
+      avatar_url: profile.avatar_url ? normalizeMediaUrl(profile.avatar_url) : (profile.avatar_file_id ? mediaProxyUrl(profile.avatar_file_id) : publicMediaUrl(profile.avatar_path))
+    } : null;
+  }
   res.json({ data: publicProduct(data) });
 });
 
