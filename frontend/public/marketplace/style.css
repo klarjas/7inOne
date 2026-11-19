@@ -5866,3 +5866,9 @@ body > footer {
   .site-online-value small{font-size:8px}
 }
 
+
+
+/* Shared multi-image album for non-product marketplace listings */
+.listing-image-album{min-width:0}
+.listing-image-album .product-album-picker{width:100%;box-sizing:border-box}
+.listing-image-album .product-image-album{margin-top:10px}
