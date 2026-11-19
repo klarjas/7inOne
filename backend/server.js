@@ -715,9 +715,9 @@ const telegramMediaRateLimit = rateLimit({ windowMs: 60_000, limit: 600, standar
 // Permanent backend media URLs; Telegram file paths are cached briefly and refreshed when stale.
 app.get(['/api/media/image/:mediaId', '/api/media/telegram/:fileId'], telegramMediaRateLimit, async (req, res) => {
   try {
-    if (!process.env.TELEGRAM_BOT_TOKEN) return fail(res, 503, 'Telegram media is unavailable: TELEGRAM_BOT_TOKEN is not configured.');
+    if (!process.env.TELEGRAM_BOT_TOKEN) return fail(res, 503, 'Image service is temporarily unavailable. Please try again later.');
     const fileId = clean(req.params.mediaId || req.params.fileId, 2048);
-    if (!fileId) return fail(res, 400, 'Invalid Telegram file ID.');
+    if (!fileId) return fail(res, 400, 'Invalid image reference.');
     const requestedMime = clean(req.query.mime, 60).toLowerCase();
     const safeAudioMimes = new Set(['audio/webm','audio/ogg','audio/mp4','audio/mpeg','audio/wav','audio/x-wav']);
     const safeImageMimes = new Set(['image/jpeg','image/png','image/webp']);
