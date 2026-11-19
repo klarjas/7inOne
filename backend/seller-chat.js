@@ -1,5 +1,4 @@
-export function registerSellerChat(app, { supabase, authenticate, requireVendor, upload, telegram, telegramStorageChatId, clean, fail, productPublicMaxAgeMs }) {
-  const mediaProxyUrl = (fileId, mimeType) => fileId ? `/api/media/image/${encodeURIComponent(fileId)}${mimeType ? `?mime=${encodeURIComponent(mimeType)}` : ''}` : '';
+export function registerSellerChat(app, { supabase, authenticate, requireVendor, upload, telegram, telegramStorageChatId, clean, fail, productPublicMaxAgeMs, mediaProxyUrl }) {
   const publicMessage = message => {
     if (!message) return message;
     const { telegram_file_id: fileId, telegram_message_id: _messageId, ...safeMessage } = message;
