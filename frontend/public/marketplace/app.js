@@ -3022,7 +3022,6 @@ async function loadHomeVendorMedia() {
       </div><div class="home-vendor-media-store"><span>${esc(row.store_name||'ហាងអ្នកលក់')}</span></div></article>`}).join('');
     section.classList.remove('hidden');
     const move=dir=>{const card=target.querySelector('.home-vendor-media-card');if(!card)return;const max=Math.max(0,target.scrollWidth-target.clientWidth),step=card.getBoundingClientRect().width+12;if(dir>0&&target.scrollLeft>=max-8)target.scrollTo({left:0,behavior:'smooth'});else if(dir<0&&target.scrollLeft<=8)target.scrollTo({left:max,behavior:'smooth'});else target.scrollBy({left:step*dir,behavior:'smooth'})};
-    if ($('homeVendorMediaPrev')) $('homeVendorMediaPrev').onclick=()=>move(-1); if ($('homeVendorMediaNext')) $('homeVendorMediaNext').onclick=()=>move(1);
     if(state.homeVendorMediaTimer)clearInterval(state.homeVendorMediaTimer);let paused=false;
     target.onpointerenter=()=>{paused=true};target.onpointerleave=()=>{paused=false};target.onfocusin=()=>{paused=true};target.onfocusout=()=>{paused=false};
     state.homeVendorMediaTimer=setInterval(()=>{if(!paused&&!document.hidden&&rows.length>1)move(1)},5000);
