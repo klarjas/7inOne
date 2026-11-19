@@ -2381,7 +2381,7 @@ textarea,
 #searchIcon{display:none!important}
 #searchInput{height:100%;background:#101822;color:#FFFFFF;font-size:13px}
 #searchBtn{width:46px;height:100%;border:0;border-radius:0;background:#2B74B8;color:#FFFFFF}
-#postAdBtn{background:#2B74B8;color:#FFFFFF;border-radius:5px;white-space:nowrap}
+#postAdBtn{background:#3e4f64!important;color:#FFFFFF;border-radius:5px;white-space:nowrap}
 #notificationBtn,#profileMenuBtn{color:#FFFFFF}
 #navName,#navRole{color:#FFFFFF}
 #profileMenuBtn .nav-avatar{border-color:rgba(255,255,255,.45)!important}
