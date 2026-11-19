@@ -1,4 +1,10 @@
 export function registerSellerChat(app, { supabase, authenticate, requireVendor, upload, telegram, telegramStorageChatId, clean, fail, productPublicMaxAgeMs }) {
+  const mediaProxyUrl = (fileId, mimeType) => fileId ? `/api/media/image/${encodeURIComponent(fileId)}${mimeType ? `?mime=${encodeURIComponent(mimeType)}` : ''}` : '';
+  const publicMessage = message => {
+    if (!message) return message;
+    const { telegram_file_id: fileId, telegram_message_id: _messageId, ...safeMessage } = message;
+    return { ...safeMessage, media_url: fileId ? mediaProxyUrl(fileId, message.mime_type) : null };
+  };
   async function getConversationForUser(id, userId) {
     const { data: conversation, error } = await supabase.from('seller_conversations').select('*').eq('id', id).maybeSingle();
     if (error || !conversation) return { error: 'សន្ទនានេះមិនមានទេ។' };
@@ -15,7 +21,7 @@ export function registerSellerChat(app, { supabase, authenticate, requireVendor,
     const { data: images } = await supabase.from('product_images').select('id,sort_order,file_id,image_url')
       .eq('product_id', conversation.product_id).order('sort_order', { ascending: true }).limit(1);
     const image = images?.[0];
-    return { conversation: { ...conversation, vendor: vendor ? { ...vendor, store_logo_url: vendor.store_logo_file_id ? '/api/media/telegram/' + encodeURIComponent(vendor.store_logo_file_id) : '', profile: vendorProfile } : null, product: product ? { ...product, image_url: image?.image_url || (image?.file_id ? '/api/media/telegram/' + encodeURIComponent(image.file_id) : '') } : null, buyer, current_role: role } };
+    return { conversation: { ...conversation, vendor: vendor ? { id: vendor.id, user_id: vendor.user_id, store_name: vendor.store_name, store_logo_url: vendor.store_logo_file_id ? mediaProxyUrl(vendor.store_logo_file_id) : '', profile: vendorProfile } : null, product: product ? { ...product, image_url: image?.file_id ? mediaProxyUrl(image.file_id) : image?.image_url || '' } : null, buyer, current_role: role } };
   }
 
   async function listInbox(userId) {
@@ -45,7 +51,7 @@ export function registerSellerChat(app, { supabase, authenticate, requireVendor,
     if (vendorProfilesResult.error) throw vendorProfilesResult.error;
     const vendorProfiles = new Map((vendorProfilesResult.data || []).map(row => [row.id, row]));
     const buyers = new Map((buyersResult.data || []).map(row => [row.id, row]));
-    const vendors = new Map((vendorsResult.data || []).map(row => [row.id, { ...row, store_logo_url: row.store_logo_file_id ? '/api/media/telegram/' + encodeURIComponent(row.store_logo_file_id) : '', profile: vendorProfiles.get(row.user_id) || null }]));
+    const vendors = new Map((vendorsResult.data || []).map(row => [row.id, { id: row.id, user_id: row.user_id, store_name: row.store_name, store_logo_url: row.store_logo_file_id ? mediaProxyUrl(row.store_logo_file_id) : '', profile: vendorProfiles.get(row.user_id) || null }]));
     const products = new Map((productsResult.data || []).map(row => [row.id, row]));
     const images = new Map();
     for (const row of imagesResult.data || []) if (!images.has(row.product_id)) images.set(row.product_id, row);
@@ -56,7 +62,7 @@ export function registerSellerChat(app, { supabase, authenticate, requireVendor,
       return {
         ...row, current_role: row.buyer_id === userId ? 'buyer' : 'seller',
         buyer: buyers.get(row.buyer_id) || null, vendor: vendors.get(row.vendor_id) || null,
-        product: product ? { ...product, image_url: image?.image_url || (image?.file_id ? '/api/media/telegram/' + encodeURIComponent(image.file_id) : '') } : null,
+        product: product ? { ...product, image_url: image?.file_id ? mediaProxyUrl(image.file_id) : image?.image_url || '' } : null,
         other_role: otherRole,
         unread_count: row.buyer_id === userId ? Number(row.unread_buyer_count || 0) : Number(row.unread_seller_count || 0),
         other_name: row.buyer_id === userId ? (vendors.get(row.vendor_id)?.store_name || 'អ្នកលក់') : (buyers.get(row.buyer_id)?.display_name || 'អ្នកទិញ')
@@ -151,7 +157,7 @@ export function registerSellerChat(app, { supabase, authenticate, requireVendor,
       const marked=await supabase.from('seller_conversations').update({[unreadField]:0}).eq('id',conversation.id);
       if(marked.error)throw marked.error;
       res.set('Cache-Control','no-store');
-      return res.json({data:{conversation,messages:productCards}});
+      return res.json({data:{conversation,messages:productCards.map(publicMessage)}});
     } catch (error) { console.error('Seller chat load failed:', error.message); return fail(res, 500, 'មិនអាចផ្ទុកសារបានទេ។'); }
   });
 
@@ -189,7 +195,7 @@ export function registerSellerChat(app, { supabase, authenticate, requireVendor,
         const message = await saveMessage(conversation, req.user.id, conversation.current_role, {
           body: body || product.title, message_type: 'product', product_id: product.id
         }, preview);
-        return res.status(201).json({ data: { message } });
+        return res.status(201).json({ data: { message: publicMessage(message) } });
       }
 
       if (!body) return fail(res, 400, 'សូមសរសេរសារជាមុនសិន។');
