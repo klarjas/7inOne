@@ -71,8 +71,6 @@ export function registerSellerChat(app, { supabase, authenticate, requireVendor,
         ...row, current_role: row.buyer_id === userId ? 'buyer' : 'seller',
         buyer: buyers.get(row.buyer_id) || null, vendor: chatVendor, recipient,
         product: product ? { ...product, image_url: image?.file_id ? mediaProxyUrl(image.file_id) : String(image?.image_url || '').replace('/api/media/telegram/','/api/media/image/') } : null,
-        chat_type: row.recipient_id ? 'personal' : 'shop',
-        other_user_id: row.buyer_id === userId ? (row.recipient_id || chatVendor?.user_id || null) : row.buyer_id,
         other_role: row.buyer_id === userId ? 'seller' : 'buyer',
         unread_count: row.buyer_id === userId ? Number(row.unread_buyer_count || 0) : Number(row.unread_seller_count || 0),
         other_name: row.buyer_id === userId ? (chatVendor?.store_name || 'អ្នកលក់') : (buyers.get(row.buyer_id)?.display_name || 'អ្នកទិញ')
