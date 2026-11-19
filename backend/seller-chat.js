@@ -7,64 +7,73 @@ export function registerSellerChat(app, { supabase, authenticate, requireVendor,
   async function getConversationForUser(id, userId) {
     const { data: conversation, error } = await supabase.from('seller_conversations').select('*').eq('id', id).maybeSingle();
     if (error || !conversation) return { error: 'សន្ទនានេះមិនមានទេ។' };
-    const [{ data: vendor }, { data: product }, { data: buyer }] = await Promise.all([
-      supabase.from('vendors').select('id,user_id,store_name,store_logo_file_id').eq('id', conversation.vendor_id).maybeSingle(),
-      supabase.from('products').select('id,title,price,status,stock').eq('id', conversation.product_id).maybeSingle(),
-      supabase.from('profiles').select('id,display_name,avatar_url').eq('id', conversation.buyer_id).maybeSingle()
+    const [{ data: vendor }, { data: product }, { data: buyer }, { data: recipientProfile }] = await Promise.all([
+      conversation.vendor_id ? supabase.from('vendors').select('id,user_id,store_name,store_logo_file_id').eq('id', conversation.vendor_id).maybeSingle() : Promise.resolve({ data: null }),
+      conversation.product_id ? supabase.from('products').select('id,title,price,status,stock').eq('id', conversation.product_id).maybeSingle() : Promise.resolve({ data: null }),
+      supabase.from('profiles').select('id,display_name,avatar_url,avatar_file_id,avatar_path').eq('id', conversation.buyer_id).maybeSingle(),
+      conversation.recipient_id ? supabase.from('profiles').select('id,display_name,avatar_url,avatar_file_id,avatar_path').eq('id', conversation.recipient_id).maybeSingle() : Promise.resolve({ data: null })
     ]);
     const { data: vendorProfile } = vendor?.user_id
-      ? await supabase.from('profiles').select('id,avatar_url').eq('id', vendor.user_id).maybeSingle()
+      ? await supabase.from('profiles').select('id,display_name,avatar_url,avatar_file_id,avatar_path').eq('id', vendor.user_id).maybeSingle()
       : { data: null };
-    const role = conversation.buyer_id === userId ? 'buyer' : vendor?.user_id === userId ? 'seller' : null;
+    const profileAvatar = profile => profile?.avatar_url || (profile?.avatar_file_id ? mediaProxyUrl(profile.avatar_file_id) : null);
+    const role = conversation.buyer_id === userId ? 'buyer' : (vendor?.user_id === userId || conversation.recipient_id === userId) ? 'seller' : null;
     if (!role) return { error: 'អ្នកមិនមានសិទ្ធិចូលសន្ទនានេះទេ។' };
-    const { data: images } = await supabase.from('product_images').select('id,sort_order,file_id,image_url')
-      .eq('product_id', conversation.product_id).order('sort_order', { ascending: true }).limit(1);
+    const { data: images } = conversation.product_id
+      ? await supabase.from('product_images').select('id,sort_order,file_id,image_url').eq('product_id', conversation.product_id).order('sort_order', { ascending: true }).limit(1)
+      : { data: [] };
     const image = images?.[0];
-    return { conversation: { ...conversation, vendor: vendor ? { id: vendor.id, user_id: vendor.user_id, store_name: vendor.store_name, store_logo_url: vendor.store_logo_file_id ? mediaProxyUrl(vendor.store_logo_file_id) : '', profile: vendorProfile } : null, product: product ? { ...product, image_url: image?.file_id ? mediaProxyUrl(image.file_id) : String(image?.image_url || '').replace('/api/media/telegram/','/api/media/image/') } : null, buyer, current_role: role } };
+    const chatVendor = vendor ? { id: vendor.id, user_id: vendor.user_id, store_name: vendor.store_name, store_logo_url: vendor.store_logo_file_id ? mediaProxyUrl(vendor.store_logo_file_id) : profileAvatar(vendorProfile), profile: vendorProfile } : recipientProfile ? { id: null, user_id: recipientProfile.id, store_name: recipientProfile.display_name || 'អ្នកប្រើប្រាស់', store_logo_url: profileAvatar(recipientProfile), profile: recipientProfile } : null;
+    return { conversation: { ...conversation, vendor: chatVendor, recipient: recipientProfile, product: product ? { ...product, image_url: image?.file_id ? mediaProxyUrl(image.file_id) : String(image?.image_url || '').replace('/api/media/telegram/','/api/media/image/') } : null, buyer, current_role: role } };
   }
 
   async function listInbox(userId) {
     const { data: vendor } = await supabase.from('vendors').select('id,user_id,store_name,status').eq('user_id', userId).maybeSingle();
     let query = supabase.from('seller_conversations').select('*');
     query = vendor?.status === 'approved'
-      ? query.or('buyer_id.eq.' + userId + ',vendor_id.eq.' + vendor.id)
-      : query.eq('buyer_id', userId);
+      ? query.or('buyer_id.eq.' + userId + ',recipient_id.eq.' + userId + ',vendor_id.eq.' + vendor.id)
+      : query.or('buyer_id.eq.' + userId + ',recipient_id.eq.' + userId);
     const { data, error } = await query.order('last_message_at', { ascending: false }).limit(100);
     if (error) throw error;
     const rows = data || [];
     const buyerIds = [...new Set(rows.map(row => row.buyer_id))];
-    const vendorIds = [...new Set(rows.map(row => row.vendor_id))];
+    const vendorIds = [...new Set(rows.map(row => row.vendor_id).filter(Boolean))];
+    const recipientIds = [...new Set(rows.map(row => row.recipient_id).filter(Boolean))];
     const productIds = [...new Set(rows.map(row => row.product_id).filter(Boolean))];
-    const [buyersResult, vendorsResult, productsResult, imagesResult] = await Promise.all([
-      buyerIds.length ? supabase.from('profiles').select('id,display_name,avatar_url').in('id', buyerIds) : Promise.resolve({ data: [] }),
+    const [buyersResult, vendorsResult, productsResult, imagesResult, recipientsResult] = await Promise.all([
+      buyerIds.length ? supabase.from('profiles').select('id,display_name,avatar_url,avatar_file_id,avatar_path').in('id', buyerIds) : Promise.resolve({ data: [] }),
       vendorIds.length ? supabase.from('vendors').select('id,user_id,store_name,store_logo_file_id').in('id', vendorIds) : Promise.resolve({ data: [] }),
       productIds.length ? supabase.from('products').select('id,title,price,status,stock').in('id', productIds) : Promise.resolve({ data: [] }),
-      productIds.length ? supabase.from('product_images').select('product_id,sort_order,file_id,image_url').in('product_id', productIds).order('sort_order', { ascending: true }) : Promise.resolve({ data: [] })
+      productIds.length ? supabase.from('product_images').select('product_id,sort_order,file_id,image_url').in('product_id', productIds).order('sort_order', { ascending: true }) : Promise.resolve({ data: [] }),
+      recipientIds.length ? supabase.from('profiles').select('id,display_name,avatar_url,avatar_file_id,avatar_path').in('id', recipientIds) : Promise.resolve({ data: [] })
     ]);
-    const issue = buyersResult.error || vendorsResult.error || productsResult.error || imagesResult.error;
+    const issue = buyersResult.error || vendorsResult.error || productsResult.error || imagesResult.error || recipientsResult.error;
     if (issue) throw issue;
     const vendorUserIds = [...new Set((vendorsResult.data || []).map(row => row.user_id).filter(Boolean))];
     const vendorProfilesResult = vendorUserIds.length
-      ? await supabase.from('profiles').select('id,avatar_url').in('id', vendorUserIds)
+      ? await supabase.from('profiles').select('id,display_name,avatar_url,avatar_file_id,avatar_path').in('id', vendorUserIds)
       : { data: [] };
     if (vendorProfilesResult.error) throw vendorProfilesResult.error;
+    const avatar = profile => profile?.avatar_url || (profile?.avatar_file_id ? mediaProxyUrl(profile.avatar_file_id) : null);
     const vendorProfiles = new Map((vendorProfilesResult.data || []).map(row => [row.id, row]));
     const buyers = new Map((buyersResult.data || []).map(row => [row.id, row]));
-    const vendors = new Map((vendorsResult.data || []).map(row => [row.id, { id: row.id, user_id: row.user_id, store_name: row.store_name, store_logo_url: row.store_logo_file_id ? mediaProxyUrl(row.store_logo_file_id) : '', profile: vendorProfiles.get(row.user_id) || null }]));
+    const recipients = new Map((recipientsResult.data || []).map(row => [row.id, row]));
+    const vendors = new Map((vendorsResult.data || []).map(row => [row.id, { id: row.id, user_id: row.user_id, store_name: row.store_name, store_logo_url: row.store_logo_file_id ? mediaProxyUrl(row.store_logo_file_id) : avatar(vendorProfiles.get(row.user_id)), profile: vendorProfiles.get(row.user_id) || null }]));
     const products = new Map((productsResult.data || []).map(row => [row.id, row]));
     const images = new Map();
     for (const row of imagesResult.data || []) if (!images.has(row.product_id)) images.set(row.product_id, row);
     return rows.map(row => {
-      const otherRole = row.buyer_id === userId ? 'seller' : 'buyer';
+      const recipient = recipients.get(row.recipient_id) || null;
+      const chatVendor = vendors.get(row.vendor_id) || (recipient ? { id: null, user_id: recipient.id, store_name: recipient.display_name || 'អ្នកប្រើប្រាស់', store_logo_url: avatar(recipient), profile: recipient } : null);
       const product = products.get(row.product_id) || null;
       const image = images.get(row.product_id);
       return {
         ...row, current_role: row.buyer_id === userId ? 'buyer' : 'seller',
-        buyer: buyers.get(row.buyer_id) || null, vendor: vendors.get(row.vendor_id) || null,
+        buyer: buyers.get(row.buyer_id) || null, vendor: chatVendor, recipient,
         product: product ? { ...product, image_url: image?.file_id ? mediaProxyUrl(image.file_id) : String(image?.image_url || '').replace('/api/media/telegram/','/api/media/image/') } : null,
-        other_role: otherRole,
+        other_role: row.buyer_id === userId ? 'seller' : 'buyer',
         unread_count: row.buyer_id === userId ? Number(row.unread_buyer_count || 0) : Number(row.unread_seller_count || 0),
-        other_name: row.buyer_id === userId ? (vendors.get(row.vendor_id)?.store_name || 'អ្នកលក់') : (buyers.get(row.buyer_id)?.display_name || 'អ្នកទិញ')
+        other_name: row.buyer_id === userId ? (chatVendor?.store_name || 'អ្នកលក់') : (buyers.get(row.buyer_id)?.display_name || 'អ្នកទិញ')
       };
     });
   }
@@ -124,6 +133,60 @@ export function registerSellerChat(app, { supabase, authenticate, requireVendor,
       if(updated.error)throw updated.error;
       return res.status(200).json({data:{id:conversation.id}});
     } catch (error) { console.error('Seller chat conversation create failed:', error.message); return fail(res, 500, 'មិនអាចបើកសន្ទនាជាមួយអ្នកលក់បានទេ។'); }
+  });
+
+  app.post('/api/seller-chat/listing-conversations', authenticate, async (req, res) => {
+    const listingType = clean(req.body?.listing_type, 20);
+    const listingId = clean(req.body?.listing_id, 80);
+    if (!['job','real_estate'].includes(listingType) || !listingId) return fail(res, 400, 'ប្រភេទប្រកាសមិនត្រឹមត្រូវទេ។');
+    try {
+      const sources = listingType === 'job'
+        ? [{ table: 'jobs', title: 'title' }]
+        : [{ table: 'property_listings' }, { table: 'rentals' }, { table: 'land_listings' }, { table: 'house_sale_listings' }];
+      let listing = null;
+      for (const source of sources) {
+        const result = await supabase.from(source.table).select('id,user_id,title,status').eq('id', listingId).maybeSingle();
+        if (result.error && ['42P01','PGRST205'].includes(result.error.code)) continue;
+        if (result.error) throw result.error;
+        if (result.data) { listing = result.data; break; }
+      }
+      if (!listing || listing.status !== 'active') return fail(res, 404, 'ប្រកាសនេះមិនអាចឆាតបានទេ។');
+      if (!listing.user_id || listing.user_id === req.user.id) return fail(res, 400, 'អ្នកមិនអាចឆាតទៅប្រកាសរបស់ខ្លួនឯងបានទេ។');
+      const { data: recipient, error: profileError } = await supabase.from('profiles').select('id,display_name').eq('id', listing.user_id).maybeSingle();
+      if (profileError || !recipient) return fail(res, 404, 'រកមិនឃើញ Profile អ្នកផុសទេ។');
+      let { data: conversation, error } = await supabase.from('seller_conversations').select('id,unread_seller_count')
+        .eq('recipient_id', recipient.id).eq('buyer_id', req.user.id).maybeSingle();
+      if (error) throw error;
+      if (!conversation) {
+        const created = await supabase.from('seller_conversations').insert({
+          product_id: null, vendor_id: null, recipient_id: recipient.id, listing_type: listingType,
+          listing_id: listing.id, buyer_id: req.user.id, status: 'open', last_message_at: new Date().toISOString()
+        }).select('id,unread_seller_count').single();
+        if (created.error) {
+          if (created.error.code !== '23505') throw created.error;
+          const retry = await supabase.from('seller_conversations').select('id,unread_seller_count')
+            .eq('recipient_id', recipient.id).eq('buyer_id', req.user.id).single();
+          if (retry.error) throw retry.error;
+          conversation = retry.data;
+        } else conversation = created.data;
+      }
+      const preview = 'សួរអំពីប្រកាស៖ ' + clean(listing.title || 'ប្រកាស', 120);
+      const now = new Date().toISOString();
+      const message = await supabase.from('seller_messages').insert({
+        conversation_id: conversation.id, sender_id: req.user.id, sender_role: 'buyer',
+        body: preview, message_type: 'text'
+      }).select('id').single();
+      if (message.error) throw message.error;
+      const updated = await supabase.from('seller_conversations').update({
+        listing_type: listingType, listing_id: listing.id, status: 'open', last_message_at: now,
+        last_message_preview: preview.slice(0,180), unread_seller_count: Number(conversation.unread_seller_count || 0) + 1, updated_at: now
+      }).eq('id', conversation.id);
+      if (updated.error) throw updated.error;
+      return res.status(200).json({ data: { id: conversation.id } });
+    } catch (error) {
+      console.error('Listing chat conversation create failed:', error.message);
+      return fail(res, 500, 'មិនអាចបើកសន្ទនាជាមួយអ្នកផុសបានទេ។');
+    }
   });
 
   app.get('/api/seller-chat/conversations/:id', authenticate, async (req, res) => {
