@@ -2033,7 +2033,7 @@ app.delete('/api/products/:id', authenticate, async (req, res) => {
   for (const img of product.product_images || []) await deleteTelegramMessage(img.telegram_message_id);
   res.json({ success: true, archived: false });
 });
-app.post('/api/products/:id/images', authenticate, upload.array('images', 5), async (req, res) => {
+app.post('/api/products/:id/images', authenticate, upload.array('images', 10), async (req, res) => {
   const admin = await isAdmin(req.user.id);
   const { data: vendor } = await vendorFor(req.user.id);
   if (!admin && (!vendor || vendor.status === 'blocked')) return fail(res, 403, 'Active vendor account required');
@@ -2049,7 +2049,7 @@ app.post('/api/products/:id/images', authenticate, upload.array('images', 5), as
     return fail(res, 400, 'Choose valid JPG, PNG or WEBP product images only (maximum 8MB per image).');
   }
   const { count } = await supabase.from('product_images').select('*', { count: 'exact', head: true }).eq('product_id', product.id);
-  if ((count || 0) + files.length > 5) return fail(res, 400, 'Maximum 5 images per product.');
+  if ((count || 0) + files.length > 10) return fail(res, 400, 'Maximum 10 images per product.');
   const uploaded = [];
   try {
     for (const file of files) uploaded.push(await uploadToTelegram(file));
@@ -2081,7 +2081,7 @@ app.patch('/api/products/:id/images/order', authenticate, async (req, res) => {
   const { data: product } = await productQuery.maybeSingle();
   if (!product) return fail(res, 404, 'Product not found');
   const imageIds = Array.isArray(req.body?.image_ids) ? req.body.image_ids.map(id => clean(id, 80)) : [];
-  if (imageIds.length > 5 || new Set(imageIds).size !== imageIds.length || imageIds.some(id => !id)) return fail(res, 400, 'Invalid product image order.');
+  if (imageIds.length > 10 || new Set(imageIds).size !== imageIds.length || imageIds.some(id => !id)) return fail(res, 400, 'Invalid product image order.');
   const { data: rows, error: lookupError } = await supabase.from('product_images').select('id').eq('product_id', product.id);
   if (lookupError) return fail(res, 500, 'Could not verify product images.');
   const ownedIds = new Set((rows || []).map(row => String(row.id)));
