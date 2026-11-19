@@ -781,6 +781,79 @@ app.get('/api/vendor-media',async(_req,res)=>{
  return res.json({data:(data||[]).map(row=>({id:row.id,vendor_id:row.vendor_id,media_url:row.media_url,media_type:row.media_type,created_at:row.created_at,store_name:row.vendors?.store_name||'ហាងអ្នកលក់',store_logo_url:row.vendors?.store_logo_file_id?telegramMediaUrl(row.vendors.store_logo_file_id):null}))});
 });
 
+// Community photo posts, likes and comments.
+app.get('/api/social/posts', async (req, res) => {
+  if (!db(res)) return;
+  const { data, error } = await supabase.from('social_posts')
+    .select('id,user_id,caption,image_file_id,created_at,profiles!social_posts_user_id_fkey(display_name,avatar_url,avatar_file_id,avatar_path),social_post_likes(user_id),social_post_comments(id)')
+    .order('created_at', { ascending: false }).limit(20);
+  if (error) { console.error('Social feed load failed:', error.message); return fail(res, 500, 'Could not load community posts.'); }
+  let viewerId = null;
+  const token = req.headers.authorization?.replace(/^Bearer\\s+/i, '');
+  if (token) { try { const { data: auth } = await supabase.auth.getUser(token); viewerId = auth?.user?.id || null; } catch {} }
+  return res.json({ data: (data || []).map(post => ({
+    id: post.id, user_id: post.user_id, caption: post.caption,
+    image_url: telegramMediaUrl(post.image_file_id), created_at: post.created_at,
+    profile: { display_name: post.profiles?.display_name || 'អ្នកប្រើប្រាស់',
+      avatar_url: post.profiles?.avatar_url || telegramMediaUrl(post.profiles?.avatar_file_id) || publicMediaUrl(post.profiles?.avatar_path) },
+    like_count: post.social_post_likes?.length || 0,
+    comment_count: post.social_post_comments?.length || 0,
+    liked_by_me: Boolean(viewerId && post.social_post_likes?.some(like => like.user_id === viewerId))
+  })) });
+});
+app.post('/api/social/posts', authenticate, upload.single('image'), async (req, res) => {
+  let uploaded = null;
+  try {
+    const caption = clean(req.body?.caption, 500), file = req.file;
+    const invalid = imageUploadError(file, 8 * 1024 * 1024);
+    if (invalid) return fail(res, 400, invalid);
+    uploaded = await uploadToTelegram(file);
+    const { data, error } = await supabase.from('social_posts')
+      .insert({ user_id: req.user.id, caption, image_file_id: uploaded.fileId, image_message_id: uploaded.messageId })
+      .select('id,user_id,caption,image_file_id,created_at').single();
+    if (error) throw error;
+    return res.status(201).json({ data: { ...data, image_url: telegramMediaUrl(data.image_file_id) } });
+  } catch (error) {
+    if (uploaded?.messageId) await deleteTelegramMessage(uploaded.messageId);
+    console.error('Social post publish failed:', error.message);
+    return fail(res, 500, 'Could not publish your photo. Please try again.');
+  }
+});
+app.post('/api/social/posts/:id/like', authenticate, async (req, res) => {
+  const postId = clean(req.params.id, 36);
+  const { data: existing, error: lookupError } = await supabase.from('social_post_likes')
+    .select('user_id').eq('post_id', postId).eq('user_id', req.user.id).maybeSingle();
+  if (lookupError) return fail(res, 500, 'Could not update like.');
+  if (existing) {
+    const { error } = await supabase.from('social_post_likes').delete().eq('post_id', postId).eq('user_id', req.user.id);
+    if (error) return fail(res, 500, 'Could not remove like.');
+  } else {
+    const { error } = await supabase.from('social_post_likes').insert({ post_id: postId, user_id: req.user.id });
+    if (error) return fail(res, 500, 'Could not add like.');
+  }
+  const { count, error } = await supabase.from('social_post_likes').select('user_id', { count: 'exact', head: true }).eq('post_id', postId);
+  if (error) return fail(res, 500, 'Could not count likes.');
+  return res.json({ liked: !existing, like_count: count || 0 });
+});
+app.get('/api/social/posts/:id/comments', async (req, res) => {
+  if (!db(res)) return;
+  const { data, error } = await supabase.from('social_post_comments')
+    .select('id,body,created_at,profiles!social_post_comments_user_id_fkey(display_name)')
+    .eq('post_id', clean(req.params.id, 36)).order('created_at', { ascending: true }).limit(100);
+  if (error) return fail(res, 500, 'Could not load comments.');
+  return res.json({ data: (data || []).map(item => ({ id: item.id, body: item.body, created_at: item.created_at, display_name: item.profiles?.display_name || 'អ្នកប្រើប្រាស់' })) });
+});
+app.post('/api/social/posts/:id/comments', authenticate, async (req, res) => {
+  const body = clean(req.body?.body, 500);
+  if (!body) return fail(res, 400, 'Comment cannot be empty.');
+  const { data, error } = await supabase.from('social_post_comments')
+    .insert({ post_id: clean(req.params.id, 36), user_id: req.user.id, body })
+    .select('id,body,created_at').single();
+  if (error) return fail(res, 500, 'Could not save comment.');
+  return res.status(201).json({ data });
+});
+
+
 // Public catalogue.
 app.get('/api/categories', async (_req, res) => {
   if (!db(res)) return;
