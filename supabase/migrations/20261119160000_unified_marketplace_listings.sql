@@ -138,3 +138,42 @@ create policy land_owner_update on public.land_listings
 drop policy if exists land_owner_delete on public.land_listings;
 create policy land_owner_delete on public.land_listings
   for delete using (auth.uid() = user_id);
+
+
+-- House-sale listings share the Real Estate feed but remain distinct from rentals and land.
+create table if not exists public.house_sale_listings (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  title text not null check (char_length(trim(title)) between 2 and 160),
+  description text not null default '',
+  short_description text not null default '',
+  category text not null default 'house_sale',
+  property_type text not null default 'house',
+  location text not null default '',
+  address text not null default '',
+  price numeric(14,2) not null check (price >= 0),
+  bedrooms integer check (bedrooms is null or bedrooms >= 0),
+  bathrooms integer check (bathrooms is null or bathrooms >= 0),
+  area_sqm numeric(12,2) check (area_sqm is null or area_sqm >= 0),
+  furnished boolean,
+  title_deed text not null default '',
+  image_file_id text,
+  image_message_id text,
+  image_mime_type text,
+  status text not null default 'active' check (status in ('active','sold','archived')),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+create index if not exists house_sale_listings_public_feed_idx on public.house_sale_listings(status, created_at desc);
+create index if not exists house_sale_listings_owner_feed_idx on public.house_sale_listings(user_id, created_at desc);
+alter table public.house_sale_listings enable row level security;
+drop policy if exists house_sale_public_read_active on public.house_sale_listings;
+create policy house_sale_public_read_active on public.house_sale_listings for select using (status = 'active');
+drop policy if exists house_sale_owner_read_all on public.house_sale_listings;
+create policy house_sale_owner_read_all on public.house_sale_listings for select using (auth.uid() = user_id);
+drop policy if exists house_sale_owner_insert on public.house_sale_listings;
+create policy house_sale_owner_insert on public.house_sale_listings for insert with check (auth.uid() = user_id);
+drop policy if exists house_sale_owner_update on public.house_sale_listings;
+create policy house_sale_owner_update on public.house_sale_listings for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+drop policy if exists house_sale_owner_delete on public.house_sale_listings;
+create policy house_sale_owner_delete on public.house_sale_listings for delete using (auth.uid() = user_id);
