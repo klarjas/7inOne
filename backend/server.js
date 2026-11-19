@@ -1333,7 +1333,7 @@ app.post('/api/jobs', authenticate, upload.fields([{name:'images',maxCount:10},{
   const salaryMin=body.salary_min===''||body.salary_min==null?null:Number(body.salary_min);
   const salaryMax=body.salary_max===''||body.salary_max==null?null:Number(body.salary_max);
   const vacancies=Number(body.vacancies||1);
-  if(title.length<2||!JOB_CATEGORIES.has(category))return fail(res,400,'សូមបំពេញចំណងជើង និងប្រភេទការងារត្រឹមត្រូវ។');
+  if(title.length<2||!/^[a-z0-9_]{2,40}$/.test(category))return fail(res,400,'សូមបំពេញចំណងជើង និងប្រភេទការងារត្រឹមត្រូវ។');
   if(!Number.isInteger(vacancies)||vacancies<1||(salaryMin!=null&&(!Number.isFinite(salaryMin)||salaryMin<0))||(salaryMax!=null&&(!Number.isFinite(salaryMax)||salaryMax<0))||(salaryMin!=null&&salaryMax!=null&&salaryMax<salaryMin))return fail(res,400,'ព័ត៌មានប្រាក់ខែ ឬចំនួនបុគ្គលិកមិនត្រឹមត្រូវ។');
   const images=[...(req.files?.images||[]),...(req.files?.image||[])].slice(0,10);
   for(const image of images){const problem=imageUploadError(image,8*1024*1024);if(problem)return fail(res,400,problem);}
@@ -1373,7 +1373,7 @@ app.post('/api/real-estate', authenticate, upload.fields([{name:'images',maxCoun
   const category=listingText(body.category,40).toLowerCase();
   const price=body.price===''||body.price==null?null:Number(body.price);
   const area=body.area_sqm===''||body.area_sqm==null?null:Number(body.area_sqm);
-  if(title.length<2||!PROPERTY_CATEGORIES.has(category))return fail(res,400,'សូមបំពេញចំណងជើង និងប្រភេទអចលនទ្រព្យត្រឹមត្រូវ។');
+  if(title.length<2||!/^[a-z0-9_]{2,40}$/.test(category))return fail(res,400,'សូមបំពេញចំណងជើង និងប្រភេទអចលនទ្រព្យត្រឹមត្រូវ។');
   if(price!=null&&(!Number.isFinite(price)||price<0))return fail(res,400,'តម្លៃមិនត្រឹមត្រូវ។');
   if(area!=null&&(!Number.isFinite(area)||area<0))return fail(res,400,'ទំហំផ្ទៃដីមិនត្រឹមត្រូវ។');
   if(['house_sale','house_rent','condo_sale','apartment_rent','land','land_rent','commercial_sale','commercial_rent','room_rent'].includes(category)&&price==null)return fail(res,400,'សូមបញ្ចូលតម្លៃលក់ ឬជួល។');
