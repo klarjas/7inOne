@@ -264,7 +264,7 @@ function decodeMediaToken(token) {
   if (!timingSafeEqual(iv, expectedIv)) throw new Error('Invalid media reference.');
   return value;
 }
-const mediaProxyUrl = fileId => fileId ? '/api/media/image/' + encodeURIComponent(encodeMediaToken(fileId)) : null;
+const mediaProxyUrl = (fileId, mimeType) => fileId ? '/api/media/image/' + encodeURIComponent(encodeMediaToken(fileId)) + (mimeType ? '?mime=' + encodeURIComponent(mimeType) : '') : null;
 function normalizeMediaUrl(value) {
   const raw = String(value || '');
   const parts = raw.split('?');
