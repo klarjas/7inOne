@@ -6,6 +6,14 @@ alter table public.rentals add column if not exists expires_at timestamptz;
 alter table public.land_listings add column if not exists expires_at timestamptz;
 alter table public.house_sale_listings add column if not exists expires_at timestamptz;
 
+-- Give existing legacy listings a consistent seven-day first lifecycle.
+-- Expired rows remain in My Posts and can be renewed by their owners.
+update public.jobs set expires_at = created_at + interval '7 days' where expires_at is null;
+update public.property_listings set expires_at = created_at + interval '7 days' where expires_at is null;
+update public.rentals set expires_at = created_at + interval '7 days' where expires_at is null;
+update public.land_listings set expires_at = created_at + interval '7 days' where expires_at is null;
+update public.house_sale_listings set expires_at = created_at + interval '7 days' where expires_at is null;
+
 create index if not exists property_listings_owner_expiry_idx on public.property_listings(user_id, expires_at);
 create index if not exists rentals_owner_expiry_idx on public.rentals(user_id, expires_at);
 create index if not exists land_listings_owner_expiry_idx on public.land_listings(user_id, expires_at);
