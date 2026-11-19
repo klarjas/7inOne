@@ -1014,6 +1014,9 @@ async function loadProducts() {
   $('emptyHome').classList.add('hidden');
   $('skeletonGrid').classList.remove('hidden');
 
+  // Load verified-seller Shorts independently of marketplace listing/banner loading.
+  void loadHomeVendorMedia();
+
   const params = new URLSearchParams({ limit: '50', type: state.activeListingType || 'all' });
   if (state.searchTerm) params.set('q', state.searchTerm);
   if (state.activeListingType === 'product' && state.activeCategory !== 'all') params.set('category', state.activeCategory);
@@ -1025,7 +1028,6 @@ async function loadProducts() {
     state.products = Array.isArray(res.data) ? res.data : [];
     renderProducts();
     syncHomeHeroImagesFromProducts();
-    void loadHomeVendorMedia();
   } catch (error) {
     if (requestId !== state.productsRequestId) return;
     renderProducts();
