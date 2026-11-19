@@ -1692,6 +1692,21 @@ const PRODUCT_SPEC_FIELDS = {
   fashion: ['ម៉ាក / Brand','ទំហំ / Size','ពណ៌','សម្ភារៈ','សម្រាប់ភេទ / Gender'],
   furniture: ['ម៉ាក / Brand','សម្ភារៈ','ទំហំ (បណ្តោយ × ទទឹង × កម្ពស់)','ពណ៌','ស្ថានភាព']
 };
+const PRODUCT_DETAIL_SPEC_FIELDS = {
+  'CPU': ['CPU Brand (Intel / AMD)','CPU Series & Model','Generation','Socket','Cores / Threads','Base / Boost Clock (GHz)'],
+  'RAM': ['RAM Type (DDR3 / DDR4 / DDR5)','Capacity (4 / 8 / 16 / 32 / 64GB)','Form Factor (Desktop DIMM / Laptop SO-DIMM)','Speed (MHz)','Brand'],
+  'GPU / VGA': ['GPU Brand (NVIDIA / AMD / Intel)','GPU Model (RTX / GTX / Radeon)','VRAM (4 / 6 / 8 / 12 / 16GB)','Memory Type (GDDR6 / GDDR6X)','Condition'],
+  'HDD': ['Capacity (GB / TB)','RPM (5400 / 7200)','Interface (SATA / USB)','Form Factor (2.5 / 3.5 inch)'],
+  'SATA SSD': ['Capacity (128 / 256 / 512GB / 1TB / 2TB)','Interface (SATA III)','Form Factor (2.5 inch / M.2 SATA)','Read / Write Speed'],
+  'NVMe / M.2 SSD': ['Capacity (256 / 512GB / 1TB / 2TB)','Interface (NVMe PCIe 3.0 / 4.0 / 5.0)','Form Factor (M.2 2230 / 2242 / 2280)','Read / Write Speed'],
+  'External SSD': ['Capacity (256 / 512GB / 1TB / 2TB)','Connection (USB-C / USB 3.0 / Thunderbolt)','Read / Write Speed'],
+  'USB Flash Drive': ['Capacity (16 / 32 / 64 / 128 / 256GB)','USB Version (2.0 / 3.0 / 3.2 / Type-C)'],
+  'Motherboard': ['Brand & Model','CPU Socket','Chipset','Form Factor (ATX / mATX / ITX)','RAM Type & Slots','M.2 / SATA Slots'],
+  'Power Supply': ['Wattage (W)','80 PLUS Rating','Modular Type (Full / Semi / Non)','Connector Support'],
+  'Monitor': ['Screen Size (inch)','Resolution (FHD / QHD / 4K)','Refresh Rate (Hz)','Panel (IPS / VA / OLED)','Ports (HDMI / DP / USB-C)'],
+  'Laptop': ['CPU Model','RAM Type & Capacity','GPU Model & VRAM','Storage Type & Capacity','Screen Size','Battery Health'],
+  'Desktop PC': ['CPU Model','RAM Type & Capacity','GPU Model & VRAM','Storage Type & Capacity','Motherboard','Power Supply Wattage']
+};
 function renderProductTaxonomy(category) {
   const entry = PRODUCT_TAXONOMY[category];
   const setOptions = (select, placeholder, values) => {
@@ -1699,7 +1714,11 @@ function renderProductTaxonomy(category) {
   };
   setOptions($('productSubcategory'), 'ជ្រើសរើសផ្នែករង', entry?.subs || []);
   setOptions($('productDetailType'), 'ជ្រើសរើសប្រភេទលម្អិត', entry?.details || []);
-  const fields = PRODUCT_SPEC_FIELDS[category] || [];
+  renderProductSpecFields(category);
+}
+function renderProductSpecFields(category) {
+  const detail = $('productDetailType')?.value || '';
+  const fields = PRODUCT_DETAIL_SPEC_FIELDS[detail] || PRODUCT_SPEC_FIELDS[category] || [];
   $('productSpecificationFields').innerHTML = fields.length
     ? '<h3 class="sm:col-span-2 text-xs font-bold text-slate-300">លក្ខណៈសម្បត្តិផលិតផល</h3>' + fields.map((label,index) =>
       '<label><span class="label">' + esc(label) + '</span><input class="field" data-listing-spec="' + esc('spec_' + index) + '" placeholder="' + esc(label) + '"></label>'
@@ -2645,6 +2664,7 @@ function bindEvents() {
     else if (kind === 'real_estate') openPropertyListingForm();
   }));
   $('productCategory').addEventListener('change', () => renderProductTaxonomy($('productCategory').value));
+  $('productDetailType').addEventListener('change', () => renderProductSpecFields($('productCategory').value));
   $('jobCategory').addEventListener('change', () => { fillTaxonomySelect($('jobCategory'), $('jobSubcategory'), $('jobDetailType'), LISTING_TAXONOMY.jobs); renderListingSpecFields('job', $('jobCategory').value); });
   $('propertyCategory').addEventListener('change', () => { fillTaxonomySelect($('propertyCategory'), $('propertySubcategory'), $('propertyDetailType'), LISTING_TAXONOMY.properties); renderListingSpecFields('property', $('propertyCategory').value); });
   $('jobListingForm').addEventListener('submit', (event) => { event.preventDefault(); void submitNewListing(event.currentTarget, '/api/jobs', 'job'); });
