@@ -1837,8 +1837,8 @@ function renderSellerChatMessages(messages, forceScroll = false) {
         ? `<img src="${esc(prod.image_url)}" alt="${esc(prod.title || 'ផលិតផល')}" loading="lazy">`
         : `<span class="seller-chat-product-placeholder">${ic('bag', 24)}</span>`;
       content = `<article class="seller-chat-product-card" ${prod?.id ? `data-chat-product-id="${esc(prod.id)}"` : ''}>${img}<div class="seller-chat-product-info"><small>ផលិតផលដែលបានសួរ</small><b>${esc(prod?.title || msg.body || 'ផលិតផល')}</b>${prod ? `<strong>${money(prod.price)}</strong>` : '<span class="seller-chat-product-unavailable">ព័ត៌មានផលិតផលមិនទាន់មាន</span>'}</div></article>`;
-    } else if (msg.message_type === 'image' && (msg.telegram_file_id || msg.local_image_url)) {
-      const src = msg.local_image_url || `/api/media/telegram/${encodeURIComponent(msg.telegram_file_id)}?mime=${encodeURIComponent(msg.mime_type || 'image/jpeg')}`;
+    } else if (msg.message_type === 'image' && (msg.media_url || msg.local_image_url)) {
+      const src = msg.local_image_url || msg.media_url;
       content = `<a href="${esc(src)}" target="_blank" rel="noopener noreferrer"><img class="seller-chat-image" src="${esc(src)}" alt=""></a>`;
     } else {
       content = `<p>${esc(msg.body || '').replace(/\n/g, '<br>')}</p>`;
