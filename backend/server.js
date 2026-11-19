@@ -954,6 +954,75 @@ app.get('/api/categories', async (_req, res) => {
   if (error) return fail(res, 500, 'Could not load categories');
   res.json({ data: [...new Set((data || []).map(row => row.category).filter(Boolean))].sort() });
 });
+// Unified home feed: merge independent listing tables without changing product APIs.
+app.get('/api/marketplace/listings', async (req, res) => {
+  if (!db(res)) return;
+  const limit = Math.min(50, Math.max(1, Number.parseInt(req.query.limit, 10) || 30));
+  const q = clean(req.query.q, 100).replace(/[%_,()]/g, '').trim();
+  const type = clean(req.query.type || 'all', 20).toLowerCase();
+  const category = clean(req.query.category, 80);
+  const cutoff = new Date(Date.now() - PRODUCT_PUBLIC_MAX_AGE_MS).toISOString();
+  if (!['all','product','job','rent','land'].includes(type)) return fail(res, 400, 'Invalid listing type.');
+
+  try {
+    const tasks = [];
+    if (type === 'all' || type === 'product') {
+      const productFields = 'id,title,description,price,stock,category,location,condition,view_count,created_at,updated_at,renewed_at,vendor_id,product_images(id,file_id,image_url,sort_order),vendors!inner(id,store_name,status,store_logo_file_id)';
+      const legacyFields = 'id,title,description,price,stock,category,location,condition,view_count,created_at,updated_at,vendor_id,product_images(id,file_id,image_url,sort_order),vendors!inner(id,store_name,status,store_logo_file_id)';
+      const runProducts = (legacy = false) => {
+        let query = supabase.from('products').select(legacy ? legacyFields : productFields)
+          .eq('status', 'active').in('vendors.status', ['approved','pending','rejected']).gt('stock', 0)
+          .order('created_at', { ascending: false }).limit(limit);
+        query = legacy ? query.gte('created_at', cutoff) : query.or(`renewed_at.gte.${cutoff},and(renewed_at.is.null,created_at.gte.${cutoff})`);
+        if (q) query = query.or(`title.ilike.%${q}%,description.ilike.%${q}%,location.ilike.%${q}%`);
+        if (category) query = query.eq('category', category);
+        return query;
+      };
+      tasks.push((async () => {
+        let result = await runProducts(false);
+        if (result.error && (/renewed_at/i.test(result.error.message || '') || result.error.code === '42703')) result = await runProducts(true);
+        if (result.error) throw result.error;
+        return (result.data || []).map(row => {
+          const product = publicProduct(row);
+          const firstImage = product.product_images?.[0]?.image_url || null;
+          return { ...product, listing_type: 'product', image_url: firstImage, price_label: row.price, listing_subtitle: row.vendors?.store_name || 'ហាងអ្នកលក់' };
+        });
+      })());
+    }
+    if (type === 'all' || type === 'job') tasks.push((async () => {
+      let query = supabase.from('jobs').select('id,user_id,title,company_name,description,short_description,category,subcategory,location,vacancies,salary_min,salary_max,salary_period,employment_type,work_schedule,experience,education,skills,languages,benefits,image_file_id,image_mime_type,status,expires_at,created_at')
+        .eq('status','active').or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`).order('created_at',{ascending:false}).limit(limit);
+      if(q) query=query.or(`title.ilike.%${q}%,company_name.ilike.%${q}%,location.ilike.%${q}%`);
+      if(category) query=query.eq('category',category);
+      const {data,error}=await query; if(error) throw error;
+      return (data||[]).map(row=>({...row,listing_type:'job',image_url:row.image_file_id?mediaProxyUrl(row.image_file_id,row.image_mime_type):null,price_label:[row.salary_min,row.salary_max].filter(v=>v!=null).join(' - ')||'ចរចា',listing_subtitle:row.company_name||'និយោជក'}));
+    })());
+    if (type === 'all' || type === 'rent') tasks.push((async () => {
+      let query=supabase.from('rentals').select('id,user_id,title,description,short_description,category,property_type,location,address,rent_amount,rent_period,bedrooms,bathrooms,area_sqm,furnished,image_file_id,image_mime_type,status,created_at')
+        .eq('status','active').order('created_at',{ascending:false}).limit(limit);
+      if(q) query=query.or(`title.ilike.%${q}%,description.ilike.%${q}%,location.ilike.%${q}%`);
+      if(category) query=query.eq('category',category);
+      const {data,error}=await query; if(error) throw error;
+      return (data||[]).map(row=>({...row,listing_type:'rent',image_url:row.image_file_id?mediaProxyUrl(row.image_file_id,row.image_mime_type):null,price_label:row.rent_amount,listing_subtitle:row.property_type||'អចលនទ្រព្យជួល'}));
+    })());
+    if (type === 'all' || type === 'land') tasks.push((async () => {
+      let query=supabase.from('land_listings').select('id,user_id,title,description,short_description,category,location,address,price,area_sqm,land_type,title_deed,road_access,image_file_id,image_mime_type,status,created_at')
+        .eq('status','active').order('created_at',{ascending:false}).limit(limit);
+      if(q) query=query.or(`title.ilike.%${q}%,description.ilike.%${q}%,location.ilike.%${q}%`);
+      if(category) query=query.eq('category',category);
+      const {data,error}=await query; if(error) throw error;
+      return (data||[]).map(row=>({...row,listing_type:'land',image_url:row.image_file_id?mediaProxyUrl(row.image_file_id,row.image_mime_type):null,price_label:row.price,listing_subtitle:row.land_type||'ដីលក់'}));
+    })());
+    const groups=await Promise.all(tasks);
+    const data=groups.flat().sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0)).slice(0,limit);
+    res.set('Cache-Control','no-store');
+    return res.json({data,total:data.length,limit,type});
+  } catch(error) {
+    console.error('Unified marketplace feed failed:',error.message);
+    return fail(res,500,'Could not load marketplace listings');
+  }
+});
+
 app.get('/api/products', async (req, res) => {
   if (!db(res)) return;
   const page = Math.max(1, Number.parseInt(req.query.page, 10) || 1);
