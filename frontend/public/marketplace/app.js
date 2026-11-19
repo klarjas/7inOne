@@ -1085,7 +1085,8 @@ async function openMarketplaceListing(type, id, options = {}) {
   if (!id || !['job', 'real_estate'].includes(type)) return false;
   const isCurrent = () => options.routeSyncNavigationId == null || options.routeSyncNavigationId === state.routeSyncNavigationId;
   try {
-    let item = state.products.find(row => row.listing_type === type && String(row.id) === String(id));
+    let item = state.products.find(row => row.listing_type === type && String(row.id) === String(id))
+      || state.jobs.find(row => row.listing_type === type && String(row.id) === String(id));
     if (!item) {
       const result = await api('/api/marketplace/listings?limit=100&type=' + encodeURIComponent(type));
       if (!isCurrent()) return false;
