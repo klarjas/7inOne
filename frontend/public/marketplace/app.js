@@ -1918,6 +1918,7 @@ async function loadSellerChatConversation(scrollToBottom = false) {
 
   $('sellerChatInboxPane').classList.add('mobile-hidden');
   $('sellerChatBack').classList.remove('hidden');
+  $('sellerChatHeaderBack').classList.remove('hidden');
   $('sellerChatThread').classList.add('mobile-active');
 }
 
@@ -1943,6 +1944,7 @@ async function openSellerChatInbox() {
   $('sellerChatInboxPane').classList.remove('mobile-hidden');
   $('sellerChatThread').classList.remove('mobile-active');
   $('sellerChatBack').classList.add('hidden');
+  $('sellerChatHeaderBack').classList.add('hidden');
   $('sellerChatHeaderIdentity').classList.add('hidden');
   $('sellerChatHeaderDefault').classList.remove('hidden');
   $('sellerChatHeaderSubtitle').classList.remove('hidden');
@@ -2589,6 +2591,7 @@ function bindEvents() {
   // Unified Chat Events
   $('supportChatLauncher').addEventListener('click', toggleSellerChatPanel);
   $('sellerChatClose').addEventListener('click', minimizeSellerChatPanel);
+  $('sellerChatHeaderBack').addEventListener('click', () => void openSellerChatInbox());
   $('sellerChatInboxRefresh').addEventListener('click', () => void loadUnifiedSellerChatInbox());
   $('sellerChatInboxList').addEventListener('click', (e) => {
     const btn = e.target.closest('[data-unified-chat]');
@@ -2759,6 +2762,8 @@ function bindEvents() {
 
   // Open chat images in an in-page lightbox; never navigate to a new tab.
   $('sellerChatMessages')?.addEventListener('click', (e) => {
+    const productCard = e.target.closest('.seller-chat-product-card[data-chat-product-id]');
+    if (productCard) { e.preventDefault(); void openProduct(productCard.dataset.chatProductId); return; }
     const image = e.target.closest('.seller-chat-image');
     if (!image) return;
     e.preventDefault();
@@ -2781,6 +2786,8 @@ function bindEvents() {
     document.body.appendChild(overlay);
   });
   $('sellerChatMessages')?.addEventListener('keydown', (e) => {
+    const productCard = e.target.closest('.seller-chat-product-card[data-chat-product-id]');
+    if (productCard && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); void openProduct(productCard.dataset.chatProductId); return; }
     const image = e.target.closest('.seller-chat-image');
     if (image && (e.key === 'Enter' || e.key === ' ')) {
       e.preventDefault();
@@ -2789,7 +2796,15 @@ function bindEvents() {
   });
   $('sellerChatChooseImage')?.addEventListener('click', () => $('sellerChatImageInput')?.click());
   $('sellerChatImageInput')?.addEventListener('change', async () => { const file = $('sellerChatImageInput').files?.[0]; if (!file || !state.chatConversationId) return; const form = new FormData(); form.append('image', file); try { await api('/api/seller-chat/conversations/' + encodeURIComponent(state.chatConversationId) + '/image', { method: 'POST', body: form }); $('sellerChatImageInput').value = ''; await loadSellerChatConversation(true); await loadUnifiedSellerChatInbox(); } catch (err) { toast(err.message || 'មិនអាចផ្ញើរូបភាពបានទេ។', 'error'); } });
-  $('sellerChatMute')?.addEventListener('click', () => { state.chatMuted = !state.chatMuted; const b = $('sellerChatMute'); b.setAttribute('aria-pressed', String(state.chatMuted)); b.textContent = state.chatMuted ? 'បើកសំឡេង' : 'បិទសំឡេង'; b.title = state.chatMuted ? 'បើកសំឡេង' : 'បិទសំឡេង'; });
+  $('sellerChatMute')?.addEventListener('click', () => {
+    state.chatMuted = !state.chatMuted;
+    const b = $('sellerChatMute');
+    const label = state.chatMuted ? 'បើកសំឡេង' : 'បិទសំឡេង';
+    b.setAttribute('aria-pressed', String(state.chatMuted)); b.setAttribute('aria-label', label); b.title = label;
+    b.innerHTML = state.chatMuted
+      ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="m16 9 5 6m0-6-5 6"/></svg>'
+      : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/></svg>';
+  });
 
 }
 
