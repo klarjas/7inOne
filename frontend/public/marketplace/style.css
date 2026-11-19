@@ -5078,3 +5078,42 @@ body > footer {
 .seller-chat-mute:hover{background:#2A475E;color:#66C0F4}
 .seller-chat-product-card[data-chat-product-id]{cursor:pointer;transition:border-color .15s,background .15s}
 .seller-chat-product-card[data-chat-product-id]:hover,.seller-chat-product-card[data-chat-product-id]:focus-visible{border-color:#66C0F4;background:#203244;outline:none}
+
+
+/* Seller Chat Header Actions - Isolated Steam Dark */
+#sellerChatModal .seller-chat-header-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 4px;
+  background: #101822;
+  border: 1px solid #2A475E;
+  border-radius: 10px;
+  flex: 0 0 auto;
+}
+
+#sellerChatModal .seller-chat-header-actions .seller-chat-header-icon {
+  width: 34px;
+  min-width: 34px;
+  height: 34px;
+  min-height: 34px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 0;
+  border-radius: 7px;
+  color: #C7D5E0;
+}
+
+#sellerChatModal .seller-chat-header-actions .seller-chat-header-icon:hover {
+  background: #2A475E;
+  color: #66C0F4;
+}
+
+#sellerChatModal .seller-chat-header-actions .seller-chat-header-icon svg {
+  display: block;
+  flex: 0 0 auto;
+}
