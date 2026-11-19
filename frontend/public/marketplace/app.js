@@ -1662,6 +1662,51 @@ function renderProductImageAlbum() {
    Unified listing creation: jobs and real estate are isolated from products.
    Extend this registry as new marketplace categories are introduced.
    -------------------------------------------------------------------------- */
+
+const PRODUCT_TAXONOMY = {
+  phones: {
+    subs: ['ស្មាតហ្វូន','Tablet & iPad','កុំព្យូទ័រ និង Laptop','Computer Hardware','គ្រឿងបន្លាស់ទូរស័ព្ទ','កាមេរ៉ា','សំឡេង និង Audio','Gaming','Network & Internet','Printer & Scanner','Software & License','ឧបករណ៍អេឡិចត្រូនិកផ្សេងៗ'],
+    details: ['iPhone','Samsung Galaxy','Xiaomi / Redmi','OPPO','Vivo','Huawei','iPad','Android Tablet','Laptop','Desktop PC','CPU','RAM','GPU / VGA','Motherboard','HDD','SATA SSD','NVMe / M.2 SSD','External SSD','USB Flash Drive','Power Supply','Monitor','Keyboard','Mouse','Webcam','Router','Switch','Printer','Scanner','Headphones','Speaker','Camera Lens','Gaming Console','Software License']
+  },
+  vehicles: {
+    subs: ['រថយន្ត','ម៉ូតូ','ម៉ូតូកង់បី','រថយន្តដឹកទំនិញ','កង់','គ្រឿងបន្លាស់ និង Accessories'],
+    details: ['Sedan','SUV','Crossover','Pickup','Van','Luxury Car','Electric Car','Hybrid Car','Sport Motorcycle','Scooter','Underbone','Tuk Tuk','Truck','Bus','Bicycle','Engine Parts','Tires & Wheels','Battery','Accessories']
+  },
+  property: {
+    subs: ['ផ្ទះ','ដី','ខុនដូ','អាផាតមិន','អគារពាណិជ្ជកម្ម'],
+    details: ['ផ្ទះលក់','ផ្ទះជួល','ដីលក់','ដីជួល','ខុនដូលក់','អាផាតមិនជួល','ហាង','ការិយាល័យ','ឃ្លាំង']
+  },
+  fashion: {
+    subs: ['សម្លៀកបំពាក់បុរស','សម្លៀកបំពាក់នារី','សម្លៀកបំពាក់កុមារ','ស្បែកជើង','កាបូប','នាឡិកា និងគ្រឿងអលង្ការ'],
+    details: ['អាវ','ខោ','រ៉ូប','សំពត់','អាវក្រៅ','ស្បែកជើងកីឡា','ស្បែកជើងផ្លូវការ','កាបូបដៃ','កាបូបស្ពាយ','នាឡិកា','វ៉ែនតា','គ្រឿងអលង្ការ']
+  },
+  furniture: {
+    subs: ['បន្ទប់គេង','បន្ទប់ទទួលភ្ញៀវ','ផ្ទះបាយ','ការិយាល័យ','គ្រឿងតុបតែងផ្ទះ'],
+    details: ['គ្រែ','ពូក','ទូខោអាវ','សាឡុង','តុ','កៅអី','ទូដាក់ឥវ៉ាន់','តុបាយ','ទូរទស្សន៍','ភ្លើងបំភ្លឺ','វាំងនន','គ្រឿងតុបតែង']
+  }
+};
+const PRODUCT_SPEC_FIELDS = {
+  phones: ['ម៉ាក / Brand','ម៉ូដែល / Model','ទំហំ / Capacity','RAM','Storage','ពណ៌','ស្ថានភាពធានា'],
+  vehicles: ['ម៉ាក / Brand','ម៉ូដែល / Model','ឆ្នាំផលិត','ចំណុះម៉ាស៊ីន (cc)','ប្រអប់លេខ','ប្រភេទប្រេង','ចម្ងាយបើកបរ (km)','ពណ៌','ឯកសារពន្ធ'],
+  property: ['ទីតាំងលម្អិត','ទំហំដី (m²)','ទំហំសំណង់ (m²)','បន្ទប់គេង','បន្ទប់ទឹក','ប្រភេទប្លង់'],
+  fashion: ['ម៉ាក / Brand','ទំហំ / Size','ពណ៌','សម្ភារៈ','សម្រាប់ភេទ / Gender'],
+  furniture: ['ម៉ាក / Brand','សម្ភារៈ','ទំហំ (បណ្តោយ × ទទឹង × កម្ពស់)','ពណ៌','ស្ថានភាព']
+};
+function renderProductTaxonomy(category) {
+  const entry = PRODUCT_TAXONOMY[category];
+  const setOptions = (select, placeholder, values) => {
+    select.innerHTML = '<option value="">' + placeholder + '</option>' + (values || []).map(value => '<option value="' + esc(value) + '">' + esc(value) + '</option>').join('');
+  };
+  setOptions($('productSubcategory'), 'ជ្រើសរើសផ្នែករង', entry?.subs || []);
+  setOptions($('productDetailType'), 'ជ្រើសរើសប្រភេទលម្អិត', entry?.details || []);
+  const fields = PRODUCT_SPEC_FIELDS[category] || [];
+  $('productSpecificationFields').innerHTML = fields.length
+    ? '<h3 class="sm:col-span-2 text-xs font-bold text-slate-300">លក្ខណៈសម្បត្តិផលិតផល</h3>' + fields.map((label,index) =>
+      '<label><span class="label">' + esc(label) + '</span><input class="field" data-listing-spec="' + esc('spec_' + index) + '" placeholder="' + esc(label) + '"></label>'
+    ).join('')
+    : '';
+}
+
 const LISTING_TAXONOMY = {
   jobs: {
     it: { subs: ['Software & Development','IT Support & Networking','Design & Multimedia','Data & AI','Cybersecurity'], details: ['Frontend Developer','Backend Developer','Full Stack Developer','Mobile App Developer','UI/UX Designer','Graphic Designer','IT Support','Network Engineer','System Administrator','Data Analyst','AI Engineer','QA Tester','Cybersecurity Specialist'] },
@@ -1799,6 +1844,9 @@ function renderProductForm(product = null) {
   revokeProductImagePreviews();
   state.selectedProductImages = [];
   $('productForm').reset();
+  $('productSubcategory').innerHTML = '<option value="">ជ្រើសរើសផ្នែករង</option>';
+  $('productDetailType').innerHTML = '<option value="">ជ្រើសរើសប្រភេទលម្អិត</option>';
+  $('productSpecificationFields').innerHTML = '';
   $('editProductId').value = product?.id || '';
   $('productFormTitle').textContent = product ? 'កែប្រែព័ត៌មានទំនិញ' : 'បន្ថែមទំនិញថ្មី';
   $('productImageThumb').innerHTML = ic('image', 21);
@@ -2592,6 +2640,7 @@ function bindEvents() {
     } else if (kind === 'job') openJobListingForm();
     else if (kind === 'real_estate') openPropertyListingForm();
   }));
+  $('productCategory').addEventListener('change', () => renderProductTaxonomy($('productCategory').value));
   $('jobCategory').addEventListener('change', () => { fillTaxonomySelect($('jobCategory'), $('jobSubcategory'), $('jobDetailType'), LISTING_TAXONOMY.jobs); renderListingSpecFields('job', $('jobCategory').value); });
   $('propertyCategory').addEventListener('change', () => { fillTaxonomySelect($('propertyCategory'), $('propertySubcategory'), $('propertyDetailType'), LISTING_TAXONOMY.properties); renderListingSpecFields('property', $('propertyCategory').value); });
   $('jobListingForm').addEventListener('submit', (event) => { event.preventDefault(); void submitNewListing(event.currentTarget, '/api/jobs', 'job'); });
@@ -2784,6 +2833,19 @@ function bindEvents() {
         await api('/api/products/' + encodeURIComponent(productId) + '/images/order', {
           method: 'PATCH', body: JSON.stringify({ image_ids: orderedIds })
         });
+      }
+      try {
+        await api('/api/products/' + encodeURIComponent(productId) + '/listing-details', {
+          method: 'PUT',
+          body: JSON.stringify({
+            category: payload.category,
+            subcategory: $('productSubcategory').value,
+            detail_type: $('productDetailType').value,
+            specifications: collectListingSpecs($('productForm'))
+          })
+        });
+      } catch (detailsError) {
+        console.warn('Product taxonomy details were not saved:', detailsError.message);
       }
       revokeProductImagePreviews();
       closeModal('productFormModal');
