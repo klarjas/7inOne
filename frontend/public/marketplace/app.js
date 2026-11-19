@@ -1168,7 +1168,7 @@ async function openProduct(id, options = {}) {
     if (!isCurrent()) return false;
     const product = result.data;
     if (!product) throw new Error('មិនមានព័ត៌មានទំនិញនេះទេ។');
-    product.poster = state.products.find(row => row.listing_type === 'product' && String(row.id) === productId)?.poster || null;
+    product.poster = state.products.find(row => row.listing_type === 'product' && String(row.id) === productId)?.poster || product.poster || null;
 
     const trust = await api('/api/vendors/' + encodeURIComponent(product.vendor_id) + '/ratings');
     if (!isCurrent()) return false;
