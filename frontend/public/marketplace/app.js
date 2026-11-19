@@ -415,7 +415,7 @@ async function refreshSession() {
    5. Navigation & Routing
    -------------------------------------------------------------------------- */
 function showView(name, options = {}) {
-  const allowed = ['home', 'profile', 'seller', 'admin', 'product', 'listing', 'store'];
+  const allowed = ['home', 'profile', 'seller', 'admin', 'product', 'store'];
   if (!allowed.includes(name)) name = 'home';
 
   if (!options.optimistic) {
@@ -2875,7 +2875,7 @@ function renderJobs() {
         <small>${esc(job.company_name || 'និយោជក')} · ${esc(job.location || 'កម្ពុជា')}</small>
         <strong>${esc(salary)}${({hourly:' / ម៉ោង',daily:' / ថ្ងៃ',monthly:' / ខែ'}[job.salary_period] || '')}</strong>
       </span>
-      <span class="jobs-result-arrow">${ic('chevronright',16)}</span>
+      <span class="jobs-result-arrow" aria-hidden="true">›</span>
     </button>`;
   }).join('');
 }
