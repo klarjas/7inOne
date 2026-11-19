@@ -5768,3 +5768,38 @@ body > footer {
 #skeletonGrid .skeleton::after{
   display:none !important;
 }
+
+
+/* Correct product-image loading placeholder to the 7inOne dark palette */
+#view-home .cd .im .cd-image-wrap.shimmer-scan,
+#view-store .cd .im .cd-image-wrap.shimmer-scan,
+#view-product .cd .im .cd-image-wrap.shimmer-scan,
+.product-related-grid .cd .im .cd-image-wrap.shimmer-scan{
+  background:#101822!important;
+}
+#view-home .cd .im .cd-image-wrap.shimmer-scan::before,
+#view-store .cd .im .cd-image-wrap.shimmer-scan::before,
+#view-product .cd .im .cd-image-wrap.shimmer-scan::before,
+.product-related-grid .cd .im .cd-image-wrap.shimmer-scan::before{
+  background:#16202D!important;
+}
+#view-home .cd .im .cd-image-wrap.shimmer-scan::after,
+#view-store .cd .im .cd-image-wrap.shimmer-scan::after,
+#view-product .cd .im .cd-image-wrap.shimmer-scan::after,
+.product-related-grid .cd .im .cd-image-wrap.shimmer-scan::after{
+  background:linear-gradient(105deg,#101822 20%,#203244 50%,#101822 80%)!important;
+  background-size:200% 100%!important;
+}
+#view-home .cd .im .cd-image-wrap.image-failed,
+#view-store .cd .im .cd-image-wrap.image-failed,
+#view-product .cd .im .cd-image-wrap.image-failed,
+.product-related-grid .cd .im .cd-image-wrap.image-failed{
+  background:#101822!important;
+}
+#view-home .cd .im .cd-image-wrap.image-failed::after,
+#view-store .cd .im .cd-image-wrap.image-failed::after,
+#view-product .cd .im .cd-image-wrap.image-failed::after,
+.product-related-grid .cd .im .cd-image-wrap.image-failed::after{
+  background:#203244!important;
+  color:#8F98A0!important;
+}
