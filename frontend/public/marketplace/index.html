@@ -986,12 +986,21 @@
           <label><span class="label">ផ្នែករង / Subcategory</span><select class="field" id="productSubcategory"><option value="">ជ្រើសរើសផ្នែករង</option></select></label>
           <label><span class="label">ប្រភេទលម្អិត / Detailed Type</span><select class="field" id="productDetailType"><option value="">ជ្រើសរើសប្រភេទលម្អិត</option></select></label>
           <div class="sm:col-span-2 listing-spec-fields" id="productSpecificationFields"></div>
-          <label><span class="label">ទីតាំង *</span>
-            <select class="field" id="productLocation" required>
-              <option>ភ្នំពេញ</option><option>សៀមរាប</option><option>បាត់ដំបង</option><option>ព្រះសីហនុ</option>
-              <option>កំពង់ចាម</option><option>កំពត</option><option>តាកែវ</option><option>កណ្តាល</option>
-            </select>
-          </label>
+          <div class="sm:col-span-2 cambodia-location-picker" data-location-picker="product">
+            <span class="label">ទីតាំងផលិតផល * (ជ្រើសរើសដល់កម្រិតភូមិ)</span>
+            <div class="grid gap-2 sm:grid-cols-2">
+              <select class="field" data-location-level="province"><option value="">ជ្រើសរើសរាជធានី/ខេត្ត</option></select>
+              <select class="field" data-location-level="district" disabled><option value="">ជ្រើសរើសស្រុក/ខណ្ឌ</option></select>
+              <select class="field" data-location-level="commune" disabled><option value="">ជ្រើសរើសឃុំ/សង្កាត់</option></select>
+              <select class="field" data-location-level="village" disabled><option value="">ជ្រើសរើសភូមិ</option></select>
+            </div>
+            <input type="hidden" id="productLocation" value="">
+            <input type="hidden" id="productProvinceCode">
+            <input type="hidden" id="productDistrictCode">
+            <input type="hidden" id="productCommuneCode">
+            <input type="hidden" id="productVillageCode">
+            <small class="block text-[10px] text-slate-400" data-location-summary>ទិន្នន័យរដ្ឋបាលកម្ពុជាផ្លូវការ · មិនត្រូវការលេខផ្ទះ/ផ្លូវ</small>
+          </div>
           <label><span class="label">ស្ថានភាព</span>
             <select class="field" id="productCondition">
               <option>ប្រើរួចស្អាត</option><option>ថ្មី ១០០%</option><option>ល្អដូចថ្មី</option>
@@ -1051,7 +1060,21 @@
           <label><span class="label">ប្រភេទការងារ *</span><select class="field" id="jobCategory" name="category" required><option value="">ជ្រើសរើសប្រភេទ</option><option value="it">IT & Technology</option><option value="office">ការិយាល័យ និងរដ្ឋបាល</option><option value="sales">លក់ និងទីផ្សារ</option><option value="transport">ដឹកជញ្ជូន</option><option value="hospitality">ភោជនីយដ្ឋាន និងសណ្ឋាគារ</option><option value="construction">សំណង់ និងវិស្វកម្ម</option><option value="education">អប់រំ</option><option value="healthcare">សុខាភិបាល</option><option value="factory">រោងចក្រ និងផលិតកម្ម</option><option value="agriculture">កសិកម្ម</option><option value="services">សម្រស់ និងសេវាកម្ម</option><option value="other">ការងារផ្សេងៗ</option></select></label>
           <label><span class="label">មុខតំណែង / Job Title *</span><input class="field" name="title" maxlength="160" placeholder="ឧ. IT Support" required></label>
           <label><span class="label">ក្រុមហ៊ុន / អ្នកជ្រើសរើស</span><input class="field" name="company_name" maxlength="160" placeholder="ឈ្មោះក្រុមហ៊ុន"></label>
-          <label><span class="label">ទីតាំងការងារ *</span><input class="field" name="location" maxlength="120" placeholder="ខណ្ឌ សង្កាត់ រាជធានី/ខេត្ត" required></label>
+          <div class="sm:col-span-2 cambodia-location-picker" data-location-picker="job">
+            <span class="label">ទីតាំងការងារ * (ជ្រើសរើសដល់កម្រិតភូមិ)</span>
+            <div class="grid gap-2 sm:grid-cols-2">
+              <select class="field" data-location-level="province"><option value="">ជ្រើសរើសរាជធានី/ខេត្ត</option></select>
+              <select class="field" data-location-level="district" disabled><option value="">ជ្រើសរើសស្រុក/ខណ្ឌ</option></select>
+              <select class="field" data-location-level="commune" disabled><option value="">ជ្រើសរើសឃុំ/សង្កាត់</option></select>
+              <select class="field" data-location-level="village" disabled><option value="">ជ្រើសរើសភូមិ</option></select>
+            </div>
+            <input type="hidden" name="location" data-location-value required>
+            <input type="hidden" name="province_code" data-location-code="province">
+            <input type="hidden" name="district_code" data-location-code="district">
+            <input type="hidden" name="commune_code" data-location-code="commune">
+            <input type="hidden" name="village_code" data-location-code="village">
+            <small class="block text-[10px] text-slate-400" data-location-summary>មិនត្រូវការលេខផ្ទះ ឬឈ្មោះផ្លូវទេ</small>
+          </div>
           <label><span class="label">ផ្នែករង</span><select class="field" id="jobSubcategory" name="subcategory"><option value="">ជ្រើសរើសផ្នែករង</option></select></label>
           <label><span class="label">មុខតំណែងលម្អិត</span><select class="field" id="jobDetailType" name="detail_type"><option value="">ជ្រើសរើសមុខតំណែង</option></select></label>
           <label><span class="label">ប្រភេទការងារ</span><select class="field" name="employment_type"><option value="full_time">ពេញម៉ោង</option><option value="part_time">ក្រៅម៉ោង</option><option value="contract">កិច្ចសន្យា</option><option value="internship">ហាត់ការ</option><option value="freelance">Freelance</option></select></label>
@@ -1088,8 +1111,21 @@
           <label><span class="label">ទំហំ (m²)</span><input class="field" name="area_sqm" type="number" min="0" step="0.01" placeholder="ទំហំផ្ទៃក្រឡា"></label>
           <label><span class="label">បន្ទប់គេង</span><input class="field" name="bedrooms" type="number" min="0" step="1" placeholder="ចំនួន"></label>
           <label><span class="label">បន្ទប់ទឹក</span><input class="field" name="bathrooms" type="number" min="0" step="1" placeholder="ចំនួន"></label>
-          <label><span class="label">ទីតាំង / ខេត្ត *</span><input class="field" name="location" maxlength="120" placeholder="រាជធានី/ខេត្ត" required></label>
-          <label class="sm:col-span-2"><span class="label">អាសយដ្ឋានលម្អិត</span><input class="field" name="address" maxlength="300" placeholder="ផ្លូវ សង្កាត់ ខណ្ឌ និងទីតាំងជិតខាង"></label>
+          <div class="sm:col-span-2 cambodia-location-picker" data-location-picker="property">
+            <span class="label">ទីតាំងអចលនទ្រព្យ * (ជ្រើសរើសដល់កម្រិតភូមិ)</span>
+            <div class="grid gap-2 sm:grid-cols-2">
+              <select class="field" data-location-level="province"><option value="">ជ្រើសរើសរាជធានី/ខេត្ត</option></select>
+              <select class="field" data-location-level="district" disabled><option value="">ជ្រើសរើសស្រុក/ខណ្ឌ</option></select>
+              <select class="field" data-location-level="commune" disabled><option value="">ជ្រើសរើសឃុំ/សង្កាត់</option></select>
+              <select class="field" data-location-level="village" disabled><option value="">ជ្រើសរើសភូមិ</option></select>
+            </div>
+            <input type="hidden" name="location" data-location-value required>
+            <input type="hidden" name="province_code" data-location-code="province">
+            <input type="hidden" name="district_code" data-location-code="district">
+            <input type="hidden" name="commune_code" data-location-code="commune">
+            <input type="hidden" name="village_code" data-location-code="village">
+            <small class="block text-[10px] text-slate-400" data-location-summary>ទីតាំងបង្ហាញត្រឹមភូមិប៉ុណ្ណោះ · មិនត្រូវការលេខផ្ទះ/ផ្លូវ</small>
+          </div>
           <label class="sm:col-span-2"><span class="label">ការពិពណ៌នាលម្អិត *</span><textarea class="field min-h-[110px]" name="description" maxlength="5000" rows="5" placeholder="ពិពណ៌នាព័ត៌មានលម្អិត..." required></textarea></label>
           <label class="sm:col-span-2"><span class="label">រូបភាពអចលនទ្រព្យ (JPG/PNG/WEBP · អតិបរមា 8MB)</span><input class="field" name="image" type="file" accept="image/jpeg,image/png,image/webp"></label>
         </div>
