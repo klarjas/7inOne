@@ -1121,7 +1121,7 @@ function normalizeSellerMediaUrl(value) {
 function validateSellerMedia(mediaUrl,mediaType){
  if(!mediaUrl)return 'Please provide a valid public Facebook or YouTube HTTPS link.';
  if(!['live','video'].includes(mediaType))return 'Media type must be live or video.';
- if(mediaType==='video'){let host='';try{host=new URL(mediaUrl).hostname.toLowerCase().replace(/^www\./,'')}catch{}if(!(host==='youtube.com'||host==='youtu.be'||host.endsWith('.youtube.com')))return 'YouTube Shorts links are required for video posts.';}
+ if(mediaType==='video'&&!isTelegramShortRef(mediaUrl)){let host='';try{host=new URL(mediaUrl).hostname.toLowerCase().replace(/^www\./,'')}catch{}if(!(host==='youtube.com'||host==='youtu.be'||host.endsWith('.youtube.com')))return 'YouTube Shorts links are required for video posts.';}
  return null;
 }
 app.get('/api/vendor/media-links',authenticate,requireVendor,async(req,res)=>{
