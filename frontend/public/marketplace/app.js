@@ -2161,7 +2161,10 @@ function bindEvents() {
     if (!['image/jpeg','image/png','image/webp'].includes(file.type) || file.size > 8 * 1024 * 1024) {
       clearSocialStoryImage(); toast('សូមប្រើរូប JPG, PNG ឬ WEBP ដែលមានទំហំមិនលើស 8MB។', 'error'); return;
     }
-    clearSocialStoryImage();
+    if (state.socialStoryPreviewUrl) URL.revokeObjectURL(state.socialStoryPreviewUrl);
+    state.socialStoryPreviewUrl = null;
+    $('socialStoryPreview')?.classList.add('hidden');
+    $('socialStoryPreviewImage')?.removeAttribute('src');
     const url = URL.createObjectURL(file);
     state.socialStoryPreviewUrl = url;
     $('socialStoryPreviewImage').src = url;
