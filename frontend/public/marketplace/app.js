@@ -1081,6 +1081,7 @@ function openMarketplaceListing(type, id) {
   if (!modal || !body) return;
   const labels = { job: 'ការងារ', real_estate: 'អចលនទ្រព្យ' };
   const image = item.image_url || '';
+  const gallery = Array.isArray(item.image_urls) && item.image_urls.length ? item.image_urls : (image ? [image] : []);
   const price = type === 'job'
     ? (item.price_label === 'ចរចា' ? 'ចរចាប្រាក់ខែ' : '$' + String(item.price_label).replace(' - ', ' - $'))
     : money(item.price_label) + (item.real_estate_type?.endsWith('_rent') ? ({daily:' / ថ្ងៃ',monthly:' / ខែ',yearly:' / ឆ្នាំ'}[item.rent_period] || '') : '');
@@ -1089,7 +1090,7 @@ function openMarketplaceListing(type, id) {
     : item.real_estate_type?.includes('rent') || item.real_estate_type === 'house_sale'
       ? [['ប្រភេទអចលនទ្រព្យ',item.property_type || item.real_estate_type],['បន្ទប់គេង',item.bedrooms],['បន្ទប់ទឹក',item.bathrooms],['ទំហំ',item.area_sqm ? item.area_sqm + ' m²' : ''],['អាសយដ្ឋាន',item.address],['ប្លង់',item.title_deed]]
       : [['ប្រភេទដី',item.land_type],['ទំហំ',item.area_sqm ? item.area_sqm + ' m²' : ''],['ប្លង់',item.title_deed],['ផ្លូវចូល',item.road_access],['អាសយដ្ឋាន',item.address]];
-  body.innerHTML = `${image ? `<img class="marketplace-detail-image" src="${esc(image)}" alt="${esc(item.title)}">` : ''}
+  body.innerHTML = `${gallery.length ? `<div class="marketplace-detail-gallery"><img class="marketplace-detail-image" src="${esc(gallery[0])}" alt="${esc(item.title)}">${gallery.length > 1 ? `<div class="marketplace-detail-thumbs">${gallery.map((url,index)=>`<img src="${esc(url)}" alt="រូបភាព ${index+1}" loading="lazy">`).join('')}</div>` : ''}</div>` : ''}
     <span class="marketplace-type-badge">${labels[type] || ''}</span><h2>${esc(item.title)}</h2>
     <p class="marketplace-detail-price">${esc(price)}</p><p class="marketplace-detail-location">${esc(item.location || 'កម្ពុជា')}</p>
     <div class="marketplace-detail-facts">${facts.filter(([,v])=>v!==null&&v!==undefined&&String(v).trim()!=='').map(([k,v])=>`<p><b>${esc(k)}</b><span>${esc(v)}</span></p>`).join('')}</div>
