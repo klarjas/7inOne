@@ -156,6 +156,9 @@ const state = {
   siteBrandingRefreshTimer: null,
 
   // Presence & Realtime
+  sitePresenceStarted: false,
+  sitePresenceTimer: null,
+  sitePresenceVisitorId: '',
   vendorPresenceIds: new Set(),
   vendorPresenceAnnouncedId: null,
   vendorPresencePollTimer: null,
@@ -3371,9 +3374,61 @@ function bindEvents() {
 
 }
 
+function updateSiteOnlineCount(count) {
+  const target = $('siteOnlineCount');
+  if (!target) return;
+  const value = Number(count);
+  target.textContent = Number.isFinite(value) && value >= 0
+    ? new Intl.NumberFormat('en').format(Math.floor(value))
+    : '—';
+}
+
+async function sendSitePresence(leave = false) {
+  if (!state.sitePresenceVisitorId) return;
+  try {
+    const response = await fetch('/api/site/presence', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ visitor_id: state.sitePresenceVisitorId, leave }),
+      cache: 'no-store',
+      keepalive: leave
+    });
+    if (!response.ok) throw new Error(`Presence request failed (${response.status})`);
+    const result = await response.json();
+    if (!leave) updateSiteOnlineCount(result?.data?.count);
+  } catch (error) {
+    if (leave) return;
+    try {
+      const response = await fetch('/api/site/online', { cache: 'no-store' });
+      if (!response.ok) return;
+      const result = await response.json();
+      updateSiteOnlineCount(result?.data?.count);
+    } catch (readError) {
+      console.warn('Could not refresh website online count:', readError.message);
+    }
+  }
+}
+
+function startSitePresence() {
+  if (state.sitePresenceStarted) return;
+  state.sitePresenceStarted = true;
+  try {
+    state.sitePresenceVisitorId = crypto.randomUUID();
+  } catch {
+    state.sitePresenceVisitorId = Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
+  }
+  void sendSitePresence();
+  state.sitePresenceTimer = window.setInterval(() => void sendSitePresence(), 25_000);
+  window.addEventListener('pagehide', () => {
+    if (state.sitePresenceTimer) window.clearInterval(state.sitePresenceTimer);
+    void sendSitePresence(true);
+  }, { once: true });
+}
+
 async function boot() {
   initIcons();
   bindEvents();
+  startSitePresence();
 
   const initialView = document.documentElement.dataset.initialView || 'home';
   const initialProductId = document.documentElement.dataset.initialProductId || '';
