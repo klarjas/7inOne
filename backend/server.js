@@ -991,7 +991,7 @@ app.get('/api/marketplace/listings', async (req, res) => {
       })());
     }
     if (type === 'all' || type === 'job') tasks.push((async () => {
-      let query = supabase.from('jobs').select('id,user_id,title,company_name,description,short_description,category,subcategory,location,vacancies,salary_min,salary_max,salary_period,employment_type,work_schedule,experience,education,skills,languages,benefits,image_file_id,image_mime_type,status,expires_at,created_at')
+      let query = supabase.from('jobs').select('id,user_id,title,company_name,description,short_description,category,subcategory,detail_type,specifications,location,vacancies,salary_min,salary_max,salary_period,employment_type,work_schedule,experience,education,skills,languages,benefits,image_file_id,image_mime_type,status,expires_at,created_at')
         .eq('status','active').order('created_at',{ascending:false}).limit(limit);
       const filters=[`or(expires_at.is.null,expires_at.gt.${new Date().toISOString()})`];
       if(q) filters.push(`or(title.ilike.%${q}%,company_name.ilike.%${q}%,location.ilike.%${q}%)`);
@@ -1076,7 +1076,7 @@ app.get('/api/marketplace/listings', async (req, res) => {
 // Independent job and real-estate publishing APIs. Product routes and Telegram product-upload flow are not modified.
 const JOB_CATEGORIES = new Set(['it','office','sales','transport','hospitality','construction','education','healthcare','factory','agriculture','services','other']);
 const PROPERTY_CATEGORIES = new Set(['house_sale','house_rent','condo_sale','apartment_rent','land','land_rent','commercial_sale','commercial_rent','room_rent','properties_wanted','agent_services','others_properties']);
-const listingText = (value, max = 5000) => clean(value, max);
+const listingText = (value, max = 5000) => clean(value, max);\nconst listingObject = value => { if (value && typeof value === 'object' && !Array.isArray(value)) return value; if (typeof value === 'string') { try { const parsed = JSON.parse(value); return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {}; } catch {} } return {}; };
 app.post('/api/jobs', authenticate, upload.single('image'), async (req, res) => {
   if (!db(res)) return;
   const body = req.body || {};
@@ -1102,7 +1102,7 @@ app.post('/api/jobs', authenticate, upload.single('image'), async (req, res) => 
       skills:Array.isArray(body.skills)?body.skills.map(v=>listingText(v,80)).filter(Boolean).slice(0,30):[],
       languages:Array.isArray(body.languages)?body.languages.map(v=>listingText(v,60)).filter(Boolean).slice(0,20):[],
       benefits:Array.isArray(body.benefits)?body.benefits.map(v=>listingText(v,120)).filter(Boolean).slice(0,30):[],
-      specifications:body.specifications && typeof body.specifications==='object' && !Array.isArray(body.specifications)?body.specifications:{},
+      specifications:listingObject(body.specifications),
       image_file_id:uploaded?.fileId||null,image_message_id:uploaded?.messageId||null,image_mime_type:uploaded?.mimeType||null,status:'active'
     };
     const {data,error}=await supabase.from('jobs').insert(row).select().single();
@@ -1136,7 +1136,7 @@ app.post('/api/real-estate', authenticate, upload.single('image'), async (req, r
       price_period:['daily','monthly','yearly','total','negotiable'].includes(body.price_period)?body.price_period:'total',
       area_sqm:area,bedrooms:body.bedrooms===''||body.bedrooms==null?null:Math.max(0,Number(body.bedrooms)),
       bathrooms:body.bathrooms===''||body.bathrooms==null?null:Math.max(0,Number(body.bathrooms)),
-      specifications:body.specifications&&typeof body.specifications==='object'&&!Array.isArray(body.specifications)?body.specifications:{},
+      specifications:listingObject(body.specifications),
       image_file_id:uploaded?.fileId||null,image_message_id:uploaded?.messageId||null,image_mime_type:uploaded?.mimeType||null,status:'active'
     };
     const {data,error}=await supabase.from('property_listings').insert(row).select().single();
@@ -1147,6 +1147,30 @@ app.post('/api/real-estate', authenticate, upload.single('image'), async (req, r
     console.error('Real-estate listing create failed:',error.message);
     return fail(res,400,'មិនអាចបង្កើតប្រកាសអចលនទ្រព្យបានទេ។ សូមពិនិត្យ Database migration និងព័ត៌មានដែលបានបំពេញ។');
   }
+});
+
+// Store hierarchical product taxonomy outside the legacy product record and image workflow.
+app.put('/api/products/:id/listing-details', authenticate, async (req, res) => {
+  if (!db(res)) return;
+  const { data: vendor } = await vendorFor(req.user.id);
+  const admin = await isAdmin(req.user.id);
+  let productQuery = supabase.from('products').select('id,vendor_id').eq('id', req.params.id);
+  if (!admin) {
+    if (!vendor || vendor.status === 'blocked') return fail(res,403,'Active seller account required');
+    productQuery = productQuery.eq('vendor_id',vendor.id);
+  }
+  const { data: product, error: productError } = await productQuery.maybeSingle();
+  if (productError) return fail(res,500,'Could not verify product ownership');
+  if (!product) return fail(res,404,'Product not found');
+  const category = listingText(req.body?.category,80);
+  const subcategory = listingText(req.body?.subcategory,100);
+  const detailType = listingText(req.body?.detail_type,120);
+  const specifications = listingObject(req.body?.specifications);
+  const { data, error } = await supabase.from('product_listing_details').upsert({
+    product_id:product.id,category,subcategory,detail_type:detailType,specifications,updated_at:new Date().toISOString()
+  },{onConflict:'product_id'}).select().single();
+  if (error) return fail(res,400,'Could not save product category details');
+  return res.json({data});
 });
 
 app.get('/api/products', async (req, res) => {
