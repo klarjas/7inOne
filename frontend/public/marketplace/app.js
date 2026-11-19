@@ -1964,8 +1964,11 @@ async function initCambodiaLocationPicker(root, legacyLocation = '') {
       });
       root.dataset.locationBound = 'true';
     }
-    if (!legacyLocation && !locationInput?.value) applySavedLocation(getSavedLocation());
-    else updateLocation();
+    if (!legacyLocation && !locationInput?.value) {
+      if (!applySavedLocation(getSavedLocation())) updateLocation();
+    } else if (!legacyLocation) {
+      updateLocation();
+    }
     root.dataset.locationReady = 'true';
   } catch (error) {
     if (summary) summary.textContent = error.message || 'មិនអាចផ្ទុកទីតាំងបានទេ។';
