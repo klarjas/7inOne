@@ -1891,20 +1891,23 @@ async function initCambodiaLocationPicker(root, legacyLocation = '') {
         if (summary) summary.textContent = 'សូមជ្រើសរើសរាជធានី/ខេត្ត → ស្រុក/ខណ្ឌ → ឃុំ/សង្កាត់ → ភូមិ';
       }
     };
-    selects.province?.addEventListener('change', () => {
-      fill(selects.district, 'ជ្រើសរើសស្រុក/ខណ្ឌ', unique(rows.filter(r => r.province_code === selects.province.value),'district_code','district_kh','district_en'));
-      selects.commune.innerHTML = '<option value="">ជ្រើសរើសឃុំ/សង្កាត់</option>'; selects.commune.disabled = true;
-      selects.village.innerHTML = '<option value="">ជ្រើសរើសភូមិ</option>'; selects.village.disabled = true; updateLocation();
-    });
-    selects.district?.addEventListener('change', () => {
-      fill(selects.commune, 'ជ្រើសរើសឃុំ/សង្កាត់', unique(rows.filter(r => r.district_code === selects.district.value),'commune_code','commune_kh','commune_en'));
-      selects.village.innerHTML = '<option value="">ជ្រើសរើសភូមិ</option>'; selects.village.disabled = true; updateLocation();
-    });
-    selects.commune?.addEventListener('change', () => {
-      fill(selects.village, 'ជ្រើសរើសភូមិ', unique(rows.filter(r => r.commune_code === selects.commune.value),'village_code','village_kh','village_en'));
-      updateLocation();
-    });
-    selects.village?.addEventListener('change', updateLocation);
+    if (root.dataset.locationBound !== 'true') {
+      selects.province?.addEventListener('change', () => {
+        fill(selects.district, 'ជ្រើសរើសស្រុក/ខណ្ឌ', unique(rows.filter(r => r.province_code === selects.province.value),'district_code','district_kh','district_en'));
+        selects.commune.innerHTML = '<option value="">ជ្រើសរើសឃុំ/សង្កាត់</option>'; selects.commune.disabled = true;
+        selects.village.innerHTML = '<option value="">ជ្រើសរើសភូមិ</option>'; selects.village.disabled = true; updateLocation();
+      });
+      selects.district?.addEventListener('change', () => {
+        fill(selects.commune, 'ជ្រើសរើសឃុំ/សង្កាត់', unique(rows.filter(r => r.district_code === selects.district.value),'commune_code','commune_kh','commune_en'));
+        selects.village.innerHTML = '<option value="">ជ្រើសរើសភូមិ</option>'; selects.village.disabled = true; updateLocation();
+      });
+      selects.commune?.addEventListener('change', () => {
+        fill(selects.village, 'ជ្រើសរើសភូមិ', unique(rows.filter(r => r.commune_code === selects.commune.value),'village_code','village_kh','village_en'));
+        updateLocation();
+      });
+      selects.village?.addEventListener('change', updateLocation);
+      root.dataset.locationBound = 'true';
+    }
     root.dataset.locationReady = 'true';
   } catch (error) {
     if (summary) summary.textContent = error.message || 'មិនអាចផ្ទុកទីតាំងបានទេ។';
