@@ -2070,10 +2070,10 @@ app.post('/api/products/:id/images', authenticate, upload.array('images', 10), a
       image_url: mediaProxyUrl(item.fileId), sort_order: (count || 0) + index
     }));
     const { data, error } = await supabase.from('product_images').insert(rows).select('id,product_id,file_id,telegram_message_id,image_url,sort_order');
-    if (error) throw new Error('Image uploads succeeded, but product image records could not be saved. Apply the Telegram media migration. ' + error.message);
+    if (error) throw new Error('Image uploads succeeded, but the product image records could not be saved. Please contact support.');
     return res.status(201).json({ data: (data || []).map(image => ({
       id: image.id, product_id: image.product_id, sort_order: image.sort_order,
-      image_url: image.file_id ? mediaProxyUrl(image.file_id) : image.image_url
+      image_url: image.file_id ? mediaProxyUrl(image.file_id) : normalizeMediaUrl(image.image_url)
     })) });
   } catch (error) {
     for (const item of uploaded) await deleteTelegramMessage(item.messageId);
