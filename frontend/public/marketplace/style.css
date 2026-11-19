@@ -4849,3 +4849,14 @@ body > footer {
   background:#2A475E!important;
   color:#66C0F4!important;
 }
+
+
+/* Product hero grid — enforce the shared Steam Dark surface */
+#view-product .product-hero-grid {
+  background: #16202D !important;
+  background-color: #16202D !important;
+  border: 1px solid #2A475E !important;
+  border-radius: 20px !important;
+  color: #C7D5E0 !important;
+  box-shadow: none !important;
+}
