@@ -1269,9 +1269,11 @@ app.get('/api/marketplace/listings', async (req, res) => {
     })());
     if (type === 'all' || type === 'real_estate') {
       if (type === 'all' || propertyType === 'all' || propertyType === 'house_rent' || propertyType === 'room_rent') tasks.push((async () => {
-        let query=supabase.from('rentals').select('id,user_id,title,description,short_description,category,property_type,location,address,rent_amount,rent_period,bedrooms,bathrooms,area_sqm,furnished,image_file_id,image_mime_type,status,created_at')
+        let query = supabase.from('rentals').select('id,user_id,title,description,short_description,category,property_type,location,address,rent_amount,rent_period,bedrooms,bathrooms,area_sqm,furnished,image_file_id,image_mime_type,status,expires_at,created_at')
           .eq('status','active').order('created_at',{ascending:false}).limit(limit);
-        if(q) query=query.or(`title.ilike.%${q}%,description.ilike.%${q}%,location.ilike.%${q}%`);
+        const filters=[`or(expires_at.is.null,expires_at.gt.${new Date().toISOString()})`];
+        if(q) filters.push(`or(title.ilike.%${q}%,description.ilike.%${q}%,location.ilike.%${q}%)`);
+        query=query.or(`and(${filters.join(',')})`);
         if(propertyType==='house_rent') query=query.eq('property_type','house');
         if(propertyType==='room_rent') query=query.eq('property_type','room');
         const {data,error}=await query;
@@ -1280,9 +1282,11 @@ app.get('/api/marketplace/listings', async (req, res) => {
         return (data||[]).map(row=>({...row,listing_type:'real_estate',real_estate_type:row.property_type==='room'?'room_rent':'house_rent',image_url:row.image_file_id?mediaProxyUrl(row.image_file_id,row.image_mime_type):null,price_label:row.rent_amount,listing_subtitle:row.property_type==='room'?'បន្ទប់ជួល':'ផ្ទះជួល'}));
       })());
       if (type === 'all' || propertyType === 'all' || propertyType === 'land') tasks.push((async () => {
-        let query=supabase.from('land_listings').select('id,user_id,title,description,short_description,category,location,address,price,area_sqm,land_type,title_deed,road_access,image_file_id,image_mime_type,status,created_at')
+        let query = supabase.from('land_listings').select('id,user_id,title,description,short_description,category,location,address,price,area_sqm,land_type,title_deed,road_access,image_file_id,image_mime_type,status,expires_at,created_at')
           .eq('status','active').order('created_at',{ascending:false}).limit(limit);
-        if(q) query=query.or(`title.ilike.%${q}%,description.ilike.%${q}%,location.ilike.%${q}%`);
+        const filters=[`or(expires_at.is.null,expires_at.gt.${new Date().toISOString()})`];
+        if(q) filters.push(`or(title.ilike.%${q}%,description.ilike.%${q}%,location.ilike.%${q}%)`);
+        query=query.or(`and(${filters.join(',')})`);
         const {data,error}=await query;
         if(error && ['42P01','PGRST205'].includes(error.code)) return [];
         if(error) throw error;
@@ -1290,9 +1294,11 @@ app.get('/api/marketplace/listings', async (req, res) => {
       })());
       // House-sale records are stored separately from rental and land records.
       if (type === 'all' || propertyType === 'all' || propertyType === 'house_sale') tasks.push((async () => {
-        let query=supabase.from('house_sale_listings').select('id,user_id,title,description,short_description,category,property_type,location,address,price,bedrooms,bathrooms,area_sqm,furnished,title_deed,image_file_id,image_mime_type,status,created_at')
+        let query = supabase.from('house_sale_listings').select('id,user_id,title,description,short_description,category,property_type,location,address,price,bedrooms,bathrooms,area_sqm,furnished,title_deed,image_file_id,image_mime_type,status,expires_at,created_at')
           .eq('status','active').order('created_at',{ascending:false}).limit(limit);
-        if(q) query=query.or(`title.ilike.%${q}%,description.ilike.%${q}%,location.ilike.%${q}%`);
+        const filters=[`or(expires_at.is.null,expires_at.gt.${new Date().toISOString()})`];
+        if(q) filters.push(`or(title.ilike.%${q}%,description.ilike.%${q}%,location.ilike.%${q}%)`);
+        query=query.or(`and(${filters.join(',')})`);
         const {data,error}=await query;
         if(error && ['42P01','PGRST205'].includes(error.code)) return [];
         if(error) throw error;
@@ -1301,9 +1307,11 @@ app.get('/api/marketplace/listings', async (req, res) => {
     }
     // New detailed property listings use their own table; legacy house/rental/land tables remain untouched.
     if (type === 'all' || type === 'real_estate') tasks.push((async () => {
-      let query = supabase.from('property_listings').select('id,user_id,title,description,short_description,category,subcategory,detail_type,location,address,price,price_period,area_sqm,bedrooms,bathrooms,specifications,image_file_id,image_mime_type,image_gallery,status,created_at')
-        .eq('status','active').order('created_at',{ascending:false}).limit(limit);
-      if (q) query = query.or(`title.ilike.%${q}%,description.ilike.%${q}%,location.ilike.%${q}%`);
+      let query = supabase.from('property_listings').select('id,user_id,title,description,short_description,category,subcategory,detail_type,location,address,price,price_period,area_sqm,bedrooms,bathrooms,specifications,image_file_id,image_mime_type,image_gallery,status,expires_at,created_at')
+          .eq('status','active').order('created_at',{ascending:false}).limit(limit);
+        const filters=[`or(expires_at.is.null,expires_at.gt.${new Date().toISOString()})`];
+        if(q) filters.push(`or(title.ilike.%${q}%,description.ilike.%${q}%,location.ilike.%${q}%)`);
+        query=query.or(`and(${filters.join(',')})`);
       if (propertyType !== 'all') query = query.eq('category', propertyType);
       const { data, error } = await query;
       if (error && ['42P01','PGRST205'].includes(error.code)) return [];
