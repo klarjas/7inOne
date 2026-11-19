@@ -45,6 +45,9 @@ export function registerMyPostsRoutes(app, {
     if (type === 'story') {
       status = Date.parse(row.expires_at || '') <= Date.now() ? 'expired' : 'active';
       renewable = true;
+    } else if (type === 'social_post') {
+      status = 'active';
+      renewable = false;
     } else if (row.expires_at && Date.parse(row.expires_at) <= Date.now() && status === 'active') {
       status = 'expired';
       renewable = true;
