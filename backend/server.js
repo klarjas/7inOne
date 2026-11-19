@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { createClient } from '@supabase/supabase-js';
 import { registerSupportChat } from './support-chat.js';
 import { registerSellerChat } from './seller-chat.js';
+import { registerMyPostsRoutes } from './my-posts.js';
 import { randomUUID, randomBytes, randomInt, createHash, createHmac, timingSafeEqual, createCipheriv, createDecipheriv } from 'node:crypto';
 
 const app = express();
@@ -1344,6 +1345,7 @@ const PROPERTY_CATEGORIES = new Set(['house_sale','house_rent','condo_sale','apa
 const listingText = (value, max = 5000) => clean(value, max);
 const listingObject = value => { if (value && typeof value === 'object' && !Array.isArray(value)) return value; if (typeof value === 'string') { try { const parsed = JSON.parse(value); return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {}; } catch {} } return {}; };
 const listingArray = value => { if (Array.isArray(value)) return value; if (typeof value === 'string') { try { const parsed = JSON.parse(value); return Array.isArray(parsed) ? parsed : []; } catch {} } return []; };
+registerMyPostsRoutes(app, { supabase, authenticate, mediaProxyUrl, deleteTelegramMessage, vendorFor });
 app.post('/api/jobs', authenticate, upload.fields([{name:'images',maxCount:10},{name:'image',maxCount:1}]), async (req, res) => {
   if (!db(res)) return;
   const body=req.body||{};
