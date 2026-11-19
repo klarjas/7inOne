@@ -5901,3 +5901,37 @@ body > footer {
 .marketplace-listing-posted{margin-top:14px;color:#94a3b8;font-size:11px}
 @media(max-width:760px){.marketplace-listing-detail-layout{grid-template-columns:minmax(0,1fr);gap:20px}.marketplace-listing-detail-media .marketplace-detail-image{max-height:440px;aspect-ratio:4/3}.marketplace-listing-detail-info .marketplace-detail-facts{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:420px){.marketplace-listing-detail-info .marketplace-detail-facts{grid-template-columns:minmax(0,1fr)}}
+
+
+/* Jobs results: functional listing cards and subcategory/sort controls */
+#view-home .jobs-subcategory-list { display:flex; flex-wrap:wrap; gap:5px; margin-top:8px; }
+#view-home .jobs-subcategory-list[hidden] { display:none; }
+#view-home .jobs-subcategory-list button {
+  border:1px solid #2A475E; border-radius:7px; padding:5px 8px;
+  background:#101822; color:#9FB2C3; font-size:9px; line-height:1.4;
+}
+#view-home .jobs-subcategory-list button.is-active {
+  border-color:#344256; background:#202D3D; color:#B7C5D8;
+}
+#view-home .jobs-results-heading select {
+  max-width:145px; min-width:0; border:1px solid #2A475E; border-radius:7px;
+  padding:6px 8px; background:#101822; color:#C7D5E0; font-size:9px;
+}
+#view-home .jobs-list { display:flex; flex-direction:column; gap:7px; }
+#view-home .jobs-result-card {
+  display:flex; align-items:center; gap:9px; width:100%; min-width:0;
+  padding:9px; border:1px solid #2A475E; border-radius:10px;
+  background:#101822; color:#C7D5E0; text-align:left; cursor:pointer;
+  transition:background .16s ease,border-color .16s ease;
+}
+#view-home .jobs-result-card:hover { background:#16202D; border-color:#66C0F4; }
+#view-home .jobs-result-image {
+  display:grid; place-items:center; flex:0 0 48px; width:48px; height:48px;
+  overflow:hidden; border-radius:8px; background:#203244; color:#66C0F4;
+}
+#view-home .jobs-result-image img { width:100%; height:100%; object-fit:cover; }
+#view-home .jobs-result-content { display:flex; flex:1; min-width:0; flex-direction:column; gap:3px; }
+#view-home .jobs-result-content b { overflow:hidden; color:#C7D5E0; font-size:10px; font-weight:800; text-overflow:ellipsis; white-space:nowrap; }
+#view-home .jobs-result-content small { overflow:hidden; color:#8F98A0; font-size:8px; text-overflow:ellipsis; white-space:nowrap; }
+#view-home .jobs-result-content strong { color:#66C0F4; font-size:9px; font-weight:800; }
+#view-home .jobs-result-arrow { flex:0 0 auto; color:#8F98A0; }
