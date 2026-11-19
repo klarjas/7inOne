@@ -1758,6 +1758,7 @@ async function renderProfile() {
   setAvatar($('profileAvatar'), p.avatar_url, profileName());
   $('profileHeadingName').textContent = profileName();
   $('profileHeadingMeta').textContent = state.session.user.phone || (isInternalAuthEmail(state.session.user.email) ? '' : state.session.user.email) || 'សមាជិក 7inOne';
+  $('profileHeadingBio').textContent = `អំពីខ្ញុំ៖ ${p.bio?.trim() || 'មិនទាន់បានបន្ថែម Bio'}`;
 
   const badges = [];
   if (isAdmin()) badges.push(`<span class="account-role-chip bg-violet-50 text-violet-700">${ic('shield', 12)} អ្នកគ្រប់គ្រង</span>`);
@@ -3726,7 +3727,7 @@ function bindEvents() {
   $('profileApplyTop')?.addEventListener('click', () => state.me?.vendor ? showView('seller') : openSellerModal());
   $('profileForm')?.addEventListener('submit', async (e) => {
     e.preventDefault(); if (!requireLogin()) return;
-    try { await api('/api/me', { method: 'PATCH', body: JSON.stringify({ display_name: $('profileName')?.value.trim() || '', phone: $('profilePhone')?.value.trim() || '', province: $('profileLocation')?.value || '', bio: $('profileBio')?.value.trim() || '' }) }); await refreshSession(); toast('បានរក្សាទុកព័ត៌មាន Profile ជោគជ័យ!'); await renderProfileTab(); }
+    try { await api('/api/me', { method: 'PATCH', body: JSON.stringify({ display_name: $('profileName')?.value.trim() || '', phone: $('profilePhone')?.value.trim() || '', province: $('profileLocation')?.value || '', bio: $('profileBio')?.value.trim() || '' }) }); await refreshSession(); $('profileHeadingBio').textContent = `អំពីខ្ញុំ៖ ${state.me?.profile?.bio?.trim() || 'មិនទាន់បានបន្ថែម Bio'}`; toast('បានរក្សាទុកព័ត៌មាន Profile ជោគជ័យ!'); await renderProfileTab(); }
     catch (err) { toast(err.message || 'មិនអាចរក្សាទុក Profile បានទេ។', 'error'); }
   });
   // Profile settings dialogs (forms and Telegram widget IDs remain unchanged).
