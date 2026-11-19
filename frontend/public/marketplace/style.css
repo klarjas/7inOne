@@ -4764,11 +4764,11 @@ body > footer {
 @media (min-width: 1200px) {
   #view-home .home-main-content #productGrid:not(.hidden) {
     display: grid !important;
-    grid-template-columns: repeat(auto-fit, minmax(max(172px, calc((100% - 70px) / 6)), 1fr)) !important;
+    grid-template-columns: repeat(auto-fill, minmax(max(172px, calc((100% - 70px) / 6)), 1fr)) !important;
     gap: 14px !important;
     align-content: start !important;
   }
   #view-store #storeProductGrid {
-    grid-template-columns: repeat(auto-fit, minmax(max(172px, calc((100% - 70px) / 6)), 1fr)) !important;
+    grid-template-columns: repeat(auto-fill, minmax(max(172px, calc((100% - 70px) / 6)), 1fr)) !important;
   }
 }
