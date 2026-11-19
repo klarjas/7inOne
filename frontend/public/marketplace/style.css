@@ -5143,3 +5143,22 @@ body > footer {
   display: block;
   flex: 0 0 auto;
 }
+
+
+/* Seller Chat Header - aligned back button, profile and identity */
+#sellerChatModal > section > header .seller-chat-header-leading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+#sellerChatModal > section > header #sellerChatHeaderIdentity {
+  gap: 8px;
+  min-width: 0;
+}
+
+#sellerChatModal > section > header #sellerChatHeaderSubtitle {
+  color: #8F98A0;
+}
