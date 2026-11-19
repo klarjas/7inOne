@@ -6074,3 +6074,9 @@ body > footer {
 .home-shorts-popup-stage.is-loading iframe{opacity:0}
 .home-shorts-popup-stage iframe{position:relative;z-index:1;display:block;opacity:1;transition:opacity .3s ease}
 @media(prefers-reduced-motion:reduce){.home-short-poster-spinner{animation:none}.home-short-poster,.home-vendor-media-player iframe,.home-shorts-popup-stage iframe{transition:none}}
+
+
+/* Ensure shop profile photos sit above the fallback icon in every product card. */
+.cd .sh .sp{position:relative!important;isolation:isolate!important}
+.cd .sh .sp .sp-fallback{position:absolute!important;inset:0!important;z-index:0!important}
+.cd .sh .sp img{position:absolute!important;inset:0!important;z-index:1!important;display:block!important;width:100%!important;height:100%!important;max-width:none!important;border-radius:50%!important;object-fit:cover!important;object-position:center!important}

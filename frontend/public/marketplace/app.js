@@ -761,7 +761,7 @@ function productCard(p, index) {
       <div class="sh">
         <span class="sp" role="img" aria-label="រូប Logo ហាង">
           <span class="sp-fallback">${ic('user', 15)}</span>
-          ${vendorLogo ? `<img src="${esc(vendorLogo)}" alt="${esc(vendorName)}" loading="lazy" decoding="async">` : ''}
+          ${vendorLogo ? `<img src="${esc(vendorLogo)}" alt="${esc(vendorName)}" loading="lazy" decoding="async" onerror="this.style.display=\'none\'">` : ''}
         </span>
         <button type="button" class="sn text-left hover:underline" data-action="store" data-vendor-id="${esc(p.vendor_id)}">${esc(vendorName)}</button>
         ${verified ? verifiedStoreBadge(p.vendor_id) : ''}
