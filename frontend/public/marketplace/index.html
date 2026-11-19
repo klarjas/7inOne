@@ -420,9 +420,14 @@
               <button type="button" data-job-category="services">Beauty &amp; Services</button>
               <button type="button" data-job-category="other">Other Jobs</button>
             </div>
+            <div class="jobs-subcategory-list" id="jobsSubcategoryList" hidden></div>
             <div class="jobs-results-heading">
               <div><b>ការងារទាំងអស់</b><small id="jobsResultCount">0 ការងារ</small></div>
-              <span>ថ្មីៗ</span>
+              <select id="jobsSortSelect" aria-label="តម្រៀបការងារ">
+                <option value="newest">បង្ហោះថ្មីៗ</option>
+                <option value="salary_asc">តម្លៃទាបទៅខ្ពស់</option>
+                <option value="salary_desc">តម្លៃខ្ពស់ទៅទាប</option>
+              </select>
             </div>
             <div class="jobs-list" id="jobsList" aria-live="polite">
               <div class="jobs-empty-state">
