@@ -210,22 +210,52 @@
             <button class="store-filter-link" type="button" data-listing-type="job">ការងារ</button>
             <button class="store-filter-link" type="button" data-listing-type="real_estate">អចលនទ្រព្យ</button>
           </section>
-          <section class="store-filter-group marketplace-property-filter" id="marketplacePropertyFilters" hidden>
-            <h3>ប្រភេទអចលនទ្រព្យ</h3>
-            <button class="store-filter-link active" type="button" data-property-type="all">ទាំងអស់</button>
-            <button class="store-filter-link" type="button" data-property-type="land">ដីលក់</button>
-            <button class="store-filter-link" type="button" data-property-type="house_sale">ផ្ទះលក់</button>
-            <button class="store-filter-link" type="button" data-property-type="house_rent">ផ្ទះជួល</button>
-            <button class="store-filter-link" type="button" data-property-type="room_rent">បន្ទប់ជួល</button>
-          </section>
-          <section class="store-filter-group">
-            <h3 id="marketplaceCategoryHeading">ប្រភេទទាំងអស់</h3>
-            <button class="store-filter-link active" type="button" data-category="all">ទំនិញទាំងអស់</button>
-            <button class="store-filter-link" type="button" data-category="phones">ទូរស័ព្ទ និង អេឡិចត្រូនិក</button>
-            <button class="store-filter-link" type="button" data-category="vehicles">រថយន្ត និង ម៉ូតូ</button>
-            <button class="store-filter-link" type="button" data-category="property">អចលនទ្រព្យ</button>
-            <button class="store-filter-link" type="button" data-category="fashion">សម្លៀកបំពាក់</button>
-            <button class="store-filter-link" type="button" data-category="furniture">គ្រឿងសង្ហារិម</button>
+          <section class="store-filter-group" id="marketplaceCategoryGroups">
+            <div class="marketplace-category-group" data-marketplace-category-group="all">
+              <h3 id="marketplaceCategoryHeading">ប្រភេទទាំងអស់</h3>
+              <button class="store-filter-link active" type="button" data-listing-type="all">ប្រកាសទាំងអស់</button>
+            </div>
+            <div class="marketplace-category-group" data-marketplace-category-group="product" hidden>
+              <h3>ប្រភេទផលិតផល</h3>
+              <button class="store-filter-link active" type="button" data-category="all">ទំនិញទាំងអស់</button>
+              <button class="store-filter-link" type="button" data-category="phones">ទូរស័ព្ទ និង អេឡិចត្រូនិក</button>
+              <button class="store-filter-link" type="button" data-category="vehicles">រថយន្ត និង ម៉ូតូ</button>
+              <button class="store-filter-link" type="button" data-category="property">អចលនទ្រព្យ</button>
+              <button class="store-filter-link" type="button" data-category="fashion">សម្លៀកបំពាក់</button>
+              <button class="store-filter-link" type="button" data-category="furniture">គ្រឿងសង្ហារិម</button>
+            </div>
+            <div class="marketplace-category-group" data-marketplace-category-group="job" hidden>
+              <h3>ប្រភេទការងារ</h3>
+              <button class="store-filter-link active" type="button" data-marketplace-job-category="all">ការងារទាំងអស់</button>
+              <button class="store-filter-link" type="button" data-marketplace-job-category="it">IT &amp; Technology</button>
+              <button class="store-filter-link" type="button" data-marketplace-job-category="office">ការិយាល័យ និង រដ្ឋបាល</button>
+              <button class="store-filter-link" type="button" data-marketplace-job-category="sales">លក់ និង ទីផ្សារ</button>
+              <button class="store-filter-link" type="button" data-marketplace-job-category="transport">ដឹកជញ្ជូន</button>
+              <button class="store-filter-link" type="button" data-marketplace-job-category="hospitality">ភោជនីយដ្ឋាន និង សណ្ឋាគារ</button>
+              <button class="store-filter-link" type="button" data-marketplace-job-category="construction">សំណង់ និង វិស្វកម្ម</button>
+              <button class="store-filter-link" type="button" data-marketplace-job-category="education">អប់រំ</button>
+              <button class="store-filter-link" type="button" data-marketplace-job-category="healthcare">សុខាភិបាល</button>
+              <button class="store-filter-link" type="button" data-marketplace-job-category="factory">រោងចក្រ និង ផលិតកម្ម</button>
+              <button class="store-filter-link" type="button" data-marketplace-job-category="agriculture">កសិកម្ម</button>
+              <button class="store-filter-link" type="button" data-marketplace-job-category="services">សម្រស់ និង សេវាកម្ម</button>
+              <button class="store-filter-link" type="button" data-marketplace-job-category="other">ការងារផ្សេងៗ</button>
+            </div>
+            <div class="marketplace-category-group" data-marketplace-category-group="real_estate" hidden>
+              <h3>ប្រភេទអចលនទ្រព្យ</h3>
+              <button class="store-filter-link active" type="button" data-property-type="all">អចលនទ្រព្យទាំងអស់</button>
+              <button class="store-filter-link" type="button" data-property-type="house_sale">ផ្ទះលក់</button>
+              <button class="store-filter-link" type="button" data-property-type="house_rent">ផ្ទះជួល</button>
+              <button class="store-filter-link" type="button" data-property-type="condo_sale">ខុនដូសម្រាប់លក់</button>
+              <button class="store-filter-link" type="button" data-property-type="apartment_rent">អាផាតមិនសម្រាប់ជួល</button>
+              <button class="store-filter-link" type="button" data-property-type="land">ដីលក់</button>
+              <button class="store-filter-link" type="button" data-property-type="land_rent">ដីសម្រាប់ជួល</button>
+              <button class="store-filter-link" type="button" data-property-type="commercial_sale">អចលនទ្រព្យពាណិជ្ជកម្មសម្រាប់លក់</button>
+              <button class="store-filter-link" type="button" data-property-type="commercial_rent">អចលនទ្រព្យពាណិជ្ជកម្មសម្រាប់ជួល</button>
+              <button class="store-filter-link" type="button" data-property-type="room_rent">បន្ទប់ជួល</button>
+              <button class="store-filter-link" type="button" data-property-type="properties_wanted">ត្រូវការអចលនទ្រព្យ</button>
+              <button class="store-filter-link" type="button" data-property-type="agent_services">សេវាកម្មភ្នាក់ងារ</button>
+              <button class="store-filter-link" type="button" data-property-type="others_properties">ផ្សេងទៀត</button>
+            </div>
           </section>
           <section class="store-filter-group">
             <h3>ស្ថានភាព</h3>
