@@ -1882,7 +1882,7 @@ async function initCambodiaLocationPicker(root, legacyLocation = '') {
       if (selected.village && selected.commune && selected.district && selected.province) {
         const names = [selected.province.province_kh, selected.district.district_kh, selected.commune.commune_kh, selected.village.village_kh];
         if (locationInput) locationInput.value = names.join(' · ');
-        if (summary) summary.textContent = names.join(' · ') + '  |  កូដភូមិ: ' + selected.village.village_code;
+        if (summary) summary.textContent = 'ខេត្ត/ក្រុង៖ ' + selected.province.province_kh + ' · ស្រុក/ខណ្ឌ៖ ' + selected.district.district_kh + ' · ឃុំ/សង្កាត់៖ ' + selected.commune.commune_kh + ' · ភូមិ៖ ' + selected.village.village_kh + '  |  កូដភូមិ៖ ' + selected.village.village_code;
       } else {
         if (locationInput) locationInput.value = '';
         if (summary) summary.textContent = 'សូមជ្រើសរើសរាជធានី/ខេត្ត → ស្រុក/ខណ្ឌ → ឃុំ/សង្កាត់ → ភូមិ';
