@@ -789,7 +789,7 @@ app.get('/api/social/posts', async (req, res) => {
     .order('created_at', { ascending: false }).limit(20);
   if (error) { console.error('Social feed load failed:', error.message); return fail(res, 500, 'Could not load community posts.'); }
   let viewerId = null;
-  const token = req.headers.authorization?.replace(/^Bearer\\s+/i, '');
+  const token = req.headers.authorization?.replace(/^Bearer\s+/i, '');
   if (token) { try { const { data: auth } = await supabase.auth.getUser(token); viewerId = auth?.user?.id || null; } catch {} }
   return res.json({ data: (data || []).map(post => ({
     id: post.id, user_id: post.user_id, caption: post.caption,
