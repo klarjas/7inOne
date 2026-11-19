@@ -1037,7 +1037,7 @@ function updateMarketplaceCategoryHeading() {
   const heading = $('marketplaceCategoryHeading');
   if (heading) heading.textContent = titles[state.activeListingType] || titles.all;
   document.querySelectorAll('[data-marketplace-category-group]').forEach((group) => {
-    group.hidden = group.dataset.marketplaceCategoryGroup !== state.activeListingType;
+    group.hidden = state.activeListingType === 'all' || group.dataset.marketplaceCategoryGroup !== state.activeListingType;
   });
 }
 
