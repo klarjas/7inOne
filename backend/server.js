@@ -3083,10 +3083,11 @@ app.get('/api/stream-url', async (req, res) => {
   const sourceUrl = clean(req.query.url, 2048);
   if (!sourceUrl) return fail(res, 400, 'YouTube URL is required');
   const serviceBase = clean(process.env.YOUTUBE_STREAM_SERVICE_URL, 500).replace(/\/+$/, '');
-  if (!serviceBase) return fail(res, 503, 'YouTube stream service is not configured');
+  const serviceToken = clean(process.env.YOUTUBE_STREAM_SERVICE_TOKEN, 500);
+  if (!serviceBase || !serviceToken) return fail(res, 503, 'YouTube stream service is not configured');
   try {
     const upstream = await fetch(`${serviceBase}/api/stream-url?url=${encodeURIComponent(sourceUrl)}`, {
-      headers: { accept: 'application/json' }, signal: AbortSignal.timeout(25_000)
+      headers: { accept: 'application/json', 'x-stream-service-token': serviceToken }, signal: AbortSignal.timeout(25_000)
     });
     const payload = await upstream.json().catch(() => null);
     if (!upstream.ok || !payload?.success || !payload?.data?.stream_url) {
