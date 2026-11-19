@@ -5063,3 +5063,9 @@ body > footer {
 .seller-chat-image-preview img{display:block;max-width: min(94vw,1200px);max-height:88dvh;width:auto;height:auto;object-fit:contain;border-radius:8px}
 .seller-chat-image-preview-close{position:absolute;top:16px;right:18px;width:42px;height:42px;border:1px solid rgba(255,255,255,.25);border-radius:50%;background:#1B2838;color:#fff;font-size:30px;line-height:1;cursor:pointer}
 @media(max-width:640px){.seller-chat-image-preview{padding:12px}.seller-chat-image-preview img{max-width:96vw;max-height:86dvh}}
+
+/* The participant identity now lives in the main chat header; keep only mobile back navigation here. */
+#sellerChatProductContext{height:0;min-height:0;padding:0;border:0;overflow:hidden}
+@media(max-width:640px){
+  #sellerChatProductContext{height:auto;min-height:42px;padding:8px 10px;border-bottom:1px solid #2A475E;overflow:visible}
+}
