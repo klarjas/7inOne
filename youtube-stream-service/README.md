@@ -10,11 +10,13 @@ This is a separate FastAPI service. The existing 7inOne app remains Node.js/Expr
 - Build Command: `pip install -r requirements.txt`
 - Start Command: `uvicorn main:app --host 0.0.0.0 --port $PORT`
 
-After deployment, set this environment variable on the existing 7inOne Node service:
+Generate a long random secret. Set these environment variables:
 
-`YOUTUBE_STREAM_SERVICE_URL=https://YOUR-PYTHON-SERVICE.onrender.com`
+- On the Python service: `STREAM_SERVICE_TOKEN=YOUR_LONG_RANDOM_SECRET`
+- On the existing 7inOne Node service: `YOUTUBE_STREAM_SERVICE_URL=https://YOUR-PYTHON-SERVICE.onrender.com`
+- On the existing 7inOne Node service: `YOUTUBE_STREAM_SERVICE_TOKEN=THE_SAME_LONG_RANDOM_SECRET`
 
-Do not add a trailing slash. The browser calls the same-origin Node proxy.
+Do not add a trailing slash to the service URL. Keep the token private; the browser calls only the same-origin Node proxy.
 
 ## Notes
 
