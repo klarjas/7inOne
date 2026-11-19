@@ -6037,3 +6037,10 @@ body > footer {
   .detail-bottom-actions { gap:6px; }
   .detail-bottom-actions button { padding:8px 4px; font-size:11px; }
 }
+
+/* Shorts manager follows the existing dark seller dashboard theme. */
+#view-seller .seller-media-item{border-color:#2A475E;background:#16202D;color:#C7D5E0}
+#view-seller .seller-media-item-info a{color:#8AB4F8}
+#view-seller .seller-media-item-info small{color:#8F98A0}
+#view-seller .seller-media-item-actions button{border-color:#3B5268;background:#101822;color:#C7D5E0}
+#view-seller .seller-media-item-actions button[data-media-action="delete"]{border-color:rgba(242,139,130,.3);color:#F28B82}
