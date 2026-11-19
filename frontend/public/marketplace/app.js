@@ -1839,7 +1839,7 @@ function renderSellerChatMessages(messages, forceScroll = false) {
       content = `<article class="seller-chat-product-card" ${prod?.id ? `data-chat-product-id="${esc(prod.id)}"` : ''}>${img}<div class="seller-chat-product-info"><small>ផលិតផលដែលបានសួរ</small><b>${esc(prod?.title || msg.body || 'ផលិតផល')}</b>${prod ? `<strong>${money(prod.price)}</strong>` : '<span class="seller-chat-product-unavailable">ព័ត៌មានផលិតផលមិនទាន់មាន</span>'}</div></article>`;
     } else if (msg.message_type === 'image' && (msg.media_url || msg.local_image_url)) {
       const src = msg.local_image_url || msg.media_url;
-      content = `<a href="${esc(src)}" target="_blank" rel="noopener noreferrer"><img class="seller-chat-image" src="${esc(src)}" alt=""></a>`;
+      content = `<img class="seller-chat-image" src="${esc(src)}" alt="រូបភាពក្នុងសារ" loading="lazy" role="button" tabindex="0" aria-label="មើលរូបភាពធំ">`;
     } else {
       content = `<p>${esc(msg.body || '').replace(/\n/g, '<br>')}</p>`;
     }
@@ -1898,10 +1898,15 @@ async function loadSellerChatConversation(scrollToBottom = false) {
   const otherName = otherIsShop
     ? (conv.vendor?.store_name || 'ហាងអ្នកលក់')
     : (conv.buyer?.display_name || 'អ្នកទិញ');
-  $('sellerChatTitle').textContent = otherName;
-  $('sellerChatSubtitle').textContent = otherIsShop ? 'គណនីហាង · សន្ទនាផ្ទាល់' : 'សន្ទនាជាមួយអ្នកទិញ';
-
   const otherAvatar = otherIsShop ? conv.vendor?.store_logo_url : conv.buyer?.avatar_url;
+  $('sellerChatTitle').textContent = otherName;
+  $('sellerChatSubtitle').textContent = '';
+  $('sellerChatHeaderTitle').textContent = otherName;
+  $('sellerChatHeaderSubtitle').classList.add('hidden');
+  $('sellerChatHeaderIdentity').classList.remove('hidden');
+  $('sellerChatHeaderAvatar').innerHTML = otherAvatar
+    ? `<img src="${esc(otherAvatar)}" alt="${esc(otherName)}" class="h-full w-full rounded-full object-cover">`
+    : `<span class="grid h-full w-full place-items-center text-slate-400">${ic(otherIsShop ? 'store' : 'user', 18)}</span>`;
   $('sellerChatProductImage').innerHTML = otherAvatar
     ? `<img src="${esc(otherAvatar)}" alt="${esc(otherName)}" class="h-full w-full object-cover">`
     : `<span class="grid h-full w-full place-items-center text-slate-400">${ic(otherIsShop ? 'store' : 'user', 18)}</span>`;
@@ -1937,6 +1942,11 @@ async function openSellerChatInbox() {
   $('sellerChatInboxPane').classList.remove('mobile-hidden');
   $('sellerChatThread').classList.remove('mobile-active');
   $('sellerChatBack').classList.add('hidden');
+  $('sellerChatHeaderIdentity').classList.add('hidden');
+  $('sellerChatHeaderDefault').classList.remove('hidden');
+  $('sellerChatHeaderSubtitle').classList.remove('hidden');
+  $('sellerChatTitle').textContent = 'ជ្រើសរើសសន្ទនា';
+  $('sellerChatSubtitle').textContent = 'ព័ត៌មានផលិតផលនឹងបង្ហាញនៅទីនេះ';
   openModal('sellerChatModal');
   await loadUnifiedSellerChatInbox();
 }
@@ -2638,6 +2648,7 @@ function bindEvents() {
       document.querySelectorAll('.modal.open').forEach((m) => closeModal(m.id));
       closeDropdowns();
       if (state.productLightboxOpen) closeProductLightbox();
+      document.querySelector('.seller-chat-image-preview')?.remove();
     }
   });
 
@@ -2745,6 +2756,36 @@ function bindEvents() {
   $('telegramDiagnosticsBtn')?.addEventListener('click', async () => { const target = $('telegramDiagnosticsResult'); try { const res = await api('/api/admin/telegram/diagnostics'); if (target) target.textContent = JSON.stringify(res.data ?? res, null, 2); } catch (err) { if (target) target.textContent = JSON.stringify({ error: err.message }, null, 2); } });
   $('adminApplications')?.addEventListener('click', async (e) => { const b = e.target.closest('[data-admin-review]'); if (!b) return; try { await api('/api/admin/vendors/' + encodeURIComponent(b.dataset.id), { method: 'PATCH', body: JSON.stringify({ status: b.dataset.adminReview }) }); await renderAdmin(); toast('បានធ្វើបច្ចុប្បន្នភាពពាក្យស្នើសុំ។'); } catch (err) { toast(err.message || 'មិនអាចពិនិត្យពាក្យស្នើសុំបានទេ។', 'error'); } });
 
+  // Open chat images in an in-page lightbox; never navigate to a new tab.
+  $('sellerChatMessages')?.addEventListener('click', (e) => {
+    const image = e.target.closest('.seller-chat-image');
+    if (!image) return;
+    e.preventDefault();
+    document.querySelector('.seller-chat-image-preview')?.remove();
+    const overlay = document.createElement('div');
+    overlay.className = 'seller-chat-image-preview';
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-modal', 'true');
+    overlay.setAttribute('aria-label', 'មើលរូបភាព');
+    const close = document.createElement('button');
+    close.type = 'button';
+    close.className = 'seller-chat-image-preview-close';
+    close.setAttribute('aria-label', 'បិទ');
+    close.textContent = '×';
+    const fullImage = document.createElement('img');
+    fullImage.src = image.currentSrc || image.src;
+    fullImage.alt = image.alt || 'រូបភាពក្នុងសារ';
+    overlay.append(close, fullImage);
+    overlay.addEventListener('click', (event) => { if (event.target === overlay || event.target === close) overlay.remove(); });
+    document.body.appendChild(overlay);
+  });
+  $('sellerChatMessages')?.addEventListener('keydown', (e) => {
+    const image = e.target.closest('.seller-chat-image');
+    if (image && (e.key === 'Enter' || e.key === ' ')) {
+      e.preventDefault();
+      image.click();
+    }
+  });
   $('sellerChatChooseImage')?.addEventListener('click', () => $('sellerChatImageInput')?.click());
   $('sellerChatImageInput')?.addEventListener('change', async () => { const file = $('sellerChatImageInput').files?.[0]; if (!file || !state.chatConversationId) return; const form = new FormData(); form.append('image', file); try { await api('/api/seller-chat/conversations/' + encodeURIComponent(state.chatConversationId) + '/image', { method: 'POST', body: form }); $('sellerChatImageInput').value = ''; await loadSellerChatConversation(true); await loadUnifiedSellerChatInbox(); } catch (err) { toast(err.message || 'មិនអាចផ្ញើរូបភាពបានទេ។', 'error'); } });
   $('sellerChatMute')?.addEventListener('click', () => { state.chatMuted = !state.chatMuted; const b = $('sellerChatMute'); b.setAttribute('aria-pressed', String(state.chatMuted)); b.textContent = state.chatMuted ? 'បើកសំឡេង' : 'បិទសំឡេង'; b.title = state.chatMuted ? 'បើកសំឡេង' : 'បិទសំឡេង'; });
