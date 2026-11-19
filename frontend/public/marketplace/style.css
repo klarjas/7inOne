@@ -367,7 +367,7 @@ body{background:var(--market-bg);color:var(--market-ink)}.shell{width:min(1440px
 /* Telegram-inspired conversation UI: familiar spacing, wallpaper, bubbles and composer. */
 #sellerChatModal .seller-chat-shell{width:min(96vw,1120px);height:min(90vh,820px);max-width:1120px;border:1px solid #dce5ec;border-radius:16px;background:#fff;box-shadow:0 24px 80px rgba(25,45,65,.22)}
 #sellerChatModal>section>header{min-height:64px;background:#171A21;color:#C7D5E0;border-bottom:1px solid #2A475E;padding:10px 16px}
-#sellerChatModal>section>header b{font-size:14px;color:#17212b}
+#sellerChatModal>section>header b{font-size:14px;color:#fff}
 #sellerChatModal>section>header span{font-size:10px;color:#70808f}
 .seller-chat-layout{height:calc(min(90vh,820px) - 64px);background:#16202D}
 .seller-chat-inbox-pane{width:320px;background:#171A21;color:#C7D5E0;border-right:1px solid #2A475E;padding:12px}
