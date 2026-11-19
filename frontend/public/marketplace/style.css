@@ -5935,3 +5935,53 @@ body > footer {
 #view-home .jobs-result-content small { overflow:hidden; color:#8F98A0; font-size:8px; text-overflow:ellipsis; white-space:nowrap; }
 #view-home .jobs-result-content strong { color:#66C0F4; font-size:9px; font-weight:800; }
 #view-home .jobs-result-arrow { flex:0 0 auto; color:#8F98A0; }
+
+
+/* Shared listing details: clean editorial list, not boxed chips */
+#view-product .product-detail-description .listing-detail-list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid #E7EBF0;
+}
+#view-product .product-detail-description .listing-detail-list > li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 18px;
+  min-width: 0;
+  padding: 12px 2px;
+  border-bottom: 1px solid #E7EBF0;
+  background: transparent;
+}
+#view-product .product-detail-description .listing-detail-list > li > span {
+  flex: 0 0 42%;
+  color: #8491A2;
+  font-size: 13px;
+  line-height: 1.6;
+}
+#view-product .product-detail-description .listing-detail-list > li > strong {
+  min-width: 0;
+  color: #263448;
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.6;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+#view-product .product-detail-description .product-full-description {
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid #E7EBF0;
+  color: #526174;
+  font-size: 14px;
+  line-height: 1.9;
+}
+@media (max-width: 520px) {
+  #view-product .product-detail-description .listing-detail-list > li { gap: 12px; padding: 11px 0; }
+  #view-product .product-detail-description .listing-detail-list > li > span,
+  #view-product .product-detail-description .listing-detail-list > li > strong { font-size: 12px; }
+}
