@@ -304,7 +304,7 @@
               <button id="homeShortsPopupClose" type="button" aria-label="បិទវីដេអូ">✕</button>
             </div>
             <div class="home-shorts-popup-stage">
-              <iframe id="homeShortsPopupFrame" title="វីដេអូ Shorts ពង្រីក" allow="autoplay; encrypted-media; picture-in-picture; web-share" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+              <video id="homeShortsPopupFrame" title="វីដេអូ Shorts ពង្រីក" controls playsinline preload="metadata"></video>
             </div>
           </dialog>
 
@@ -711,9 +711,10 @@
             <section class="seller-tab-panel" id="sellerTabMedia" data-seller-panel="media" hidden>
               <div id="sellerMediaVerifiedGate" class="seller-media-verified-gate hidden">មុខងារនេះអាចប្រើបានតែអ្នកលក់ដែលបានផ្ទៀងផ្ទាត់ប៉ុណ្ណោះ។</div>
               <form id="sellerMediaForm" class="seller-media-form">
-                <label class="block"><span class="label">ប្រភេទមាតិកា</span><select id="sellerMediaType" class="field"><option value="video">YouTube Shorts</option><option value="live">Live ផ្សាយផ្ទាល់</option></select></label>
-                <label class="block"><span class="label">Link វីដេអូ / Live</span><input id="sellerMediaUrl" class="field" type="url" maxlength="1000" placeholder="https://www.youtube.com/shorts/..." required /></label>
-                <div class="flex flex-wrap items-center justify-between gap-2"><span id="sellerMediaStatus" class="text-[11px] text-slate-500">អាចបង្ហោះ Shorts បានច្រើន</span><button id="sellerMediaSave" type="submit" class="brand-gradient rounded-full px-5 py-2 text-[11px] font-bold text-white">បង្ហោះ Shorts</button></div>
+                <label class="block"><span class="label">ប្រភេទមាតិកា</span><select id="sellerMediaType" class="field"><option value="video">Telegram Shorts (MP4)</option><option value="live">Live ផ្សាយផ្ទាល់</option></select></label>
+                <label id="sellerMediaVideoWrap" class="block"><span class="label">ជ្រើសរើសវីដេអូ MP4</span><input id="sellerMediaVideo" class="field" type="file" accept="video/mp4,.mp4" /><small class="mt-1 block text-[10px] text-slate-500">MP4 ប៉ុណ្ណោះ · ទំហំអតិបរមា 20MB · រក្សាទុកក្នុង Telegram Channel 7inone Short</small></label>
+                <label id="sellerMediaUrlWrap" class="block hidden"><span class="label">Link Live ផ្សាយផ្ទាល់</span><input id="sellerMediaUrl" class="field" type="url" maxlength="1000" placeholder="https://..." /></label>
+                <div class="flex flex-wrap items-center justify-between gap-2"><span id="sellerMediaStatus" class="text-[11px] text-slate-500">វីដេអូនឹងត្រូវបង្ហោះទៅ Telegram ដោយស្វ័យប្រវត្តិ</span><button id="sellerMediaSave" type="submit" class="brand-gradient rounded-full px-5 py-2 text-[11px] font-bold text-white">បង្ហោះ Shorts</button></div>
               </form>
               <div id="sellerMediaList" class="seller-media-list" aria-live="polite"></div>
             </section>
