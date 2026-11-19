@@ -983,6 +983,7 @@ async function loadProducts() {
   const params = new URLSearchParams({ limit: '50', type: state.activeListingType || 'all' });
   if (state.searchTerm) params.set('q', state.searchTerm);
   if (state.activeListingType === 'product' && state.activeCategory !== 'all') params.set('category', state.activeCategory);
+  if (state.activeListingType === 'real_estate') params.set('property_type', state.activePropertyType || 'all');
 
   try {
     const res = await api('/api/marketplace/listings?' + params.toString());
