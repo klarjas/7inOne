@@ -4445,7 +4445,7 @@ body > footer {
   #view-home .home-social-rail { position: static; max-height: none; overflow: visible; }
 }
 @media (max-width: 760px) {
-  #view-home .home-social-rail { display: none; }
+  #view-home .home-social-rail { display: flex; grid-column: 1 / -1 !important; grid-row: 999 !important; position: static; max-height: none; overflow: visible; margin-top: 18px; }
 }
 #view-home .social-composer,
 #view-home .social-feed-card {
