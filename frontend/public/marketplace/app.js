@@ -1205,6 +1205,76 @@ async function openProduct(id, options = {}) {
 }
 
 function renderMarketplaceListingInProductDetail(item) {
+function extractGoogleMapEmbedUrl(rawUrl, fallbackLocation = '') {
+  const raw = String(rawUrl || '').trim();
+  const fallback = String(fallbackLocation || '').trim();
+  let query = fallback;
+  if (raw) {
+    try {
+      const url = new URL(raw);
+      const host = url.hostname.toLowerCase();
+      if (!['google.com','www.google.com','maps.google.com','maps.app.goo.gl','goo.gl'].includes(host) &&
+          !host.endsWith('.google.com')) return '';
+      const coordinateMatch = url.href.match(/@(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)/);
+      if (coordinateMatch) query = coordinateMatch[1] + ',' + coordinateMatch[2];
+      else {
+        const placeMatch = url.pathname.match(/\/place\/([^/]+)/i);
+        const q = url.searchParams.get('q') || url.searchParams.get('query');
+        if (q) query = q;
+        else if (placeMatch) query = decodeURIComponent(placeMatch[1].replace(/\+/g, ' '));
+        else if (!/maps\.app\.goo\.gl|goo\.gl/.test(host)) query = url.pathname.replace(/^\/(maps\/)?/,'').replace(/\//g,' ').trim() || fallback;
+      }
+    } catch { return ''; }
+  }
+  if (!query) return '';
+  return 'https://maps.google.com/maps?q=' + encodeURIComponent(query) + '&z=16&output=embed';
+}
+function renderDetailMapSection(item) {
+  const specs = item.specifications && typeof item.specifications === 'object' ? item.specifications : {};
+  const rawUrl = specs.google_map_url || item.google_map_url || '';
+  const location = [item.location, item.address].filter(Boolean).join(' · ');
+  if (!rawUrl) return location ? `<div class="detail-location"><div class="detail-location-heading">${ic('pin',17)} <b>ទីតាំង</b></div><p>${esc(item.location || 'កម្ពុជា')}</p>${item.address ? `<small>${esc(item.address)}</small>` : ''}</div>` : '';
+  const embedUrl = extractGoogleMapEmbedUrl(rawUrl, location || 'Cambodia');
+  return `<section class="detail-map-section"><div class="detail-location-heading">${ic('pin',17)} <b>ទីតាំង</b></div><p>${esc(item.location || 'កម្ពុជា')}</p>${item.address ? `<small>${esc(item.address)}</small>` : ''}<div class="detail-map-frame">${embedUrl ? `<iframe src="${esc(embedUrl)}" title="Google Maps location" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>` : ''}<button type="button" class="detail-map-open" data-detail-action="map" data-map-url="${esc(rawUrl)}">បង្ហាញទីតាំងនៅលើផែនទី</button></div></section>`;
+}
+function bindListingDetailActions(root, item) {
+  root.querySelectorAll('[data-detail-action]').forEach(button => button.addEventListener('click', async () => {
+    const action = button.dataset.detailAction;
+    if (action === 'map') {
+      const url = button.dataset.mapUrl || '';
+      try { const parsed = new URL(url); if (parsed.protocol === 'https:' && (parsed.hostname.endsWith('google.com') || parsed.hostname.endsWith('goo.gl'))) window.open(url, '_blank', 'noopener,noreferrer'); else toast('Google Maps Link មិនត្រឹមត្រូវ។','warning'); } catch { toast('Google Maps Link មិនត្រឹមត្រូវ។','warning'); }
+      return;
+    }
+    if (action === 'share') {
+      try { await navigator.clipboard.writeText(location.origin + location.pathname + '#product/' + encodeURIComponent(item.id)); toast('បានចម្លង Link រួចរាល់!'); }
+      catch { toast('មិនអាចចម្លង Link បានទេ។','error'); }
+      return;
+    }
+    if (!requireLogin()) return;
+    if (action === 'save') {
+      button.disabled = true;
+      try {
+        const result = await api('/api/listing-saves', {method:'POST',body:JSON.stringify({listing_type:item.listing_type,id:item.id})});
+        if (result.data?.saved) { button.classList.add('is-saved'); button.querySelector('span').textContent='បានរក្សាទុក'; toast('បានរក្សាទុកប្រកាស!'); }
+      } catch (error) { toast(error.message || 'មិនអាចរក្សាទុកបានទេ។','error'); }
+      finally { button.disabled = false; }
+      return;
+    }
+    if (action === 'report') {
+      const reason = window.prompt('សូមបញ្ជាក់មូលហេតុរាយការណ៍ (ឧ. ព័ត៌មានមិនត្រឹមត្រូវ ឬបោកប្រាស់)៖');
+      if (!reason || !reason.trim()) return;
+      button.disabled = true;
+      try { await api('/api/listing-reports',{method:'POST',body:JSON.stringify({listing_type:item.listing_type,id:item.id,reason:reason.trim()})}); toast('បានផ្ញើរបាយការណ៍ទៅ Admin រួចរាល់។'); }
+      catch(error){ toast(error.message || 'មិនអាចរាយការណ៍បានទេ។','error'); }
+      finally { button.disabled = false; }
+    }
+  }));
+}
+function detailBottomActions(item) {
+  return `<div class="detail-bottom-actions"><button type="button" data-detail-action="save">${ic('bookmark',16)} <span>រក្សាទុក</span></button><button type="button" data-detail-action="report">${ic('flag',16)} <span>រាយការណ៍</span></button><button type="button" data-detail-action="share">${ic('share',16)} <span>ចែករំលែក</span></button></div>`;
+}
+
+function renderMarketplaceListingInProductDetail(item) {
   const root = $('productDetail');
   if (!root) return;
   const type = item.listing_type;
@@ -1232,9 +1302,10 @@ function renderMarketplaceListingInProductDetail(item) {
     if (key === 'vacancies' && /^\\d+$/.test(raw)) return raw + ' នាក់';
     return raw.replace(/_/g, ' ');
   };
+  const specs = item.specifications && typeof item.specifications === 'object' ? item.specifications : {};
   const facts = isJob
-    ? [['ក្រុមហ៊ុន',item.company_name],['ប្រភេទការងារ',displayJobValue('employment_type',item.employment_type)],['ប្រភេទរង',item.subcategory],['ចំនួនបុគ្គលិក',displayJobValue('vacancies',item.vacancies)],['បទពិសោធន៍',displayJobValue('experience',item.experience)],['ការអប់រំ',displayJobValue('education',item.education)],['ម៉ោងធ្វើការ',displayJobValue('work_schedule',item.work_schedule)],['ប្រភេទប្រាក់ខែ',displayJobValue('salary_period',item.salary_period)]]
-    : [['ប្រភេទអចលនទ្រព្យ',item.property_type || item.real_estate_type],['ប្រភេទរង',item.subcategory],['បន្ទប់គេង',item.bedrooms],['បន្ទប់ទឹក',item.bathrooms],['ទំហំ',item.area_sqm ? item.area_sqm + ' m²' : ''],['ប្រភេទដី',item.land_type],['ប្លង់',item.title_deed],['ផ្លូវចូល',item.road_access],['អាសយដ្ឋាន',item.address]];
+    ? [['ក្រុមហ៊ុន',item.company_name],['ប្រភេទការងារ',displayJobValue('employment_type',item.employment_type)],['ប្រភេទរង',item.subcategory],['ចំនួនបុគ្គលិក',displayJobValue('vacancies',item.vacancies)],['បទពិសោធន៍',displayJobValue('experience',item.experience)],['ការអប់រំ',displayJobValue('education',item.education)],['ម៉ោងធ្វើការ',displayJobValue('work_schedule',item.work_schedule)],['ប្រភេទប្រាក់ខែ',displayJobValue('salary_period',item.salary_period)],...Object.entries(specs).filter(([key,value])=>key!=='google_map_url'&&value!=null&&String(value).trim()!=='').map(([key,value])=>[key.replace(/_/g,' '),value])]
+    : [['ប្រភេទអចលនទ្រព្យ',item.property_type || item.real_estate_type],['ប្រភេទរង',item.subcategory],['បន្ទប់គេង',item.bedrooms],['បន្ទប់ទឹក',item.bathrooms],['ទំហំ',item.area_sqm ? item.area_sqm + ' m²' : ''],['ប្រភេទដី',item.land_type],['ប្លង់',item.title_deed],['ផ្លូវចូល',item.road_access],['អាសយដ្ឋាន',item.address],...Object.entries(specs).filter(([key,value])=>key!=='google_map_url'&&value!=null&&String(value).trim()!=='').map(([key,value])=>[key.replace(/_/g,' '),value])];
   const imageHtml = gallery.length
     ? `<div class="product-gallery-stage"><img class="product-listing-main-image" src="${esc(gallery[0])}" alt="${esc(item.title)}"></div>${gallery.length > 1 ? `<div class="product-gallery-thumbs">${gallery.map((url,index)=>`<button type="button" class="product-gallery-thumb ${index===0?'active':''}" data-shared-listing-image="${index}"><img src="${esc(url)}" alt="រូបភាព ${index+1}" loading="lazy"></button>`).join('')}</div>` : ''}`
     : `<div class="product-gallery-stage">${ic('image',48)}</div>`;
@@ -1258,14 +1329,17 @@ function renderMarketplaceListingInProductDetail(item) {
             <button type="button" class="listing-poster-chat" data-listing-chat>${ic('chat',16)} ឆាតជាមួយអ្នកផុស</button>
           </section>
           <section class="product-detail-description">
-            <h2>${ic('file',18)} ព័ត៌មានលម្អិតអំពី${label}</h2>
-            <ul class="listing-detail-list">${facts.filter(([,value])=>value!==null&&value!==undefined&&String(value).trim()!=='').map(([key,value])=>`<li><span>${esc(key)}</span><strong>${esc(value)}</strong></li>`).join('')}</ul>
+            <h2>${ic('file',18)} ការពិពណ៌នា</h2>
+            <div class="product-spec-grid detail-spec-grid">${facts.filter(([,value])=>value!==null&&value!==undefined&&String(value).trim()!=='').map(([key,value])=>`<div><small>${esc(key)}</small><b>${esc(value)}</b></div>`).join('')}</div>
             <p class="product-full-description">${esc(item.description || item.short_description || 'មិនទាន់មានការពិពណ៌នាលម្អិតទេ។')}</p>
+            ${renderDetailMapSection(item)}
           </section>
+          ${detailBottomActions(item)}
           <p class="product-meta-item">${esc(item.contact_phone || item.phone || '')}</p>
         </div>
       </section>
     </div>`;
+  bindListingDetailActions(root, item);
   root.querySelector('[data-listing-chat]')?.addEventListener('click', () => { void startListingPosterChat(item); });
   root.querySelectorAll('[data-shared-listing-image]').forEach(button => button.addEventListener('click', () => {
     const index = Number(button.dataset.sharedListingImage);
@@ -1355,7 +1429,10 @@ function renderProductDetail() {
             <div><small>ស្ថានភាព</small><b>${esc(p.condition || 'មិនបានបញ្ជាក់')}</b></div>
             <div><small>ទីតាំង</small><b>${ic('pin', 13)} ${esc(p.location || 'មិនបានបញ្ជាក់')}</b></div>
             <div><small>កាលបរិច្ឆេទបង្ហោះ</small><b>${fmtDate(p.created_at)}</b></div>
+            ${Object.entries(p.specifications || {}).filter(([key,value])=>key!=='google_map_url'&&value!=null&&String(value).trim()!=='').map(([key,value])=>`<div><small>${esc(key.replace(/_/g,' '))}</small><b>${esc(value)}</b></div>`).join('')}
           </div>
+          ${renderDetailMapSection(p)}
+          ${detailBottomActions({...p,listing_type:'product'})}
         </article>
       </div>
     </section>
@@ -1396,6 +1473,7 @@ function renderProductDetail() {
     </div>
   </div>`;
 
+  bindListingDetailActions($('productDetail'), {...p,listing_type:'product'});
   const updateGallery = (idx) => {
     if (!images.length) return;
     state.productGalleryIndex = (idx + images.length) % images.length;
@@ -2179,7 +2257,12 @@ async function submitNewListing(form, endpoint, kind) {
   const skills = String(data.get('skills_text') || '').split(',').map(v => v.trim()).filter(Boolean);
   const benefits = String(data.get('benefits_text') || '').split(',').map(v => v.trim()).filter(Boolean);
   data.delete('skills_text'); data.delete('benefits_text');
-  data.set('specifications', JSON.stringify(collectListingSpecs(form)));
+  const listingSpecifications = collectListingSpecs(form);
+  const mapUrl = String(data.get('google_map_url') || '').trim();
+  if (mapUrl) listingSpecifications.google_map_url = mapUrl;
+  else delete listingSpecifications.google_map_url;
+  data.delete('google_map_url');
+  data.set('specifications', JSON.stringify(listingSpecifications));
   if (kind === 'job') {
     data.set('skills', JSON.stringify(skills));
     data.set('benefits', JSON.stringify(benefits));
@@ -2226,6 +2309,8 @@ function renderProductForm(product = null) {
     $('productCategory').value = product.category;
     $('productLocation').value = product.location || 'ភ្នំពេញ';
     $('productCondition').value = product.condition || 'ប្រើរួចស្អាត';
+    const mapField = $('productForm').elements.google_map_url;
+    if (mapField) mapField.value = product.specifications?.google_map_url || '';
     const desc = productDescriptionParts(product);
     $('productShortDesc').value = desc.short;
     $('productDescription').value = desc.full;
@@ -3342,7 +3427,7 @@ function bindEvents() {
             category: payload.category,
             subcategory: $('productSubcategory').value,
             detail_type: $('productDetailType').value,
-            specifications: collectListingSpecs($('productForm')),
+            specifications: {...collectListingSpecs($('productForm')), ...($('productForm').elements.google_map_url?.value.trim() ? {google_map_url:$('productForm').elements.google_map_url.value.trim()} : {})},
             province_code: $('productProvinceCode').value,
             district_code: $('productDistrictCode').value,
             commune_code: $('productCommuneCode').value,
