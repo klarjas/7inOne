@@ -1850,7 +1850,7 @@ app.patch('/api/me', authenticate, async (req, res) => {
   if (!Object.keys(patch).length) return fail(res, 400, 'No profile fields supplied');
   const { data, error } = await supabase.from('profiles').update(patch).eq('id', req.user.id).select().single();
   if (error) return fail(res, 400, 'Could not update profile');
-  res.json({ data: { ...withoutStorageFields(data), avatar_url: normalizeMediaUrl(data.avatar_url) || mediaProxyUrl(data.avatar_file_id) || publicMediaUrl(data.cover_path) } });
+  res.json({ data: { ...withoutStorageFields(data), avatar_url: normalizeMediaUrl(data.avatar_url) || mediaProxyUrl(data.avatar_file_id) || publicMediaUrl(data.avatar_path), cover_url: normalizeMediaUrl(data.cover_url) || mediaProxyUrl(data.cover_file_id) || publicMediaUrl(data.cover_path) } });
 });
 app.post('/api/me/media', authenticate, upload.single('file'), async (req, res) => {
   try {
