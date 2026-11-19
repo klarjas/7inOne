@@ -94,6 +94,7 @@ const state = {
   savedIds: new Set(),
   favoritePending: new Set(),
   activeCategory: 'all',
+  activeListingType: 'all',
   activeCondition: 'all',
   searchTerm: '',
   currentProduct: null,
@@ -923,18 +924,48 @@ async function submitSocialComment(form) {
   } catch (error) { toast(error.message || 'មិនអាចផ្ញើមតិយោបល់បានទេ។', 'error'); }
 }
 
+function marketplaceCard(item, index) {
+  if (item.listing_type === 'product') return productCard(item, index);
+  const labels = { job: 'ការងារ', rent: 'ជួលអចលនទ្រព្យ', land: 'ដីលក់' };
+  const image = item.image_url || '';
+  const period = item.listing_type === 'job'
+    ? ({hourly:' / ម៉ោង',daily:' / ថ្ងៃ',monthly:' / ខែ',negotiable:''}[item.salary_period] || '')
+    : item.listing_type === 'rent'
+      ? ({daily:' / ថ្ងៃ',monthly:' / ខែ',yearly:' / ឆ្នាំ'}[item.rent_period] || '') : '';
+  const price = item.listing_type === 'job'
+    ? (item.price_label === 'ចរចា' ? 'ចរចាប្រាក់ខែ' : '$' + String(item.price_label).replace(' - ', ' - $') + period)
+    : money(item.price_label) + period;
+  const description = String(item.short_description || item.description || '').trim().split(/\\s+/).slice(0, 28).join(' ');
+  return `
+  <article class="cd marketplace-extra-card" style="animation-delay:${Math.min(index, 12) * 30}ms">
+    <div class="ph im">
+      <button class="absolute inset-0 z-[1] h-full w-full" type="button" data-action="view-listing" data-id="${esc(item.id)}" data-type="${esc(item.listing_type)}" aria-label="មើល ${esc(item.title)}"></button>
+      ${image ? `<span class="img-scan-wrap shimmer-scan cd-image-wrap cd-main-wrap"><img src="${esc(image)}" alt="${esc(item.title)}" loading="lazy" decoding="async" class="cd-main" onload="this.parentElement.classList.add('is-loaded')" onerror="this.parentElement.classList.add('is-failed');this.style.display='none'"></span>` : ic('image', 36)}
+      <span class="marketplace-type-badge">${labels[item.listing_type] || 'ផ្សារ'}</span>
+    </div>
+    <div class="cb">
+      <h3 class="cursor-pointer hover:text-emerald-800" data-action="view-listing" data-id="${esc(item.id)}" data-type="${esc(item.listing_type)}">${esc(item.title)}</h3>
+      <p class="pr"><span>${esc(price)}</span></p>
+      ${description ? `<p class="cd-description">${esc(description)}</p>` : ''}
+      <div class="sh"><span class="sn">${esc(item.listing_subtitle || labels[item.listing_type] || '7inOne')}</span></div>
+      <p class="mt"><span class="cd-time-meta">${timeAgoKm(item.created_at)}</span><span class="cd-location-meta">${esc(item.location || 'កម្ពុជា')}</span></p>
+    </div>
+  </article>`;
+}
+
 function renderProducts() {
-  const list = state.products.filter((product) => {
-    if (state.activeCondition === 'all') return true;
-    const condition = String(product.condition || '').toLowerCase();
+  const list = state.products.filter((item) => {
+    if (item.listing_type !== 'product' || state.activeCondition === 'all') return true;
+    const condition = String(item.condition || '').toLowerCase();
     const isNew = condition.includes('new') || condition.includes('ថ្មី');
     const isUsed = condition.includes('used') || condition.includes('second') || condition.includes('មួយទឹក') || condition.includes('ប្រើរួច');
     return state.activeCondition === 'new' ? isNew : isUsed;
   });
-  $('productGrid').innerHTML = list.map(productCard).join('');
-  $('resultCount').textContent = `${list.length} មុខ`;
-  $('listingTitle').textContent = state.activeCategory === 'all' ? 'ទំនិញដែលគួរឱ្យចាប់អារម្មណ៍' : CATEGORIES[state.activeCategory] || 'ទំនិញ';
-  $('listingSub').textContent = state.searchTerm ? `លទ្ធផលស្វែងរកសម្រាប់ «${esc(state.searchTerm)}»` : 'ទំនិញពិតពីហាងដែលបានចុះឈ្មោះនៅលើ 7inOne';
+  $('productGrid').innerHTML = list.map(marketplaceCard).join('');
+  $('resultCount').textContent = `${list.length} ប្រកាស`;
+  const typeTitles = { all: 'ប្រកាសថ្មីៗទាំងអស់', product: 'ផលិតផល', job: 'ការងារ', rent: 'អចលនទ្រព្យជួល', land: 'ដីសម្រាប់លក់' };
+  $('listingTitle').textContent = typeTitles[state.activeListingType] || typeTitles.all;
+  $('listingSub').textContent = state.searchTerm ? `លទ្ធផលស្វែងរកសម្រាប់ «${esc(state.searchTerm)}»` : 'ផលិតផល ការងារ ផ្ទះជួល និងដីលក់ បង្ហាញតាមពេលបង្ហោះថ្មីបំផុត';
   $('emptyHome').classList.toggle('hidden', list.length > 0);
   $('productGrid').classList.toggle('hidden', list.length === 0);
   $('skeletonGrid').classList.add('hidden');
@@ -948,22 +979,21 @@ async function loadProducts() {
   $('emptyHome').classList.add('hidden');
   $('skeletonGrid').classList.remove('hidden');
 
-  const params = new URLSearchParams({ page: '1', limit: '50' });
+  const params = new URLSearchParams({ limit: '50', type: state.activeListingType || 'all' });
   if (state.searchTerm) params.set('q', state.searchTerm);
-  if (state.activeCategory !== 'all') params.set('category', state.activeCategory);
+  if (state.activeListingType === 'product' && state.activeCategory !== 'all') params.set('category', state.activeCategory);
 
   try {
-    const res = await api('/api/products?' + params.toString());
+    const res = await api('/api/marketplace/listings?' + params.toString());
     if (requestId !== state.productsRequestId) return;
     state.products = Array.isArray(res.data) ? res.data : [];
     renderProducts();
     syncHomeHeroImagesFromProducts();
     void loadHomeVendorMedia();
   } catch (error) {
-    // Keep the last successful catalogue visible during a temporary API/network failure.
     if (requestId !== state.productsRequestId) return;
     renderProducts();
-    toast('មិនអាចទាញយកទំនិញបានទេ៖ ' + error.message, 'error');
+    toast('មិនអាចទាញយកប្រកាសបានទេ៖ ' + error.message, 'error');
   } finally {
     if (requestId === state.productsRequestId) {
       $('skeletonGrid').classList.add('hidden');
@@ -997,9 +1027,46 @@ function syncHomeHeroImagesFromProducts() {
 
 function setCategory(category) {
   state.activeCategory = category;
+  if (category !== 'all') state.activeListingType = 'product';
   $('searchCategory').value = category;
   document.querySelectorAll('[data-category]').forEach((b) => b.classList.toggle('active', b.dataset.category === category));
+  document.querySelectorAll('[data-listing-type]').forEach((b) => b.classList.toggle('active', b.dataset.listingType === state.activeListingType));
   void loadProducts();
+}
+
+function setListingType(type) {
+  state.activeListingType = ['all','product','job','rent','land'].includes(type) ? type : 'all';
+  state.activeCategory = 'all';
+  $('searchCategory').value = 'all';
+  document.querySelectorAll('[data-category]').forEach((b) => b.classList.toggle('active', b.dataset.category === 'all'));
+  document.querySelectorAll('[data-listing-type]').forEach((b) => b.classList.toggle('active', b.dataset.listingType === state.activeListingType));
+  void loadProducts();
+}
+
+function openMarketplaceListing(type, id) {
+  const item = state.products.find(row => row.listing_type === type && String(row.id) === String(id));
+  if (!item) return;
+  const modal = $('marketplaceListingModal');
+  const body = $('marketplaceListingDetail');
+  if (!modal || !body) return;
+  const labels = { job: 'ការងារ', rent: 'អចលនទ្រព្យជួល', land: 'ដីលក់' };
+  const image = item.image_url || '';
+  const price = type === 'job'
+    ? (item.price_label === 'ចរចា' ? 'ចរចាប្រាក់ខែ' : '$' + String(item.price_label).replace(' - ', ' - $'))
+    : money(item.price_label) + (type === 'rent' ? ({daily:' / ថ្ងៃ',monthly:' / ខែ',yearly:' / ឆ្នាំ'}[item.rent_period] || '') : '');
+  const facts = type === 'job'
+    ? [['ក្រុមហ៊ុន',item.company_name],['ប្រភេទការងារ',item.employment_type],['ចំនួនបុគ្គលិក',item.vacancies],['បទពិសោធន៍',item.experience],['ការអប់រំ',item.education],['ម៉ោងធ្វើការ',item.work_schedule]]
+    : type === 'rent'
+      ? [['ប្រភេទអចលនទ្រព្យ',item.property_type],['បន្ទប់គេង',item.bedrooms],['បន្ទប់ទឹក',item.bathrooms],['ទំហំ',item.area_sqm ? item.area_sqm + ' m²' : ''],['អាសយដ្ឋាន',item.address]]
+      : [['ប្រភេទដី',item.land_type],['ទំហំ',item.area_sqm ? item.area_sqm + ' m²' : ''],['ប្លង់',item.title_deed],['ផ្លូវចូល',item.road_access],['អាសយដ្ឋាន',item.address]];
+  body.innerHTML = `${image ? `<img class="marketplace-detail-image" src="${esc(image)}" alt="${esc(item.title)}">` : ''}
+    <span class="marketplace-type-badge">${labels[type] || ''}</span><h2>${esc(item.title)}</h2>
+    <p class="marketplace-detail-price">${esc(price)}</p><p class="marketplace-detail-location">${esc(item.location || 'កម្ពុជា')}</p>
+    <div class="marketplace-detail-facts">${facts.filter(([,v])=>v!==null&&v!==undefined&&String(v).trim()!=='').map(([k,v])=>`<p><b>${esc(k)}</b><span>${esc(v)}</span></p>`).join('')}</div>
+    <div class="marketplace-detail-description">${esc(item.description || '')}</div>`;
+  modal.classList.remove('hidden');
+  modal.setAttribute('aria-hidden','false');
+  document.body.classList.add('overflow-hidden');
 }
 
 function saveAction(productId, button = null) {
@@ -2251,6 +2318,16 @@ function bindEvents() {
   });
 
   // Search & Category Filters
+  document.querySelectorAll('[data-listing-type]').forEach((button) => {
+    button.addEventListener('click', () => setListingType(button.dataset.listingType));
+  });
+  $('marketplaceListingModal')?.addEventListener('click', (event) => {
+    if (event.target.matches('[data-close-marketplace-detail]')) {
+      $('marketplaceListingModal').classList.add('hidden');
+      $('marketplaceListingModal').setAttribute('aria-hidden','true');
+      document.body.classList.remove('overflow-hidden');
+    }
+  });
   $('searchForm').addEventListener('submit', (e) => {
     e.preventDefault();
     state.searchTerm = $('searchInput').value.trim();
@@ -2289,6 +2366,8 @@ function bindEvents() {
     });
   });
   $('productGrid').addEventListener('click', (e) => {
+    const otherListing = e.target.closest('[data-action="view-listing"]');
+    if (otherListing) { openMarketplaceListing(otherListing.dataset.type, otherListing.dataset.id); return; }
     const heart = e.target.closest('[data-action="save"]');
     if (heart) { e.preventDefault(); e.stopPropagation(); saveAction(heart.dataset.id, heart); return; }
     const store = e.target.closest('[data-action="store"]');
