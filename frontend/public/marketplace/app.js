@@ -935,7 +935,7 @@ function marketplaceCard(item, index) {
   const price = item.listing_type === 'job'
     ? (item.price_label === 'ចរចា' ? 'ចរចាប្រាក់ខែ' : '$' + String(item.price_label).replace(' - ', ' - $') + period)
     : money(item.price_label) + period;
-  const description = String(item.short_description || item.description || '').trim().split(/\\s+/).slice(0, 28).join(' ');
+  const description = String(item.short_description || item.description || '').trim().split(/\s+/).slice(0, 28).join(' ');
   return `
   <article class="cd marketplace-extra-card" style="animation-delay:${Math.min(index, 12) * 30}ms">
     <div class="ph im">
