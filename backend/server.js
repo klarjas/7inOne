@@ -523,6 +523,27 @@ app.delete('/api/vendor/presence', authenticate, requireVendor, (req, res) => {
 });
 setInterval(pruneVendorPresence, 20_000).unref?.();
 
+const CHAT_USER_PRESENCE_TTL_MS = 65_000;
+const chatUserPresence = new Map();
+function pruneChatUserPresence() {
+  const cutoff = Date.now() - CHAT_USER_PRESENCE_TTL_MS;
+  for (const [userId, lastSeen] of chatUserPresence) {
+    if (lastSeen < cutoff) chatUserPresence.delete(userId);
+  }
+}
+app.post('/api/chat/presence', authenticate, (req, res) => {
+  if (req.body?.leave === true) chatUserPresence.delete(String(req.user.id));
+  else chatUserPresence.set(String(req.user.id), Date.now());
+  pruneChatUserPresence();
+  return res.status(204).end();
+});
+app.get('/api/chat/online', authenticate, (_req, res) => {
+  pruneChatUserPresence();
+  res.set('Cache-Control', 'no-store');
+  return res.json({ data: { user_ids: [...chatUserPresence.keys()] } });
+});
+setInterval(pruneChatUserPresence, 20_000).unref?.();
+
 app.get('/health', (_req, res) => res.json({ status: 'ok', service: '7inOne', database: Boolean(supabase) }));
 
 // Admin-only Telegram diagnostics. Never returns bot tokens or webhook secrets.
