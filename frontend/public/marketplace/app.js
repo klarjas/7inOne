@@ -3710,6 +3710,8 @@ async function boot() {
 
   const initialView = document.documentElement.dataset.initialView || 'home';
   const initialProductId = document.documentElement.dataset.initialProductId || '';
+  const initialListingType = document.documentElement.dataset.initialListingType || '';
+  const initialListingId = document.documentElement.dataset.initialListingId || '';
   const initialStoreId = document.documentElement.dataset.initialStoreId || '';
 
   void showView(initialView, { optimistic: true, deferLoad: true, preserveScroll: true });
@@ -3768,9 +3770,15 @@ async function boot() {
 
     // Always load the public storefront even if session restoration or profile lookup fails.
     const tasks = [loadProducts(), loadJobs()];
-    if (initialView === 'product' && initialProductId) tasks.push(openProduct(initialProductId, { preserveScroll: true }));
-    else if (initialView === 'store' && initialStoreId) tasks.push(openStorefront(initialStoreId, { preserveScroll: true }));
-    else tasks.push(showView(initialView, { preserveScroll: true }));
+    if (initialView === 'product' && initialListingType && initialListingId) {
+      tasks.push(openMarketplaceListing(initialListingType, initialListingId, { preserveScroll: true }));
+    } else if (initialView === 'product' && initialProductId) {
+      tasks.push(openProduct(initialProductId, { preserveScroll: true }));
+    } else if (initialView === 'store' && initialStoreId) {
+      tasks.push(openStorefront(initialStoreId, { preserveScroll: true }));
+    } else {
+      tasks.push(showView(initialView, { preserveScroll: true }));
+    }
 
     if (state.session) {
       tasks.push(Promise.all([loadSaved(), loadOrders(), loadUnifiedSellerChatInbox()]).catch((error) => {
