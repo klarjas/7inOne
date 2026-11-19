@@ -1,7 +1,9 @@
 import re
+import hmac
+import os
 from urllib.parse import urlparse, parse_qs
 from cachetools import TTLCache
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Header
 from starlette.concurrency import run_in_threadpool
 from yt_dlp import YoutubeDL
 
@@ -56,7 +58,10 @@ def health():
     return {"status": "ok"}
 
 @app.get("/api/stream-url")
-async def stream_url(url: str = Query(..., min_length=12, max_length=2048)):
+async def stream_url(url: str = Query(..., min_length=12, max_length=2048), x_stream_service_token: str = Header(default="")):
+    expected = os.environ.get("STREAM_SERVICE_TOKEN", "")
+    if not expected or not hmac.compare_digest(x_stream_service_token, expected):
+        raise HTTPException(status_code=401, detail="Unauthorized")
     try:
         return {"success": True, "data": await run_in_threadpool(extract_mp4, url)}
     except ValueError as exc:
