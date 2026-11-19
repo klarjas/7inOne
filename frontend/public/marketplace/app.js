@@ -3056,8 +3056,8 @@ function initIcons() {
   $('menuAdminIcon').innerHTML = ic('shield', 15);
   $('menuSaveIcon').innerHTML = ic('bookmark', 15);
   $('menuLoginIcon').innerHTML = ic('logout', 15);
-  $('heroShield').innerHTML = ic('shield', 15);
-  $('heroUsers').innerHTML = ic('users', 15);
+  if ($('heroShield')) $('heroShield').innerHTML = ic('shield', 15);
+  if ($('heroUsers')) $('heroUsers').innerHTML = ic('users', 15);
   $('catAll').innerHTML = ic('grid', 22);
   $('catPhone').innerHTML = ic('phone', 22);
   $('catCar').innerHTML = ic('car', 22);
