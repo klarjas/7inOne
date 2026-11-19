@@ -439,10 +439,10 @@ function showView(name, options = {}) {
   });
 
   document.documentElement.dataset.initialView = name;
-  const routeHash = name === 'listing'
-    ? (state.currentMarketplaceListing?.id ? 'listing/' + encodeURIComponent(state.currentMarketplaceListing.listing_type) + '/' + encodeURIComponent(state.currentMarketplaceListing.id) : (options.optimistic ? String(window.location.hash || '#listing').replace(/^#/, '') : 'listing'))
-    : name === 'product'
-    ? (state.currentProduct?.id ? 'product/' + encodeURIComponent(state.currentProduct.id) : (options.optimistic ? String(window.location.hash || '#product').replace(/^#/, '') : 'product'))
+  const routeHash = name === 'product'
+    ? (state.currentProduct?.listing_type && ['job', 'real_estate'].includes(state.currentProduct.listing_type)
+      ? 'product/' + encodeURIComponent(state.currentProduct.listing_type) + '/' + encodeURIComponent(state.currentProduct.id)
+      : (state.currentProduct?.id ? 'product/' + encodeURIComponent(state.currentProduct.id) : (options.optimistic ? String(window.location.hash || '#product').replace(/^#/, '') : 'product')))
     : name === 'store'
       ? (state.currentStoreId ? 'store/' + encodeURIComponent(state.currentStoreId) : (options.optimistic ? String(window.location.hash || '#store').replace(/^#/, '') : 'store'))
       : name;
@@ -466,7 +466,6 @@ function showView(name, options = {}) {
     if (name === 'seller') tasks.push(renderSeller());
     if (name === 'admin') tasks.push(renderAdmin());
     if (name === 'product') tasks.push(Promise.resolve().then(() => renderProductDetail()));
-    if (name === 'listing') tasks.push(Promise.resolve().then(() => renderMarketplaceListingDetail()));
     if (name === 'store') tasks.push(Promise.resolve().then(() => renderStorefront()));
   }
   return Promise.all(tasks).then(() => true);
@@ -1089,62 +1088,22 @@ async function openMarketplaceListing(type, id, options = {}) {
     }
     if (!item) throw new Error('មិនមានព័ត៌មានប្រកាសនេះទេ។');
     state.currentMarketplaceListing = item;
+    state.currentProduct = item;
+    state.currentVendor = null;
+    state.productGalleryIndex = 0;
     try {
-      sessionStorage.setItem('ecomstore.activeView', 'listing');
+      sessionStorage.setItem('ecomstore.activeView', 'product');
+      sessionStorage.setItem('ecomstore.currentProductId', String(id));
       sessionStorage.setItem('ecomstore.currentListingType', type);
       sessionStorage.setItem('ecomstore.currentListingId', String(id));
     } catch {}
-    await showView('listing', { preserveScroll: Boolean(options.preserveScroll) });
+    await showView('product', { preserveScroll: Boolean(options.preserveScroll) });
     return true;
   } catch (error) {
     if (!isCurrent()) return false;
     toast(error.message || 'មិនអាចបើកព័ត៌មានប្រកាសបានទេ។', 'error');
     return false;
   }
-}
-
-function renderMarketplaceListingDetail() {
-  const item = state.currentMarketplaceListing;
-  const root = $('marketplaceListingPage');
-  if (!root) return;
-  if (!item) {
-    root.innerHTML = '<p class="text-sm text-slate-500">មិនមានព័ត៌មានប្រកាសនេះទេ។</p>';
-    return;
-  }
-  const type = item.listing_type;
-  const labels = { job: 'ការងារ', real_estate: 'អចលនទ្រព្យ' };
-  const gallery = Array.isArray(item.image_urls) && item.image_urls.length
-    ? item.image_urls.filter(Boolean)
-    : (item.image_url ? [item.image_url] : []);
-  const price = type === 'job'
-    ? (item.price_label === 'ចរចា' ? 'ចរចាប្រាក់ខែ' : '$' + String(item.price_label || '').replace(' - ', ' - $') + ({hourly:' / ម៉ោង',daily:' / ថ្ងៃ',monthly:' / ខែ',negotiable:''}[item.salary_period] || ''))
-    : (item.price_label == null ? 'ទាក់ទងសួរតម្លៃ' : money(item.price_label) + (item.real_estate_type?.endsWith('_rent') ? ({daily:' / ថ្ងៃ',monthly:' / ខែ',yearly:' / ឆ្នាំ'}[item.rent_period] || '') : ''));
-  const facts = type === 'job'
-    ? [['ក្រុមហ៊ុន',item.company_name],['ប្រភេទការងារ',item.employment_type],['ចំនួនបុគ្គលិក',item.vacancies],['បទពិសោធន៍',item.experience],['ការអប់រំ',item.education],['ម៉ោងធ្វើការ',item.work_schedule],['ប្រភេទប្រាក់ខែ',item.salary_period]]
-    : [['ប្រភេទអចលនទ្រព្យ',item.property_type || item.real_estate_type],['បន្ទប់គេង',item.bedrooms],['បន្ទប់ទឹក',item.bathrooms],['ទំហំ',item.area_sqm ? item.area_sqm + ' m²' : ''],['ប្រភេទដី',item.land_type],['ប្លង់',item.title_deed],['ផ្លូវចូល',item.road_access],['អាសយដ្ឋាន',item.address]];
-  root.innerHTML = `
-    <div class="marketplace-listing-detail-page">
-      <div class="marketplace-listing-detail-layout">
-        <section class="marketplace-listing-detail-media">
-          ${gallery.length ? `<div class="marketplace-detail-gallery"><img class="marketplace-detail-image" src="${esc(gallery[0])}" alt="${esc(item.title)}">${gallery.length > 1 ? `<div class="marketplace-detail-thumbs">${gallery.map((url,index)=>`<button type="button" data-listing-image="${index}" class="${index===0?'active':''}"><img src="${esc(url)}" alt="រូបភាព ${index+1}" loading="lazy"></button>`).join('')}</div>` : ''}</div>` : `<div class="marketplace-detail-image-placeholder">${ic('image',42)}</div>`}
-        </section>
-        <section class="marketplace-listing-detail-info">
-          <span class="marketplace-type-badge">${labels[type] || 'ប្រកាស'}</span>
-          <h1>${esc(item.title)}</h1>
-          <p class="marketplace-detail-price">${esc(price)}</p>
-          <p class="marketplace-detail-location">${ic('pin',15)} ${esc(item.location || 'កម្ពុជា')}</p>
-          <div class="marketplace-detail-facts">${facts.filter(([,v])=>v!==null&&v!==undefined&&String(v).trim()!=='').map(([k,v])=>`<p><b>${esc(k)}</b><span>${esc(v)}</span></p>`).join('')}</div>
-          <div class="marketplace-detail-description"><h2>ព័ត៌មានលម្អិត</h2><p>${esc(item.description || item.short_description || 'មិនទាន់មានការពិពណ៌នាលម្អិតទេ។')}</p></div>
-          <p class="marketplace-listing-posted">${timeAgoKm(item.created_at)}</p>
-        </section>
-      </div>
-    </div>`;
-  root.querySelectorAll('[data-listing-image]').forEach(button => button.addEventListener('click', () => {
-    const index = Number(button.dataset.listingImage);
-    const main = root.querySelector('.marketplace-detail-image');
-    if (main && gallery[index]) main.src = gallery[index];
-    root.querySelectorAll('[data-listing-image]').forEach(node => node.classList.toggle('active', node === button));
-  }));
 }
 
 function saveAction(productId, button = null) {
@@ -1215,10 +1174,65 @@ async function openProduct(id, options = {}) {
   }
 }
 
+function renderMarketplaceListingInProductDetail(item) {
+  const root = $('productDetail');
+  if (!root) return;
+  const type = item.listing_type;
+  const isJob = type === 'job';
+  const label = isJob ? 'ការងារ' : 'អចលនទ្រព្យ';
+  const gallery = Array.isArray(item.image_urls) && item.image_urls.length
+    ? item.image_urls.filter(Boolean)
+    : (item.image_url ? [item.image_url] : []);
+  const price = isJob
+    ? (item.price_label === 'ចរចា' ? 'ចរចាប្រាក់ខែ' : (item.price_label ? '$' + String(item.price_label).replace(' - ', ' - $') : 'ទាក់ទងសួរប្រាក់ខែ') + ({hourly:' / ម៉ោង',daily:' / ថ្ងៃ',monthly:' / ខែ',negotiable:''}[item.salary_period] || ''))
+    : (item.price_label == null ? 'ទាក់ទងសួរតម្លៃ' : money(item.price_label) + (item.real_estate_type?.endsWith('_rent') ? ({daily:' / ថ្ងៃ',monthly:' / ខែ',yearly:' / ឆ្នាំ'}[item.rent_period] || '') : ''));
+  const facts = isJob
+    ? [['ក្រុមហ៊ុន',item.company_name],['ប្រភេទការងារ',item.employment_type],['ប្រភេទរង',item.subcategory],['ចំនួនបុគ្គលិក',item.vacancies],['បទពិសោធន៍',item.experience],['ការអប់រំ',item.education],['ម៉ោងធ្វើការ',item.work_schedule],['ប្រភេទប្រាក់ខែ',item.salary_period]]
+    : [['ប្រភេទអចលនទ្រព្យ',item.property_type || item.real_estate_type],['ប្រភេទរង',item.subcategory],['បន្ទប់គេង',item.bedrooms],['បន្ទប់ទឹក',item.bathrooms],['ទំហំ',item.area_sqm ? item.area_sqm + ' m²' : ''],['ប្រភេទដី',item.land_type],['ប្លង់',item.title_deed],['ផ្លូវចូល',item.road_access],['អាសយដ្ឋាន',item.address]];
+  const imageHtml = gallery.length
+    ? `<div class="product-gallery-stage"><img class="product-listing-main-image" src="${esc(gallery[0])}" alt="${esc(item.title)}"></div>${gallery.length > 1 ? `<div class="product-gallery-thumbs">${gallery.map((url,index)=>`<button type="button" class="product-gallery-thumb ${index===0?'active':''}" data-shared-listing-image="${index}"><img src="${esc(url)}" alt="រូបភាព ${index+1}" loading="lazy"></button>`).join('')}</div>` : ''}`
+    : `<div class="product-gallery-stage">${ic('image',48)}</div>`;
+  root.innerHTML = `
+    <div class="product-detail-page">
+      <section class="product-hero-grid">
+        <div class="product-detail-gallery">${imageHtml}</div>
+        <div class="product-detail-info">
+          <div class="product-top-meta">
+            <span class="product-category-badge">${label}</span>
+            <span class="product-meta-item">${ic('clock',14)} ${item.created_at ? timeAgoKm(item.created_at) : ''}</span>
+          </div>
+          <ul class="product-facts-list">
+            <li><span>ចំណងជើង</span><h1 class="product-detail-title">${esc(item.title || label)}</h1></li>
+            <li><span>${isJob ? 'ប្រាក់ខែ' : 'តម្លៃ'}</span><strong class="product-facts-price">${esc(price)}</strong></li>
+            <li><span>ទីតាំង</span><strong>${ic('pin',14)} ${esc(item.location || 'កម្ពុជា')}</strong></li>
+          </ul>
+          <section class="product-detail-description">
+            <h2>${ic('file',18)} ព័ត៌មានលម្អិតអំពី${label}</h2>
+            <div class="product-spec-grid">${facts.filter(([,value])=>value!==null&&value!==undefined&&String(value).trim()!=='').map(([key,value])=>`<div><small>${esc(key)}</small><b>${esc(value)}</b></div>`).join('')}</div>
+            <p class="product-full-description">${esc(item.description || item.short_description || 'មិនទាន់មានការពិពណ៌នាលម្អិតទេ។')}</p>
+          </section>
+          <p class="product-meta-item">${esc(item.contact_phone || item.phone || '')}</p>
+        </div>
+      </section>
+    </div>`;
+  root.querySelectorAll('[data-shared-listing-image]').forEach(button => button.addEventListener('click', () => {
+    const index = Number(button.dataset.sharedListingImage);
+    if (!gallery[index]) return;
+    const main = root.querySelector('.product-listing-main-image');
+    if (main) main.src = gallery[index];
+    root.querySelectorAll('[data-shared-listing-image]').forEach(node => node.classList.toggle('active', node === button));
+  }));
+}
+
 function renderProductDetail() {
   const p = state.currentProduct;
   const v = state.currentVendor;
-  if (!p || !v) return;
+  if (!p) return;
+  if (p.listing_type === 'job' || p.listing_type === 'real_estate') {
+    renderMarketplaceListingInProductDetail(p);
+    return;
+  }
+  if (!v) return;
 
   const descriptions = productDescriptionParts(p);
   const images = (p.product_images || []).filter((i) => i.image_url);
@@ -2911,17 +2925,16 @@ function bindEvents() {
     try { routeId = routeParts[1] ? decodeURIComponent(routeParts[1]) : ''; } catch {}
 
     const activeView = document.querySelector('.view.active')?.id?.replace(/^view-/, '') || '';
-    if (routeName === 'listing' && routeParts[1] && routeParts[2]) {
-      const listingType = routeParts[1];
+    if (routeName === 'product' && ['job', 'real_estate'].includes(routeParts[1]) && routeParts[2]) {
       let listingId = '';
       try { listingId = decodeURIComponent(routeParts[2]); } catch {}
-      if (activeView === 'listing' && String(state.currentMarketplaceListing?.id || '') === listingId) return;
+      if (activeView === 'product' && String(state.currentProduct?.id || '') === listingId && state.currentProduct?.listing_type === routeParts[1]) return;
       const navigationId = ++state.routeSyncNavigationId;
-      void openMarketplaceListing(listingType, listingId, { preserveScroll: true, routeSyncNavigationId: navigationId });
+      void openMarketplaceListing(routeParts[1], listingId, { preserveScroll: true, routeSyncNavigationId: navigationId });
       return;
     }
     if (routeName === 'product' && routeId) {
-      if (activeView === 'product' && String(state.currentProduct?.id || '') === routeId) return;
+      if (activeView === 'product' && String(state.currentProduct?.id || '') === routeId && !state.currentProduct?.listing_type) return;
       const navigationId = ++state.routeSyncNavigationId;
       void openProduct(routeId, { preserveScroll: true, routeSyncNavigationId: navigationId });
       return;
