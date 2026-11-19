@@ -1831,6 +1831,9 @@ async function submitNewListing(form, endpoint, kind) {
     state.activeListingType = kind === 'job' ? 'job' : 'real_estate';
     state.activeCategory = 'all'; state.activePropertyType = 'all';
     updateMarketplaceCategoryHeading();
+    document.querySelectorAll('[data-listing-type]').forEach((button) => button.classList.toggle('active', button.dataset.listingType === state.activeListingType));
+    document.querySelectorAll('[data-property-type]').forEach((button) => button.classList.toggle('active', button.dataset.propertyType === 'all'));
+    $('marketplacePropertyFilters')?.toggleAttribute('hidden', state.activeListingType !== 'real_estate');
     await loadProducts();
   } catch (error) {
     toast(error.message || 'មិនអាចបង្ហោះប្រកាសបានទេ។', 'error');
@@ -1863,6 +1866,7 @@ function renderProductForm(product = null) {
       .slice().sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0))
       .map((item) => ({ kind: 'existing', id: item.id, image_url: item.image_url }));
   }
+  renderProductTaxonomy($('productCategory').value);
   renderProductImageAlbum();
   updateShortDescriptionCounter();
   openModal('productFormModal');
