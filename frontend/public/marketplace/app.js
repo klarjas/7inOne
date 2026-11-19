@@ -3729,6 +3729,23 @@ function bindEvents() {
     try { await api('/api/me', { method: 'PATCH', body: JSON.stringify({ display_name: $('profileName')?.value.trim() || '', phone: $('profilePhone')?.value.trim() || '', province: $('profileLocation')?.value || '', bio: $('profileBio')?.value.trim() || '' }) }); await refreshSession(); toast('បានរក្សាទុកព័ត៌មាន Profile ជោគជ័យ!'); await renderProfileTab(); }
     catch (err) { toast(err.message || 'មិនអាចរក្សាទុក Profile បានទេ។', 'error'); }
   });
+  // Profile settings dialogs (forms and Telegram widget IDs remain unchanged).
+  document.querySelectorAll('[data-open-profile-modal]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const dialog = $(button.dataset.openProfileModal);
+      if (dialog && !dialog.open) dialog.showModal();
+    });
+  });
+  document.querySelectorAll('[data-close-profile-modal]').forEach((button) => {
+    button.addEventListener('click', () => $(button.dataset.closeProfileModal)?.close());
+  });
+  ['profileInfoModal', 'telegramSecurityModal'].forEach((id) => {
+    const dialog = $(id);
+    dialog?.addEventListener('click', (event) => {
+      if (event.target === dialog) dialog.close();
+    });
+  });
+
   const uploadProfileImage = async (inputId, type) => {
     const file = $(inputId)?.files?.[0];
     if (!file) return;
