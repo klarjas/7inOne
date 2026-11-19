@@ -4234,3 +4234,10 @@ body > footer {
   border-color:#66C0F4;
   color:#FFFFFF!important;
 }
+
+/* Editable profile badge — transparent Steam Dark theme */
+.account-panel > div.mb-5 > span.rounded-full.bg-slate-100 {
+  background: transparent !important;
+  color: #66C0F4 !important;
+  border: 1px solid rgba(102, 192, 244, .35);
+}
