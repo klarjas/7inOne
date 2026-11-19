@@ -1067,6 +1067,7 @@ app.post('/api/vendor/media-link',authenticate,requireVendor,async(req,res)=>{
  const mediaUrl=normalizeSellerMediaUrl(req.body?.media_url),mediaType=clean(req.body?.media_type,10);
  if(!mediaUrl)return fail(res,400,'Please provide a valid public Facebook or YouTube HTTPS link.');
  if(!['live','video'].includes(mediaType))return fail(res,400,'Media type must be live or video.');
+ if(mediaType==='video'){let videoHost='';try{videoHost=new URL(mediaUrl).hostname.toLowerCase().replace(/^www\\./,'')}catch{}if(!(videoHost==='youtube.com'||videoHost==='youtu.be'||videoHost.endsWith('.youtube.com')))return fail(res,400,'YouTube Shorts links are required for video posts.');}
  const {data,error}=await supabase.from('vendor_media_links').upsert({vendor_id:req.vendor.id,media_url:mediaUrl,media_type:mediaType,is_active:true,updated_at:new Date().toISOString()},{onConflict:'vendor_id'}).select('id,vendor_id,media_url,media_type,is_active,created_at,updated_at').single();
  if(error){console.error('Seller media link save failed:',error.message);return fail(res,500,'Could not save the Live / Video link')}return res.json({data});
 });
