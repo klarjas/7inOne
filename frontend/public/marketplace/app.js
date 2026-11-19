@@ -1097,6 +1097,9 @@ async function openMarketplaceListing(type, id, options = {}) {
       item = (result.data || []).find(row => String(row.id) === String(id));
     }
     if (!item) throw new Error('មិនមានព័ត៌មានប្រកាសនេះទេ។');
+    // Keep the listing type explicit so showView builds the shared detail route
+    // as product/job/<id> instead of treating a job ID as a product ID.
+    item = { ...item, listing_type: type };
     state.currentMarketplaceListing = item;
     state.currentProduct = item;
     state.currentVendor = null;
