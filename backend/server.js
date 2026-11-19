@@ -748,6 +748,121 @@ app.use('/api', async (req, res, nextMiddleware) => {
 // Image traffic is isolated from the normal API budget so catalogue grids do not consume the API quota.
 const telegramMediaRateLimit = rateLimit({ windowMs: 60_000, limit: 600, standardHeaders: 'draft-8', legacyHeaders: false });
 // Permanent backend media URLs; Telegram file paths are cached briefly and refreshed when stale.
+// Cambodia official village-level location dataset stored as a Telegram document.
+const CAMBODIA_GEO_SETTING_KEY = 'cambodia_geo_locations';
+let cambodiaGeoRowsCache = null;
+let cambodiaGeoLoadPromise = null;
+function extractCambodiaGeoRowsServer(payload) {
+  if (Array.isArray(payload)) return payload;
+  if (!payload || typeof payload !== 'object') return [];
+  for (const key of ['data','records','results','items','rows','content']) {
+    const value = payload[key];
+    if (Array.isArray(value)) return value;
+    if (value && typeof value === 'object') {
+      const nested = extractCambodiaGeoRowsServer(value);
+      if (nested.length) return nested;
+    }
+  }
+  return [];
+}
+async function fetchOfficialCambodiaGeoRows() {
+  const all = [];
+  const pageSize = 200;
+  let completed = false;
+  for (let page = 1; page <= 100; page += 1) {
+    const url = 'https://data.mef.gov.kh/api/v1/public-datasets/pd_68e370856a965e00074a5e7b/json?page=' + page + '&page_size=' + pageSize;
+    const response = await fetch(url, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(20000) });
+    if (!response.ok) throw new Error('DataEF returned HTTP ' + response.status);
+    const payload = await response.json();
+    const rows = extractCambodiaGeoRowsServer(payload);
+    if (!rows.length) { completed = true; break; }
+    all.push(...rows);
+    if (rows.length < pageSize) { completed = true; break; }
+  }
+  if (!completed || !all.length) throw new Error('Official Cambodia location data could not be fully retrieved.');
+  const normalized = all.map(row => ({
+    province_code: String(row.province_code || '').trim(),
+    province_kh: String(row.province_kh || '').trim(),
+    province_en: String(row.province_en || '').trim(),
+    district_code: String(row.district_code || '').trim(),
+    district_kh: String(row.district_kh || '').trim(),
+    district_en: String(row.district_en || '').trim(),
+    commune_code: String(row.commune_code || '').trim(),
+    commune_kh: String(row.commune_kh || '').trim(),
+    commune_en: String(row.commune_en || '').trim(),
+    village_code: String(row.village_code || '').trim(),
+    village_kh: String(row.village_kh || '').trim(),
+    village_en: String(row.village_en || '').trim()
+  })).filter(row => row.province_code && row.district_code && row.commune_code && row.village_code && row.village_kh);
+  if (!normalized.length) throw new Error('DataEF returned an unexpected location data format.');
+  return normalized;
+}
+async function downloadTelegramDocumentBuffer(fileId) {
+  const filePath = await lookupTelegramFilePath(fileId);
+  const response = await fetchTelegramWithRetry(
+    `https://api.telegram.org/file/bot${process.env.TELEGRAM_BOT_TOKEN}/${filePath}`,
+    { method: 'GET' },
+    'location document download'
+  );
+  return Buffer.from(await response.arrayBuffer());
+}
+async function getCambodiaGeoRows() {
+  if (Array.isArray(cambodiaGeoRowsCache)) return cambodiaGeoRowsCache;
+  if (!cambodiaGeoLoadPromise) cambodiaGeoLoadPromise = (async () => {
+    if (!supabase) throw new Error('Database is unavailable.');
+    const { data: saved, error: readError } = await supabase.from('site_settings')
+      .select('value').eq('key', CAMBODIA_GEO_SETTING_KEY).maybeSingle();
+    if (readError) throw readError;
+    if (saved?.value?.fileId) {
+      try {
+        const buffer = await downloadTelegramDocumentBuffer(clean(saved.value.fileId, 2048));
+        const rows = JSON.parse(buffer.toString('utf8'));
+        if (Array.isArray(rows) && rows.length) {
+          cambodiaGeoRowsCache = rows;
+          return rows;
+        }
+      } catch (error) {
+        console.warn('Stored Cambodia location file could not be read; rebuilding:', error.message);
+      }
+    }
+    assertTelegramStorageConfig();
+    const rows = await fetchOfficialCambodiaGeoRows();
+    const buffer = Buffer.from(JSON.stringify(rows), 'utf8');
+    const form = new FormData();
+    form.append('chat_id', telegramStorageChatId());
+    form.append('document', new Blob([buffer], { type: 'application/json' }), 'CambodiaGeographicalList2025.json');
+    const sent = await telegram('sendDocument', { method: 'POST', body: form });
+    const fileId = sent.document?.file_id;
+    const messageId = sent.message_id;
+    if (!fileId || !messageId) throw new Error('Telegram did not return the location document reference.');
+    const value = {
+      fileId, messageId: String(messageId), fileName: 'CambodiaGeographicalList2025.json',
+      source: 'DataEF / MLMUPC Cambodia Geographical List 2025',
+      rowCount: rows.length, updatedAt: new Date().toISOString()
+    };
+    const { error: saveError } = await supabase.from('site_settings').upsert({
+      key: CAMBODIA_GEO_SETTING_KEY, value, updated_at: value.updatedAt
+    }, { onConflict: 'key' });
+    if (saveError) {
+      await deleteTelegramMessage(String(messageId));
+      throw saveError;
+    }
+    cambodiaGeoRowsCache = rows;
+    return rows;
+  })().catch(error => { cambodiaGeoLoadPromise = null; throw error; });
+  return cambodiaGeoLoadPromise;
+}
+app.get('/api/locations/cambodia', async (_req, res) => {
+  try {
+    const rows = await getCambodiaGeoRows();
+    res.set('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400');
+    return res.json({ data: rows, source: 'DataEF / MLMUPC Cambodia Geographical List 2025' });
+  } catch (error) {
+    console.error('Cambodia location data load failed:', error.message);
+    return fail(res, 503, 'មិនអាចទាញយកបញ្ជីទីតាំងពី Telegram បានទេ។ សូមព្យាយាមម្ដងទៀត។');
+  }
+});
+
 app.get(['/api/media/image/:mediaId', '/api/media/telegram/:fileId'], telegramMediaRateLimit, async (req, res) => {
   try {
     if (!process.env.TELEGRAM_BOT_TOKEN) return fail(res, 503, 'Image service is temporarily unavailable. Please try again later.');
