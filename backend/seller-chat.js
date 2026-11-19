@@ -21,7 +21,7 @@ export function registerSellerChat(app, { supabase, authenticate, requireVendor,
     const { data: images } = await supabase.from('product_images').select('id,sort_order,file_id,image_url')
       .eq('product_id', conversation.product_id).order('sort_order', { ascending: true }).limit(1);
     const image = images?.[0];
-    return { conversation: { ...conversation, vendor: vendor ? { id: vendor.id, user_id: vendor.user_id, store_name: vendor.store_name, store_logo_url: vendor.store_logo_file_id ? mediaProxyUrl(vendor.store_logo_file_id) : '', profile: vendorProfile } : null, product: product ? { ...product, image_url: image?.file_id ? mediaProxyUrl(image.file_id) : image?.image_url || '' } : null, buyer, current_role: role } };
+    return { conversation: { ...conversation, vendor: vendor ? { id: vendor.id, user_id: vendor.user_id, store_name: vendor.store_name, store_logo_url: vendor.store_logo_file_id ? mediaProxyUrl(vendor.store_logo_file_id) : '', profile: vendorProfile } : null, product: product ? { ...product, image_url: image?.file_id ? mediaProxyUrl(image.file_id) : String(image?.image_url || '').replace('/api/media/telegram/','/api/media/image/') } : null, buyer, current_role: role } };
   }
 
   async function listInbox(userId) {
@@ -62,7 +62,7 @@ export function registerSellerChat(app, { supabase, authenticate, requireVendor,
       return {
         ...row, current_role: row.buyer_id === userId ? 'buyer' : 'seller',
         buyer: buyers.get(row.buyer_id) || null, vendor: vendors.get(row.vendor_id) || null,
-        product: product ? { ...product, image_url: image?.file_id ? mediaProxyUrl(image.file_id) : image?.image_url || '' } : null,
+        product: product ? { ...product, image_url: image?.file_id ? mediaProxyUrl(image.file_id) : String(image?.image_url || '').replace('/api/media/telegram/','/api/media/image/') } : null,
         other_role: otherRole,
         unread_count: row.buyer_id === userId ? Number(row.unread_buyer_count || 0) : Number(row.unread_seller_count || 0),
         other_name: row.buyer_id === userId ? (vendors.get(row.vendor_id)?.store_name || 'អ្នកលក់') : (buyers.get(row.buyer_id)?.display_name || 'អ្នកទិញ')
