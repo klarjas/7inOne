@@ -1099,7 +1099,17 @@
           <label class="sm:col-span-2"><span class="label">ព័ត៌មានលម្អិត និងតួនាទីការងារ *</span><textarea class="field min-h-[110px]" name="description" maxlength="5000" rows="5" placeholder="ពិពណ៌នាអំពីតួនាទី ភារកិច្ច និងលក្ខខណ្ឌ..." required></textarea></label>
           <label class="sm:col-span-2"><span class="label">ជំនាញដែលត្រូវការ (បំបែកដោយសញ្ញាក្បៀស)</span><input class="field" name="skills_text" placeholder="ឧ. Computer, Excel, Communication"></label>
           <label class="sm:col-span-2"><span class="label">អត្ថប្រយោជន៍ (បំបែកដោយសញ្ញាក្បៀស)</span><input class="field" name="benefits_text" placeholder="ឧ. ប្រាក់ខែបន្ថែម, ធានារ៉ាប់រង"></label>
-          <label class="sm:col-span-2"><span class="label">រូបភាព / Logo (ជាជម្រើស · JPG/PNG/WEBP · អតិបរមា 8MB)</span><input class="field" name="image" type="file" accept="image/jpeg,image/png,image/webp"></label>
+          <div class="sm:col-span-2 listing-image-album" data-listing-image-album="job">
+            <span class="label">រូបភាពការងារ / Logo (JPG/PNG/WEBP · អតិបរមា ១០ រូប · 8MB/រូប)</span>
+            <label class="product-album-picker" data-listing-image-picker>
+              <span class="product-album-picker-icon">▧</span>
+              <span class="min-w-0 flex-1"><b>ជ្រើសរើសរូបភាពច្រើន</b><small data-listing-image-count>0 / ១០ រូបបានជ្រើសរើស</small></span>
+              <span class="product-album-add">+ បន្ថែមរូប</span>
+              <input class="sr-only" type="file" accept="image/jpeg,image/png,image/webp" multiple data-listing-image-input>
+            </label>
+            <div class="product-image-album" data-listing-image-grid><div class="product-album-empty"><span>▧</span><b>មិនទាន់មានរូបភាពទេ</b><small>ជ្រើសរើសរូបភាពរហូតដល់ ១០ រូប</small></div></div>
+            <p class="product-album-hint">រូបទី១ ជារូបមេ · អាចប្តូររូបមេ លុបរូប និងរៀបលំដាប់បាន</p>
+          </div>
         </div>
         <div id="jobSpecificationFields" class="listing-spec-fields"></div>
         <div class="flex justify-end gap-2 pt-3"><button class="rounded-full border border-slate-600 px-5 py-2.5 text-[11px] font-bold" data-close="jobFormModal" type="button">បោះបង់</button><button class="brand-gradient rounded-full px-6 py-2.5 text-[11px] font-bold text-white" type="submit">បង្ហោះការងារ</button></div>
@@ -1139,7 +1149,17 @@
             <small class="block text-[10px] text-slate-400" data-location-summary>ប្រភព៖ DataEF / MLMUPC · Cambodia Geographical List 2025 · បង្ហាញត្រឹមភូមិ</small>
           </div>
           <label class="sm:col-span-2"><span class="label">ការពិពណ៌នាលម្អិត *</span><textarea class="field min-h-[110px]" name="description" maxlength="5000" rows="5" placeholder="ពិពណ៌នាព័ត៌មានលម្អិត..." required></textarea></label>
-          <label class="sm:col-span-2"><span class="label">រូបភាពអចលនទ្រព្យ (JPG/PNG/WEBP · អតិបរមា 8MB)</span><input class="field" name="image" type="file" accept="image/jpeg,image/png,image/webp"></label>
+          <div class="sm:col-span-2 listing-image-album" data-listing-image-album="property">
+            <span class="label">រូបភាពអចលនទ្រព្យ (JPG/PNG/WEBP · អតិបរមា ១០ រូប · 8MB/រូប)</span>
+            <label class="product-album-picker" data-listing-image-picker>
+              <span class="product-album-picker-icon">▧</span>
+              <span class="min-w-0 flex-1"><b>ជ្រើសរើសរូបភាពច្រើន</b><small data-listing-image-count>0 / ១០ រូបបានជ្រើសរើស</small></span>
+              <span class="product-album-add">+ បន្ថែមរូប</span>
+              <input class="sr-only" type="file" accept="image/jpeg,image/png,image/webp" multiple data-listing-image-input>
+            </label>
+            <div class="product-image-album" data-listing-image-grid><div class="product-album-empty"><span>▧</span><b>មិនទាន់មានរូបភាពទេ</b><small>ជ្រើសរើសរូបភាពរហូតដល់ ១០ រូប</small></div></div>
+            <p class="product-album-hint">រូបទី១ ជារូបមេ · អាចប្តូររូបមេ លុបរូប និងរៀបលំដាប់បាន</p>
+          </div>
         </div>
         <div id="propertySpecificationFields" class="listing-spec-fields"></div>
         <div class="flex justify-end gap-2 pt-3"><button class="rounded-full border border-slate-600 px-5 py-2.5 text-[11px] font-bold" data-close="propertyFormModal" type="button">បោះបង់</button><button class="brand-gradient rounded-full px-6 py-2.5 text-[11px] font-bold text-white" type="submit">បង្ហោះអចលនទ្រព្យ</button></div>
