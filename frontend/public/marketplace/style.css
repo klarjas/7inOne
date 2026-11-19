@@ -5636,3 +5636,37 @@ body > footer {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+ 
+/* Header delivery location: neutral line icon and balanced type scale. */
+.delivery-location {
+  gap: 8px !important;
+  min-width: 116px;
+  color: #AAB8C8 !important;
+}
+.delivery-location .delivery-pin {
+  display: inline-flex;
+  width: 26px;
+  height: 30px;
+  flex: 0 0 26px;
+  align-items: center;
+  justify-content: center;
+  color: #AAB8C8 !important;
+  font-size: 0 !important;
+}
+.delivery-location .delivery-pin svg {
+  display: block;
+  width: 22px;
+  height: 22px;
+  stroke: currentColor;
+}
+.delivery-location small {
+  color: #AAB8C8 !important;
+  font-size: 10px !important;
+  font-weight: 500;
+}
+.delivery-location b {
+  color: #C7D5E0 !important;
+  font-size: 13px !important;
+  font-weight: 650;
+}
