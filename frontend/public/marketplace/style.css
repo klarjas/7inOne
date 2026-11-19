@@ -4415,3 +4415,93 @@ body > footer {
     width: 100%;
   }
 }
+
+
+/* 7inOne Social Feed — homepage right rail */
+@media (min-width: 1101px) {
+  #view-home .home-layout-shell,
+  #view-home .amazon-store-body {
+    width: min(1680px, calc(100% - 28px)) !important;
+    grid-template-columns: 218px minmax(0, 1fr) 292px !important;
+    column-gap: 16px !important;
+  }
+  #view-home .home-social-rail {
+    grid-column: 3 !important;
+    grid-row: 2 / span 12 !important;
+    position: sticky;
+    top: 92px;
+    max-height: calc(100vh - 108px);
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #2A475E transparent;
+    padding: 0 2px 14px;
+  }
+  #view-home .home-main-content #productGrid:not(.hidden),
+  #view-home .home-main-content #skeletonGrid:not(.hidden) {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+}
+@media (max-width: 1100px) {
+  #view-home .home-social-rail { position: static; max-height: none; overflow: visible; }
+}
+@media (max-width: 760px) {
+  #view-home .home-social-rail { display: none; }
+}
+#view-home .social-composer,
+#view-home .social-feed-card {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid #2A475E;
+  border-radius: 15px;
+  background: #16202D;
+  color: #C7D5E0;
+  box-shadow: none;
+}
+#view-home .social-rail-heading,
+#view-home .social-feed-heading,
+#view-home .social-compose-user,
+#view-home .social-post-author,
+#view-home .social-post-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 9px;
+}
+#view-home .social-rail-heading h2 { margin: 3px 0 0; color: #FFFFFF; font-size: 14px; font-weight: 800; }
+#view-home .social-kicker { color: #66C0F4; font-size: 9px; letter-spacing: .12em; font-weight: 800; }
+#view-home .social-live-dot { width: 8px; height: 8px; border-radius: 50%; background: #35C98A; box-shadow: 0 0 0 4px rgba(53,201,138,.12); }
+#view-home .social-compose-user { justify-content: flex-start; margin: 14px 0 10px; }
+#view-home .social-avatar { display: grid; flex: 0 0 36px; width: 36px; height: 36px; place-items: center; overflow: hidden; border-radius: 50%; background: #203D55; color: #C7D5E0; font-size: 13px; font-weight: 800; }
+#view-home .social-avatar img { width: 100%; height: 100%; object-fit: cover; }
+#view-home .social-compose-user b, #view-home .social-post-author b { display: block; color: #FFFFFF; font-size: 11px; }
+#view-home .social-compose-user small, #view-home .social-post-author small { display: block; color: #8F98A0; font-size: 9px; }
+#view-home #socialPostCaption { display: block; width: 100%; min-height: 68px; resize: vertical; padding: 10px; border: 1px solid #2A475E; border-radius: 10px; background: #101822; color: #C7D5E0; font: inherit; font-size: 11px; outline: none; }
+#view-home #socialPostCaption:focus { border-color: #66C0F4; }
+#view-home .social-upload-trigger { display: flex; align-items: center; gap: 8px; margin-top: 10px; padding: 10px; border: 1px dashed #3D6687; border-radius: 10px; color: #C7D5E0; cursor: pointer; font-size: 11px; }
+#view-home .social-upload-trigger>span:first-child { color: #66C0F4; font-size: 18px; }
+#view-home .social-upload-trigger small { margin-left: auto; color: #66C0F4; font-weight: 800; }
+#view-home .social-upload-preview { position: relative; margin-top: 10px; overflow: hidden; border-radius: 10px; background: #101822; }
+#view-home .social-upload-preview img { display: block; width: 100%; max-height: 290px; aspect-ratio: 9/16; object-fit: contain; }
+#view-home .social-upload-preview button { position: absolute; top: 7px; right: 7px; width: 27px; height: 27px; border: 0; border-radius: 50%; background: rgba(0,0,0,.75); color: white; font-size: 20px; }
+#view-home .social-publish-btn { width: 100%; min-height: 38px; margin-top: 10px; border: 0; border-radius: 9px; background: linear-gradient(135deg,#3D83B5,#66C0F4); color: #102131; font-size: 11px; font-weight: 850; }
+#view-home .social-publish-btn:disabled { opacity: .55; cursor: wait; }
+#view-home .social-compose-note { margin: 7px 0 0; color: #8F98A0; font-size: 9px; }
+#view-home .social-feed-heading { margin: 17px 1px 9px; }
+#view-home .social-feed-heading h3 { color: #FFFFFF; font-size: 12px; font-weight: 800; }
+#view-home .social-feed-heading button { color: #66C0F4; font-size: 20px; }
+#view-home .social-feed-list { display: flex; flex-direction: column; gap: 11px; }
+#view-home .social-feed-card { padding: 11px; }
+#view-home .social-post-author { justify-content: flex-start; }
+#view-home .social-post-caption { margin: 10px 0; color: #C7D5E0; font-size: 11px; line-height: 1.65; overflow-wrap: anywhere; white-space: pre-wrap; }
+#view-home .social-post-image { display: block; width: 100%; max-height: 390px; aspect-ratio: 9/16; object-fit: cover; border-radius: 10px; background: #101822; }
+#view-home .social-post-actions { justify-content: space-around; margin-top: 9px; padding-top: 8px; border-top: 1px solid #2A475E; }
+#view-home .social-post-actions button { color: #9FB2C3; font-size: 10px; }
+#view-home .social-post-actions button.is-liked { color: #66C0F4; }
+#view-home .social-comment-panel { margin-top: 9px; padding-top: 8px; border-top: 1px solid #2A475E; }
+#view-home .social-comment-list { display: flex; flex-direction: column; gap: 7px; max-height: 180px; overflow: auto; }
+#view-home .social-comment { padding: 7px 8px; border-radius: 8px; background: #101822; color: #C7D5E0; font-size: 10px; }
+#view-home .social-comment b { color: #FFFFFF; margin-right: 4px; }
+#view-home .social-comment-form { display: flex; gap: 6px; margin-top: 8px; }
+#view-home .social-comment-form input { min-width: 0; flex: 1; padding: 8px; border: 1px solid #2A475E; border-radius: 8px; background: #101822; color: #C7D5E0; font-size: 10px; }
+#view-home .social-comment-form button { padding: 0 9px; border-radius: 8px; background: #203D55; color: #66C0F4; font-size: 10px; }
+#view-home .social-feed-loading, #view-home .social-feed-empty { padding: 16px 10px; border: 1px dashed #2A475E; border-radius: 12px; color: #8F98A0; text-align: center; font-size: 10px; }
