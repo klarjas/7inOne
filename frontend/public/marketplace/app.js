@@ -1551,7 +1551,7 @@ function renderProductImageAlbum() {
   const album = $('productImageAlbum');
   const images = state.selectedProductImages || [];
   if (!album) return;
-  $('productImageName').textContent = images.length ? (images.length + ' / ៥ រូបបានជ្រើសរើស') : 'ជ្រើសរើសរូបភាពផលិតផល';
+  $('productImageName').textContent = images.length ? (images.length + ' / ១០ រូបបានជ្រើសរើស') : 'ជ្រើសរើសរូបភាពផលិតផល';
   album.innerHTML = images.length ? images.map((item, index) => {
     const src = item.kind === 'new' ? item.previewUrl : item.image_url;
     const main = index === 0;
@@ -1561,9 +1561,9 @@ function renderProductImageAlbum() {
       '<span class="product-album-index">' + (index + 1) + '</span>' +
       (main ? '<span class="product-album-main-label">រូបមេដែលបានជ្រើស</span>' : '<button type="button" class="product-album-set-main" data-product-image-main="' + index + '">កំណត់ជារូបមេ</button>') +
       '<button type="button" class="product-album-remove" data-product-image-remove="' + index + '" aria-label="លុបរូបភាព">' + ic('x', 14) + '</button></div>';
-  }).join('') : '<div class="product-album-empty"><span>' + ic('images', 25) + '</span><b>មិនទាន់មានរូបភាពទេ</b><small>ជ្រើសរើសរូបភាពរហូតដល់ ៥ រូប</small></div>';
-  document.querySelector('.product-album-picker')?.classList.toggle('is-full', images.length >= 5);
-  $('productImage').disabled = images.length >= 5;
+  }).join('') : '<div class="product-album-empty"><span>' + ic('images', 25) + '</span><b>មិនទាន់មានរូបភាពទេ</b><small>ជ្រើសរើសរូបភាពរហូតដល់ ១០ រូប</small></div>';
+  document.querySelector('.product-album-picker')?.classList.toggle('is-full', images.length >= 10);
+  $('productImage').disabled = images.length >= 10;
 }
 function renderProductForm(product = null) {
   if (!isSellerAccount()) { openSellerModal(); return; }
@@ -2457,7 +2457,7 @@ function bindEvents() {
     for (const file of selected) {
       if (!allowed.has(file.type)) { toast('សូមប្រើ JPG, PNG ឬ WEBP ប៉ុណ្ណោះ។', 'error'); continue; }
       if (file.size > 8 * 1024 * 1024) { toast('រូបភាពនីមួយៗមិនអាចធំជាង ៨MB បានទេ។', 'error'); continue; }
-      if (current.length + accepted.length >= 5) { toast('អាចដាក់រូបភាពបានអតិបរមា ៥ រូបប៉ុណ្ណោះ។', 'error'); break; }
+      if (current.length + accepted.length >= 10) { toast('អាចដាក់រូបភាពបានអតិបរមា ១០ រូបប៉ុណ្ណោះ។', 'error'); break; }
       accepted.push({ kind: 'new', file: file, previewUrl: URL.createObjectURL(file) });
     }
     state.selectedProductImages = current.concat(accepted);
@@ -2491,7 +2491,7 @@ function bindEvents() {
     const selectedImages = (state.selectedProductImages || []).slice();
     const newImages = selectedImages.filter((item) => item.kind === 'new');
     const existingImages = selectedImages.filter((item) => item.kind === 'existing');
-    if (selectedImages.length > 5) { toast('អាចដាក់រូបភាពបានអតិបរមា ៥ រូប។', 'error'); return; }
+    if (selectedImages.length > 10) { toast('អាចដាក់រូបភាពបានអតិបរមា ១០ រូប។', 'error'); return; }
     const allowed = new Set(['image/jpeg', 'image/png', 'image/webp']);
     if (newImages.some((item) => !allowed.has(item.file.type) || item.file.size > 8 * 1024 * 1024)) {
       toast('សូមប្រើ JPG / PNG / WEBP ហើយរូបនីមួយៗមិនលើស ៨MB។', 'error'); return;
