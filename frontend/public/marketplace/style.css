@@ -4427,7 +4427,7 @@ body > footer {
   }
   #view-home .home-social-rail {
     grid-column: 3 !important;
-    grid-row: 2 / span 12 !important;
+    grid-row: 1 / span 12 !important;
     position: sticky;
     top: 92px;
     max-height: calc(100vh - 108px);
@@ -4559,7 +4559,7 @@ body > footer {
   }
   #view-home .home-social-rail {
     grid-column: 3 !important;
-    grid-row: 2 / span 12 !important;
+    grid-row: 1 / span 12 !important;
     position: sticky;
     top: 92px;
     max-height: calc(100vh - 108px);
