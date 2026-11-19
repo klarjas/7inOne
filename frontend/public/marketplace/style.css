@@ -5549,3 +5549,27 @@ body > footer {
   height: 16px;
   flex: 0 0 16px;
 }
+
+
+/* Auth Login / Register Tabs — match the 7inOne dark theme */
+#authModal .mb-4.grid.grid-cols-2.rounded-full {
+  background: #101822 !important;
+  border: 1px solid #2A475E !important;
+  padding: 4px !important;
+}
+
+#authModal .auth-tab {
+  min-width: 0;
+  border-radius: 999px !important;
+  background: transparent !important;
+  color: #8F98A0 !important;
+  box-shadow: none !important;
+  transition: background-color .2s ease, color .2s ease, box-shadow .2s ease;
+}
+
+#authModal .auth-tab.bg-white,
+#authModal .auth-tab.active {
+  background: #203244 !important;
+  color: #66C0F4 !important;
+  box-shadow: inset 0 0 0 1px #2A475E, 0 2px 8px rgba(0,0,0,.2) !important;
+}
