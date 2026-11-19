@@ -4772,3 +4772,39 @@ body > footer {
     grid-template-columns: repeat(auto-fill, minmax(max(172px, calc((100% - 70px) / 6)), 1fr)) !important;
   }
 }
+
+
+/* Product card title spacing and metadata alignment */
+.cd .cb h3 {
+  min-height: 0 !important;
+  margin-bottom: 0 !important;
+  line-height: 1.4 !important;
+}
+.cd .pr {
+  margin-top: 2px !important;
+}
+.cd .mt {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 4px 8px !important;
+  min-width: 0;
+}
+.cd .mt .cd-location-meta {
+  margin-left: auto;
+  margin-right: 4px;
+  max-width: 42%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #8F98A0;
+}
+.cd .mt .vw {
+  margin-left: 0 !important;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+@media (max-width: 639px) {
+  .cd .mt { gap: 3px 5px !important; }
+  .cd .mt .cd-location-meta { max-width: 38%; }
+}
