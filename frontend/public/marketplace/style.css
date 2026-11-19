@@ -1685,23 +1685,23 @@ body{background:var(--page)!important;color:var(--ink);font-family:"Kantumruy Pr
   #view-product .product-lightbox>img{max-width:94vw;max-height:82vh}
 }
 
-/* Seller Live / Video homepage strip */
-.home-vendor-media{margin:4px 0 18px;padding:14px 0 8px;border-top:1px solid #E5ECE8}
-.home-vendor-media-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
-.home-vendor-media-heading h2{margin:2px 0 0;color:#173A2B;font-size:17px;font-weight:800}
-.home-vendor-media-subtitle{margin:3px 0 0;color:#64748B;font-size:10px}
+/* Clean Seller Shorts strip and multi-post seller manager */
+.home-vendor-media{margin:4px 0 18px;padding:4px 0 8px}
 .home-vendor-media-list{display:flex;gap:12px;overflow-x:auto;padding:2px 2px 12px;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain;scroll-behavior:smooth}
 .home-vendor-media-list::-webkit-scrollbar{display:none}
 .home-vendor-media-card{display:block;flex:0 0 154px;min-width:0;color:inherit;text-decoration:none;scroll-snap-align:start}
-.home-vendor-media-player{position:relative;width:100%;aspect-ratio:9/16;overflow:hidden;border:1px solid #DCE8E1;border-radius:14px;background:#101010}
+.home-vendor-media-player{position:relative;width:100%;aspect-ratio:9/16;overflow:hidden;border-radius:14px;background:#101010}
 .home-vendor-media-player iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
-.home-vendor-media-store{display:flex;align-items:center;gap:6px;margin-top:7px;min-width:0}
-.home-vendor-media-store>span:first-child{display:grid;width:22px;height:22px;flex:0 0 22px;place-items:center;overflow:hidden;border:1px solid #E5EEE8;border-radius:50%;background:#F0F7F2;color:#087A55;font-size:9px;font-weight:800}
-.home-vendor-media-store>span:nth-child(2){display:block;min-width:0;overflow:hidden;color:#334155;font-size:10px;font-weight:700;text-overflow:ellipsis;white-space:nowrap}
-.verified-store-mini{display:grid;width:13px;height:13px;flex:0 0 13px;place-items:center;border-radius:50%;background:#0B8BCE;color:#fff;font-size:9px;font-weight:900}
-.seller-media-verified-gate{padding:14px;border:1px solid #FDE68A;border-radius:12px;background:#FFFBEB;color:#92400E;font-size:12px;font-weight:700}
-@media(max-width:639px){.home-vendor-media{margin:0 0 16px;padding-top:12px}.home-vendor-media-card{flex-basis:138px}.home-vendor-media-player{border-radius:12px}}
-
+.home-vendor-media-store{display:block;margin-top:7px;min-width:0;overflow:hidden;color:#334155;font-size:11px;font-weight:700;text-overflow:ellipsis;white-space:nowrap}
+.seller-media-list{display:grid;gap:10px;margin-top:16px}
+.seller-media-item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;border:1px solid #E2E8F0;border-radius:12px;background:#fff}
+.seller-media-item-info{display:grid;min-width:0;gap:4px}
+.seller-media-item-info a{overflow-wrap:anywhere;color:#2563EB;font-size:11px}
+.seller-media-item-info small{color:#64748B;font-size:10px}
+.seller-media-item-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:6px;flex:0 0 auto}
+.seller-media-item-actions button{padding:6px 9px;border:1px solid #CBD5E1;border-radius:8px;color:#334155;font-size:10px;font-weight:700}
+.seller-media-item-actions button[data-media-action="delete"]{border-color:#FECACA;color:#DC2626}
+@media(max-width:639px){.home-vendor-media{margin:0 0 16px;padding-top:4px}.home-vendor-media-card{flex-basis:138px}.home-vendor-media-player{border-radius:12px}.seller-media-item{align-items:flex-start;flex-direction:column}.seller-media-item-actions{justify-content:flex-start}}
 /* Premium desktop marketplace refresh */
 .home-layout-shell{display:grid;grid-template-columns:184px minmax(0,1fr) 228px;gap:18px;align-items:start;padding:16px 0 36px}
 .home-sidebar{position:sticky;top:92px;display:flex;flex-direction:column;gap:7px;min-width:0;padding:10px 8px;border:1px solid #2A475E;border-radius:18px;background:#16202D;color:#C7D5E0;box-shadow:none}
@@ -6037,3 +6037,10 @@ body > footer {
   .detail-bottom-actions { gap:6px; }
   .detail-bottom-actions button { padding:8px 4px; font-size:11px; }
 }
+
+/* Shorts manager follows the existing dark seller dashboard theme. */
+#view-seller .seller-media-item{border-color:#2A475E;background:#16202D;color:#C7D5E0}
+#view-seller .seller-media-item-info a{color:#8AB4F8}
+#view-seller .seller-media-item-info small{color:#8F98A0}
+#view-seller .seller-media-item-actions button{border-color:#3B5268;background:#101822;color:#C7D5E0}
+#view-seller .seller-media-item-actions button[data-media-action="delete"]{border-color:rgba(242,139,130,.3);color:#F28B82}
