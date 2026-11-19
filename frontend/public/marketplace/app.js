@@ -580,9 +580,9 @@ function applyMaintenanceUI() {
   document.body.classList.add('maintenance-ready');
 }
 
+const DEFAULT_FAVICON_URL = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%232B74B8'/%3E%3Ctext x='32' y='47' font-family='Arial,sans-serif' font-size='44' font-weight='700' text-anchor='middle' fill='%23fff'%3E7%3C/text%3E%3C/svg%3E";
+
 function applyFavicon(url) {
-  if (!url) return;
-  state.faviconUrl = url;
   let link = document.querySelector('link[data-site-favicon]');
   if (!link) {
     link = document.createElement('link');
@@ -590,6 +590,22 @@ function applyFavicon(url) {
     link.dataset.siteFavicon = 'true';
     document.head.appendChild(link);
   }
+
+  // Keep an immediate local fallback while the Admin-configured icon loads.
+  if (!url) {
+    link.type = 'image/svg+xml';
+    link.href = DEFAULT_FAVICON_URL;
+    return;
+  }
+
+  state.faviconUrl = url;
+  link.onerror = () => {
+    if (link.href !== DEFAULT_FAVICON_URL) {
+      link.type = 'image/svg+xml';
+      link.href = DEFAULT_FAVICON_URL;
+    }
+  };
+  link.removeAttribute('type');
   link.href = url;
 }
 
