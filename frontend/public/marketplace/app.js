@@ -725,9 +725,6 @@ function productCard(p, index) {
     <div class="cb">
       <h3 class="cursor-pointer hover:text-emerald-800" data-action="view" data-id="${esc(p.id)}">${esc(p.title)}</h3>
       <p class="pr"><span>${money(p.price)}</span></p>
-      <div class="cd-condition-row">
-        <span class="cd-location-meta">${esc(location)}</span>
-      </div>
       ${description ? `<p class="cd-description">${esc(description)}</p>` : ''}
       <div class="sh">
         <span class="sp" role="img" aria-label="រូប Profile ហាង">
@@ -738,7 +735,8 @@ function productCard(p, index) {
         ${verified ? verifiedStoreBadge(p.vendor_id) : ''}
       </div>
       <p class="mt">
-        <span>${timeAgoKm(p.created_at)}</span>
+        <span class="cd-time-meta">${timeAgoKm(p.created_at)}</span>
+        <span class="cd-location-meta">${esc(location)}</span>
         <span class="vw" title="ចំនួនអ្នកមើល">${ic('eye', 13)}${formatViews(p.view_count)}</span>
       </p>
     </div>
