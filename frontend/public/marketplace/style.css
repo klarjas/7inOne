@@ -5803,3 +5803,65 @@ body > footer {
   background:#203244!important;
   color:#8F98A0!important;
 }
+
+
+/* Header followers block beside location: two-line compact layout. */
+.site-online-counter{
+  display:flex;
+  flex:0 0 auto;
+  flex-direction:column;
+  align-items:flex-start;
+  justify-content:center;
+  gap:4px;
+  min-height:30px;
+  margin-left:1px;
+  padding:0 0 0 13px;
+  border:0;
+  border-left:1px solid #344256;
+  border-radius:0;
+  background:transparent;
+  color:#C7D5E0;
+}
+.site-online-heading{
+  color:#C7D5E0;
+  font-size:11px;
+  font-weight:800;
+  line-height:1.1;
+  white-space:nowrap;
+}
+.site-online-copy{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  line-height:1;
+}
+.site-online-value{
+  display:flex;
+  align-items:baseline;
+  gap:3px;
+  white-space:nowrap;
+}
+.site-online-value b{
+  color:#D8FBE8;
+  font-size:12px;
+  font-weight:800;
+  font-variant-numeric:tabular-nums;
+}
+.site-online-value small{
+  color:#8F98A0;
+  font-size:9px;
+  font-weight:650;
+}
+@media(max-width:699px){
+  .delivery-location{display:flex!important;min-width:0!important}
+  .delivery-location .delivery-pin{width:22px!important;flex-basis:22px!important}
+  .delivery-location .delivery-pin svg{width:19px!important;height:19px!important}
+  .delivery-location small{font-size:9px!important}
+  .delivery-location b{font-size:11px!important}
+  .site-online-counter{min-height:28px;padding-left:9px;gap:3px}
+  .site-online-heading{font-size:10px}
+  .site-online-copy{gap:4px}
+  .site-online-icon{width:7px;height:7px;flex-basis:7px}
+  .site-online-value b{font-size:11px}
+  .site-online-value small{font-size:8px}
+}
