@@ -2086,7 +2086,6 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 #view-profile .account-tabs .tab{border-radius:980px;border:0;background:transparent;color:#8F98A0}
 #view-profile .account-tabs .tab.active{background:#203244;color:#66C0F4}
 @media(max-width:900px){
- #view-product .product-hero-grid{grid-template-columns:minmax(0,1fr)!important;gap:18px!important}
  #view-product .product-detail-gallery{position:static!important}
  #view-product .product-detail-info{position:static!important}
 }
@@ -4870,12 +4869,16 @@ body > footer {
 }
 #view-product .product-detail-page,
 #view-product .product-hero-card,
-#view-product .product-hero-grid,
 #view-product .product-detail-gallery,
 #view-product .product-detail-info {
   min-width: 0 !important;
   max-width: 100% !important;
   box-sizing: border-box !important;
+}
+#view-product .product-hero-grid {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 #view-product .product-hero-grid {
   display: grid;
@@ -4901,6 +4904,7 @@ body > footer {
   }
   #view-product .product-hero-grid {
     grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
   }
 }
 @media (max-width: 639px) {
