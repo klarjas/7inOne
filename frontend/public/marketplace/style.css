@@ -4871,11 +4871,11 @@ body > footer {
   overflow-x: clip !important;
 }
 #view-product > .shell {
-  width: 100% !important;
+  width: calc(100% - 48px) !important;
   max-width: none !important;
   min-width: 0 !important;
-  margin-inline: 0 !important;
-  padding-inline: 24px !important;
+  margin-inline: auto !important;
+  padding-inline: 0 !important;
   box-sizing: border-box !important;
 }
 #view-product .product-detail-page,
@@ -4903,7 +4903,9 @@ body > footer {
 }
 @media (max-width: 900px) {
   #view-product > .shell {
-    padding-inline: 18px !important;
+    width: calc(100% - 36px) !important;
+    margin-inline: auto !important;
+    padding-inline: 0 !important;
   }
   #view-product .product-hero-grid {
     grid-template-columns: minmax(0, 1fr) !important;
@@ -4911,6 +4913,8 @@ body > footer {
 }
 @media (max-width: 639px) {
   #view-product > .shell {
-    padding-inline: 12px !important;
+    width: calc(100% - 24px) !important;
+    margin-inline: auto !important;
+    padding-inline: 0 !important;
   }
 }
