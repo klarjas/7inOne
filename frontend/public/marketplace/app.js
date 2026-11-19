@@ -1035,6 +1035,9 @@ function updateMarketplaceCategoryHeading() {
   };
   const heading = $('marketplaceCategoryHeading');
   if (heading) heading.textContent = titles[state.activeListingType] || titles.all;
+  document.querySelectorAll('[data-marketplace-category-group]').forEach((group) => {
+    group.hidden = group.dataset.marketplaceCategoryGroup !== state.activeListingType;
+  });
 }
 
 function setCategory(category) {
@@ -1061,7 +1064,7 @@ function setListingType(type) {
 }
 
 function setPropertyType(type) {
-  state.activePropertyType = ['all','land','house_sale','house_rent','room_rent'].includes(type) ? type : 'all';
+  state.activePropertyType = ['all','house_sale','house_rent','condo_sale','apartment_rent','land','land_rent','commercial_sale','commercial_rent','room_rent','properties_wanted','agent_services','others_properties'].includes(type) ? type : 'all';
   document.querySelectorAll('[data-property-type]').forEach((b) => b.classList.toggle('active', b.dataset.propertyType === state.activePropertyType));
   void loadProducts();
 }
