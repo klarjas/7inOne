@@ -2456,7 +2456,7 @@ function bindEvents() {
     const allowed = new Set(['image/jpeg', 'image/png', 'image/webp']);
     for (const file of selected) {
       if (!allowed.has(file.type)) { toast('សូមប្រើ JPG, PNG ឬ WEBP ប៉ុណ្ណោះ។', 'error'); continue; }
-      if (file.size > 8 * 1024 * 1024) { toast('រូបភាពនីមួយៗមិនអាចធំជាង ៨MB បានទេ។', 'error'); continue; }
+      if (file.size > 20 * 1024 * 1024) { toast('រូបភាពនីមួយៗមិនអាចធំជាង ២០MB បានទេ។', 'error'); continue; }
       if (current.length + accepted.length >= 10) { toast('អាចដាក់រូបភាពបានអតិបរមា ១០ រូបប៉ុណ្ណោះ។', 'error'); break; }
       accepted.push({ kind: 'new', file: file, previewUrl: URL.createObjectURL(file) });
     }
@@ -2493,8 +2493,8 @@ function bindEvents() {
     const existingImages = selectedImages.filter((item) => item.kind === 'existing');
     if (selectedImages.length > 10) { toast('អាចដាក់រូបភាពបានអតិបរមា ១០ រូប។', 'error'); return; }
     const allowed = new Set(['image/jpeg', 'image/png', 'image/webp']);
-    if (newImages.some((item) => !allowed.has(item.file.type) || item.file.size > 8 * 1024 * 1024)) {
-      toast('សូមប្រើ JPG / PNG / WEBP ហើយរូបនីមួយៗមិនលើស ៨MB។', 'error'); return;
+    if (newImages.some((item) => !allowed.has(item.file.type) || item.file.size > 20 * 1024 * 1024)) {
+      toast('សូមប្រើ JPG / PNG / WEBP ហើយរូបនីមួយៗមិនលើស ២០MB។', 'error'); return;
     }
     const shortDesc = $('productShortDesc').value.trim();
     const fullDesc = $('productDescription').value.trim();
