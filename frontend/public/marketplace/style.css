@@ -4781,3 +4781,16 @@ body > footer {
     padding-right: 24px !important;
   }
 }
+
+
+/* Final fix: override the older 1200px homepage max-width rule */
+@media (min-width: 701px) {
+  #view-home > .home-layout-shell.amazon-store-body.shell {
+    width: calc(100% - 48px) !important;
+    max-width: none !important;
+    margin-left: 24px !important;
+    margin-right: 24px !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+}
