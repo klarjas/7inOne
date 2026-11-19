@@ -3078,28 +3078,6 @@ app.patch('/api/admin/orders/:id', authenticate, requireAdmin, async (req, res) 
   res.json({ data });
 });
 
-// Resolve a YouTube URL through the separate yt-dlp service.
-app.get('/api/stream-url', async (req, res) => {
-  const sourceUrl = clean(req.query.url, 2048);
-  if (!sourceUrl) return fail(res, 400, 'YouTube URL is required');
-  const serviceBase = clean(process.env.YOUTUBE_STREAM_SERVICE_URL, 500).replace(/\/+$/, '');
-  const serviceToken = clean(process.env.YOUTUBE_STREAM_SERVICE_TOKEN, 500);
-  if (!serviceBase || !serviceToken) return fail(res, 503, 'YouTube stream service is not configured');
-  try {
-    const upstream = await fetch(`${serviceBase}/api/stream-url?url=${encodeURIComponent(sourceUrl)}`, {
-      headers: { accept: 'application/json', 'x-stream-service-token': serviceToken }, signal: AbortSignal.timeout(25_000)
-    });
-    const payload = await upstream.json().catch(() => null);
-    if (!upstream.ok || !payload?.success || !payload?.data?.stream_url) {
-      return fail(res, upstream.status === 400 ? 400 : 502, payload?.detail || 'Could not resolve this video stream');
-    }
-    return res.json(payload);
-  } catch (error) {
-    console.error('YouTube stream service request failed:', clean(error.message, 240));
-    return fail(res, 502, 'Video stream service is temporarily unavailable');
-  }
-});
-
 // Return JSON for unknown API paths instead of Next.js HTML 404 pages. This
 // makes missing or stale upload endpoints visible to the marketplace client.
 app.use('/api', (req, res) => fail(res, 404, `API route not found: ${req.method} ${req.path}`));
