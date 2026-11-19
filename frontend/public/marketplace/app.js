@@ -1246,7 +1246,8 @@ function bindListingDetailActions(root, item) {
       return;
     }
     if (action === 'share') {
-      try { await navigator.clipboard.writeText(location.origin + location.pathname + '#product/' + encodeURIComponent(item.id)); toast('បានចម្លង Link រួចរាល់!'); }
+      const route = item.listing_type === 'product' ? '#product/' + encodeURIComponent(item.id) : '#product/' + encodeURIComponent(item.listing_type) + '/' + encodeURIComponent(item.id);
+      try { await navigator.clipboard.writeText(location.origin + location.pathname + route); toast('បានចម្លង Link រួចរាល់!'); }
       catch { toast('មិនអាចចម្លង Link បានទេ។','error'); }
       return;
     }
@@ -1422,15 +1423,11 @@ function renderProductDetail() {
         </section>
 
         <article class="product-detail-description">
-          <h2>${ic('file', 18)} ព័ត៌មានលម្អិតអំពីទំនិញ</h2>
-          <p class="product-full-description">${esc(descriptions.full || descriptions.short || 'មិនទាន់មានការពិពណ៌នាលម្អិតទេ។')}</p>
-          <div class="product-spec-grid">
-            <div><small>ប្រភេទ</small><b>${esc(CATEGORIES[p.category] || p.category || 'មិនបានបញ្ជាក់')}</b></div>
-            <div><small>ស្ថានភាព</small><b>${esc(p.condition || 'មិនបានបញ្ជាក់')}</b></div>
-            <div><small>ទីតាំង</small><b>${ic('pin', 13)} ${esc(p.location || 'មិនបានបញ្ជាក់')}</b></div>
-            <div><small>កាលបរិច្ឆេទបង្ហោះ</small><b>${fmtDate(p.created_at)}</b></div>
-            ${Object.entries(p.specifications || {}).filter(([key,value])=>key!=='google_map_url'&&value!=null&&String(value).trim()!=='').map(([key,value])=>`<div><small>${esc(key.replace(/_/g,' '))}</small><b>${esc(value)}</b></div>`).join('')}
+          <h2>${ic('file', 18)} ការពិពណ៌នា</h2>
+          <div class="product-spec-grid detail-spec-grid">
+            ${[['ប្រភេទ',CATEGORIES[p.category] || p.category],['ស្ថានភាព',p.condition],['កាលបរិច្ឆេទបង្ហោះ',p.created_at ? fmtDate(p.created_at) : ''],...Object.entries(p.specifications || {}).filter(([key,value])=>key!=='google_map_url'&&value!=null&&String(value).trim()!=='').map(([key,value])=>[key.replace(/_/g,' '),value])].filter(([,value])=>value!=null&&String(value).trim()!=='').map(([key,value])=>`<div><small>${esc(key)}</small><b>${esc(value)}</b></div>`).join('')}
           </div>
+          <p class="product-full-description">${esc(descriptions.full || descriptions.short || 'មិនទាន់មានការពិពណ៌នាលម្អិតទេ។')}</p>
           ${renderDetailMapSection(p)}
           ${detailBottomActions({...p,listing_type:'product'})}
         </article>
