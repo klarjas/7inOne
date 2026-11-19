@@ -663,7 +663,7 @@ function renderHomeSidePosters() {
    7. Marketplace & Product Cards
    -------------------------------------------------------------------------- */
 function productImage(p) {
-  return p.product_images?.find((x) => x.image_url)?.image_url || '';
+  return (p.product_images || []).slice().sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0)).find((x) => x.image_url)?.image_url || '';
 }
 
 function productDescriptionParts(product = {}) {
@@ -701,7 +701,7 @@ function verifiedStoreBadge(vendorId, showKhmerLabel = false) {
 }
 
 function productCard(p, index) {
-  const images = (p.product_images || []).filter((item) => item.image_url);
+  const images = (p.product_images || []).filter((item) => item.image_url).sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0));
   const image = images[0]?.image_url || '';
   const secondImage = images[1]?.image_url || '';
   const saved = state.savedIds.has(p.id);
@@ -1535,14 +1535,44 @@ function openSellerModal() {
   openModal('sellerModal');
 }
 
+function revokeProductImagePreviews() {
+  (state.selectedProductImages || []).forEach((item) => {
+    if (item.kind === 'new' && item.previewUrl) URL.revokeObjectURL(item.previewUrl);
+  });
+}
+function syncProductImageFileInput() {
+  const input = $('productImage');
+  if (!input) return;
+  const transfer = new DataTransfer();
+  (state.selectedProductImages || []).filter((item) => item.kind === 'new').forEach((item) => transfer.items.add(item.file));
+  input.files = transfer.files;
+}
+function renderProductImageAlbum() {
+  const album = $('productImageAlbum');
+  const images = state.selectedProductImages || [];
+  if (!album) return;
+  $('productImageName').textContent = images.length ? (images.length + ' / ៥ រូបបានជ្រើសរើស') : 'ជ្រើសរើសរូបភាពផលិតផល';
+  album.innerHTML = images.length ? images.map((item, index) => {
+    const src = item.kind === 'new' ? item.previewUrl : item.image_url;
+    const main = index === 0;
+    return '<div class="product-album-item ' + (main ? 'is-main' : '') + '">' +
+      '<img src="' + esc(src) + '" alt="រូបភាពផលិតផល ' + (index + 1) + '">' +
+      (main ? '<span class="product-album-main-badge">រូបមេ</span>' : '') +
+      '<span class="product-album-index">' + (index + 1) + '</span>' +
+      (main ? '<span class="product-album-main-label">រូបមេដែលបានជ្រើស</span>' : '<button type="button" class="product-album-set-main" data-product-image-main="' + index + '">កំណត់ជារូបមេ</button>') +
+      '<button type="button" class="product-album-remove" data-product-image-remove="' + index + '" aria-label="លុបរូបភាព">' + ic('x', 14) + '</button></div>';
+  }).join('') : '<div class="product-album-empty"><span>' + ic('images', 25) + '</span><b>មិនទាន់មានរូបភាពទេ</b><small>ជ្រើសរើសរូបភាពរហូតដល់ ៥ រូប</small></div>';
+  document.querySelector('.product-album-picker')?.classList.toggle('is-full', images.length >= 5);
+  $('productImage').disabled = images.length >= 5;
+}
 function renderProductForm(product = null) {
   if (!isSellerAccount()) { openSellerModal(); return; }
+  revokeProductImagePreviews();
   state.selectedProductImages = [];
   $('productForm').reset();
   $('editProductId').value = product?.id || '';
   $('productFormTitle').textContent = product ? 'កែប្រែព័ត៌មានទំនិញ' : 'បន្ថែមទំនិញថ្មី';
-  $('productImageThumb').innerHTML = ic('image', 20);
-
+  $('productImageThumb').innerHTML = ic('image', 21);
   if (product) {
     $('productTitle').value = product.title;
     $('productPrice').value = product.price;
@@ -1552,7 +1582,11 @@ function renderProductForm(product = null) {
     const desc = productDescriptionParts(product);
     $('productShortDesc').value = desc.short;
     $('productDescription').value = desc.full;
+    state.selectedProductImages = (product.product_images || []).filter((item) => item.image_url)
+      .slice().sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0))
+      .map((item) => ({ kind: 'existing', id: item.id, image_url: item.image_url }));
   }
+  renderProductImageAlbum();
   updateShortDescriptionCounter();
   openModal('productFormModal');
 }
@@ -2415,62 +2449,88 @@ function bindEvents() {
   $('sellerGateApply').addEventListener('click', openSellerModal);
   $('sellerVerifyNow').addEventListener('click', openSellerModal);
   $('productShortDesc')?.addEventListener('input', updateShortDescriptionCounter);
+  $('productImage')?.addEventListener('change', (event) => {
+    const selected = Array.from(event.currentTarget.files || []);
+    const current = state.selectedProductImages || [];
+    const accepted = [];
+    const allowed = new Set(['image/jpeg', 'image/png', 'image/webp']);
+    for (const file of selected) {
+      if (!allowed.has(file.type)) { toast('សូមប្រើ JPG, PNG ឬ WEBP ប៉ុណ្ណោះ។', 'error'); continue; }
+      if (file.size > 8 * 1024 * 1024) { toast('រូបភាពនីមួយៗមិនអាចធំជាង ៨MB បានទេ។', 'error'); continue; }
+      if (current.length + accepted.length >= 5) { toast('អាចដាក់រូបភាពបានអតិបរមា ៥ រូបប៉ុណ្ណោះ។', 'error'); break; }
+      accepted.push({ kind: 'new', file: file, previewUrl: URL.createObjectURL(file) });
+    }
+    state.selectedProductImages = current.concat(accepted);
+    syncProductImageFileInput();
+    renderProductImageAlbum();
+    event.currentTarget.value = '';
+  });
+  $('productImageAlbum')?.addEventListener('click', (event) => {
+    const mainButton = event.target.closest('[data-product-image-main]');
+    const removeButton = event.target.closest('[data-product-image-remove]');
+    const images = state.selectedProductImages || [];
+    if (mainButton) {
+      const index = Number(mainButton.dataset.productImageMain);
+      if (index > 0 && images[index]) { images.unshift(images.splice(index, 1)[0]); renderProductImageAlbum(); }
+      return;
+    }
+    if (removeButton) {
+      const index = Number(removeButton.dataset.productImageRemove);
+      const removed = images[index];
+      if (!removed) return;
+      if (removed.kind === 'new' && removed.previewUrl) URL.revokeObjectURL(removed.previewUrl);
+      images.splice(index, 1);
+      syncProductImageFileInput();
+      renderProductImageAlbum();
+    }
+  });
 
   $('productForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const id = $('editProductId').value;
-    const files = Array.from($('productImage').files || []);
-    const existingProduct = id
-      ? state.sellerProductCache.find((product) => String(product.id) === String(id))
-      : null;
-    const existingImageCount = existingProduct?.product_images?.length || 0;
-
-    if (existingImageCount + files.length > 5) {
-      toast(`អាចបញ្ចូលរូបភាពបានអតិបរមា ៥ រូបក្នុងទំនិញមួយ។ ទំនិញនេះមានរូបភាពរួចហើយ ${existingImageCount} រូប។`, 'error');
-      return;
+    const selectedImages = (state.selectedProductImages || []).slice();
+    const newImages = selectedImages.filter((item) => item.kind === 'new');
+    const existingImages = selectedImages.filter((item) => item.kind === 'existing');
+    if (selectedImages.length > 5) { toast('អាចដាក់រូបភាពបានអតិបរមា ៥ រូប។', 'error'); return; }
+    const allowed = new Set(['image/jpeg', 'image/png', 'image/webp']);
+    if (newImages.some((item) => !allowed.has(item.file.type) || item.file.size > 8 * 1024 * 1024)) {
+      toast('សូមប្រើ JPG / PNG / WEBP ហើយរូបនីមួយៗមិនលើស ៨MB។', 'error'); return;
     }
-    const allowedImageTypes = new Set(['image/jpeg', 'image/png', 'image/webp']);
-    if (files.some((file) => !allowedImageTypes.has(file.type))) {
-      toast('ប្រភេទរូបភាពមិនត្រឹមត្រូវទេ។ សូមប្រើ JPG, PNG ឬ WEBP ប៉ុណ្ណោះ។', 'error');
-      return;
-    }
-    if (files.some((file) => file.size > 8 * 1024 * 1024)) {
-      toast('រូបភាពនីមួយៗមិនអាចធំជាង ៨MB បានទេ។ សូមជ្រើសរើសរូបភាពតូចជាងនេះ។', 'error');
-      return;
-    }
-
     const shortDesc = $('productShortDesc').value.trim();
     const fullDesc = $('productDescription').value.trim();
     const payload = {
-      title: $('productTitle').value.trim(),
-      price: Number($('productPrice').value),
-      category: $('productCategory').value,
-      location: $('productLocation').value,
-      condition: $('productCondition').value,
-      short_description: shortDesc,
-      description: shortDesc + PRODUCT_DESC_SEPARATOR + fullDesc,
-      stock: 1
+      title: $('productTitle').value.trim(), price: Number($('productPrice').value),
+      category: $('productCategory').value, location: $('productLocation').value,
+      condition: $('productCondition').value, short_description: shortDesc,
+      description: shortDesc + PRODUCT_DESC_SEPARATOR + fullDesc, stock: 1
     };
     try {
       const r = id
         ? await api('/api/products/' + encodeURIComponent(id), { method: 'PATCH', body: JSON.stringify(payload) })
         : await api('/api/products', { method: 'POST', body: JSON.stringify(payload) });
-      if (files.length) {
-        const form = new FormData();
-        files.forEach((f) => form.append('images', f));
-        try {
-          await api(`/api/products/${r.data.id}/images`, { method: 'POST', body: form });
-        } catch (uploadError) {
-          if (!id) {
-            $('editProductId').value = r.data.id;
-            $('productFormTitle').textContent = 'កែប្រែព័ត៌មានទំនិញ';
-            toast(`ទំនិញត្រូវបានរក្សាទុកហើយ ប៉ុន្តែរូបភាព upload មិនបានទេ៖ ${uploadError.message || 'មិនស្គាល់មូលហេតុ'}។ សូមព្យាយាមម្តងទៀត។`, 'error');
-            await Promise.allSettled([renderSeller(), loadProducts()]);
-            return;
-          }
-          throw uploadError;
+      const productId = r.data.id;
+      const existingProduct = id ? state.sellerProductCache.find((item) => String(item.id) === String(id)) : null;
+      const keepIds = new Set(existingImages.map((item) => String(item.id)));
+      for (const oldImage of (existingProduct?.product_images || [])) {
+        if (oldImage.id && !keepIds.has(String(oldImage.id))) {
+          await api('/api/products/' + encodeURIComponent(productId) + '/images/' + encodeURIComponent(oldImage.id), { method: 'DELETE' });
         }
       }
+      let uploadedImages = [];
+      if (newImages.length) {
+        const form = new FormData();
+        newImages.forEach((item) => form.append('images', item.file));
+        const uploaded = await api('/api/products/' + encodeURIComponent(productId) + '/images', { method: 'POST', body: form });
+        uploadedImages = uploaded.data || [];
+      }
+      const uploadedByFile = new Map(newImages.map((item, index) => [item, uploadedImages[index]]));
+      const orderedIds = selectedImages.map((item) => item.kind === 'existing' ? item.id : uploadedByFile.get(item)?.id).filter(Boolean);
+      if (orderedIds.length) {
+        await api('/api/products/' + encodeURIComponent(productId) + '/images/order', {
+          method: 'PATCH', body: JSON.stringify({ image_ids: orderedIds })
+        });
+      }
+      revokeProductImagePreviews();
       closeModal('productFormModal');
       toast('បានរក្សាទុកទំនិញជោគជ័យ!');
       await Promise.all([renderSeller(), loadProducts()]);
