@@ -719,7 +719,8 @@ function productCard(p, index) {
   const secondImage = images[1]?.image_url || '';
   const saved = state.savedIds.has(p.id);
   const vendorName = p.vendors?.store_name || 'ហាងអ្នកលក់';
-  const vendorLogo = p.vendors?.store_logo_url || '';
+  const vendorLogo = p.poster?.avatar_url || p.vendors?.store_logo_url || '';
+  const posterName = p.poster?.display_name || vendorName;
   const verified = p.vendors?.status === 'approved';
   const description = productDescriptionParts(p).short;
 
@@ -959,7 +960,11 @@ function marketplaceCard(item, index) {
       <h3 class="cursor-pointer hover:text-emerald-800" data-action="view-listing" data-id="${esc(item.id)}" data-type="${esc(item.listing_type)}">${esc(item.title)}</h3>
       <p class="pr"><span>${esc(price)}</span></p>
       ${description ? `<p class="cd-description">${esc(description)}</p>` : ''}
-      <div class="sh"><span class="sn">${esc(item.listing_subtitle || labels[item.listing_type] || '7inOne')}</span></div>
+      <div class="sh listing-poster-row">
+        <span class="listing-poster-avatar">${item.poster?.avatar_url ? `<img src="${esc(item.poster.avatar_url)}" alt="">` : esc(Array.from(item.poster?.display_name || '7')[0])}</span>
+        <span class="listing-poster-name">${esc(item.poster?.display_name || 'អ្នកប្រើប្រាស់')}</span>
+        <span class="listing-poster-kind">${esc(item.listing_subtitle || labels[item.listing_type] || '7inOne')}</span>
+      </div>
       <p class="mt"><span class="cd-time-meta">${timeAgoKm(item.created_at)}</span><span class="cd-location-meta">${esc(item.location || 'កម្ពុជា')}</span></p>
     </div>
   </article>`;
@@ -1163,6 +1168,7 @@ async function openProduct(id, options = {}) {
     if (!isCurrent()) return false;
     const product = result.data;
     if (!product) throw new Error('មិនមានព័ត៌មានទំនិញនេះទេ។');
+    product.poster = state.products.find(row => row.listing_type === 'product' && String(row.id) === productId)?.poster || null;
 
     const trust = await api('/api/vendors/' + encodeURIComponent(product.vendor_id) + '/ratings');
     if (!isCurrent()) return false;
@@ -1228,6 +1234,11 @@ function renderMarketplaceListingInProductDetail(item) {
             <li><span>${isJob ? 'ប្រាក់ខែ' : 'តម្លៃ'}</span><strong class="product-facts-price">${esc(price)}</strong></li>
             <li><span>ទីតាំង</span><strong>${ic('pin',14)} ${esc(item.location || 'កម្ពុជា')}</strong></li>
           </ul>
+          <section class="listing-poster-detail">
+            <div class="listing-poster-detail-avatar">${item.poster?.avatar_url ? `<img src="${esc(item.poster.avatar_url)}" alt="">` : esc(Array.from(item.poster?.display_name || '7')[0])}</div>
+            <div class="listing-poster-detail-copy"><small>អ្នកផុសប្រកាសនេះ</small><b>${esc(item.poster?.display_name || 'អ្នកប្រើប្រាស់')}</b><time>${item.created_at ? timeAgoKm(item.created_at) : ''}</time></div>
+            <button type="button" class="listing-poster-chat" data-listing-chat>${ic('chat',16)} ឆាតជាមួយអ្នកផុស</button>
+          </section>
           <section class="product-detail-description">
             <h2>${ic('file',18)} ព័ត៌មានលម្អិតអំពី${label}</h2>
             <ul class="listing-detail-list">${facts.filter(([,value])=>value!==null&&value!==undefined&&String(value).trim()!=='').map(([key,value])=>`<li><span>${esc(key)}</span><strong>${esc(value)}</strong></li>`).join('')}</ul>
@@ -1237,6 +1248,7 @@ function renderMarketplaceListingInProductDetail(item) {
         </div>
       </section>
     </div>`;
+  root.querySelector('[data-listing-chat]')?.addEventListener('click', () => { void startListingPosterChat(item); });
   root.querySelectorAll('[data-shared-listing-image]').forEach(button => button.addEventListener('click', () => {
     const index = Number(button.dataset.sharedListingImage);
     if (!gallery[index]) return;
@@ -1303,9 +1315,9 @@ function renderProductDetail() {
 
         <section class="product-seller-card">
           <div class="product-seller-heading">
-            <div class="product-seller-logo">${v.store_logo_url ? `<img src="${esc(v.store_logo_url)}" alt="">` : avatarFallbackMarkup(v.store_name)}</div>
+            <div class="product-seller-logo">${p.poster?.avatar_url ? `<img src="${esc(p.poster.avatar_url)}" alt="">` : (v.store_logo_url ? `<img src="${esc(v.store_logo_url)}" alt="">` : avatarFallbackMarkup(v.store_name))}</div>
             <div class="product-seller-identity">
-              <b>${esc(v.store_name || 'ហាងអ្នកលក់')}</b>
+              <b>${esc(p.poster?.display_name || v.store_name || 'អ្នកលក់')}</b>
               <span class="product-seller-verified">${v.status === 'approved' ? ic('checkcircle', 13) + ' អ្នកលក់បានផ្ទៀងផ្ទាត់' : 'អ្នកលក់'}</span>
             </div>
             <button type="button" class="product-store-button" data-product-action="store">${ic('store', 15)} មើលហាង</button>
@@ -2573,6 +2585,21 @@ async function openSellerChatInbox() {
   await loadUnifiedSellerChatInbox();
 }
 
+async function startListingPosterChat(item) {
+  if (!requireLogin()) return;
+  if (!item?.id || !['job','real_estate'].includes(item.listing_type)) return;
+  try {
+    const result = await api('/api/seller-chat/listing-conversations', {
+      method: 'POST',
+      body: JSON.stringify({ listing_type: item.listing_type, listing_id: item.id })
+    });
+    if (!result.data?.id) throw new Error('មិនអាចបើកសន្ទនាបានទេ។');
+    await openSellerChat(result.data.id, 'buyer', null);
+  } catch (error) {
+    toast(error.message || 'មិនអាចឆាតជាមួយអ្នកផុសបានទេ។', 'error');
+  }
+}
+
 async function startBuyerSellerChat(productId) {
   if (!requireLogin()) return;
   const targetProduct = (state.currentProduct && String(state.currentProduct.id) === String(productId))
@@ -2888,6 +2915,7 @@ function renderJobs() {
     return `<button type="button" class="jobs-result-card" data-job-open="${esc(job.id)}">
       <span class="jobs-result-image">${image ? `<img src="${esc(image)}" alt="" loading="lazy">` : ic('briefcase',22)}</span>
       <span class="jobs-result-content">
+        <span class="jobs-result-poster"><span class="listing-poster-avatar">${job.poster?.avatar_url ? `<img src="${esc(job.poster.avatar_url)}" alt="">` : esc(Array.from(job.poster?.display_name || '7')[0])}</span><b>${esc(job.poster?.display_name || job.company_name || 'អ្នកប្រើប្រាស់')}</b><time>${timeAgoKm(job.created_at)}</time></span>
         <b>${esc(job.title || 'ការងារ')}</b>
         <small>${esc(job.company_name || 'និយោជក')} · ${esc(job.location || 'កម្ពុជា')}</small>
         <strong>${esc(salary)}${({hourly:' / ម៉ោង',daily:' / ថ្ងៃ',monthly:' / ខែ'}[job.salary_period] || '')}</strong>
