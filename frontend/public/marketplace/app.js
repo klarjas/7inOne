@@ -3783,9 +3783,10 @@ function bindEvents() {
       const verb = action.dataset.myPostAction;
       if (!confirm(labels[verb] || 'បន្តសកម្មភាពនេះ?')) return;
       try {
-        if (verb === 'delete') await api('/api/my-posts/' + encodeURIComponent(type) + '/' + encodeURIComponent(id), { method:'DELETE' });
-        else await api('/api/my-posts/' + encodeURIComponent(type) + '/' + encodeURIComponent(id), { method:'PATCH', body:JSON.stringify({ action:verb }) });
-        toast(verb === 'delete' ? 'បានលុបប្រកាសរួចរាល់។' : verb === 'renew' ? 'បាន Renew ប្រកាសជោគជ័យ។' : 'បានបញ្ចប់សុពលភាពប្រកាស។');
+        let response;
+        if (verb === 'delete') response = await api('/api/my-posts/' + encodeURIComponent(type) + '/' + encodeURIComponent(id), { method:'DELETE' });
+        else response = await api('/api/my-posts/' + encodeURIComponent(type) + '/' + encodeURIComponent(id), { method:'PATCH', body:JSON.stringify({ action:verb }) });
+        toast(verb === 'delete' && response?.archived ? 'ប្រកាសនេះមានប្រវត្តិលក់ ដូច្នេះបានដាក់ Archive។' : verb === 'delete' ? 'បានលុបប្រកាសរួចរាល់។' : verb === 'renew' ? 'បាន Renew ប្រកាសជោគជ័យ។' : 'បានបញ្ចប់សុពលភាពប្រកាស។');
         await renderMyPosts();
       } catch (err) { toast(err.message || 'មិនអាចធ្វើសកម្មភាពបានទេ។', 'error'); }
       return;
