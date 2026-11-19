@@ -462,6 +462,34 @@ async function ratingsFor(vendorIds) {
   return grouped;
 }
 
+const SITE_PRESENCE_TTL_MS = 70_000;
+const sitePresence = new Map();
+function pruneSitePresence() {
+  const cutoff = Date.now() - SITE_PRESENCE_TTL_MS;
+  for (const [visitorId, lastSeen] of sitePresence) {
+    if (lastSeen < cutoff) sitePresence.delete(visitorId);
+  }
+}
+function sitePresenceVisitorId(value) {
+  const visitorId = clean(value, 80);
+  return /^[A-Za-z0-9-]{16,80}$/.test(visitorId) ? visitorId : null;
+}
+app.get('/api/site/online', (_req, res) => {
+  pruneSitePresence();
+  res.set('Cache-Control', 'no-store');
+  return res.json({ data: { count: sitePresence.size } });
+});
+app.post('/api/site/presence', (req, res) => {
+  const visitorId = sitePresenceVisitorId(req.body?.visitor_id);
+  if (!visitorId) return fail(res, 400, 'A valid visitor ID is required');
+  if (req.body?.leave === true) sitePresence.delete(visitorId);
+  else sitePresence.set(visitorId, Date.now());
+  pruneSitePresence();
+  res.set('Cache-Control', 'no-store');
+  return res.json({ data: { count: sitePresence.size } });
+});
+setInterval(pruneSitePresence, 20_000).unref?.();
+
 const VENDOR_PRESENCE_TTL_MS = 65_000;
 const vendorPresence = new Map();
 function pruneVendorPresence() {
