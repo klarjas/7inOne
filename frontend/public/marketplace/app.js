@@ -2026,6 +2026,7 @@ async function initCambodiaLocationPicker(root, legacyLocation = '') {
 }
 function openListingTypeChooser() { openModal('listingTypeModal'); }
 function openJobListingForm() {
+  revokeListingAlbum('job');
   $('jobListingForm').reset();
   fillTaxonomySelect($('jobCategory'), $('jobSubcategory'), $('jobDetailType'), LISTING_TAXONOMY.jobs);
   void initCambodiaLocationPicker($('jobListingForm').querySelector('[data-location-picker]'));
@@ -2033,6 +2034,7 @@ function openJobListingForm() {
   openModal('jobFormModal');
 }
 function openPropertyListingForm() {
+  revokeListingAlbum('property');
   $('propertyListingForm').reset();
   fillTaxonomySelect($('propertyCategory'), $('propertySubcategory'), $('propertyDetailType'), LISTING_TAXONOMY.properties);
   void initCambodiaLocationPicker($('propertyListingForm').querySelector('[data-location-picker]'));
