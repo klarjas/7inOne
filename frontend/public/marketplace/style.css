@@ -4294,3 +4294,79 @@ body > footer {
   outline: 2px solid #66C0F4;
   outline-offset: 3px;
 }
+
+/* Seller Center tabs — one aligned horizontal row in Steam Dark theme */
+#view-seller .seller-tabs {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 6px;
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 8px 14px 0;
+  background: #16202D !important;
+  border-bottom: 1px solid #2A475E !important;
+  scrollbar-width: thin;
+  scrollbar-color: #3D6687 transparent;
+}
+#view-seller .seller-tabs .seller-tab {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 12px 16px 11px;
+  border: 0 !important;
+  border-bottom: 2px solid transparent !important;
+  border-radius: 10px 10px 0 0;
+  background: transparent !important;
+  color: #8F98A0 !important;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  transition: color .2s ease, background .2s ease, border-color .2s ease;
+}
+#view-seller .seller-tabs .seller-tab > span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: currentColor;
+}
+#view-seller .seller-tabs .seller-tab:hover {
+  background: rgba(102, 192, 244, .09) !important;
+  color: #66C0F4 !important;
+}
+#view-seller .seller-tabs .seller-tab.is-active {
+  background: rgba(102, 192, 244, .10) !important;
+  border-bottom-color: #66C0F4 !important;
+  color: #66C0F4 !important;
+}
+#view-seller .seller-tabs .seller-tab-count {
+  display: inline-flex;
+  min-width: 21px;
+  height: 21px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+  border: 1px solid rgba(102, 192, 244, .22);
+  border-radius: 999px;
+  background: #203244 !important;
+  color: #C7D5E0 !important;
+  font-size: 10px;
+  font-weight: 800;
+}
+@media (max-width: 640px) {
+  #view-seller .seller-tabs {
+    gap: 3px;
+    padding-right: 10px;
+    padding-left: 10px;
+  }
+  #view-seller .seller-tabs .seller-tab {
+    min-height: 43px;
+    padding: 10px 12px 9px;
+    font-size: 11px;
+  }
+}
