@@ -3015,37 +3015,32 @@ function youtubeVideoId(value) {
   return '';
 }
 let editingSellerMediaId = null;
-async function loadHomeVendorMedia() {
-  const section=$('homeVendorMediaSection'),target=$('homeVendorMediaList'); if(!section||!target)return;
-  try {
-    const res=await api('/api/vendor-media'),rows=(res.data||[]).filter(row=>row.media_type==='video'&&youtubeVideoId(row.media_url));
+async function loadHomeVendorMedia(){
+  const section=$('homeVendorMediaSection'),target=$('homeVendorMediaList');if(!section||!target)return;
+  try{
+    // Only Telegram-hosted Shorts are public now. Existing YouTube rows remain in SQL but are hidden.
+    const res=await api('/api/vendor-media');
+    const rows=(res.data||[]).filter(row=>row.media_type==='video'&&String(row.media_url||'').startsWith('/api/media/video/'));
     if(!rows.length){section.classList.add('hidden');target.replaceChildren();return}
-    target.innerHTML=rows.map(row=>{const id=youtubeVideoId(row.media_url);return `<article class="home-vendor-media-card" data-short-video-id="${esc(id)}" data-short-store="${esc(row.store_name||'ហាងអ្នកលក់')}"><button class="home-vendor-media-open" type="button" aria-label="ពង្រីកវីដេអូ ${esc(row.store_name||'ហាងអ្នកលក់')}"><div class="home-vendor-media-player"><div class="home-short-poster" style="background-image:url('https://i.ytimg.com/vi/${encodeURIComponent(id)}/hqdefault.jpg')" aria-hidden="true"><span class="home-short-poster-spinner"></span></div>
-      <iframe src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&mute=1&loop=1&playlist=${encodeURIComponent(id)}&controls=0&disablekb=1&fs=0&iv_load_policy=3&rel=0&playsinline=1" title="Shorts ពី ${esc(row.store_name||'ហាងអ្នកលក់')}" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
-      </div></button><div class="home-vendor-media-store">${esc(row.store_name||'ហាងអ្នកលក់')}</div></article>`}).join('');
-    target.querySelectorAll('.home-vendor-media-player iframe').forEach(frame=>frame.addEventListener('load',()=>frame.closest('.home-vendor-media-player')?.classList.add('is-ready'),{once:true}));
-    section.classList.remove('hidden');
-    const popup=$('homeShortsPopup'),popupFrame=$('homeShortsPopupFrame'),popupTitle=$('homeShortsPopupTitle');
+    target.innerHTML=rows.map(row=>`<article class="home-vendor-media-card" data-short-video-url="${esc(row.media_url)}" data-short-store="${esc(row.store_name||'ហាងអ្នកលក់')}"><button class="home-vendor-media-open" type="button" aria-label="ពង្រីកវីដេអូ ${esc(row.store_name||'ហាងអ្នកលក់')}"><div class="home-vendor-media-player"><video src="${esc(row.media_url)}" muted autoplay loop playsinline preload="metadata"></video><span class="home-short-play-indicator" aria-hidden="true">▶</span></div></button><div class="home-vendor-media-store">${esc(row.store_name||'ហាងអ្នកលក់')}</div></article>`).join('');
+    const popup=$('homeShortsPopup'),popupVideo=$('homeShortsPopupFrame'),popupTitle=$('homeShortsPopupTitle');
     if(popup&&!target.dataset.popupBound){
       target.dataset.popupBound='1';
       target.addEventListener('click',event=>{
         const trigger=event.target.closest('.home-vendor-media-open');if(!trigger)return;
-        const card=trigger.closest('.home-vendor-media-card');const id=card?.dataset.shortVideoId;if(!id||!popupFrame)return;
+        const card=trigger.closest('.home-vendor-media-card'),src=card?.dataset.shortVideoUrl;if(!src||!popupVideo)return;
         popupTitle.textContent=card.dataset.shortStore||'វីដេអូ';
-        const popupStage=popup?.querySelector('.home-shorts-popup-stage');
-        if(popupStage){popupStage.style.backgroundImage=`url(\"https://i.ytimg.com/vi/${encodeURIComponent(id)}/hqdefault.jpg\")`;popupStage.classList.add('is-loading');}
-        popupFrame.onload=()=>popupStage?.classList.remove('is-loading');
-        popupFrame.src=`https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&controls=1&rel=0&playsinline=1`;
-        if(!popup.open)popup.showModal();
+        popupVideo.src=src;popupVideo.currentTime=0;if(!popup.open)popup.showModal();popupVideo.play().catch(()=>{});
       });
-      popup?.addEventListener('close',()=>{if(popupFrame){popupFrame.onload=null;popupFrame.src='about:blank'}const stage=popup?.querySelector('.home-shorts-popup-stage');if(stage){stage.classList.remove('is-loading');stage.style.backgroundImage='none'}});
-      popup?.addEventListener('click',event=>{if(event.target===popup)popup.close()});
+      const closePopup=()=>{if(popupVideo){popupVideo.pause();popupVideo.removeAttribute('src');popupVideo.load()}};
+      popup?.addEventListener('close',closePopup);popup?.addEventListener('click',event=>{if(event.target===popup)popup.close()});
       $('homeShortsPopupClose')?.addEventListener('click',()=>popup.close());
     }
     const move=dir=>{const card=target.querySelector('.home-vendor-media-card');if(!card)return;const max=Math.max(0,target.scrollWidth-target.clientWidth),step=card.getBoundingClientRect().width+12;if(dir>0&&target.scrollLeft>=max-8)target.scrollTo({left:0,behavior:'smooth'});else if(dir<0&&target.scrollLeft<=8)target.scrollTo({left:max,behavior:'smooth'});else target.scrollBy({left:step*dir,behavior:'smooth'})};
     if(state.homeVendorMediaTimer)clearInterval(state.homeVendorMediaTimer);let paused=false;
     target.onpointerenter=()=>{paused=true};target.onpointerleave=()=>{paused=false};target.onfocusin=()=>{paused=true};target.onfocusout=()=>{paused=false};
     state.homeVendorMediaTimer=setInterval(()=>{if(!paused&&!document.hidden&&rows.length>1)move(1)},5000);
+    target.querySelectorAll('video').forEach(video=>video.play().catch(()=>{}));section.classList.remove('hidden');
   }catch{section.classList.add('hidden')}
 }
 async function loadSellerMediaSettings(){
@@ -3055,15 +3050,15 @@ async function loadSellerMediaSettings(){
  try{
   const res=await api('/api/vendor/media-links'),rows=res.data||[];
   $('sellerMediaStatus').textContent=rows.length?`មានមាតិកា ${rows.length} ធាតុ។ អ្នកអាចបង្ហោះបន្ថែមបាន។`:'មិនទាន់មាន Shorts។ អ្នកអាចបង្ហោះដំបូងបាន។';
-  list.innerHTML=rows.length?rows.map(row=>`<article class="seller-media-item">
-    <div class="seller-media-item-info"><b>${row.media_type==='video'?'YouTube Shorts':'Live ផ្សាយផ្ទាល់'} · ${row.is_active?'កំពុងបង្ហាញ':'បានផ្អាក'}</b>
-    <a href="${esc(row.media_url)}" target="_blank" rel="noopener noreferrer">${esc(row.media_url)}</a>
+  list.innerHTML=rows.length?rows.map(row=>{const telegramVideo=String(row.media_url||'').startsWith('tgvideo:');return `<article class="seller-media-item">
+    <div class="seller-media-item-info"><b>${row.media_type==='video'?(telegramVideo?'Telegram Shorts · MP4':'YouTube Shorts (ចាស់)'):'Live ផ្សាយផ្ទាល់'} · ${row.is_active?'កំពុងបង្ហាញ':'បានផ្អាក'}</b>
+    ${telegramVideo?'<span>រក្សាទុកក្នុង Telegram Channel 7inone Short</span>':`<a href="${esc(row.media_url)}" target="_blank" rel="noopener noreferrer">${esc(row.media_url)}</a>`}
     <small>${row.created_at?new Date(row.created_at).toLocaleString('km-KH'):''}</small></div>
     <div class="seller-media-item-actions">
-      <button type="button" data-media-action="edit" data-id="${esc(row.id)}">កែ Link</button>
+      ${telegramVideo?'':`<button type="button" data-media-action="edit" data-id="${esc(row.id)}">កែ Link</button>`}
       <button type="button" data-media-action="toggle" data-id="${esc(row.id)}" data-active="${row.is_active?'false':'true'}">${row.is_active?'ផ្អាក':'បង្ហាញ'}</button>
       <button type="button" data-media-action="delete" data-id="${esc(row.id)}">លុប</button>
-    </div></article>`).join(''):'<p class="text-xs text-slate-500">មិនទាន់មានមាតិកាដែលបានបង្ហោះទេ។</p>';
+    </div></article>`}).join(''):'<p class="text-xs text-slate-500">មិនទាន់មានមាតិកាដែលបានបង្ហោះទេ។</p>';
  }catch(err){$('sellerMediaStatus').textContent=err.message||'មិនអាចទាញយក Shorts បានទេ';list.replaceChildren()}
 }
 async function syncVendorPresence() {
@@ -3909,14 +3904,24 @@ function bindEvents() {
   $('sellerOffers')?.addEventListener('click', async (e) => { const b = e.target.closest('[data-offer-action]'); if (!b) return; try { await api('/api/offers/' + encodeURIComponent(b.dataset.id), { method: 'PATCH', body: JSON.stringify({ status: b.dataset.offerAction }) }); await renderSeller(); toast('បានធ្វើបច្ចុប្បន្នភាពសំណើតម្លៃ។'); } catch (err) { toast(err.message || 'មិនអាចកែស្ថានភាពសំណើបានទេ។', 'error'); } });
   $('sellerOrders')?.addEventListener('click', async (e) => { const b = e.target.closest('[data-order-status]'); if (!b) return; try { await api('/api/vendor/orders/' + encodeURIComponent(b.dataset.orderId), { method: 'PATCH', body: JSON.stringify({ status: b.dataset.orderStatus }) }); await renderSeller(); toast('បានធ្វើបច្ចុប្បន្នភាពការបញ្ជាទិញ។'); } catch (err) { toast(err.message || 'មិនអាចកែស្ថានភាពការបញ្ជាទិញបានទេ។', 'error'); } });
   $('sellerShopProfileForm')?.addEventListener('submit', async (e) => { e.preventDefault(); const form = new FormData(); form.append('store_name', $('sellerShopName')?.value.trim() || ''); form.append('store_location', $('sellerShopLocation')?.value.trim() || ''); form.append('description', $('sellerShopDescription')?.value.trim() || ''); const logo = $('sellerShopLogo')?.files?.[0], cover = $('sellerShopCover')?.files?.[0]; if (logo) form.append('logo', logo); if (cover) form.append('cover', cover); try { await api('/api/vendor/profile', { method: 'PATCH', body: form }); await refreshSession(); await renderSeller(); toast('បានរក្សាទុកព័ត៌មានហាង។'); } catch (err) { toast(err.message || 'មិនអាចរក្សាទុកព័ត៌មានហាងបានទេ។', 'error'); } });
+  const syncSellerMediaFields=()=>{const video=$('sellerMediaType')?.value==='video';$('sellerMediaVideoWrap')?.classList.toggle('hidden',!video);$('sellerMediaUrlWrap')?.classList.toggle('hidden',video);if($('sellerMediaVideo'))$('sellerMediaVideo').required=video&&!editingSellerMediaId;if($('sellerMediaUrl'))$('sellerMediaUrl').required=!video;};
+  $('sellerMediaType')?.addEventListener('change',syncSellerMediaFields);syncSellerMediaFields();
   $('sellerMediaForm')?.addEventListener('submit', async (e) => {
     e.preventDefault(); if (!isVerifiedSeller()) { toast('សូមផ្ទៀងផ្ទាត់ហាងជាមុនសិន។', 'error'); return; }
-    const id=editingSellerMediaId, url=id?`/api/vendor/media-links/${encodeURIComponent(id)}`:'/api/vendor/media-links';
+    const id=editingSellerMediaId,type=$('sellerMediaType')?.value||'video',url=id?`/api/vendor/media-links/${encodeURIComponent(id)}`:'/api/vendor/media-links',save=$('sellerMediaSave');
+    save.disabled=true;save.textContent='កំពុងបង្ហោះ...';
     try {
-      await api(url,{method:id?'PATCH':'POST',body:JSON.stringify({media_type:$('sellerMediaType')?.value||'video',media_url:$('sellerMediaUrl')?.value.trim()||''})});
-      editingSellerMediaId=null;$('sellerMediaForm').reset();$('sellerMediaSave').textContent='បង្ហោះ Shorts';
-      await loadHomeVendorMedia();await loadSellerMediaSettings();toast(id?'បានកែ Link ជោគជ័យ!':'បានបង្ហោះ Shorts ថ្មីជោគជ័យ!');
-    } catch(err){toast(err.message||'មិនអាចរក្សាទុកមាតិកាបានទេ។','error')}
+      if(id){await api(url,{method:'PATCH',body:JSON.stringify({media_type:type,media_url:$('sellerMediaUrl')?.value.trim()||''})});}
+      else{
+        const form=new FormData();form.append('media_type',type);
+        if(type==='video'){const file=$('sellerMediaVideo')?.files?.[0];if(!file)throw new Error('សូមជ្រើសរើសវីដេអូ MP4 ជាមុនសិន។');if(file.size>20*1024*1024)throw new Error('វីដេអូត្រូវមានទំហំមិនលើស 20MB។');form.append('video',file);}
+        else form.append('media_url',$('sellerMediaUrl')?.value.trim()||'');
+        await api(url,{method:'POST',body:form});
+      }
+      editingSellerMediaId=null;$('sellerMediaForm').reset();syncSellerMediaFields();
+      await loadHomeVendorMedia();await loadSellerMediaSettings();toast(id?'បានកែ Link ជោគជ័យ!':'បានបង្ហោះ Shorts ទៅ Telegram ជោគជ័យ!');
+    }catch(err){toast(err.message||'មិនអាចរក្សាទុកមាតិកាបានទេ។','error')}
+    finally{save.disabled=false;save.textContent='បង្ហោះ Shorts';}
   });
   $('sellerMediaList')?.addEventListener('click',async(e)=>{
     const button=e.target.closest('[data-media-action]');if(!button||!isVerifiedSeller())return;
