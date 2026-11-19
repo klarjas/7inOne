@@ -4668,3 +4668,93 @@ body > footer {
     visibility: visible !important;
   }
 }
+
+
+/* Final responsive homepage sizing + original-ratio social photos */
+@media (min-width: 1101px) {
+  #view-home .home-layout-shell,
+  #view-home .home-layout-shell.amazon-store-body.shell,
+  #view-home .amazon-store-body {
+    box-sizing: border-box !important;
+    width: calc(100% - clamp(24px, 3vw, 64px)) !important;
+    max-width: none !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    grid-template-columns:
+      clamp(184px, 15vw, 250px)
+      minmax(0, 1fr)
+      clamp(270px, 23vw, 360px) !important;
+    column-gap: clamp(14px, 1.35vw, 24px) !important;
+  }
+  #view-home .home-social-rail {
+    grid-column: 3 !important;
+    grid-row: 1 / span 30 !important;
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+}
+@media (min-width: 1001px) and (max-width: 1100px) {
+  #view-home .home-layout-shell,
+  #view-home .home-layout-shell.amazon-store-body.shell,
+  #view-home .amazon-store-body {
+    width: calc(100% - 28px) !important;
+    max-width: none !important;
+    grid-template-columns: 160px minmax(0, 1fr) !important;
+    gap: 14px !important;
+  }
+  #view-home .home-social-rail {
+    display: flex !important;
+    grid-column: 1 / -1 !important;
+    grid-row: auto !important;
+    position: static !important;
+    width: 100% !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+}
+@media (max-width: 1000px) {
+  #view-home .home-social-rail {
+    display: flex !important;
+    grid-column: 1 / -1 !important;
+    grid-row: auto !important;
+    position: static !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+}
+@media (max-width: 700px) {
+  #view-home .home-layout-shell,
+  #view-home .home-layout-shell.amazon-store-body.shell,
+  #view-home .amazon-store-body {
+    width: 100% !important;
+    max-width: none !important;
+  }
+  #view-home .home-social-rail {
+    display: flex !important;
+    width: 100% !important;
+    margin-top: 18px !important;
+  }
+}
+
+/* Keep a 9:16 viewing frame while showing every pixel of the uploaded photo. */
+#view-home .social-post-image,
+#view-home .home-social-rail .social-post-image {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  max-height: 520px !important;
+  aspect-ratio: 9 / 16 !important;
+  height: auto !important;
+  object-fit: contain !important;
+  object-position: center !important;
+  background: #101822 !important;
+}
+#view-home .social-upload-preview img,
+#view-home .social-story-preview img {
+  width: 100% !important;
+  aspect-ratio: 9 / 16 !important;
+  height: auto !important;
+  max-height: 520px !important;
+  object-fit: contain !important;
+  object-position: center !important;
+}
