@@ -5056,7 +5056,6 @@ body > footer {
 
 
 /* Buyer/seller chat identity header and in-chat image preview */
-#sellerChatModal>section>header #sellerChatHeaderIdentity{display:flex;align-items:center;gap:12px;min-width:0}
 #sellerChatModal>section>header #sellerChatHeaderAvatar{width:40px;height:40px;flex:0 0 40px;border-radius:50%;overflow:hidden}
 #sellerChatModal>section>header #sellerChatHeaderTitle{font-size:14px;line-height:1.4;color:#C7D5E0}
 .seller-chat-image{display:block;max-width:min(100%,320px);max-height:360px;border-radius:10px;object-fit:contain;cursor:zoom-in}
