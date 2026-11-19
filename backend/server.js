@@ -961,8 +961,11 @@ app.get('/api/marketplace/listings', async (req, res) => {
   const q = clean(req.query.q, 100).replace(/[%_,()]/g, '').trim();
   const type = clean(req.query.type || 'all', 20).toLowerCase();
   const category = clean(req.query.category, 80);
+  const propertyType = clean(req.query.property_type || 'all', 30).toLowerCase();
+  const allowedPropertyTypes = ['all','house_sale','house_rent','condo_sale','apartment_rent','land','land_rent','commercial_sale','commercial_rent','room_rent','properties_wanted','agent_services','others_properties'];
   const cutoff = new Date(Date.now() - PRODUCT_PUBLIC_MAX_AGE_MS).toISOString();
   if (!['all','product','job','real_estate'].includes(type)) return fail(res, 400, 'Invalid listing type.');
+  if ((type === 'all' || type === 'real_estate') && !allowedPropertyTypes.includes(propertyType)) return fail(res, 400, 'Invalid property type.');
 
   try {
     const tasks = [];
@@ -991,36 +994,24 @@ app.get('/api/marketplace/listings', async (req, res) => {
       })());
     }
     if (type === 'all' || type === 'job') tasks.push((async () => {
-      let query = supabase.from('jobs').select('id,user_id,title,company_name,description,short_description,category,subcategory,detail_type,specifications,location,vacancies,salary_min,salary_max,salary_period,employment_type,work_schedule,experience,education,skills,languages,benefits,image_file_id,image_mime_type,status,expires_at,created_at')
-        .eq('status','active').order('created_at',{ascending:false}).limit(limit);
-      const filters=[`or(expires_at.is.null,expires_at.gt.${new Date().toISOString()})`];
-      if(q) filters.push(`or(title.ilike.%${q}%,company_name.ilike.%${q}%,location.ilike.%${q}%)`);
-      query=query.or(`and(${filters.join(',')})`);
-      if(category) query=query.eq('category',category);
-      const {data,error}=await query;
-      if(error && ['42P01','PGRST205'].includes(error.code)) return [];
-      if(error) throw error;
-      return (data||[]).map(row=>({...row,listing_type:'job',image_url:row.image_file_id?mediaProxyUrl(row.image_file_id,row.image_mime_type):null,price_label:[row.salary_min,row.salary_max].filter(v=>v!=null).join(' - ')||'ចរចា',listing_subtitle:row.company_name||'និយោជក'}));
+      const fields = 'id,user_id,title,company_name,description,short_description,category,subcategory,detail_type,specifications,location,vacancies,salary_min,salary_max,salary_period,employment_type,work_schedule,experience,education,skills,languages,benefits,image_file_id,image_mime_type,status,expires_at,created_at';
+      const legacyFields = 'id,user_id,title,company_name,description,short_description,category,subcategory,location,vacancies,salary_min,salary_max,salary_period,employment_type,work_schedule,experience,education,skills,languages,benefits,image_file_id,image_mime_type,status,expires_at,created_at';
+      const runJobs = async (legacy = false) => {
+        let query = supabase.from('jobs').select(legacy ? legacyFields : fields)
+          .eq('status','active').order('created_at',{ascending:false}).limit(limit);
+        const filters=[`or(expires_at.is.null,expires_at.gt.${new Date().toISOString()})`];
+        if(q) filters.push(`or(title.ilike.%${q}%,company_name.ilike.%${q}%,location.ilike.%${q}%)`);
+        query=query.or(`and(${filters.join(',')})`);
+        if(category) query=query.eq('category',category);
+        return query;
+      };
+      let result = await runJobs(false);
+      if (result.error && (result.error.code === '42703' || /detail_type|specifications/i.test(result.error.message || ''))) result = await runJobs(true);
+      if(result.error && ['42P01','PGRST205'].includes(result.error.code)) return [];
+      if(result.error) throw result.error;
+      return (result.data||[]).map(row=>({...row,detail_type:row.detail_type||'',specifications:row.specifications||{},listing_type:'job',image_url:row.image_file_id?mediaProxyUrl(row.image_file_id,row.image_mime_type):null,price_label:[row.salary_min,row.salary_max].filter(v=>v!=null).join(' - ')||'ចរចា',listing_subtitle:row.company_name||'និយោជក'}));
     })());
     if (type === 'all' || type === 'real_estate') {
-      // Default to all so a normal page refresh never fails when no subtype is selected.
-      const propertyType = clean(req.query.property_type || 'all', 30).toLowerCase();
-      const allowedPropertyTypes = [
-        'all',
-        'house_sale',
-        'house_rent',
-        'condo_sale',
-        'apartment_rent',
-        'land',
-        'land_rent',
-        'commercial_sale',
-        'commercial_rent',
-        'room_rent',
-        'properties_wanted',
-        'agent_services',
-        'others_properties'
-      ];
-      if (!allowedPropertyTypes.includes(propertyType)) return fail(res, 400, 'Invalid property type.');
       if (type === 'all' || propertyType === 'all' || propertyType === 'house_rent' || propertyType === 'room_rent') tasks.push((async () => {
         let query=supabase.from('rentals').select('id,user_id,title,description,short_description,category,property_type,location,address,rent_amount,rent_period,bedrooms,bathrooms,area_sqm,furnished,image_file_id,image_mime_type,status,created_at')
           .eq('status','active').order('created_at',{ascending:false}).limit(limit);
