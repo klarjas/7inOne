@@ -1805,16 +1805,125 @@ function fillTaxonomySelect(categorySelect, subSelect, detailSelect, registry) {
   setOptions(subSelect, 'ជ្រើសរើសផ្នែករង', entry?.subs || []);
   setOptions(detailSelect, 'ជ្រើសរើសប្រភេទលម្អិត', entry?.details || []);
 }
+// Official Cambodia administrative geography (MEF DataEF / MLMUPC, 2025).
+let cambodiaGeoPromise = null;
+function extractCambodiaGeoRows(payload) {
+  if (Array.isArray(payload)) return payload;
+  if (!payload || typeof payload !== 'object') return [];
+  for (const key of ['data','records','results','items','rows','content']) {
+    const value = payload[key];
+    if (Array.isArray(value)) return value;
+    if (value && typeof value === 'object') {
+      const nested = extractCambodiaGeoRows(value);
+      if (nested.length) return nested;
+    }
+  }
+  return [];
+}
+async function loadCambodiaGeo() {
+  if (!cambodiaGeoPromise) cambodiaGeoPromise = (async () => {
+    const all = [];
+    const pageSize = 1000;
+    for (let page = 1; page <= 40; page += 1) {
+      const url = 'https://data.mef.gov.kh/api/v1/public-datasets/pd_68e370856a965e00074a5e7b/json?page=' + page + '&page_size=' + pageSize;
+      const response = await fetch(url, { headers: { Accept: 'application/json' } });
+      if (!response.ok) throw new Error('មិនអាចទាញយកបញ្ជីទីតាំងផ្លូវការបានទេ។ សូមព្យាយាមម្ដងទៀត។');
+      const payload = await response.json();
+      const rows = extractCambodiaGeoRows(payload);
+      if (!rows.length) break;
+      all.push(...rows);
+      if (rows.length < pageSize) break;
+    }
+    const normalized = all.map(row => ({
+      province_code: String(row.province_code || ''),
+      province_kh: String(row.province_kh || '').trim(),
+      province_en: String(row.province_en || '').trim(),
+      district_code: String(row.district_code || ''),
+      district_kh: String(row.district_kh || '').trim(),
+      district_en: String(row.district_en || '').trim(),
+      commune_code: String(row.commune_code || ''),
+      commune_kh: String(row.commune_kh || '').trim(),
+      commune_en: String(row.commune_en || '').trim(),
+      village_code: String(row.village_code || ''),
+      village_kh: String(row.village_kh || '').trim(),
+      village_en: String(row.village_en || '').trim()
+    })).filter(row => row.province_code && row.village_code && row.village_kh);
+    if (!normalized.length) throw new Error('ទិន្នន័យទីតាំងទទេ ឬមានទម្រង់មិនត្រឹមត្រូវ។');
+    return normalized;
+  })().catch(error => { cambodiaGeoPromise = null; throw error; });
+  return cambodiaGeoPromise;
+}
+function locationOptionLabel(kh, en) { return kh + (en ? ' · ' + en : ''); }
+async function initCambodiaLocationPicker(root, legacyLocation = '') {
+  if (!root) return;
+  const selects = Object.fromEntries(['province','district','commune','village'].map(level => [level, root.querySelector('[data-location-level="' + level + '"]')]));
+  const locationInput = root.querySelector('[data-location-value]') || root.querySelector('#productLocation');
+  const codeInputs = Object.fromEntries(['province','district','commune','village'].map(level => [level, root.querySelector('[data-location-code="' + level + '"]') || root.querySelector('#product' + level[0].toUpperCase() + level.slice(1) + 'Code')]));
+  const summary = root.querySelector('[data-location-summary]');
+  if (legacyLocation && locationInput && !locationInput.value) locationInput.value = legacyLocation;
+  for (const select of Object.values(selects)) if (select) select.disabled = true;
+  try {
+    const rows = await loadCambodiaGeo();
+    const unique = (items, codeKey, khKey, enKey) => {
+      const map = new Map();
+      items.forEach(row => { if (row[codeKey] && !map.has(row[codeKey])) map.set(row[codeKey], { code: row[codeKey], kh: row[khKey], en: row[enKey] }); });
+      return [...map.values()].sort((a,b) => a.kh.localeCompare(b.kh, 'km'));
+    };
+    const fill = (select, label, items) => {
+      if (!select) return;
+      select.innerHTML = '<option value="">' + label + '</option>' + items.map(item => '<option value="' + esc(item.code) + '">' + esc(locationOptionLabel(item.kh,item.en)) + '</option>').join('');
+      select.disabled = false;
+    };
+    fill(selects.province, 'ជ្រើសរើសរាជធានី/ខេត្ត', unique(rows,'province_code','province_kh','province_en'));
+    const updateLocation = () => {
+      const selected = {};
+      for (const level of ['province','district','commune','village']) {
+        selected[level] = rows.find(row => row[level + '_code'] === (selects[level]?.value || '')) || null;
+      }
+      ['province','district','commune','village'].forEach(level => {
+        if (codeInputs[level]) codeInputs[level].value = selects[level]?.value || '';
+      });
+      if (selected.village && selected.commune && selected.district && selected.province) {
+        const names = [selected.province.province_kh, selected.district.district_kh, selected.commune.commune_kh, selected.village.village_kh];
+        if (locationInput) locationInput.value = names.join(' · ');
+        if (summary) summary.textContent = names.join(' · ') + '  |  កូដភូមិ: ' + selected.village.village_code;
+      } else {
+        if (locationInput) locationInput.value = '';
+        if (summary) summary.textContent = 'សូមជ្រើសរើសរាជធានី/ខេត្ត → ស្រុក/ខណ្ឌ → ឃុំ/សង្កាត់ → ភូមិ';
+      }
+    };
+    selects.province?.addEventListener('change', () => {
+      fill(selects.district, 'ជ្រើសរើសស្រុក/ខណ្ឌ', unique(rows.filter(r => r.province_code === selects.province.value),'district_code','district_kh','district_en'));
+      selects.commune.innerHTML = '<option value="">ជ្រើសរើសឃុំ/សង្កាត់</option>'; selects.commune.disabled = true;
+      selects.village.innerHTML = '<option value="">ជ្រើសរើសភូមិ</option>'; selects.village.disabled = true; updateLocation();
+    });
+    selects.district?.addEventListener('change', () => {
+      fill(selects.commune, 'ជ្រើសរើសឃុំ/សង្កាត់', unique(rows.filter(r => r.district_code === selects.district.value),'commune_code','commune_kh','commune_en'));
+      selects.village.innerHTML = '<option value="">ជ្រើសរើសភូមិ</option>'; selects.village.disabled = true; updateLocation();
+    });
+    selects.commune?.addEventListener('change', () => {
+      fill(selects.village, 'ជ្រើសរើសភូមិ', unique(rows.filter(r => r.commune_code === selects.commune.value),'village_code','village_kh','village_en'));
+      updateLocation();
+    });
+    selects.village?.addEventListener('change', updateLocation);
+    root.dataset.locationReady = 'true';
+  } catch (error) {
+    if (summary) summary.textContent = error.message || 'មិនអាចផ្ទុកទីតាំងបានទេ។';
+    toast(error.message || 'មិនអាចផ្ទុកទីតាំងកម្ពុជាបានទេ។', 'error');
+  }
+}
 function openListingTypeChooser() { openModal('listingTypeModal'); }
 function openJobListingForm() {
   $('jobListingForm').reset();
   fillTaxonomySelect($('jobCategory'), $('jobSubcategory'), $('jobDetailType'), LISTING_TAXONOMY.jobs);
+  void initCambodiaLocationPicker($('jobListingForm').querySelector('[data-location-picker]'));
   $('jobSpecificationFields').innerHTML = '';
   openModal('jobFormModal');
 }
 function openPropertyListingForm() {
   $('propertyListingForm').reset();
   fillTaxonomySelect($('propertyCategory'), $('propertySubcategory'), $('propertyDetailType'), LISTING_TAXONOMY.properties);
+  void initCambodiaLocationPicker($('propertyListingForm').querySelector('[data-location-picker]'));
   $('propertySpecificationFields').innerHTML = '';
   openModal('propertyFormModal');
 }
@@ -1831,6 +1940,10 @@ async function submitNewListing(form, endpoint, kind) {
   if (submit?.disabled) return;
   const original = submit?.textContent || '';
   const data = new FormData(form);
+  if (!String(data.get('location') || '').trim() || !String(data.get('village_code') || '').trim()) {
+    toast('សូមជ្រើសរើសទីតាំងរហូតដល់កម្រិតភូមិ។', 'error');
+    return;
+  }
   const skills = String(data.get('skills_text') || '').split(',').map(v => v.trim()).filter(Boolean);
   const benefits = String(data.get('benefits_text') || '').split(',').map(v => v.trim()).filter(Boolean);
   data.delete('skills_text'); data.delete('benefits_text');
@@ -1866,6 +1979,8 @@ function renderProductForm(product = null) {
   revokeProductImagePreviews();
   state.selectedProductImages = [];
   $('productForm').reset();
+  $('productLocation').value = '';
+  ['Province','District','Commune','Village'].forEach(level => { const field = $('product' + level + 'Code'); if (field) field.value = ''; });
   $('productSubcategory').innerHTML = '<option value="">ជ្រើសរើសផ្នែករង</option>';
   $('productDetailType').innerHTML = '<option value="">ជ្រើសរើសប្រភេទលម្អិត</option>';
   $('productSpecificationFields').innerHTML = '';
@@ -1886,6 +2001,7 @@ function renderProductForm(product = null) {
       .map((item) => ({ kind: 'existing', id: item.id, image_url: item.image_url }));
   }
   renderProductTaxonomy($('productCategory').value);
+  void initCambodiaLocationPicker($('productForm').querySelector('[data-location-picker]'), product?.location || '');
   renderProductImageAlbum();
   updateShortDescriptionCounter();
   openModal('productFormModal');
@@ -2820,6 +2936,7 @@ function bindEvents() {
     }
     const shortDesc = $('productShortDesc').value.trim();
     const fullDesc = $('productDescription').value.trim();
+    if (!$('productLocation').value.trim()) { toast('សូមជ្រើសរើសទីតាំងដល់កម្រិតភូមិ។', 'error'); return; }
     const payload = {
       title: $('productTitle').value.trim(), price: Number($('productPrice').value),
       category: $('productCategory').value, location: $('productLocation').value,
@@ -2865,7 +2982,11 @@ function bindEvents() {
             category: payload.category,
             subcategory: $('productSubcategory').value,
             detail_type: $('productDetailType').value,
-            specifications: collectListingSpecs($('productForm'))
+            specifications: collectListingSpecs($('productForm')),
+            province_code: $('productProvinceCode').value,
+            district_code: $('productDistrictCode').value,
+            commune_code: $('productCommuneCode').value,
+            village_code: $('productVillageCode').value
           })
         });
       } catch (detailsError) {
