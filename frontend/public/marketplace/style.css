@@ -5329,3 +5329,18 @@ body > footer {
   #view-home .jobs-panel { padding: 12px; }
   #view-home .jobs-category-list { grid-template-columns: 1fr 1fr; }
 }
+
+
+@media (min-width: 1101px) {
+  #view-home .home-jobs-rail {
+    grid-column: 3 !important;
+    grid-row: 1 / span 12 !important;
+    align-self: start !important;
+    position: sticky !important;
+    top: 92px !important;
+    max-height: calc(100vh - 108px) !important;
+    overflow-y: auto !important;
+    scrollbar-width: thin;
+    scrollbar-color: #2A475E transparent;
+  }
+}
