@@ -133,6 +133,8 @@ const state = {
   telegramProfileWidgetMounted: false,
   telegramAuthPending: false,
   myOrders: [],
+  myPosts: [],
+  myPostEditing: null,
 
   // Seller
   sellerProductCache: [],
@@ -1784,6 +1786,8 @@ async function renderProfileTab() {
       const orderHtml = orders.map((o) => `<div class="rounded-2xl border border-slate-100 p-3"><div class="flex justify-between"><b class="text-xs">Order #${esc(o.id.slice(0, 8))}</b><span class="text-[10px] font-bold text-emerald-700">${esc(o.status)}</span></div><p class="mt-1 text-[10px] text-slate-500">${fmtDate(o.created_at)} · ${money(o.total)}</p></div>`).join('');
       const offerHtml = offers.map((o) => `<div class="rounded-2xl border border-slate-100 p-3"><div class="flex justify-between"><b class="text-xs">${esc(o.products?.title || 'ទំនិញ')}</b><span class="text-[10px] font-bold text-amber-600">${esc(o.status)}</span></div><p class="mt-1 text-[10px] text-slate-500">ស្នើ ${money(o.offer_price)} · ${fmtDate(o.created_at)}</p></div>`).join('');
       $('profileTabContent').innerHTML = `<div class="space-y-3"><h4 class="text-xs font-bold">ប្រវត្តិការបញ្ជាទិញ</h4>${orderHtml || '<p class="text-[10px] text-slate-400">មិនទាន់មានការបញ្ជាទិញ។</p>'}<h4 class="pt-2 text-xs font-bold">ប្រវត្តិសំណើតថ្លៃ</h4>${offerHtml || '<p class="text-[10px] text-slate-400">មិនទាន់មានសំណើតម្លៃ។</p>'}</div>`;
+    } else if (state.profileTab === 'my-posts') {
+      await renderMyPosts();
     } else {
       const v = state.me.vendor;
       $('profileTabContent').innerHTML = v
@@ -1794,6 +1798,91 @@ async function renderProfileTab() {
   } catch (e) {
     $('profileTabContent').innerHTML = `<p class="text-xs text-rose-600">${esc(e.message)}</p>`;
   }
+}
+
+
+async function renderMyPosts() {
+  const result = await api('/api/my-posts');
+  state.myPosts = result.data || [];
+  state.myPostEditing = null;
+  $('profileActivityCount').textContent = `${state.myPosts.length} ប្រកាស`;
+  $('profileTabContent').innerHTML = `
+    <div class="space-y-3">
+      <div class="flex flex-wrap gap-2">
+        <input id="myPostsSearch" class="field min-w-[180px] flex-1" type="search" placeholder="ស្វែងរកប្រកាស..." />
+        <select id="myPostsFilter" class="field w-auto min-w-[145px]">
+          <option value="all">គ្រប់ប្រភេទ</option>
+          <option value="product">ផលិតផល</option>
+          <option value="job">ការងារ</option>
+          <option value="property">អចលនទ្រព្យ</option>
+          <option value="rental">ផ្ទះ/បន្ទប់ជួល</option>
+          <option value="land">ដី</option>
+          <option value="house_sale">ផ្ទះលក់</option>
+          <option value="social_post">Community Post</option>
+          <option value="story">Story</option>
+        </select>
+      </div>
+      <div id="myPostsList" class="space-y-3"></div>
+    </div>`;
+  $('myPostsSearch')?.addEventListener('input', renderMyPostsList);
+  $('myPostsFilter')?.addEventListener('change', renderMyPostsList);
+  renderMyPostsList();
+}
+
+function renderMyPostsList() {
+  const target = $('myPostsList');
+  if (!target) return;
+  const term = String($('myPostsSearch')?.value || '').trim().toLowerCase();
+  const filter = $('myPostsFilter')?.value || 'all';
+  const rows = state.myPosts.filter(post =>
+    (filter === 'all' || post.type === filter) &&
+    (!term || String(post.title || post.caption || '').toLowerCase().includes(term) ||
+      String(post.description || '').toLowerCase().includes(term))
+  );
+  target.innerHTML = rows.map(post => {
+    const key = post.type + ':' + post.id;
+    const editing = state.myPostEditing === key;
+    const status = post.status === 'active' ? 'កំពុងផ្សាយ'
+      : ['expired','archived'].includes(post.status) ? 'ផុតសុពលភាព'
+      : post.status === 'sold' ? 'លក់រួច' : post.status === 'rented' ? 'ជួលរួច'
+      : post.status === 'closed' ? 'បានបិទ' : post.status;
+    const amount = post.price ?? post.rent_amount ?? post.salary_min;
+    const image = post.image_url ? `<img src="${esc(post.image_url)}" alt="" class="h-16 w-16 shrink-0 rounded-xl object-cover">` : `<div class="grid h-16 w-16 shrink-0 place-items-center rounded-xl bg-slate-100 text-slate-400">${ic('image',20)}</div>`;
+    const editForm = editing ? `
+      <form data-my-post-edit-form data-type="${esc(post.type)}" data-id="${esc(post.id)}" class="mt-3 grid gap-2 rounded-xl bg-slate-50 p-3">
+        ${post.type === 'social_post'
+          ? `<label class="text-[10px] font-semibold">Caption<textarea name="caption" class="field mt-1" maxlength="500" rows="3">${esc(post.caption || '')}</textarea></label>`
+          : `<label class="text-[10px] font-semibold">ចំណងជើង<input name="title" class="field mt-1" maxlength="160" required value="${esc(post.title || '')}"></label>
+             <label class="text-[10px] font-semibold">ពិពណ៌នា<textarea name="description" class="field mt-1" rows="3" maxlength="5000">${esc(post.description || '')}</textarea></label>
+             <label class="text-[10px] font-semibold">ទីតាំង<input name="location" class="field mt-1" maxlength="300" value="${esc(post.location || '')}"></label>
+             ${post.type === 'job'
+               ? `<div class="grid grid-cols-2 gap-2"><label class="text-[10px]">ប្រាក់ខែចាប់ពី<input name="salary_min" class="field mt-1" type="number" min="0" step="any" value="${esc(post.salary_min ?? '')}"></label><label class="text-[10px]">ប្រាក់ខែដល់<input name="salary_max" class="field mt-1" type="number" min="0" step="any" value="${esc(post.salary_max ?? '')}"></label></div>`
+               : post.type === 'product'
+                 ? `<div class="grid grid-cols-2 gap-2"><label class="text-[10px]">តម្លៃ<input name="price" class="field mt-1" type="number" min="0" step="any" value="${esc(post.price ?? 0)}"></label><label class="text-[10px]">ស្តុក<input name="stock" class="field mt-1" type="number" min="0" step="1" value="${esc(post.stock ?? 0)}"></label></div>`
+                 : `<label class="text-[10px]">តម្លៃ<input name="price" class="field mt-1" type="number" min="0" step="any" value="${esc(post.price ?? post.rent_amount ?? '')}"></label>`}
+          `}
+        <div class="flex justify-end gap-2"><button type="button" data-my-post-action="cancel" data-type="${esc(post.type)}" data-id="${esc(post.id)}" class="rounded-full border border-slate-200 px-4 py-2 text-[10px] font-bold">បោះបង់</button><button type="submit" class="brand-gradient rounded-full px-4 py-2 text-[10px] font-bold text-white">រក្សាទុក</button></div>
+      </form>` : '';
+    return `
+      <article class="rounded-2xl border border-slate-100 bg-white p-3" data-my-post-card="${esc(key)}">
+        <div class="flex items-start gap-3">
+          ${image}
+          <div class="min-w-0 flex-1">
+            <div class="flex flex-wrap items-center gap-2"><span class="text-[9px] font-bold text-slate-500">${esc(post.type_label || post.type)}</span><span class="rounded-full bg-slate-100 px-2 py-1 text-[9px] font-bold text-slate-600">${esc(status)}</span></div>
+            <b class="mt-1 block truncate text-xs">${esc(post.title || post.caption || 'Story')}</b>
+            <p class="mt-1 line-clamp-2 text-[10px] text-slate-500">${esc(post.description || post.caption || '')}</p>
+            <div class="mt-1 text-[9px] text-slate-400">${post.created_at ? fmtDate(post.created_at) : ''}${amount != null ? ' · ' + money(amount) : ''}</div>
+          </div>
+        </div>
+        <div class="mt-3 flex flex-wrap gap-2">
+          ${post.editable ? `<button type="button" data-my-post-action="edit" data-type="${esc(post.type)}" data-id="${esc(post.id)}" class="rounded-full border border-slate-200 px-3 py-2 text-[9px] font-bold text-slate-700">កែប្រែ</button>` : ''}
+          ${post.renewable ? `<button type="button" data-my-post-action="renew" data-type="${esc(post.type)}" data-id="${esc(post.id)}" class="rounded-full bg-emerald-50 px-3 py-2 text-[9px] font-bold text-emerald-700">Renew</button>` : ''}
+          ${post.type !== 'social_post' && post.status === 'active' ? `<button type="button" data-my-post-action="expire" data-type="${esc(post.type)}" data-id="${esc(post.id)}" class="rounded-full bg-amber-50 px-3 py-2 text-[9px] font-bold text-amber-700">Expire</button>` : ''}
+          <button type="button" data-my-post-action="delete" data-type="${esc(post.type)}" data-id="${esc(post.id)}" class="rounded-full bg-rose-50 px-3 py-2 text-[9px] font-bold text-rose-700">លុប</button>
+        </div>
+        ${editForm}
+      </article>`;
+  }).join('') || '<div class="py-10 text-center text-xs text-slate-400">មិនទាន់មានប្រកាសក្នុងប្រភេទនេះទេ។</div>';
 }
 
 function savedCard(p) {
@@ -3631,7 +3720,7 @@ function bindEvents() {
     catch (err) { toast(err.message || 'មិនអាចដាក់ពាក្យបានទេ។', 'error'); }
   });
 
-  const selectProfileTab = (tab) => { if (!['saved', 'history', 'seller'].includes(tab) || !requireLogin()) return; state.profileTab = tab; document.querySelectorAll('[data-profile-tab]').forEach((b) => { const active = b.dataset.profileTab === tab; b.classList.toggle('is-active', active); b.classList.toggle('active', active); }); void renderProfileTab(); };
+  const selectProfileTab = (tab) => { if (!['saved', 'history', 'my-posts', 'seller'].includes(tab) || !requireLogin()) return; state.profileTab = tab; document.querySelectorAll('[data-profile-tab]').forEach((b) => { const active = b.dataset.profileTab === tab; b.classList.toggle('is-active', active); b.classList.toggle('active', active); }); void renderProfileTab(); };
   document.querySelectorAll('[data-profile-tab]').forEach((b) => b.addEventListener('click', () => selectProfileTab(b.dataset.profileTab)));
   document.querySelectorAll('[data-profile-jump]').forEach((b) => b.addEventListener('click', () => selectProfileTab(b.dataset.profileJump)));
   $('profileApplyTop')?.addEventListener('click', () => state.me?.vendor ? showView('seller') : openSellerModal());
@@ -3676,7 +3765,62 @@ function bindEvents() {
   };
   $('avatarUpload')?.addEventListener('change', () => void uploadProfileImage('avatarUpload', 'avatar'));
   $('coverUpload')?.addEventListener('change', () => void uploadProfileImage('coverUpload', 'cover'));
-  $('profileTabContent')?.addEventListener('click', (e) => { const open = e.target.closest('[data-open-product]'); if (open) { void openProduct(open.dataset.openProduct); return; } const remove = e.target.closest('[data-remove-saved]'); if (remove) saveAction(remove.dataset.removeSaved, remove); });
+  $('profileTabContent')?.addEventListener('click', async (e) => {
+    const action = e.target.closest('[data-my-post-action]');
+    if (action) {
+      const { type, id } = action.dataset;
+      if (action.dataset.myPostAction === 'edit') {
+        state.myPostEditing = type + ':' + id;
+        renderMyPostsList();
+        return;
+      }
+      if (action.dataset.myPostAction === 'cancel') {
+        state.myPostEditing = null;
+        renderMyPostsList();
+        return;
+      }
+      const labels = { renew:'Renew ប្រកាសនេះ?', expire:'បញ្ចប់សុពលភាពប្រកាសនេះ?', delete:'លុបប្រកាសនេះមែនទេ?' };
+      const verb = action.dataset.myPostAction;
+      if (!confirm(labels[verb] || 'បន្តសកម្មភាពនេះ?')) return;
+      try {
+        if (verb === 'delete') await api('/api/my-posts/' + encodeURIComponent(type) + '/' + encodeURIComponent(id), { method:'DELETE' });
+        else await api('/api/my-posts/' + encodeURIComponent(type) + '/' + encodeURIComponent(id), { method:'PATCH', body:JSON.stringify({ action:verb }) });
+        toast(verb === 'delete' ? 'បានលុបប្រកាសរួចរាល់។' : verb === 'renew' ? 'បាន Renew ប្រកាសជោគជ័យ។' : 'បានបញ្ចប់សុពលភាពប្រកាស។');
+        await renderMyPosts();
+      } catch (err) { toast(err.message || 'មិនអាចធ្វើសកម្មភាពបានទេ។', 'error'); }
+      return;
+    }
+    const open = e.target.closest('[data-open-product]');
+    if (open) { void openProduct(open.dataset.openProduct); return; }
+    const remove = e.target.closest('[data-remove-saved]');
+    if (remove) saveAction(remove.dataset.removeSaved, remove);
+  });
+  $('profileTabContent')?.addEventListener('submit', async (e) => {
+    const form = e.target.closest('[data-my-post-edit-form]');
+    if (!form) return;
+    e.preventDefault();
+    const type = form.dataset.type, id = form.dataset.id, values = new FormData(form);
+    const payload = { action:'edit' };
+    if (type === 'social_post') payload.caption = values.get('caption') || '';
+    else {
+      payload.title = values.get('title') || '';
+      payload.description = values.get('description') || '';
+      payload.location = values.get('location') || '';
+      if (type === 'job') {
+        payload.salary_min = values.get('salary_min');
+        payload.salary_max = values.get('salary_max');
+      } else if (type === 'product') {
+        payload.price = values.get('price');
+        payload.stock = values.get('stock');
+      } else payload.price = values.get('price');
+    }
+    try {
+      await api('/api/my-posts/' + encodeURIComponent(type) + '/' + encodeURIComponent(id), { method:'PATCH', body:JSON.stringify(payload) });
+      state.myPostEditing = null;
+      toast('បានកែប្រែប្រកាសជោគជ័យ។');
+      await renderMyPosts();
+    } catch (err) { toast(err.message || 'មិនអាចកែប្រែប្រកាសបានទេ។', 'error'); }
+  });
 
   $('connectTelegramBtn')?.addEventListener('click', async () => { try { const res = await api('/api/me/telegram/connect', { method: 'POST', body: JSON.stringify({}) }); const url = res.data?.url || res.data?.link || res.data?.telegram_url; if (url && $('telegramConnectLink')) { $('telegramConnectLink').href = url; $('telegramConnectLink').classList.remove('hidden'); } $('refreshTelegramStatusBtn')?.classList.remove('hidden'); toast('បានបង្កើតតំណភ្ជាប់ Telegram។'); } catch (err) { toast(err.message || 'មិនអាចភ្ជាប់ Telegram បានទេ។', 'error'); } });
   $('refreshTelegramStatusBtn')?.addEventListener('click', () => void renderTelegramSecurity());
