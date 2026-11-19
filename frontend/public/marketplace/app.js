@@ -3179,6 +3179,66 @@ function bindEvents() {
     catch (err) { toast(err.message || 'មិនអាចផ្ញើសំណើតម្លៃបានទេ។', 'error'); }
   });
 
+  // Shared image preview for image upload controls across the marketplace.
+  // Product album and existing profile/document previews keep their dedicated flows.
+  const uploadPreviewUrls = new WeakMap();
+  const posterPreviewTargets = {
+    posterUploadTop: 'posterPreviewTop',
+    posterUploadMiddle: 'posterPreviewMiddle',
+    posterUploadTall: 'posterPreviewTall'
+  };
+  document.addEventListener('change', (event) => {
+    const input = event.target;
+    if (!(input instanceof HTMLInputElement) || input.type !== 'file') return;
+    if (!String(input.accept || '').toLowerCase().includes('image')) return;
+    if (['productImage', 'avatarUpload', 'coverUpload', 'sellerDocument'].includes(input.id)) return;
+
+    const files = Array.from(input.files || []).filter(file => file.type.startsWith('image/'));
+    const previousUrls = uploadPreviewUrls.get(input) || [];
+    previousUrls.forEach(url => URL.revokeObjectURL(url));
+    uploadPreviewUrls.set(input, []);
+
+    const targetId = posterPreviewTargets[input.id];
+    const existingTarget = targetId ? $(targetId) : null;
+    let preview = existingTarget;
+    if (!preview) {
+      preview = input.parentElement?.querySelector(':scope > .global-image-upload-preview');
+      if (!preview) {
+        preview = document.createElement('div');
+        preview.className = 'global-image-upload-preview';
+        const anchor = input.closest('label') || input;
+        anchor.insertAdjacentElement('afterend', preview);
+      }
+    }
+    preview.replaceChildren();
+    if (!files.length) {
+      if (targetId) preview.textContent = 'Preview';
+      else preview.remove();
+      return;
+    }
+
+    const urls = files.map(file => URL.createObjectURL(file));
+    uploadPreviewUrls.set(input, urls);
+    const grid = document.createElement('div');
+    grid.className = 'global-image-upload-grid';
+    files.forEach((file, index) => {
+      const item = document.createElement('div');
+      item.className = 'global-image-upload-item';
+      const image = document.createElement('img');
+      image.src = urls[index];
+      image.alt = file.name || 'Image preview';
+      image.loading = 'lazy';
+      item.appendChild(image);
+      if (files.length > 1) {
+        const name = document.createElement('span');
+        name.textContent = file.name;
+        item.appendChild(name);
+      }
+      grid.appendChild(item);
+    });
+    preview.appendChild(grid);
+  });
+
   $('sellerDocument')?.addEventListener('change', () => {
     const file = $('sellerDocument').files?.[0], preview = $('sellerDocPreview');
     if (!preview) return; preview.innerHTML = '';
