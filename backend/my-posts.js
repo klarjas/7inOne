@@ -11,7 +11,7 @@ export function registerMyPostsRoutes(app, {
   const sources = [
     { type:'job', label:'ការងារ', table:'jobs', fields:'id,user_id,title,description,category,location,company_name,salary_min,salary_max,status,expires_at,created_at,updated_at,image_file_id,image_message_id,image_mime_type,image_gallery' },
     { type:'property', label:'អចលនទ្រព្យ', table:'property_listings', fields:'id,user_id,title,description,category,location,price,status,expires_at,created_at,updated_at,image_file_id,image_message_id,image_mime_type,image_gallery' },
-    { type:'rental', label:'ផ្ទះ/បន្ទប់ជួល', table:'rentals', fields:'id,user_id,title,description,category,location,rent_amount,status,expires_at,created_at,updated_at,image_file_id,image_message_id,image_mime_type,image_message_id' },
+    { type:'rental', label:'ផ្ទះ/បន្ទប់ជួល', table:'rentals', fields:'id,user_id,title,description,category,location,rent_amount,status,expires_at,created_at,updated_at,image_file_id,image_message_id,image_mime_type' },
     { type:'land', label:'ដី', table:'land_listings', fields:'id,user_id,title,description,category,location,price,status,expires_at,created_at,updated_at,image_file_id,image_message_id,image_mime_type' },
     { type:'house_sale', label:'ផ្ទះលក់', table:'house_sale_listings', fields:'id,user_id,title,description,category,location,price,status,expires_at,created_at,updated_at,image_file_id,image_message_id,image_mime_type' },
     { type:'social_post', label:'Community Post', table:'social_posts', fields:'id,user_id,caption,image_file_id,image_message_id,created_at' },
@@ -72,7 +72,7 @@ export function registerMyPostsRoutes(app, {
         results.push(...(data || []).map(row => normalized(row, 'product', 'ផលិតផល')));
       }
       const reads = await Promise.all(sources.map(source =>
-        supabase.from(source.table).select(source.fields).eq('user_id', req.user.id).order('created_at', { ascending:false }).limit(200)
+        supabase.from(source.table).select(source.fields).eq('user_id', req.user.id).order('created_at', { ascending:false }).limit(1000)
       ));
       for (let index = 0; index < sources.length; index++) {
         const source = sources[index], result = reads[index];
@@ -160,7 +160,7 @@ export function registerMyPostsRoutes(app, {
       if (!source) return fail(res,400,'ប្រភេទប្រកាសមិនត្រឹមត្រូវ។');
       const { data: row, error } = await supabase.from(source.table).select('*').eq('id',id).eq('user_id',req.user.id).maybeSingle();
       if (error) throw error;
-      if (!row) return fail(res,404,'រកមិនឃើញប្រកាសនេះទេ。');
+      if (!row) return fail(res,404,'រកមិនឃើញប្រកាសនេះទេ។');
       if (action === 'renew') {
         if (['sold','rented','closed'].includes(row.status)) return fail(res,409,'ប្រកាសដែលបានបិទ/លក់រួច មិនអាច Renew បានទេ។');
         const { error:updateError } = await supabase.from(source.table).update({ status:'active', expires_at:new Date(now.getTime()+7*86400000).toISOString(), updated_at:nowIso() }).eq('id',id).eq('user_id',req.user.id);
@@ -179,6 +179,7 @@ export function registerMyPostsRoutes(app, {
           for (const key of ['salary_min','salary_max']) if (req.body[key] !== undefined) patch[key] = req.body[key] === '' || req.body[key] == null ? null : Number(req.body[key]);
           if (patch.salary_min != null && (!Number.isFinite(patch.salary_min) || patch.salary_min < 0)) return fail(res,400,'ប្រាក់ខែមិនត្រឹមត្រូវ។');
           if (patch.salary_max != null && (!Number.isFinite(patch.salary_max) || patch.salary_max < 0)) return fail(res,400,'ប្រាក់ខែមិនត្រឹមត្រូវ។');
+          if (patch.salary_min != null && patch.salary_max != null && patch.salary_max < patch.salary_min) return fail(res,400,'ប្រាក់ខែអតិបរមាត្រូវធំជាងប្រាក់ខែអប្បបរមា។');
         } else if (type === 'property') {
           if (req.body.price !== undefined) patch.price = req.body.price === '' ? null : Number(req.body.price);
         } else if (type === 'rental') {
@@ -187,7 +188,7 @@ export function registerMyPostsRoutes(app, {
           if (req.body.price !== undefined) patch.price = Number(req.body.price);
         }
         if (patch.title !== undefined && patch.title.length < 2) return fail(res,400,'ចំណងជើងត្រូវមានយ៉ាងតិច ២ តួអក្សរ។');
-        for (const key of ['price','rent_amount']) if (patch[key] !== undefined && (!Number.isFinite(patch[key]) || patch[key] < 0)) return fail(res,400,'តម្លៃមិនត្រឹមត្រូវ។');
+        for (const key of ['price','rent_amount']) if (patch[key] !== undefined && patch[key] !== null && (!Number.isFinite(patch[key]) || patch[key] < 0)) return fail(res,400,'តម្លៃមិនត្រឹមត្រូវ។');
         if (!Object.keys(patch).length) return fail(res,400,'មិនមានព័ត៌មានត្រូវកែទេ។');
         patch.updated_at = nowIso();
         const { error:updateError } = await supabase.from(source.table).update(patch).eq('id',id).eq('user_id',req.user.id);
