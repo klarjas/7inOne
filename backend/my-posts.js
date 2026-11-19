@@ -99,7 +99,7 @@ export function registerMyPostsRoutes(app, {
     try {
       if (type === 'product') {
         const { data: vendor } = await vendorFor(req.user.id);
-        if (!vendor) return fail(res, 403, 'Active store ownership required');
+        if (!vendor || vendor.status === 'blocked') return fail(res, 403, 'Active store ownership required');
         const { data: row, error } = await supabase.from('products')
           .select('id,vendor_id,title,description,price,stock,category,location,condition,status,created_at,renewed_at,updated_at,product_images(id,telegram_message_id)')
           .eq('id',id).eq('vendor_id',vendor.id).maybeSingle();
@@ -111,6 +111,7 @@ export function registerMyPostsRoutes(app, {
           const { error:updateError } = await supabase.from('products').update({ renewed_at:nowIso(), status:'active', updated_at:nowIso() }).eq('id',id);
           if (updateError) throw updateError;
         } else if (action === 'expire') {
+          if (row.status !== 'active') return fail(res,409,'ប្រកាសនេះមិនស្ថិតក្នុងស្ថានភាពអាចបញ្ចប់បានទេ។');
           const { error:updateError } = await supabase.from('products').update({ renewed_at:new Date(now.getTime() - 8 * 86400000).toISOString(), updated_at:nowIso() }).eq('id',id);
           if (updateError) throw updateError;
         } else if (action === 'edit') {
@@ -126,7 +127,7 @@ export function registerMyPostsRoutes(app, {
           if (patch.stock !== undefined && (!Number.isInteger(patch.stock) || patch.stock < 0)) return fail(res,400,'ស្តុកមិនត្រឹមត្រូវ។');
           if (!Object.keys(patch).length) return fail(res,400,'មិនមានព័ត៌មានត្រូវកែទេ។');
           patch.updated_at = nowIso();
-          const { error:updateError } = await supabase.from('products').update(patch).eq('id',id);
+          const { error:updateError } = await supabase.from('products').update(patch).eq('id',id).eq('vendor_id',vendor.id);
           if (updateError) throw updateError;
         } else return fail(res,400,'សកម្មភាពមិនត្រឹមត្រូវ។');
         return res.json({ success:true });
