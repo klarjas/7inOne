@@ -1557,13 +1557,64 @@ function renderProductForm(product = null) {
   openModal('productFormModal');
 }
 
+function shortDescriptionLineMaxWidth() {
+  const cards = Array.from(document.querySelectorAll('.cd'));
+  const card = cards.find((item) => item.getClientRects().length);
+  if (card) {
+    const body = card.querySelector('.cb');
+    const description = card.querySelector('.cd-description');
+    if (description?.clientWidth) return description.clientWidth;
+    if (body?.clientWidth) {
+      const style = getComputedStyle(body);
+      return Math.max(80, body.clientWidth - parseFloat(style.paddingLeft || 0) - parseFloat(style.paddingRight || 0));
+    }
+  }
+  // Fallback to the minimum desktop product-card width minus its content padding.
+  return 150;
+}
+
+function shortDescriptionGraphemes(value) {
+  if (typeof Intl !== 'undefined' && Intl.Segmenter) {
+    return Array.from(new Intl.Segmenter('km', { granularity: 'grapheme' }).segment(value), (part) => part.segment);
+  }
+  return Array.from(value);
+}
+
+function fitShortDescriptionLines(value, maxWidth) {
+  const field = $('productShortDesc');
+  const style = field ? getComputedStyle(field) : null;
+  const canvas = document.createElement('canvas');
+  const context = canvas.getContext('2d');
+  const cardDescription = document.querySelector('.cd .cd-description');
+  const cardStyle = cardDescription ? getComputedStyle(cardDescription) : null;
+  context.font = cardStyle?.font || '11px "Kantumruy Pro", sans-serif';
+  const lines = String(value || '').replace(/\r/g, '').split('\n').slice(0, 3);
+  return lines.map((line) => {
+    const parts = shortDescriptionGraphemes(line);
+    let result = '';
+    for (const part of parts) {
+      if (context.measureText(result + part).width > maxWidth) break;
+      result += part;
+    }
+    return result;
+  }).join('\n');
+}
+
 function updateShortDescriptionCounter() {
   const field = $('productShortDesc');
   const counter = $('productShortDescCount');
   if (!field || !counter) return;
-  const lines = String(field.value || '').replace(/\r/g, '').split('\n').slice(0, 3);
-  field.value = Array.from(lines.join('\n')).slice(0, 140).join('');
-  counter.textContent = `${field.value.length}/140 · ${Math.max(1, field.value.split('\n').length)}/3 ជួរ`;
+  const previous = field.value;
+  const caret = field.selectionStart ?? previous.length;
+  const fitted = fitShortDescriptionLines(previous, shortDescriptionLineMaxWidth());
+  if (fitted !== previous) {
+    field.value = fitted;
+    const nextCaret = Math.min(caret, fitted.length);
+    field.setSelectionRange(nextCaret, nextCaret);
+  }
+  const lines = field.value.split('\n');
+  const graphemeCounts = lines.map((line) => shortDescriptionGraphemes(line).length);
+  counter.textContent = `៣ បន្ទាត់ · ${graphemeCounts.map((count, index) => `បន្ទាត់ ${index + 1}: ${count}`).join(' / ')} · កំណត់តាមទំហំកាត`;
 }
 
 async function renderSeller() {
