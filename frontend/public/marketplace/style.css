@@ -4758,3 +4758,26 @@ body > footer {
   object-fit: contain !important;
   object-position: center !important;
 }
+
+
+/* Match homepage content edges to the full-width header inner shell */
+#view-home .home-layout-shell,
+#view-home .home-layout-shell.amazon-store-body.shell,
+#view-home .amazon-store-body {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  max-width: none !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  padding-left: 24px !important;
+  padding-right: 24px !important;
+}
+@media (max-width: 700px) {
+  #view-home .home-layout-shell,
+  #view-home .home-layout-shell.amazon-store-body.shell,
+  #view-home .amazon-store-body {
+    width: 100% !important;
+    padding-left: 24px !important;
+    padding-right: 24px !important;
+  }
+}
