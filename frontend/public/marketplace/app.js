@@ -3147,7 +3147,7 @@ async function loadHomeVendorMedia(){
    target._shortsObserver=new IntersectionObserver(entries=>{
     for(const entry of entries){
      const card=entry.target;
-     if(entry.isIntersecting&&entry.intersectionRatio>=0.65&&!document.hidden){
+     if(entry.isIntersecting&&entry.intersectionRatio>=0.65&&!document.hidden&&!popup?.open){
       void playPreview(card);
      }else if(activePreview===card){
       stopPreview(card);
