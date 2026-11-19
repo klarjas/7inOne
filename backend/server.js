@@ -1077,16 +1077,15 @@ app.post('/api/vendor/media-links',authenticate,requireVendor,async(req,res)=>{
 });
 app.patch('/api/vendor/media-links/:id',authenticate,requireVendor,async(req,res)=>{
  if(req.vendor.status!=='approved')return fail(res,403,'Only verified sellers can manage Shorts / Live links');
+ const {data:current,error:loadError}=await supabase.from('vendor_media_links').select('id,media_url,media_type').eq('id',req.params.id).eq('vendor_id',req.vendor.id).maybeSingle();
+ if(loadError)return fail(res,500,'Could not load Shorts / Live link');if(!current)return fail(res,404,'Shorts / Live link not found');
  const patch={updated_at:new Date().toISOString()};
  if(typeof req.body?.is_active==='boolean')patch.is_active=req.body.is_active;
  if(req.body?.media_url!==undefined){const mediaUrl=normalizeSellerMediaUrl(req.body.media_url);if(!mediaUrl)return fail(res,400,'Please provide a valid public Facebook or YouTube HTTPS link.');patch.media_url=mediaUrl;}
  if(req.body?.media_type!==undefined){const mediaType=clean(req.body.media_type,10);if(!['live','video'].includes(mediaType))return fail(res,400,'Media type must be live or video.');patch.media_type=mediaType;}
- const mediaType=patch.media_type;
- if(mediaType==='video'||(req.body?.media_url!==undefined&&req.body?.media_type===undefined)){
-  const url=patch.media_url;
-  if(url){const invalid=validateSellerMedia(url,'video');if(invalid)return fail(res,400,invalid);}
- }
  if(Object.keys(patch).length===1)return fail(res,400,'No valid media changes provided');
+ const nextUrl=patch.media_url??current.media_url,nextType=patch.media_type??current.media_type;
+ const invalid=validateSellerMedia(nextUrl,nextType);if(invalid)return fail(res,400,invalid);
  const {data,error}=await supabase.from('vendor_media_links').update(patch).eq('id',req.params.id).eq('vendor_id',req.vendor.id).select('id,vendor_id,media_url,media_type,is_active,created_at,updated_at').maybeSingle();
  if(error)return fail(res,500,'Could not update Live / Video link');if(!data)return fail(res,404,'Shorts / Live link not found');return res.json({data});
 });
