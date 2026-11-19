@@ -1704,7 +1704,7 @@ body{background:var(--page)!important;color:var(--ink);font-family:"Kantumruy Pr
 @media(max-width:639px){.home-vendor-media{margin:12px 0 18px;padding-top:13px}.home-vendor-media-card{flex-basis:48px}.home-vendor-media-cover{width:48px;border-radius:11px}.home-vendor-media-store>span:last-child{font-size:8px}}
 
 /* Premium desktop marketplace refresh */
-.home-layout-shell{display:grid;grid-template-columns:184px minmax(0,1fr) 228px;gap:18px;align-items:start;width:min(1600px,calc(100% - 36px));padding:16px 0 36px}
+.home-layout-shell{display:grid;grid-template-columns:184px minmax(0,1fr) 228px;gap:18px;align-items:start;padding:16px 0 36px}
 .home-sidebar{position:sticky;top:92px;display:flex;flex-direction:column;gap:7px;min-width:0;padding:10px 8px;border:1px solid #2A475E;border-radius:18px;background:#16202D;color:#C7D5E0;box-shadow:none}
 .home-side-link{display:flex;align-items:center;gap:12px;min-height:43px;padding:0 12px;border:0;border-radius:11px;background:transparent;color:#394454;text-align:left;font-size:12px;font-weight:650;transition:background .18s,color .18s}
 .home-side-link>span{display:grid;place-items:center;width:22px;font-size:17px;color:#6b7280}
@@ -1960,7 +1960,6 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
  .hd .shell>div:last-child{gap:4px}
 }
 /* Hero: clean editorial Apple Store composition */
-.home-layout-shell.shell{width:min(1200px,calc(100% - 40px))!important}
 .market-hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;padding-top:24px!important;align-items:stretch}
 .market-hero .hc{min-height:320px;justify-content:center;gap:14px;padding:clamp(24px,4vw,48px);border:1px solid #2A475E;border-radius:28px;background:#16202D;color:#C7D5E0;box-shadow:none}
 .market-hero .live{color:var(--accent)!important;font-size:11px!important;font-weight:700}
@@ -2007,7 +2006,6 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .cd .mt{font-size:10px!important;color:var(--muted)!important}
 @media(max-width:900px){.market-hero{grid-template-columns:1fr}.hero-bento{min-height:240px}.market-hero .hc{min-height:260px}}
 @media(max-width:639px){
- .home-layout-shell.shell{width:calc(100% - 24px)!important}
  .market-hero{padding-top:12px!important;gap:12px}
  .market-hero .hc{min-height:0;padding:22px!important;border-radius:22px!important}
  .market-hero .hc h1{font-size:32px!important}
@@ -2189,7 +2187,7 @@ textarea,
 }
 
 /* 7inOne storefront refinement: balanced layout and functional product grid */
-.home-layout-shell{width:min(1460px,calc(100% - 44px))!important;grid-template-columns:184px minmax(0,1fr) 220px!important;gap:20px!important;padding:22px 0 54px!important}
+.home-layout-shell{grid-template-columns:184px minmax(0,1fr) 220px!important;gap:20px!important;padding:22px 0 54px!important}
 .home-sidebar{top:82px!important;padding:12px 10px!important;border:1px solid #2A475E!important;border-radius:20px!important;background:#16202D!important;color:#C7D5E0!important;box-shadow:none!important}
 .home-side-link{min-height:44px!important;border-radius:12px!important;font-size:12px!important}
 .home-side-link.active{background:#203244!important;color:#66C0F4!important}
@@ -2242,7 +2240,7 @@ textarea,
 .home-promo-slot.tall{min-height:270px!important}
 @media(min-width:1500px){.home-layout-shell{grid-template-columns:190px minmax(0,1fr) 230px!important;gap:22px!important}.home-main-content #productGrid:not(.hidden),.home-main-content #skeletonGrid:not(.hidden){grid-template-columns:repeat(4,minmax(0,1fr))!important}}
 @media(max-width:1199px){.home-layout-shell{grid-template-columns:164px minmax(0,1fr)!important;gap:16px!important}.home-promo-rail{display:none!important}.home-main-content #productGrid:not(.hidden),.home-main-content #skeletonGrid:not(.hidden){grid-template-columns:repeat(3,minmax(0,1fr))!important}}
-@media(max-width:900px){.home-layout-shell{width:calc(100% - 28px)!important;grid-template-columns:146px minmax(0,1fr)!important;gap:13px!important}.home-main-content .market-hero{grid-template-columns:1fr!important}.home-main-content .market-hero .hc{min-height:300px!important}.home-main-content .hero-bento{min-height:230px!important}.home-main-content #productGrid:not(.hidden),.home-main-content #skeletonGrid:not(.hidden){grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+@media(max-width:900px){.home-layout-shell{grid-template-columns:146px minmax(0,1fr)!important;gap:13px!important}.home-main-content .market-hero{grid-template-columns:1fr!important}.home-main-content .market-hero .hc{min-height:300px!important}.home-main-content .hero-bento{min-height:230px!important}.home-main-content #productGrid:not(.hidden),.home-main-content #skeletonGrid:not(.hidden){grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 @media(max-width:700px){.home-layout-shell{display:block!important;width:100%!important;padding:8px 13px 32px!important}.home-sidebar,.home-promo-rail{display:none!important}.home-main-content .market-hero{grid-template-columns:1fr!important;gap:12px!important}.home-main-content .market-hero .hc{min-height:0!important;padding:23px 20px!important;border-radius:20px!important}.home-main-content .market-hero .hc h1{font-size:clamp(25px,7vw,34px)!important}.home-main-content .hero-bento{min-height:205px!important}.home-main-content .dock{overflow-x:auto!important;justify-content:flex-start!important;padding:18px 2px 14px!important}.home-main-content .dk{flex:0 0 82px!important}.home-main-content .dk .ico{width:48px!important;height:48px!important;border-radius:15px!important}.home-main-content #productGrid:not(.hidden),.home-main-content #skeletonGrid:not(.hidden){grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}.home-main-content .cd .im{margin:0!important;padding:0!important;border-radius:0!important}.home-main-content .cd .im .cd-image-wrap img{padding:0!important;object-fit:cover}.home-main-content .cd .cb{padding:10px 10px 12px!important}.home-main-content .cd .cb h3{font-size:12px!important;min-height:3em!important}.home-main-content .cd .pr{font-size:15px!important}.home-main-content .cd .mt{font-size:9px!important}}
 @media(prefers-reduced-motion:reduce){.home-main-content .cd,.home-main-content .cd:hover{transform:none!important}}
 
@@ -2391,7 +2389,7 @@ textarea,
 .amazon-nav-spacer{flex:1}
 .amazon-nav-promo{font-weight:800!important;color:#fbd36b!important}
 #view-home{padding-top:0}
-.home-layout-shell{display:grid!important;width:min(1520px,calc(100% - 32px))!important;grid-template-columns:220px minmax(0,1fr)!important;gap:14px 20px!important;align-items:start;padding:16px 0 36px!important}
+.home-layout-shell{display:grid!important;grid-template-columns:220px minmax(0,1fr)!important;gap:14px 20px!important;align-items:start;padding:16px 0 36px!important}
 .home-main-content{display:contents!important}
 .home-sidebar{grid-column:1;grid-row:3 / span 5;position:sticky;top:118px;display:flex;flex-direction:column;gap:0;min-width:0;padding:12px;border:1px solid #2A475E;border-radius:8px;background:#16202D;color:#C7D5E0;box-shadow:none}
 .store-filter-group{display:flex;flex-direction:column;gap:7px;padding:5px 0 15px;margin-bottom:12px;border-bottom:1px solid #2A475E}
@@ -2463,7 +2461,7 @@ textarea,
  .delivery-location{display:none}
  #searchForm{order:3;width:100%;flex:1 0 100%;height:40px}
  .amazon-nav-row{gap:10px}
- .home-layout-shell{width:calc(100% - 18px)!important;padding-top:10px!important}
+ .home-layout-shell{padding-top:10px!important}
  .market-hero{display:block!important;padding:18px!important;min-height:0}
  .market-hero .hero-bento{display:none!important}
  #categoryStrip{margin:9px 0}
@@ -2509,9 +2507,9 @@ textarea,
 
 /* 7inOne storefront layout correction — keeps the hero hidden and all existing IDs/actions intact. */
 #view-home{
-  width:min(1560px,calc(100% - 32px))!important;
+  width:100%!important;
   max-width:none!important;
-  margin:0 auto!important;
+  margin:0!important;
 }
 #view-home .home-layout-shell,
 #view-home .amazon-store-body{
@@ -2665,7 +2663,6 @@ body > header.hd.glass{
   }
 }
 @media(max-width:900px){
-  #view-home{width:calc(100% - 24px)!important}
   #view-home .home-layout-shell,
   #view-home .amazon-store-body{grid-template-columns:1fr!important;gap:10px!important}
   #view-home .amazon-filter-sidebar{display:none!important}
@@ -4421,7 +4418,6 @@ body > footer {
 @media (min-width: 1101px) {
   #view-home .home-layout-shell,
   #view-home .amazon-store-body {
-    width: min(1680px, calc(100% - 28px)) !important;
     grid-template-columns: 218px minmax(0, 1fr) 292px !important;
     column-gap: 16px !important;
   }
@@ -4670,68 +4666,72 @@ body > footer {
 }
 
 
-/* Final responsive homepage sizing + original-ratio social photos */
-@media (min-width: 1101px) {
-  #view-home .home-layout-shell,
-  #view-home .home-layout-shell.amazon-store-body.shell,
-  #view-home .amazon-store-body {
-    box-sizing: border-box !important;
-    width: calc(100% - clamp(24px, 3vw, 64px)) !important;
-    max-width: none !important;
-    margin-left: auto !important;
-    margin-right: auto !important;
-    grid-template-columns:
-      clamp(184px, 15vw, 250px)
-      minmax(0, 1fr)
-      clamp(270px, 23vw, 360px) !important;
-    column-gap: clamp(14px, 1.35vw, 24px) !important;
-  }
-  #view-home .home-social-rail {
-    grid-column: 3 !important;
-    grid-row: 1 / span 30 !important;
-    min-width: 0 !important;
-    width: 100% !important;
-  }
+/* Canonical homepage width: match the header's 24px inner gutters.
+   Legacy max-width rules were removed above; keep this as the single source of truth. */
+#view-home {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
 }
-@media (min-width: 1001px) and (max-width: 1100px) {
-  #view-home .home-layout-shell,
-  #view-home .home-layout-shell.amazon-store-body.shell,
-  #view-home .amazon-store-body {
-    width: calc(100% - 28px) !important;
-    max-width: none !important;
-    grid-template-columns: 160px minmax(0, 1fr) !important;
-    gap: 14px !important;
-  }
-  #view-home .home-social-rail {
-    display: flex !important;
-    grid-column: 1 / -1 !important;
-    grid-row: auto !important;
-    position: static !important;
-    width: 100% !important;
-    max-height: none !important;
-    overflow: visible !important;
-  }
+#view-home > .home-layout-shell.amazon-store-body.shell {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 16px 24px 36px !important;
 }
-@media (max-width: 1000px) {
-  #view-home .home-social-rail {
-    display: flex !important;
-    grid-column: 1 / -1 !important;
-    grid-row: auto !important;
-    position: static !important;
-    max-height: none !important;
-    overflow: visible !important;
+@media (max-width: 1100px) {
+  #view-home > .home-layout-shell.amazon-store-body.shell {
+    padding-left: 18px !important;
+    padding-right: 18px !important;
   }
 }
 @media (max-width: 700px) {
-  #view-home .home-layout-shell,
-  #view-home .home-layout-shell.amazon-store-body.shell,
-  #view-home .amazon-store-body {
-    width: 100% !important;
-    max-width: none !important;
+  #view-home > .home-layout-shell.amazon-store-body.shell {
+    padding: 8px 13px 32px !important;
   }
+}
+
+/* Community rail visibility on wide screens; responsive placement is preserved. */
+@media (min-width: 1200px) {
+  #view-home .home-layout-shell,
+  #view-home .amazon-store-body {
+    display: grid !important;
+    grid-template-columns: 218px minmax(0, 1fr) 292px !important;
+    column-gap: 16px !important;
+  }
+  #view-home .home-main-content {
+    display: contents !important;
+  }
+  #view-home aside.home-promo-rail.home-social-rail {
+    display: flex !important;
+    flex-direction: column !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    grid-column: 3 !important;
+    grid-row: 1 / span 12 !important;
+    align-self: start !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    position: sticky !important;
+    top: 92px !important;
+    max-height: calc(100vh - 108px) !important;
+    overflow-y: auto !important;
+  }
+  #view-home aside.home-promo-rail.home-social-rail .home-social-feed {
+    display: block !important;
+    width: 100% !important;
+    visibility: visible !important;
+  }
+}
+@media (max-width: 1100px) {
   #view-home .home-social-rail {
     display: flex !important;
-    width: 100% !important;
+    grid-column: 1 / -1 !important;
+    grid-row: auto !important;
+    position: static !important;
+    max-height: none !important;
+    overflow: visible !important;
     margin-top: 18px !important;
   }
 }
@@ -4757,40 +4757,4 @@ body > footer {
   max-height: 520px !important;
   object-fit: contain !important;
   object-position: center !important;
-}
-
-
-/* Match homepage content edges to the full-width header inner shell */
-#view-home .home-layout-shell,
-#view-home .home-layout-shell.amazon-store-body.shell,
-#view-home .amazon-store-body {
-  box-sizing: border-box !important;
-  width: 100% !important;
-  max-width: none !important;
-  margin-left: 0 !important;
-  margin-right: 0 !important;
-  padding-left: 24px !important;
-  padding-right: 24px !important;
-}
-@media (max-width: 700px) {
-  #view-home .home-layout-shell,
-  #view-home .home-layout-shell.amazon-store-body.shell,
-  #view-home .amazon-store-body {
-    width: 100% !important;
-    padding-left: 24px !important;
-    padding-right: 24px !important;
-  }
-}
-
-
-/* Final fix: override the older 1200px homepage max-width rule */
-@media (min-width: 701px) {
-  #view-home > .home-layout-shell.amazon-store-body.shell {
-    width: calc(100% - 48px) !important;
-    max-width: none !important;
-    margin-left: 24px !important;
-    margin-right: 24px !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-  }
 }
