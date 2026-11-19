@@ -5013,3 +5013,38 @@ body > footer {
     overflow-y:hidden!important;
   }
 }
+
+
+/* Product form save button — inline loading state */
+#productFormModal #productSaveButton{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:9px;
+  min-width:150px;
+  transition:opacity .18s ease,filter .18s ease;
+}
+#productFormModal #productSaveButton:disabled{
+  cursor:wait;
+  opacity:.82;
+  filter:saturate(.78);
+}
+#productFormModal #productSaveButton[aria-busy="true"]{
+  pointer-events:none;
+}
+#productFormModal .product-save-spinner{
+  display:inline-block;
+  width:15px;
+  height:15px;
+  flex:0 0 15px;
+  border:2px solid rgba(255,255,255,.38);
+  border-top-color:#fff;
+  border-radius:50%;
+  animation:productSaveSpin .7s linear infinite;
+}
+@keyframes productSaveSpin{
+  to{transform:rotate(360deg)}
+}
+@media(prefers-reduced-motion:reduce){
+  #productFormModal .product-save-spinner{animation-duration:1.8s}
+}
