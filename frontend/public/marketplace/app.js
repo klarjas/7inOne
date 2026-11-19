@@ -3929,7 +3929,7 @@ function bindEvents() {
     try{
       if(action==='edit'){
         const res=await api('/api/vendor/media-links'),row=(res.data||[]).find(item=>String(item.id)===String(id));if(!row)throw new Error('រកមិនឃើញ Shorts នេះទេ');
-        editingSellerMediaId=id;$('sellerMediaType').value=row.media_type||'video';$('sellerMediaUrl').value=row.media_url||'';$('sellerMediaSave').textContent='រក្សាទុកការកែ';$('sellerMediaUrl').focus();$('sellerMediaForm').scrollIntoView({behavior:'smooth',block:'center'});return;
+        editingSellerMediaId=id;$('sellerMediaType').value=row.media_type||'video';$('sellerMediaUrl').value=row.media_url||'';syncSellerMediaFields();$('sellerMediaSave').textContent='រក្សាទុកការកែ';$('sellerMediaUrl').focus();$('sellerMediaForm').scrollIntoView({behavior:'smooth',block:'center'});return;
       }
       if(action==='toggle'){
         await api(`/api/vendor/media-links/${encodeURIComponent(id)}`,{method:'PATCH',body:JSON.stringify({is_active:button.dataset.active==='true'})});
