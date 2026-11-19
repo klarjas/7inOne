@@ -1052,6 +1052,17 @@ app.get('/api/marketplace/listings', async (req, res) => {
         return (data||[]).map(row=>({...row,listing_type:'real_estate',real_estate_type:'house_sale',image_url:row.image_file_id?mediaProxyUrl(row.image_file_id,row.image_mime_type):null,price_label:row.price,listing_subtitle:'ផ្ទះលក់'}));
       })());
     }
+    // New detailed property listings use their own table; legacy house/rental/land tables remain untouched.
+    if (type === 'all' || type === 'real_estate') tasks.push((async () => {
+      let query = supabase.from('property_listings').select('id,user_id,title,description,short_description,category,subcategory,detail_type,location,address,price,price_period,area_sqm,bedrooms,bathrooms,specifications,image_file_id,image_mime_type,status,created_at')
+        .eq('status','active').order('created_at',{ascending:false}).limit(limit);
+      if (q) query = query.or(`title.ilike.%${q}%,description.ilike.%${q}%,location.ilike.%${q}%`);
+      if (propertyType !== 'all') query = query.eq('category', propertyType);
+      const { data, error } = await query;
+      if (error && ['42P01','PGRST205'].includes(error.code)) return [];
+      if (error) throw error;
+      return (data || []).map(row => ({ ...row, listing_type:'real_estate', real_estate_type:row.category, image_url:row.image_file_id?mediaProxyUrl(row.image_file_id,row.image_mime_type):null, price_label:row.price, listing_subtitle:row.subcategory || row.detail_type || 'អចលនទ្រព្យ' }));
+    })());
     const groups=await Promise.all(tasks);
     const data=groups.flat().sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0)).slice(0,limit);
     res.set('Cache-Control','no-store');
@@ -1059,6 +1070,82 @@ app.get('/api/marketplace/listings', async (req, res) => {
   } catch(error) {
     console.error('Unified marketplace feed failed:',error.message);
     return fail(res,500,'Could not load marketplace listings');
+  }
+});
+
+// Independent job and real-estate publishing APIs. Product routes and Telegram product-upload flow are not modified.
+const JOB_CATEGORIES = new Set(['it','office','sales','transport','hospitality','construction','education','healthcare','factory','agriculture','services','other']);
+const PROPERTY_CATEGORIES = new Set(['house_sale','house_rent','condo_sale','apartment_rent','land','land_rent','commercial_sale','commercial_rent','room_rent','properties_wanted','agent_services','others_properties']);
+const listingText = (value, max = 5000) => clean(value, max);
+app.post('/api/jobs', authenticate, upload.single('image'), async (req, res) => {
+  if (!db(res)) return;
+  const body = req.body || {};
+  const title = listingText(body.title, 160);
+  const category = listingText(body.category, 40).toLowerCase();
+  const salaryMin = body.salary_min === '' || body.salary_min == null ? null : Number(body.salary_min);
+  const salaryMax = body.salary_max === '' || body.salary_max == null ? null : Number(body.salary_max);
+  const vacancies = Number(body.vacancies || 1);
+  if (title.length < 2 || !JOB_CATEGORIES.has(category)) return fail(res, 400, 'សូមបំពេញចំណងជើង និងប្រភេទការងារត្រឹមត្រូវ។');
+  if (!Number.isInteger(vacancies) || vacancies < 1 || (salaryMin != null && (!Number.isFinite(salaryMin) || salaryMin < 0)) || (salaryMax != null && (!Number.isFinite(salaryMax) || salaryMax < 0)) || (salaryMin != null && salaryMax != null && salaryMax < salaryMin)) return fail(res, 400, 'ព័ត៌មានប្រាក់ខែ ឬចំនួនបុគ្គលិកមិនត្រឹមត្រូវ។');
+  const image = req.file;
+  if (image && imageUploadError(image, 8 * 1024 * 1024)) return fail(res, 400, imageUploadError(image, 8 * 1024 * 1024));
+  let uploaded = null;
+  try {
+    if (image) uploaded = await uploadToTelegram(image);
+    const row = {
+      user_id:req.user.id,title,company_name:listingText(body.company_name,160),description:listingText(body.description,5000),
+      short_description:listingText(body.short_description,300),category,subcategory:listingText(body.subcategory,100),
+      detail_type:listingText(body.detail_type,120),location:listingText(body.location,120),vacancies,
+      salary_min:salaryMin,salary_max:salaryMax,salary_period:['hourly','daily','monthly','negotiable'].includes(body.salary_period)?body.salary_period:'monthly',
+      employment_type:listingText(body.employment_type,40)||'full_time',work_schedule:listingText(body.work_schedule,120),
+      days_off:listingText(body.days_off,120),experience:listingText(body.experience,120),education:listingText(body.education,120),
+      skills:Array.isArray(body.skills)?body.skills.map(v=>listingText(v,80)).filter(Boolean).slice(0,30):[],
+      languages:Array.isArray(body.languages)?body.languages.map(v=>listingText(v,60)).filter(Boolean).slice(0,20):[],
+      benefits:Array.isArray(body.benefits)?body.benefits.map(v=>listingText(v,120)).filter(Boolean).slice(0,30):[],
+      specifications:body.specifications && typeof body.specifications==='object' && !Array.isArray(body.specifications)?body.specifications:{},
+      image_file_id:uploaded?.fileId||null,image_message_id:uploaded?.messageId||null,image_mime_type:uploaded?.mimeType||null,status:'active'
+    };
+    const {data,error}=await supabase.from('jobs').insert(row).select().single();
+    if(error) throw error;
+    return res.status(201).json({data:{...data,image_url:data.image_file_id?mediaProxyUrl(data.image_file_id,data.image_mime_type):null}});
+  } catch(error) {
+    if(uploaded?.messageId) await deleteTelegramMessage(uploaded.messageId);
+    console.error('Job listing create failed:',error.message);
+    return fail(res,400,'មិនអាចបង្កើតប្រកាសការងារបានទេ។ សូមពិនិត្យ Database migration និងព័ត៌មានដែលបានបំពេញ។');
+  }
+});
+app.post('/api/real-estate', authenticate, upload.single('image'), async (req, res) => {
+  if (!db(res)) return;
+  const body=req.body||{};
+  const title=listingText(body.title,160);
+  const category=listingText(body.category,40).toLowerCase();
+  const price=body.price===''||body.price==null?null:Number(body.price);
+  const area=body.area_sqm===''||body.area_sqm==null?null:Number(body.area_sqm);
+  if(title.length<2||!PROPERTY_CATEGORIES.has(category)) return fail(res,400,'សូមបំពេញចំណងជើង និងប្រភេទអចលនទ្រព្យត្រឹមត្រូវ។');
+  if(price!=null&&(!Number.isFinite(price)||price<0)) return fail(res,400,'តម្លៃមិនត្រឹមត្រូវ។');
+  if(area!=null&&(!Number.isFinite(area)||area<0)) return fail(res,400,'ទំហំផ្ទៃដីមិនត្រឹមត្រូវ។');
+  if(['house_sale','house_rent','condo_sale','apartment_rent','land','land_rent','commercial_sale','commercial_rent','room_rent'].includes(category)&&price==null) return fail(res,400,'សូមបញ្ចូលតម្លៃលក់ ឬជួល។');
+  if(req.file&&imageUploadError(req.file,8*1024*1024)) return fail(res,400,imageUploadError(req.file,8*1024*1024));
+  let uploaded=null;
+  try {
+    if(req.file) uploaded=await uploadToTelegram(req.file);
+    const row={
+      user_id:req.user.id,title,description:listingText(body.description,5000),short_description:listingText(body.short_description,300),
+      category,subcategory:listingText(body.subcategory,120),detail_type:listingText(body.detail_type,120),
+      location:listingText(body.location,120),address:listingText(body.address,300),price,
+      price_period:['daily','monthly','yearly','total','negotiable'].includes(body.price_period)?body.price_period:'total',
+      area_sqm:area,bedrooms:body.bedrooms===''||body.bedrooms==null?null:Math.max(0,Number(body.bedrooms)),
+      bathrooms:body.bathrooms===''||body.bathrooms==null?null:Math.max(0,Number(body.bathrooms)),
+      specifications:body.specifications&&typeof body.specifications==='object'&&!Array.isArray(body.specifications)?body.specifications:{},
+      image_file_id:uploaded?.fileId||null,image_message_id:uploaded?.messageId||null,image_mime_type:uploaded?.mimeType||null,status:'active'
+    };
+    const {data,error}=await supabase.from('property_listings').insert(row).select().single();
+    if(error) throw error;
+    return res.status(201).json({data:{...data,image_url:data.image_file_id?mediaProxyUrl(data.image_file_id,data.image_mime_type):null}});
+  } catch(error) {
+    if(uploaded?.messageId) await deleteTelegramMessage(uploaded.messageId);
+    console.error('Real-estate listing create failed:',error.message);
+    return fail(res,400,'មិនអាចបង្កើតប្រកាសអចលនទ្រព្យបានទេ។ សូមពិនិត្យ Database migration និងព័ត៌មានដែលបានបំពេញ។');
   }
 });
 
