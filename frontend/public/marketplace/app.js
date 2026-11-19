@@ -1832,7 +1832,6 @@ async function loadCambodiaGeo() {
       const rows = extractCambodiaGeoRows(payload);
       if (!rows.length) break;
       all.push(...rows);
-      if (rows.length < pageSize) break;
     }
     const normalized = all.map(row => ({
       province_code: String(row.province_code || ''),
