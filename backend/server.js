@@ -962,7 +962,7 @@ app.get('/api/marketplace/listings', async (req, res) => {
   const type = clean(req.query.type || 'all', 20).toLowerCase();
   const category = clean(req.query.category, 80);
   const cutoff = new Date(Date.now() - PRODUCT_PUBLIC_MAX_AGE_MS).toISOString();
-  if (!['all','product','job','rent','land'].includes(type)) return fail(res, 400, 'Invalid listing type.');
+  if (!['all','product','job','real_estate'].includes(type)) return fail(res, 400, 'Invalid listing type.');
 
   try {
     const tasks = [];
@@ -1002,26 +1002,40 @@ app.get('/api/marketplace/listings', async (req, res) => {
       if(error) throw error;
       return (data||[]).map(row=>({...row,listing_type:'job',image_url:row.image_file_id?mediaProxyUrl(row.image_file_id,row.image_mime_type):null,price_label:[row.salary_min,row.salary_max].filter(v=>v!=null).join(' - ')||'ចរចា',listing_subtitle:row.company_name||'និយោជក'}));
     })());
-    if (type === 'all' || type === 'rent') tasks.push((async () => {
-      let query=supabase.from('rentals').select('id,user_id,title,description,short_description,category,property_type,location,address,rent_amount,rent_period,bedrooms,bathrooms,area_sqm,furnished,image_file_id,image_mime_type,status,created_at')
-        .eq('status','active').order('created_at',{ascending:false}).limit(limit);
-      if(q) query=query.or(`title.ilike.%${q}%,description.ilike.%${q}%,location.ilike.%${q}%`);
-      if(category) query=query.eq('category',category);
-      const {data,error}=await query;
-      if(error && ['42P01','PGRST205'].includes(error.code)) return [];
-      if(error) throw error;
-      return (data||[]).map(row=>({...row,listing_type:'rent',image_url:row.image_file_id?mediaProxyUrl(row.image_file_id,row.image_mime_type):null,price_label:row.rent_amount,listing_subtitle:row.property_type||'អចលនទ្រព្យជួល'}));
-    })());
-    if (type === 'all' || type === 'land') tasks.push((async () => {
-      let query=supabase.from('land_listings').select('id,user_id,title,description,short_description,category,location,address,price,area_sqm,land_type,title_deed,road_access,image_file_id,image_mime_type,status,created_at')
-        .eq('status','active').order('created_at',{ascending:false}).limit(limit);
-      if(q) query=query.or(`title.ilike.%${q}%,description.ilike.%${q}%,location.ilike.%${q}%`);
-      if(category) query=query.eq('category',category);
-      const {data,error}=await query;
-      if(error && ['42P01','PGRST205'].includes(error.code)) return [];
-      if(error) throw error;
-      return (data||[]).map(row=>({...row,listing_type:'land',image_url:row.image_file_id?mediaProxyUrl(row.image_file_id,row.image_mime_type):null,price_label:row.price,listing_subtitle:row.land_type||'ដីលក់'}));
-    })());
+    if (type === 'all' || type === 'real_estate') {
+      const propertyType = clean(req.query.property_type, 30).toLowerCase();
+      if (!['all','land','house_sale','house_rent','room_rent'].includes(propertyType)) return fail(res, 400, 'Invalid property type.');
+      if (type === 'all' || propertyType === 'all' || propertyType === 'house_rent' || propertyType === 'room_rent') tasks.push((async () => {
+        let query=supabase.from('rentals').select('id,user_id,title,description,short_description,category,property_type,location,address,rent_amount,rent_period,bedrooms,bathrooms,area_sqm,furnished,image_file_id,image_mime_type,status,created_at')
+          .eq('status','active').order('created_at',{ascending:false}).limit(limit);
+        if(q) query=query.or(`title.ilike.%${q}%,description.ilike.%${q}%,location.ilike.%${q}%`);
+        if(propertyType==='house_rent') query=query.eq('property_type','house');
+        if(propertyType==='room_rent') query=query.eq('property_type','room');
+        const {data,error}=await query;
+        if(error && ['42P01','PGRST205'].includes(error.code)) return [];
+        if(error) throw error;
+        return (data||[]).map(row=>({...row,listing_type:'real_estate',real_estate_type:row.property_type==='room'?'room_rent':'house_rent',image_url:row.image_file_id?mediaProxyUrl(row.image_file_id,row.image_mime_type):null,price_label:row.rent_amount,listing_subtitle:row.property_type==='room'?'បន្ទប់ជួល':'ផ្ទះជួល'}));
+      })());
+      if (type === 'all' || propertyType === 'all' || propertyType === 'land') tasks.push((async () => {
+        let query=supabase.from('land_listings').select('id,user_id,title,description,short_description,category,location,address,price,area_sqm,land_type,title_deed,road_access,image_file_id,image_mime_type,status,created_at')
+          .eq('status','active').order('created_at',{ascending:false}).limit(limit);
+        if(q) query=query.or(`title.ilike.%${q}%,description.ilike.%${q}%,location.ilike.%${q}%`);
+        const {data,error}=await query;
+        if(error && ['42P01','PGRST205'].includes(error.code)) return [];
+        if(error) throw error;
+        return (data||[]).map(row=>({...row,listing_type:'real_estate',real_estate_type:'land',image_url:row.image_file_id?mediaProxyUrl(row.image_file_id,row.image_mime_type):null,price_label:row.price,listing_subtitle:'ដីលក់'}));
+      })());
+      // House-sale records are stored separately from rental and land records.
+      if (type === 'all' || propertyType === 'all' || propertyType === 'house_sale') tasks.push((async () => {
+        let query=supabase.from('rentals').select('id,user_id,title,description,short_description,category,property_type,location,address,rent_amount,rent_period,bedrooms,bathrooms,area_sqm,furnished,image_file_id,image_mime_type,status,created_at')
+          .eq('status','active').eq('property_type','house_sale').order('created_at',{ascending:false}).limit(limit);
+        if(q) query=query.or(`title.ilike.%${q}%,description.ilike.%${q}%,location.ilike.%${q}%`);
+        const {data,error}=await query;
+        if(error && ['42P01','PGRST205'].includes(error.code)) return [];
+        if(error) throw error;
+        return (data||[]).map(row=>({...row,listing_type:'real_estate',real_estate_type:'house_sale',image_url:row.image_file_id?mediaProxyUrl(row.image_file_id,row.image_mime_type):null,price_label:row.rent_amount,listing_subtitle:'ផ្ទះលក់'}));
+      })());
+    }
     const groups=await Promise.all(tasks);
     const data=groups.flat().sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0)).slice(0,limit);
     res.set('Cache-Control','no-store');
