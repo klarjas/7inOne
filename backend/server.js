@@ -1088,7 +1088,9 @@ app.post('/api/jobs', authenticate, upload.single('image'), async (req, res) => 
     const row = {
       user_id:req.user.id,title,company_name:listingText(body.company_name,160),description:listingText(body.description,5000),
       short_description:listingText(body.short_description,300),category,subcategory:listingText(body.subcategory,100),
-      detail_type:listingText(body.detail_type,120),location:listingText(body.location,120),vacancies,
+      detail_type:listingText(body.detail_type,120),location:listingText(body.location,120),
+      province_code:listingText(body.province_code,2),district_code:listingText(body.district_code,4),
+      commune_code:listingText(body.commune_code,6),village_code:listingText(body.village_code,8),vacancies,
       salary_min:salaryMin,salary_max:salaryMax,salary_period:['hourly','daily','monthly','negotiable'].includes(body.salary_period)?body.salary_period:'monthly',
       employment_type:listingText(body.employment_type,40)||'full_time',work_schedule:listingText(body.work_schedule,120),
       days_off:listingText(body.days_off,120),experience:listingText(body.experience,120),education:listingText(body.education,120),
@@ -1125,7 +1127,9 @@ app.post('/api/real-estate', authenticate, upload.single('image'), async (req, r
     const row={
       user_id:req.user.id,title,description:listingText(body.description,5000),short_description:listingText(body.short_description,300),
       category,subcategory:listingText(body.subcategory,120),detail_type:listingText(body.detail_type,120),
-      location:listingText(body.location,120),address:listingText(body.address,300),price,
+      location:listingText(body.location,120),address:listingText(body.address,300),
+      province_code:listingText(body.province_code,2),district_code:listingText(body.district_code,4),
+      commune_code:listingText(body.commune_code,6),village_code:listingText(body.village_code,8),price,
       price_period:['daily','monthly','yearly','total','negotiable'].includes(body.price_period)?body.price_period:'total',
       area_sqm:area,bedrooms:body.bedrooms===''||body.bedrooms==null?null:Math.max(0,Number(body.bedrooms)),
       bathrooms:body.bathrooms===''||body.bathrooms==null?null:Math.max(0,Number(body.bathrooms)),
@@ -1160,7 +1164,10 @@ app.put('/api/products/:id/listing-details', authenticate, async (req, res) => {
   const detailType = listingText(req.body?.detail_type,120);
   const specifications = listingObject(req.body?.specifications);
   const { data, error } = await supabase.from('product_listing_details').upsert({
-    product_id:product.id,category,subcategory,detail_type:detailType,specifications,updated_at:new Date().toISOString()
+    product_id:product.id,category,subcategory,detail_type:detailType,specifications,
+    province_code:listingText(req.body?.province_code,2),district_code:listingText(req.body?.district_code,4),
+    commune_code:listingText(req.body?.commune_code,6),village_code:listingText(req.body?.village_code,8),
+    updated_at:new Date().toISOString()
   },{onConflict:'product_id'}).select().single();
   if (error) return fail(res,400,'Could not save product category details');
   return res.json({data});
