@@ -1690,9 +1690,6 @@ body{background:var(--page)!important;color:var(--ink);font-family:"Kantumruy Pr
 .home-vendor-media-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
 .home-vendor-media-heading h2{margin:2px 0 0;color:#173A2B;font-size:17px;font-weight:800}
 .home-vendor-media-subtitle{margin:3px 0 0;color:#64748B;font-size:10px}
-.home-vendor-media-kicker{margin:0;color:#087A55;font-size:9px;font-weight:800;letter-spacing:.12em}
-.home-vendor-media-controls{display:flex;gap:6px}
-.home-vendor-media-controls button{display:grid;width:30px;height:30px;place-items:center;border:1px solid #DCE8E1;border-radius:50%;background:#fff;color:#173A2B;font-size:22px;line-height:1}
 .home-vendor-media-list{display:flex;gap:12px;overflow-x:auto;padding:2px 2px 12px;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain;scroll-behavior:smooth}
 .home-vendor-media-list::-webkit-scrollbar{display:none}
 .home-vendor-media-card{display:block;flex:0 0 154px;min-width:0;color:inherit;text-decoration:none;scroll-snap-align:start}
