@@ -1090,6 +1090,9 @@ app.post('/api/vendor/media-links',authenticate,requireVendor,async(req,res)=>{
   if(mediaType==='video'){
    const mediaUrl=normalizeYoutubeShortsUrl(req.body?.media_url);
    if(!mediaUrl)return fail(res,400,'សូមបញ្ចូល Link YouTube Shorts ត្រឹមត្រូវ (youtube.com/shorts/...)។');
+   const productIds=[...new Set((Array.isArray(req.body?.product_ids)?req.body.product_ids:[]).map(id=>clean(id,64)).filter(Boolean))];
+   if(productIds.length>2)return fail(res,400,'Shorts អាចភ្ជាប់ផលិតផលបានត្រឹម 2 មុខប៉ុណ្ណោះ។');
+   if(productIds.length){const {data:validProducts,error:productError}=await supabase.from('products').select('id').eq('vendor_id',req.vendor.id).eq('status','active').gt('stock',0).in('id',productIds);if(productError||!validProducts||validProducts.length!==productIds.length)return fail(res,400,'ផលិតផលដែលបានជ្រើសមិនត្រឹមត្រូវ ឬមិនមែនជាផលិតផលក្នុងហាងរបស់អ្នកទេ។');}
    const result=await supabase.rpc('create_vendor_youtube_short',{p_vendor_id:req.vendor.id,p_media_url:mediaUrl,p_caption:clean(req.body?.caption,160)});
    data=Array.isArray(result.data)?result.data[0]:result.data;error=result.error;
    if(error){
@@ -1097,6 +1100,7 @@ app.post('/api/vendor/media-links',authenticate,requireVendor,async(req,res)=>{
     throw error;
    }
    if(!data)throw new Error('Shorts record was not returned by the database.');
+   if(productIds.length){const links=productIds.map(product_id=>({media_link_id:data.id,product_id,vendor_id:req.vendor.id}));const {error:linkError}=await supabase.from('vendor_media_products').insert(links);if(linkError){await supabase.from('vendor_media_links').delete().eq('id',data.id).eq('vendor_id',req.vendor.id);throw linkError;}}
   } else {
    const mediaUrl=normalizeSellerMediaUrl(req.body?.media_url);
    const invalid=validateSellerMedia(mediaUrl,mediaType);if(invalid)return fail(res,400,invalid);
@@ -1135,10 +1139,14 @@ app.delete('/api/vendor/media-links/:id',authenticate,requireVendor,async(req,re
  const {data,error}=await supabase.from('vendor_media_links').delete().eq('id',req.params.id).eq('vendor_id',req.vendor.id).select('id').maybeSingle();
  if(error)return fail(res,500,'Could not remove Live / Shorts link');if(!data)return fail(res,404,'Shorts / Live link not found');return res.json({success:true});
 });
-app.get('/api/vendor-media',async(_req,res)=>{
+app.get('/api/vendor-media',async(req,res)=>{
  if(!db(res))return;
  const cutoff=new Date(Date.now()-24*60*60*1000).toISOString();
- const {data,error}=await supabase.from('vendor_media_links').select('id,vendor_id,media_url,media_type,caption,created_at,vendors!inner(id,store_name,store_location,store_logo_file_id,status)').eq('is_active',true).eq('media_type','video').gte('created_at',cutoff).eq('vendors.status','approved').order('created_at',{ascending:false}).limit(60);
+ const offset=Math.max(0,Math.min(10000,Number.parseInt(req.query.offset,10)||0));
+ const vendorId=clean(req.query.vendor_id,64);
+ let query=supabase.from('vendor_media_links').select('id,vendor_id,media_url,media_type,caption,created_at,vendors!inner(id,store_name,store_location,store_logo_file_id,status)').eq('is_active',true).eq('media_type','video').gte('created_at',cutoff).eq('vendors.status','approved').order('created_at',{ascending:false}).range(offset,offset+59);
+ if(vendorId)query=query.eq('vendor_id',vendorId);
+ const {data,error}=await query;
  if(error)return fail(res,500,'Could not load YouTube Shorts');
  return res.json({data:(data||[]).filter(row=>youtubeShortsId(row.media_url)).map(row=>({id:row.id,vendor_id:row.vendor_id,media_url:row.media_url,media_type:row.media_type,caption:row.caption||'',created_at:row.created_at,store_name:row.vendors?.store_name||'ហាងអ្នកលក់',store_location:row.vendors?.store_location||'',store_logo_url:mediaProxyUrl(row.vendors?.store_logo_file_id)}))});
 });
@@ -1171,6 +1179,10 @@ app.post('/api/vendor-media/:id/products',authenticate,requireVendor,async(req,r
  if(mediaError||!media)return fail(res,404,'Short video not found in your shop');
  const {data:product,error:productError}=await supabase.from('products').select('id,vendor_id,status,stock').eq('id',productId).eq('vendor_id',req.vendor.id).maybeSingle();
  if(productError||!product||product.status!=='active'||Number(product.stock)<=0)return fail(res,404,'Active product not found in your shop');
+ const {count,error:countError}=await supabase.from('vendor_media_products').select('id',{count:'exact',head:true}).eq('media_link_id',media.id);
+ if(countError)return fail(res,500,'Could not check linked products');
+ const {data:existing}=await supabase.from('vendor_media_products').select('product_id').eq('media_link_id',media.id);
+ if(!(existing||[]).some(row=>String(row.product_id)===String(product.id))&&(count||0)>=2)return fail(res,409,'Shorts អាចភ្ជាប់ផលិតផលបានត្រឹម 2 មុខប៉ុណ្ណោះ។');
  const {data,error}=await supabase.from('vendor_media_products').upsert({media_link_id:media.id,product_id:product.id,vendor_id:req.vendor.id},{onConflict:'media_link_id,product_id'}).select('product_id').single();
  if(error)return fail(res,500,'Could not attach product to Shorts');
  return res.status(201).json({data});
