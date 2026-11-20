@@ -3172,6 +3172,7 @@ function openListingVideoPopup(url, title = 'វីដេអូ') {
   playerShell.innerHTML =
     '<div class="custom-youtube-screen">' +
       '<div class="custom-youtube-frame" id="customYoutubeFrame"></div>' +
+      '<button type="button" class="custom-youtube-center-play" data-video-action="toggle" aria-label="ចាក់វីដេអូ"><span data-video-play-icon></span></button>' +
       '<div class="custom-youtube-loading">កំពុងផ្ទុកវីដេអូ...</div>' +
     '</div>' +
     '<div class="custom-youtube-controls">' +
@@ -3203,9 +3204,16 @@ function openListingVideoPopup(url, title = 'វីដេអូ') {
     return Math.floor(value / 60) + ':' + String(value % 60).padStart(2, '0');
   };
   const setPlayingUi = playing => {
+    const playSvg = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8 5.5v13l10-6.5-10-6.5Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>';
+    const pauseSvg = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8.5 5.5v13M15.5 5.5v13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
     playerShell.querySelectorAll('[data-video-play-icon]').forEach(node => {
-      node.textContent = playing ? 'Ⅱ' : '▶';
+      node.innerHTML = playing ? pauseSvg : playSvg;
     });
+    const centerPlay = playerShell.querySelector('.custom-youtube-center-play');
+    if (centerPlay) {
+      centerPlay.classList.toggle('is-playing', playing);
+      centerPlay.setAttribute('aria-label', playing ? 'ផ្អាកវីដេអូ' : 'ចាក់វីដេអូ');
+    }
   };
   const updateProgress = () => {
     if (!listingVideoPlayer || session !== listingVideoSession) return;
