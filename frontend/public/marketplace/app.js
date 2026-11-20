@@ -3035,25 +3035,80 @@ async function loadHomeVendorMedia(){
   target._shortPlayers?.forEach(item=>{try{item.player?.destroy()}catch{}});
   target._shortPlayers=new Map();
   if(!rows.length){section.classList.add('hidden');target.replaceChildren();return}
-  target.innerHTML=rows.map((row,index)=>{const videoId=youtubeVideoId(row.media_url),store=row.store_name||'ហាងអ្នកលក់',avatar=row.store_logo_url?'<img src="'+esc(row.store_logo_url)+'" alt="" loading="lazy" referrerpolicy="no-referrer">':'<span>'+esc(store.slice(0,1))+'</span>';return '<article class="home-vendor-media-card" data-short-store="'+esc(store)+'" data-short-caption="'+esc(row.caption||'')+'" data-short-video-id="'+esc(videoId)+'"><button class="home-vendor-media-open" type="button" aria-label="មើល YouTube Shorts"><div class="home-vendor-media-player"><div class="home-short-poster" style="background-image:url(https://i.ytimg.com/vi/'+videoId+'/hqdefault.jpg)" aria-hidden="true"><span class="home-short-poster-spinner"></span></div><div class="home-short-youtube-player" id="home-short-player-'+index+'"></div></div></button><div class="home-vendor-media-meta"><div class="home-vendor-media-store-avatar">'+avatar+'</div><div class="home-vendor-media-meta-text"><div class="home-vendor-media-store" title="'+esc(store)+'">'+esc(store)+'</div><div class="home-vendor-media-caption" title="'+esc(row.caption||'')+'">'+esc(row.caption||row.store_location||'')+'</div></div></div></article>'}).join('');
+  target.innerHTML=rows.map((row,index)=>{
+   const videoId=youtubeVideoId(row.media_url),store=row.store_name||'ហាងអ្នកលក់';
+   const avatar=row.store_logo_url?'<img src="'+esc(row.store_logo_url)+'" alt="" loading="lazy" referrerpolicy="no-referrer">':'<span>'+esc(store.slice(0,1))+'</span>';
+   return '<article class="home-vendor-media-card" data-short-id="'+esc(row.id)+'" data-short-vendor-id="'+esc(row.vendor_id)+'" data-short-store="'+esc(store)+'" data-short-caption="'+esc(row.caption||'')+'" data-short-video-id="'+esc(videoId)+'"><button class="home-vendor-media-open" type="button" aria-label="មើល YouTube Shorts"><div class="home-vendor-media-player"><div class="home-short-poster" style="background-image:url(https://i.ytimg.com/vi/'+videoId+'/hqdefault.jpg)" aria-hidden="true"><span class="home-short-poster-spinner"></span></div><div class="home-short-youtube-player" id="home-short-player-'+index+'"></div></div></button><div class="home-vendor-media-meta"><div class="home-vendor-media-store-avatar">'+avatar+'</div><div class="home-vendor-media-meta-text"><div class="home-vendor-media-store" title="'+esc(store)+'">'+esc(store)+'</div><div class="home-vendor-media-caption" title="'+esc(row.caption||'')+'">'+esc(row.caption||row.store_location||'')+'</div></div></div></article>';
+  }).join('');
   const popup=$('homeShortsPopup'),stage=$('homeShortsPopupStage'),title=$('homeShortsPopupTitle');
-  const closePlayer=()=>{try{target._popupPlayer?.destroy()}catch{};target._popupPlayer=null;stage?.replaceChildren();stage?.classList.remove('is-loading','is-ready');if(stage)stage.style.backgroundImage='';target._shortPlayers?.forEach(item=>{if(item.visible){try{item.player?.mute();item.player?.playVideo()}catch{}}})};
+  const leftProducts=$('homeShortsPopularProducts'),linkedProducts=$('homeShortsLinkedProducts'),sellerTools=$('homeShortsSellerTools'),searchInput=$('homeShortsProductSearch'),searchResults=$('homeShortsProductSearchResults');
+  const productCard=(p,action)=>{
+   const image=p.product_images?.[0]?.image_url||p.image_url||'';
+   const code=p.product_code||('P-'+String(p.id||'').replace(/-/g,'').slice(0,12).toUpperCase());
+   const actionButton=action?'<button type="button" '+action+'>'+(action.indexOf('remove')>=0?'−':'+')+'</button>':'';
+   return '<article class="home-shorts-product-card"><div class="home-shorts-product-image">'+(image?'<img src="'+esc(image)+'" alt="" loading="lazy">':'<span>រូបភាពមិនទាន់មាន</span>')+'</div><div class="home-shorts-product-info"><strong title="'+esc(p.title||'ផលិតផល')+'">'+esc(p.title||'ផលិតផល')+'</strong><small>'+esc(code)+'</small><b>$'+Number(p.price||0).toLocaleString('en-US')+'</b><span>មើល '+Number(p.view_count||0).toLocaleString()+' · ទិញ '+Number(p.sold_count||0).toLocaleString()+'</span></div>'+actionButton+'</article>';
+  };
+  const renderSellerProductSearch=query=>{
+   if(!searchResults)return;
+   const q=String(query||'').trim().toLowerCase();
+   const linkedIds=new Set(Array.from(linkedProducts?.querySelectorAll('[data-short-remove-product]')||[]).map(node=>node.dataset.shortRemoveProduct));
+   const matches=(target._popupVendorProducts||[]).filter(p=>!linkedIds.has(String(p.id))&&(!q||String(p.title||'').toLowerCase().includes(q)||String(p.product_code||'').toLowerCase().includes(q)||String(p.id||'').toLowerCase().includes(q))).slice(0,30);
+   searchResults.innerHTML=matches.length?matches.map(p=>productCard(p,'data-short-add-product="'+esc(p.id)+'" aria-label="ភ្ជាប់ផលិតផល"')).join(''):'<p class="home-shorts-empty">រកមិនឃើញផលិតផលដែលអាចភ្ជាប់បានទេ។</p>';
+  };
+  const loadPopupProducts=async(mediaId,vendorId)=>{
+   const results=await Promise.all([api('/api/vendor-media/'+encodeURIComponent(mediaId)+'/products'),api('/api/vendor-media/'+encodeURIComponent(mediaId)+'/shop-products')]);
+   const linked=results[0].data||[],popular=results[1].data||[];
+   const owner=Boolean(state.me?.vendor?.status==='approved'&&state.me?.vendor?.id&&String(state.me.vendor.id)===String(vendorId));
+   if(linkedProducts)linkedProducts.innerHTML=linked.length?linked.map(p=>productCard(p,owner?'data-short-remove-product="'+esc(p.id)+'" aria-label="ដកផលិតផល"':'')).join(''):'<p class="home-shorts-empty">មិនទាន់មានផលិតផលភ្ជាប់នឹងវីដេអូនេះទេ។</p>';
+   if($('homeShortsLinkedCount'))$('homeShortsLinkedCount').textContent=linked.length+' ផលិតផល';
+   if(leftProducts)leftProducts.innerHTML=popular.length?popular.map(p=>productCard(p,'')).join(''):'<p class="home-shorts-empty">ហាងនេះមិនទាន់មានផលិតផលសកម្មទេ។</p>';
+   if(leftProducts){
+    leftProducts.scrollLeft=0;
+    if(target._popupProductSlideTimer)clearInterval(target._popupProductSlideTimer);
+    target._popupProductSlideTimer=setInterval(()=>{if(!popup?.open||leftProducts.matches(':hover'))return;const first=leftProducts.querySelector('.home-shorts-product-card');if(!first)return;const max=Math.max(0,leftProducts.scrollHeight-leftProducts.clientHeight),step=first.getBoundingClientRect().height+9;if(max<=0)return;if(leftProducts.scrollTop>=max-8)leftProducts.scrollTo({top:0,behavior:'smooth'});else leftProducts.scrollBy({top:step,behavior:'smooth'})},3500);
+   }
+   sellerTools?.classList.toggle('hidden',!owner);
+   target._popupVendorProducts=[];
+   if(owner){try{const own=await api('/api/vendor/products');target._popupVendorProducts=(own.data||[]).filter(p=>p.status==='active'&&Number(p.stock)>0);renderSellerProductSearch(searchInput?.value||'')}catch(error){toast(error.message||'មិនអាចទាញយកផលិតផលហាងបានទេ។','error')}}
+  };
+  const closePlayer=()=>{
+   try{target._popupPlayer?.destroy()}catch{}
+   target._popupPlayer=null;
+   if(target._popupProductSlideTimer)clearInterval(target._popupProductSlideTimer);
+   stage?.replaceChildren();stage?.classList.remove('is-loading','is-ready');
+   leftProducts?.replaceChildren();linkedProducts?.replaceChildren();searchResults?.replaceChildren();
+   if(stage)stage.style.backgroundImage='';
+   target._shortPlayers?.forEach(item=>{if(item.visible){try{item.player?.mute();item.player?.playVideo()}catch{}}});
+  };
   if(!target.dataset.popupBound){
    target.dataset.popupBound='1';
    target.addEventListener('click',async event=>{
     const trigger=event.target.closest('.home-vendor-media-open');if(!trigger)return;
-    const card=trigger.closest('.home-vendor-media-card'),videoId=card?.dataset.shortVideoId;if(!videoId||!popup||!stage)return;
+    const card=trigger.closest('.home-vendor-media-card');
+    const videoId=card?.dataset.shortVideoId,mediaId=card?.dataset.shortId,vendorId=card?.dataset.shortVendorId;
+    if(!videoId||!popup||!stage)return;
     target._shortPlayers?.forEach(item=>{try{item.player?.pauseVideo()}catch{}});
-    title.textContent=card.dataset.shortStore||'YouTube Shorts';stage.replaceChildren();stage.classList.add('is-loading');stage.classList.remove('is-ready');stage.style.backgroundImage='';
+    title.textContent=card.dataset.shortStore||'YouTube Shorts';
+    stage.replaceChildren();stage.classList.add('is-loading');stage.classList.remove('is-ready');stage.style.backgroundImage='';
     const poster=document.createElement('div');poster.className='home-short-poster home-short-popup-poster';poster.style.backgroundImage='url(https://i.ytimg.com/vi/'+videoId+'/hqdefault.jpg)';poster.setAttribute('aria-hidden','true');poster.innerHTML='<span class="home-short-poster-spinner"></span>';stage.appendChild(poster);
     const mount=document.createElement('div');mount.id='homeShortsPopupPlayer';mount.style.width='100%';mount.style.height='100%';stage.appendChild(mount);
+    target._popupMediaId=mediaId;target._popupVendorId=vendorId;
     if(!popup.open)popup.showModal();
-    try{const YT=await loadYouTubeIframeApi();if(!popup.open)return;target._popupPlayer=new YT.Player('homeShortsPopupPlayer',{width:'100%',height:'100%',videoId,playerVars:{autoplay:1,controls:0,disablekb:1,fs:0,playsinline:1,rel:0,modestbranding:1,iv_load_policy:3,enablejsapi:1,origin:window.location.origin},events:{onReady:event=>event.target.playVideo(),onStateChange:event=>{if(event.data===window.YT.PlayerState.PLAYING){stage.classList.remove('is-loading');stage.classList.add('is-ready')}}}})}
-    catch(error){stage.classList.remove('is-loading');toast(error.message||'មិនអាចបើក YouTube Shorts បានទេ។','error')}
+    loadPopupProducts(mediaId,vendorId).catch(error=>console.warn('Shorts products unavailable:',error.message));
+    try{
+     const YT=await loadYouTubeIframeApi();if(!popup.open)return;
+     target._popupPlayer=new YT.Player('homeShortsPopupPlayer',{width:'100%',height:'100%',videoId,playerVars:{autoplay:1,controls:0,disablekb:1,fs:0,playsinline:1,rel:0,modestbranding:1,iv_load_policy:3,enablejsapi:1,origin:window.location.origin},events:{onReady:event=>event.target.playVideo(),onStateChange:event=>{if(event.data===window.YT.PlayerState.PLAYING){stage.classList.remove('is-loading');stage.classList.add('is-ready')}}}});
+    }catch(error){stage.classList.remove('is-loading');toast(error.message||'មិនអាចបើក YouTube Shorts បានទេ។','error')}
+   });
+   popup?.addEventListener('click',async event=>{
+    if(event.target===popup){popup.close();return}
+    const add=event.target.closest('[data-short-add-product]'),remove=event.target.closest('[data-short-remove-product]');
+    if(add){add.disabled=true;try{await api('/api/vendor-media/'+encodeURIComponent(target._popupMediaId)+'/products',{method:'POST',body:JSON.stringify({product_id:add.dataset.shortAddProduct})});await loadPopupProducts(target._popupMediaId,target._popupVendorId)}catch(error){toast(error.message||'មិនអាចភ្ជាប់ផលិតផលបានទេ។','error')}finally{add.disabled=false}}
+    if(remove){remove.disabled=true;try{await api('/api/vendor-media/'+encodeURIComponent(target._popupMediaId)+'/products/'+encodeURIComponent(remove.dataset.shortRemoveProduct),{method:'DELETE'});await loadPopupProducts(target._popupMediaId,target._popupVendorId)}catch(error){toast(error.message||'មិនអាចដកផលិតផលបានទេ។','error')}finally{remove.disabled=false}}
    });
    popup?.addEventListener('close',closePlayer);
-   popup?.addEventListener('click',event=>{if(event.target===popup)popup.close()});
    $('homeShortsPopupClose')?.addEventListener('click',()=>popup.close());
+   searchInput?.addEventListener('input',()=>renderSellerProductSearch(searchInput.value));
   }
   await loadYouTubeIframeApi();
   rows.forEach((row,index)=>{

@@ -1142,6 +1142,47 @@ app.get('/api/vendor-media',async(_req,res)=>{
  if(error)return fail(res,500,'Could not load YouTube Shorts');
  return res.json({data:(data||[]).filter(row=>youtubeShortsId(row.media_url)).map(row=>({id:row.id,vendor_id:row.vendor_id,media_url:row.media_url,media_type:row.media_type,caption:row.caption||'',created_at:row.created_at,store_name:row.vendors?.store_name||'ហាងអ្នកលក់',store_location:row.vendors?.store_location||'',store_logo_url:mediaProxyUrl(row.vendors?.store_logo_file_id)}))});
 });
+app.get('/api/vendor-media/:id/products',async(req,res)=>{
+ if(!db(res))return;
+ const {data:media,error:mediaError}=await supabase.from('vendor_media_links').select('id,vendor_id,media_type,is_active,vendors!inner(status)').eq('id',req.params.id).eq('media_type','video').eq('is_active',true).eq('vendors.status','approved').maybeSingle();
+ if(mediaError||!media)return fail(res,404,'Short video not found');
+ const {data:links,error}=await supabase.from('vendor_media_products').select('product_id,sort_order,products!inner(id,product_code,title,price,stock,status,view_count,vendor_id,product_images(id,file_id,image_url,sort_order),vendors!inner(id,store_name,status))').eq('media_link_id',media.id).order('sort_order',{ascending:true});
+ if(error)return fail(res,500,'Could not load Shorts products');
+ const products=(links||[]).map(row=>row.products).filter(p=>p&&p.vendor_id===media.vendor_id&&p.status==='active'&&Number(p.stock)>0&&p.vendors?.status==='approved');
+ const ids=products.map(p=>p.id);let sold={};
+ if(ids.length){const {data:orders}=await supabase.from('order_items').select('product_id,quantity,fulfillment_status').in('product_id',ids).eq('fulfillment_status','completed');for(const item of orders||[])sold[item.product_id]=(sold[item.product_id]||0)+Number(item.quantity||1)}
+ return res.json({data:products.map(p=>publicProduct({...p,sold_count:sold[p.id]||0}))});
+});
+app.get('/api/vendor-media/:id/shop-products',async(req,res)=>{
+ if(!db(res))return;
+ const {data:media,error:mediaError}=await supabase.from('vendor_media_links').select('id,vendor_id,media_type,is_active,vendors!inner(status)').eq('id',req.params.id).eq('media_type','video').eq('is_active',true).eq('vendors.status','approved').maybeSingle();
+ if(mediaError||!media)return fail(res,404,'Short video not found');
+ const {data:products,error}=await supabase.from('products').select('id,product_code,title,price,stock,status,view_count,vendor_id,product_images(id,file_id,image_url,sort_order),vendors!inner(id,store_name,status)').eq('vendor_id',media.vendor_id).eq('status','active').gt('stock',0).eq('vendors.status','approved').order('view_count',{ascending:false}).limit(200);
+ if(error)return fail(res,500,'Could not load shop products');
+ const ids=(products||[]).map(p=>p.id);let sold={};
+ if(ids.length){const {data:orders,error:orderError}=await supabase.from('order_items').select('product_id,quantity,fulfillment_status').in('product_id',ids).eq('fulfillment_status','completed');if(orderError)return fail(res,500,'Could not rank shop products');for(const item of orders||[])sold[item.product_id]=(sold[item.product_id]||0)+Number(item.quantity||1)}
+ const ranked=(products||[]).map(p=>({...p,sold_count:sold[p.id]||0})).sort((a,b)=>b.sold_count-a.sold_count||Number(b.view_count||0)-Number(a.view_count||0));
+ return res.json({data:ranked.map(publicProduct)});
+});
+app.post('/api/vendor-media/:id/products',authenticate,requireVendor,async(req,res)=>{
+ if(req.vendor.status!=='approved')return fail(res,403,'Only verified sellers can attach products to Shorts');
+ const productId=clean(req.body?.product_id,64);
+ const {data:media,error:mediaError}=await supabase.from('vendor_media_links').select('id,vendor_id,media_type').eq('id',req.params.id).eq('vendor_id',req.vendor.id).eq('media_type','video').maybeSingle();
+ if(mediaError||!media)return fail(res,404,'Short video not found in your shop');
+ const {data:product,error:productError}=await supabase.from('products').select('id,vendor_id,status,stock').eq('id',productId).eq('vendor_id',req.vendor.id).maybeSingle();
+ if(productError||!product||product.status!=='active'||Number(product.stock)<=0)return fail(res,404,'Active product not found in your shop');
+ const {data,error}=await supabase.from('vendor_media_products').upsert({media_link_id:media.id,product_id:product.id,vendor_id:req.vendor.id},{onConflict:'media_link_id,product_id'}).select('product_id').single();
+ if(error)return fail(res,500,'Could not attach product to Shorts');
+ return res.status(201).json({data});
+});
+app.delete('/api/vendor-media/:id/products/:productId',authenticate,requireVendor,async(req,res)=>{
+ if(req.vendor.status!=='approved')return fail(res,403,'Only verified sellers can manage Shorts products');
+ const {data:media}=await supabase.from('vendor_media_links').select('id,vendor_id').eq('id',req.params.id).eq('vendor_id',req.vendor.id).maybeSingle();
+ if(!media)return fail(res,404,'Short video not found in your shop');
+ const {error}=await supabase.from('vendor_media_products').delete().eq('media_link_id',media.id).eq('product_id',req.params.productId).eq('vendor_id',req.vendor.id);
+ if(error)return fail(res,500,'Could not remove product from Shorts');
+ return res.json({success:true});
+});
 let vendorShortCleanupPromise=null;
 async function cleanupExpiredVendorShorts(){
  if(!supabase||vendorShortCleanupPromise)return vendorShortCleanupPromise;
