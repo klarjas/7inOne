@@ -3066,7 +3066,7 @@ async function loadHomeVendorMedia(){
     if(target._popupProductSlideTimer)clearInterval(target._popupProductSlideTimer);
     target._popupProductSlideTimer=setInterval(()=>{if(!popup?.open||leftProducts.matches(':hover'))return;const max=Math.max(0,leftProducts.scrollWidth-leftProducts.clientWidth);if(max<=0)return;if(leftProducts.scrollLeft>=max-8)leftProducts.scrollTo({left:0,behavior:'smooth'});else leftProducts.scrollBy({left:Math.max(180,leftProducts.clientWidth*.8),behavior:'smooth'})},3500);
    }
-   const owner=Boolean(state.me?.vendor?.id&&String(state.me.vendor.id)===String(vendorId));
+   const owner=Boolean(state.me?.vendor?.status==='approved'&&state.me?.vendor?.id&&String(state.me.vendor.id)===String(vendorId));
    sellerTools?.classList.toggle('hidden',!owner);
    target._popupVendorProducts=[];
    if(owner){try{const own=await api('/api/vendor/products');target._popupVendorProducts=(own.data||[]).filter(p=>p.status==='active'&&Number(p.stock)>0);renderSellerProductSearch(searchInput?.value||'')}catch(error){toast(error.message||'មិនអាចទាញយកផលិតផលហាងបានទេ។','error')}}
