@@ -36,7 +36,19 @@ app.use('/api', rateLimit({ windowMs: 60_000, limit: 120, standardHeaders: 'draf
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024, files: 10 } });
 const fail = (res, status, message) => res.status(status).json({ error: message });
 const db = res => { if (!supabase) { fail(res, 503, 'Supabase is not configured'); return false; } return true; };
-const clean = (value, max = 500) => String(value ?? '').trim().slice(0, max);
+const clean = (value, max = 500) => String(value ?? '').trim().slice(0, max);\nfunction normalizeYoutubeVideoUrl(value) {
+  const raw = clean(value, 1000);
+  if (!raw) return null;
+  try {
+    const url = new URL(raw), host = url.hostname.toLowerCase().replace(/^www\./, '');
+    let id = '';
+    if (host === 'youtu.be') id = url.pathname.split('/').filter(Boolean)[0] || '';
+    else if (['youtube.com','m.youtube.com','youtube-nocookie.com'].includes(host)) id = url.searchParams.get('v') || url.pathname.match(/^\/(?:embed|live)\/([A-Za-z0-9_-]{11})\/?$/)?.[1] || '';
+    else return false;
+    return /^[A-Za-z0-9_-]{11}$/.test(id) ? 'https://www.youtube.com/watch?v=' + id : false;
+  } catch { return false; }
+}
+
 const IMAGE_MIME_TYPES = new Set(['image/jpeg','image/png','image/webp']);
 function imageUploadError(file, maxBytes = 8 * 1024 * 1024) {
   if (!file || !IMAGE_MIME_TYPES.has(file.mimetype)) return 'Only JPG, PNG or WEBP image uploads are allowed.';
@@ -1350,8 +1362,8 @@ app.get('/api/marketplace/listings', async (req, res) => {
   try {
     const tasks = [];
     if (type === 'all' || type === 'product') {
-      const productFields = 'id,title,description,price,stock,category,location,condition,view_count,created_at,updated_at,renewed_at,vendor_id,product_images(id,file_id,image_url,sort_order),vendors!inner(id,user_id,store_name,status,store_logo_file_id)';
-      const legacyFields = 'id,title,description,price,stock,category,location,condition,view_count,created_at,updated_at,vendor_id,product_images(id,file_id,image_url,sort_order),vendors!inner(id,user_id,store_name,status,store_logo_file_id)';
+      const productFields = 'id,title,description,price,stock,category,location,condition,view_count,created_at,updated_at,renewed_at,youtube_video_url,vendor_id,product_images(id,file_id,image_url,sort_order),vendors!inner(id,user_id,store_name,status,store_logo_file_id)';
+      const legacyFields = 'id,title,description,price,stock,category,location,condition,view_count,created_at,updated_at,youtube_video_url,vendor_id,product_images(id,file_id,image_url,sort_order),vendors!inner(id,user_id,store_name,status,store_logo_file_id)';
       const runProducts = (legacy = false) => {
         let query = supabase.from('products').select(legacy ? legacyFields : productFields)
           .eq('status', 'active').in('vendors.status', ['approved','pending','rejected']).gt('stock', 0)
@@ -1374,8 +1386,8 @@ app.get('/api/marketplace/listings', async (req, res) => {
       })());
     }
     if (type === 'all' || type === 'job') tasks.push((async () => {
-      const fields = 'id,user_id,title,company_name,description,short_description,category,subcategory,detail_type,specifications,location,vacancies,salary_min,salary_max,salary_period,employment_type,work_schedule,experience,education,skills,languages,benefits,image_file_id,image_mime_type,image_gallery,status,expires_at,created_at';
-      const legacyFields = 'id,user_id,title,company_name,description,short_description,category,subcategory,location,vacancies,salary_min,salary_max,salary_period,employment_type,work_schedule,experience,education,skills,languages,benefits,image_file_id,image_mime_type,status,expires_at,created_at';
+      const fields = 'id,user_id,title,company_name,description,short_description,category,subcategory,detail_type,specifications,location,vacancies,salary_min,salary_max,salary_period,employment_type,work_schedule,experience,education,skills,languages,benefits,youtube_video_url,image_file_id,image_mime_type,image_gallery,status,expires_at,created_at';
+      const legacyFields = 'id,user_id,title,company_name,description,short_description,category,subcategory,location,vacancies,salary_min,salary_max,salary_period,employment_type,work_schedule,experience,education,skills,languages,benefits,youtube_video_url,image_file_id,image_mime_type,status,expires_at,created_at';
       const runJobs = async (legacy = false) => {
         let query = supabase.from('jobs').select(legacy ? legacyFields : fields)
           .eq('status','active').order('created_at',{ascending:false}).limit(limit);
@@ -1393,7 +1405,7 @@ app.get('/api/marketplace/listings', async (req, res) => {
     })());
     if (type === 'all' || type === 'real_estate') {
       if (type === 'all' || propertyType === 'all' || propertyType === 'house_rent' || propertyType === 'room_rent') tasks.push((async () => {
-        let query = supabase.from('rentals').select('id,user_id,title,description,short_description,category,property_type,location,address,rent_amount,rent_period,bedrooms,bathrooms,area_sqm,furnished,image_file_id,image_mime_type,status,expires_at,created_at')
+        let query = supabase.from('rentals').select('id,user_id,title,description,short_description,category,property_type,location,address,rent_amount,rent_period,bedrooms,bathrooms,area_sqm,furnished,youtube_video_url,image_file_id,image_mime_type,status,expires_at,created_at')
           .eq('status','active').order('created_at',{ascending:false}).limit(limit);
         const filters=[`or(expires_at.is.null,expires_at.gt.${new Date().toISOString()})`];
         if(q) filters.push(`or(title.ilike.%${q}%,description.ilike.%${q}%,location.ilike.%${q}%)`);
@@ -1406,7 +1418,7 @@ app.get('/api/marketplace/listings', async (req, res) => {
         return (data||[]).map(row=>({...row,listing_type:'real_estate',real_estate_type:row.property_type==='room'?'room_rent':'house_rent',image_url:row.image_file_id?mediaProxyUrl(row.image_file_id,row.image_mime_type):null,price_label:row.rent_amount,listing_subtitle:row.property_type==='room'?'បន្ទប់ជួល':'ផ្ទះជួល'}));
       })());
       if (type === 'all' || propertyType === 'all' || propertyType === 'land') tasks.push((async () => {
-        let query = supabase.from('land_listings').select('id,user_id,title,description,short_description,category,location,address,price,area_sqm,land_type,title_deed,road_access,image_file_id,image_mime_type,status,expires_at,created_at')
+        let query = supabase.from('land_listings').select('id,user_id,title,description,short_description,category,location,address,price,area_sqm,land_type,title_deed,road_access,youtube_video_url,image_file_id,image_mime_type,status,expires_at,created_at')
           .eq('status','active').order('created_at',{ascending:false}).limit(limit);
         const filters=[`or(expires_at.is.null,expires_at.gt.${new Date().toISOString()})`];
         if(q) filters.push(`or(title.ilike.%${q}%,description.ilike.%${q}%,location.ilike.%${q}%)`);
@@ -1418,7 +1430,7 @@ app.get('/api/marketplace/listings', async (req, res) => {
       })());
       // House-sale records are stored separately from rental and land records.
       if (type === 'all' || propertyType === 'all' || propertyType === 'house_sale') tasks.push((async () => {
-        let query = supabase.from('house_sale_listings').select('id,user_id,title,description,short_description,category,property_type,location,address,price,bedrooms,bathrooms,area_sqm,furnished,title_deed,image_file_id,image_mime_type,status,expires_at,created_at')
+        let query = supabase.from('house_sale_listings').select('id,user_id,title,description,short_description,category,property_type,location,address,price,bedrooms,bathrooms,area_sqm,furnished,title_deed,youtube_video_url,image_file_id,image_mime_type,status,expires_at,created_at')
           .eq('status','active').order('created_at',{ascending:false}).limit(limit);
         const filters=[`or(expires_at.is.null,expires_at.gt.${new Date().toISOString()})`];
         if(q) filters.push(`or(title.ilike.%${q}%,description.ilike.%${q}%,location.ilike.%${q}%)`);
@@ -1431,7 +1443,7 @@ app.get('/api/marketplace/listings', async (req, res) => {
     }
     // New detailed property listings use their own table; legacy house/rental/land tables remain untouched.
     if (type === 'all' || type === 'real_estate') tasks.push((async () => {
-      let query = supabase.from('property_listings').select('id,user_id,title,description,short_description,category,subcategory,detail_type,location,address,price,price_period,area_sqm,bedrooms,bathrooms,specifications,image_file_id,image_mime_type,image_gallery,status,expires_at,created_at')
+      let query = supabase.from('property_listings').select('id,user_id,title,description,short_description,category,subcategory,detail_type,location,address,price,price_period,area_sqm,bedrooms,bathrooms,specifications,youtube_video_url,image_file_id,image_mime_type,image_gallery,status,expires_at,created_at')
           .eq('status','active').order('created_at',{ascending:false}).limit(limit);
         const filters=[`or(expires_at.is.null,expires_at.gt.${new Date().toISOString()})`];
         if(q) filters.push(`or(title.ilike.%${q}%,description.ilike.%${q}%,location.ilike.%${q}%)`);
@@ -2708,9 +2720,9 @@ app.post('/api/products', authenticate, async (req, res) => {
 
   const status = 'active'; // Active sellers may publish, whether verified or not.
   const location = clean(req.body.location, 100);
-  const condition = clean(req.body.condition || 'ប្រើរួចស្អាត', 60);
+  const condition = clean(req.body.condition || 'ប្រើរួចស្អាត', 60);\n  const youtubeVideoUrl = normalizeYoutubeVideoUrl(req.body.youtube_video_url);\n  if (youtubeVideoUrl === false) return fail(res, 400, 'YouTube Video Link មិនត្រឹមត្រូវទេ។');
   const { data, error } = await supabase.from('products')
-    .insert({ vendor_id: vendor.id, title, description, category, price, stock, location, condition, status, renewed_at:new Date().toISOString() }).select().single();
+    .insert({ vendor_id: vendor.id, title, description, category, price, stock, location, condition, youtube_video_url:youtubeVideoUrl, status, renewed_at:new Date().toISOString() }).select().single();
   if (error) return fail(res, 400, 'Could not create product');
   res.status(201).json({ data });
 });
@@ -2725,7 +2737,7 @@ app.patch('/api/products/:id', authenticate, async (req, res) => {
   if(isRenewal){const renewedAt=Date.parse(existing.renewed_at||existing.updated_at||existing.created_at||'');const age=Number.isFinite(renewedAt)?Date.now()-renewedAt:0;if(existing.status!=='active'||age>PRODUCT_AUTO_DELETE_AGE_MS)return fail(res,410,'This product is no longer eligible for renewal.');patch.renewed_at=new Date().toISOString();patch.status='active';}
   for (const key of ['title','description','category','location','condition']) if (req.body[key] !== undefined) patch[key] = clean(req.body[key], key === 'description' ? 5000 : key === 'title' ? 160 : 100);
   if (req.body.price !== undefined) patch.price = Number(req.body.price);
-  if (req.body.stock !== undefined) patch.stock = Number(req.body.stock);
+  if (req.body.stock !== undefined) patch.stock = Number(req.body.stock);\n  if (req.body.youtube_video_url !== undefined) { const videoUrl = normalizeYoutubeVideoUrl(req.body.youtube_video_url); if (videoUrl === false) return fail(res, 400, 'YouTube Video Link មិនត្រឹមត្រូវទេ។'); patch.youtube_video_url = videoUrl; }
   if (patch.title !== undefined && patch.title.length < 2) return fail(res, 400, 'Invalid title');
   if (patch.price !== undefined && (!Number.isFinite(patch.price) || patch.price < 0)) return fail(res, 400, 'Invalid price');
   if (patch.stock !== undefined && (!Number.isInteger(patch.stock) || patch.stock < 0)) return fail(res, 400, 'Invalid stock');
