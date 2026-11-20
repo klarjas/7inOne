@@ -3193,6 +3193,7 @@ function openListingVideoPopup(url, title = 'វីដេអូ', meta = {}) {
         '<button type="button" data-video-action="toggle" aria-label="ចាក់ / ផ្អាក"><span data-video-play-icon>▶</span></button>' +
         '<button type="button" data-video-action="back" aria-label="ថយក្រោយ 10 វិនាទី">−10</button>' +
         '<button type="button" data-video-action="forward" aria-label="ទៅមុខ 10 វិនាទី">+10</button>' +
+        '<button type="button" data-video-action="captions" aria-label="បើក/បិទ Caption" aria-pressed="false" title="បើក/បិទ Caption">CC</button>' +
         '<button type="button" data-video-action="mute" aria-label="បិទសំឡេង"><span data-video-volume-icon>🔊</span></button>' +
         '<input class="custom-youtube-volume" data-video-volume type="range" min="0" max="100" value="85" aria-label="កម្រិតសំឡេង">' +
         '<span class="custom-youtube-spacer"></span>' +
@@ -3241,6 +3242,8 @@ function openListingVideoPopup(url, title = 'វីដេអូ', meta = {}) {
     } catch {}
   };
 
+  let captionsEnabled = false;
+  const captionsButton = playerShell.querySelector('[data-video-action="captions"]');
   playerShell.addEventListener('click', event => {
     const button = event.target.closest('[data-video-action]');
     if (!button || !listingVideoPlayer) return;
@@ -3253,6 +3256,12 @@ function openListingVideoPopup(url, title = 'វីដេអូ', meta = {}) {
         listingVideoPlayer.seekTo(Math.max(0, listingVideoPlayer.getCurrentTime() - 10), true);
       } else if (action === 'forward') {
         listingVideoPlayer.seekTo(Math.min(listingVideoPlayer.getDuration() || Infinity, listingVideoPlayer.getCurrentTime() + 10), true);
+      } else if (action === 'captions') {
+        captionsEnabled = !captionsEnabled;
+        if (captionsEnabled) listingVideoPlayer.loadModule('captions');
+        else listingVideoPlayer.unloadModule('captions');
+        captionsButton?.setAttribute('aria-pressed', String(captionsEnabled));
+        captionsButton?.classList.toggle('is-active', captionsEnabled);
       } else if (action === 'mute') {
         if (listingVideoPlayer.isMuted()) listingVideoPlayer.unMute();
         else listingVideoPlayer.mute();
@@ -3590,7 +3599,7 @@ function bindEvents() {
         const width=Math.max(320,Math.min(window.innerWidth-16,resize.width+delta));
         dialog.style.width=width+'px';
         if(e.includes('w'))dialog.style.left=(resize.left+resize.width-width)+'px';
-        if(e.includes('n'))dialog.style.top=Math.max(8,resize.top+resize.width-width)+'px';
+        if(e.includes('n'))dialog.style.top=Math.max(8,resize.top+(resize.width-width)*9/16)+'px';
       });
       const stop=event=>{if(resize&&event.pointerId===resize.id)resize=null};
       grip.addEventListener('pointerup',stop);grip.addEventListener('pointercancel',stop);
