@@ -3174,8 +3174,7 @@ function openListingVideoPopup(url, title = 'វីដេអូ') {
       '<div class="custom-youtube-frame" id="customYoutubeFrame"></div>' +
       '<button type="button" class="custom-youtube-center-play" data-video-action="toggle" aria-label="ចាក់វីដេអូ"><span data-video-play-icon></span></button>' +
       '<div class="custom-youtube-loading">កំពុងផ្ទុកវីដេអូ...</div>' +
-    '</div>' +
-    '<div class="custom-youtube-controls">' +
+      '<div class="custom-youtube-controls">' +
       '<div class="custom-youtube-progress-row"><span class="custom-youtube-current">0:00</span><input class="custom-youtube-seek" data-video-seek type="range" min="0" max="1000" value="0" step="1" aria-label="ទីតាំងវីដេអូ"><span class="custom-youtube-duration">0:00</span></div>' +
       '<div class="custom-youtube-control-row">' +
         '<button type="button" data-video-action="toggle" aria-label="ចាក់ / ផ្អាក"><span data-video-play-icon>▶</span></button>' +
@@ -3188,6 +3187,8 @@ function openListingVideoPopup(url, title = 'វីដេអូ') {
         '<button type="button" data-video-action="fullscreen" aria-label="ពេញអេក្រង់">⛶</button>' +
       '</div>' +
       '<div class="custom-youtube-settings" hidden><label>ល្បឿនចាក់<select data-video-speed aria-label="ល្បឿនចាក់"><option value="0.5">0.5×</option><option value="0.75">0.75×</option><option value="1" selected>ធម្មតា 1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="1.75">1.75×</option><option value="2">2×</option></select></label></div>' +
+      '</div>' +
+    '</div>' +
     '';
 
   stage.replaceChildren(playerShell);
