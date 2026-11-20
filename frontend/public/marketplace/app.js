@@ -3081,7 +3081,7 @@ async function loadSellerMediaSettings(){
   const res=await api('/api/vendor/media-links'),rows=res.data||[];
   $('sellerMediaStatus').textContent=rows.length?`មានមាតិកា ${rows.length} ធាតុ។ អ្នកអាចបង្ហោះបន្ថែមបាន។`:'មិនទាន់មាន Shorts។ អ្នកអាចបង្ហោះដំបូងបាន។';
   list.innerHTML=rows.length?rows.map(row=>{const telegramVideo=String(row.media_url||'').startsWith('tgvideo:');return `<article class="seller-media-item">
-    <div class="seller-media-item-info"><b>${row.media_type==='video'?(telegramVideo?'Telegram Shorts · MP4':'YouTube Shorts (ចាស់)'):'Live ផ្សាយផ្ទាល់'} · ${row.is_active?'កំពុងបង្ហាញ':'បានផ្អាក'}</b>
+    <div class="seller-media-item-info"><b>${row.media_type==='video'?(telegramVideo?'Telegram Shorts · MP4':'YouTube Shorts'):'Live ផ្សាយផ្ទាល់'} · ${row.is_active?'កំពុងបង្ហាញ':'បានផ្អាក'}</b>
     ${telegramVideo?'<span>រក្សាទុកក្នុង Telegram Channel 7inone Short</span>':`<a href="${esc(row.media_url)}" target="_blank" rel="noopener noreferrer">${esc(row.media_url)}</a>`}
     <small>${row.created_at?new Date(row.created_at).toLocaleString('km-KH'):''}</small></div>
     <div class="seller-media-item-actions">
