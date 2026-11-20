@@ -3207,8 +3207,9 @@ function openListingVideoPopup(url, title = 'វីដេអូ', meta = {}) {
       if (!products.length && !isSimilar) return '';
       const rows = products.map(product => {
         const productImage = (Array.isArray(product.product_images) ? product.product_images.slice().sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0)).find(image => image?.image_url)?.image_url : '') ||
+          (Array.isArray(product.images) ? product.images.map(image => typeof image === 'string' ? image : (image?.image_url || image?.url || '')).find(Boolean) : '') ||
           (Array.isArray(product.image_urls) ? product.image_urls.find(Boolean) : '') ||
-          product.image_url || product.cover_url || product.thumbnail_url || product.photo_url || '';
+          product.primary_image_url || product.image_url || product.cover_url || product.thumbnail_url || product.photo_url || '';
         const productPrice = product.price_label != null ? money(product.price_label) :
           product.price != null ? money(product.price) : '';
         return '<div class="home-shorts-related-row">' +
