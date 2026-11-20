@@ -3004,73 +3004,74 @@ async function renderTelegramSecurity() {
 
 function youtubeVideoId(value) {
   try {
-    const url = new URL(String(value || '').trim()), host = url.hostname.toLowerCase().replace(/^www\./, '');
-    if (host === 'youtu.be') return url.pathname.split('/').filter(Boolean)[0] || '';
-    if (host === 'youtube.com' || host.endsWith('.youtube.com')) {
-      const parts = url.pathname.split('/').filter(Boolean);
-      if (url.pathname === '/watch') return url.searchParams.get('v') || '';
-      if (['shorts','embed','live'].includes(parts[0])) return parts[1] || '';
-    }
-  } catch {}
-  return '';
+    const url = new URL(String(value || '').trim());
+    const host = url.hostname.toLowerCase().replace(/^www\./, '');
+    if (!['youtube.com','m.youtube.com'].includes(host)) return '';
+    return url.pathname.match(/^\/shorts\/([A-Za-z0-9_-]{11})\/?$/)?.[1] || '';
+  } catch { return ''; }
 }
 let editingSellerMediaId = null;
+let youtubeIframeApiPromise = null;
+function loadYouTubeIframeApi() {
+  if (window.YT?.Player) return Promise.resolve(window.YT);
+  if (youtubeIframeApiPromise) return youtubeIframeApiPromise;
+  youtubeIframeApiPromise = new Promise((resolve,reject) => {
+    const previousReady=window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady=()=>{try{if(typeof previousReady==='function')previousReady()}catch{};if(window.YT?.Player)resolve(window.YT);else reject(new Error('YouTube Player API មិនអាចដំណើរការបានទេ។'))};
+    let script=document.querySelector('script[src="https://www.youtube.com/iframe_api"]');
+    if(!script){script=document.createElement('script');script.src='https://www.youtube.com/iframe_api';script.async=true;script.onerror=()=>reject(new Error('មិនអាចភ្ជាប់ YouTube Player API បានទេ។'));document.head.appendChild(script)}
+    setTimeout(()=>{if(window.YT?.Player)resolve(window.YT);else reject(new Error('YouTube Player API ផ្ទុកមិនទាន់បាន។'))},15000);
+  }).catch(error=>{youtubeIframeApiPromise=null;throw error});
+  return youtubeIframeApiPromise;
+}
 async function loadHomeVendorMedia(){
-  const section=$('homeVendorMediaSection'),target=$('homeVendorMediaList');if(!section||!target)return;
-  try{
-    // Only Telegram-hosted Shorts are public now. Existing YouTube rows remain in SQL but are hidden.
-    const res=await api('/api/vendor-media');
-    const rows=(res.data||[]).filter(row=>row.media_type==='video'&&String(row.media_url||'').startsWith('/api/media/video/'));
-    if(!rows.length){section.classList.add('hidden');target.replaceChildren();return}
-    target.innerHTML=rows.map(row=>`<article class="home-vendor-media-card" data-short-video-url="${esc(row.media_url)}" data-short-store="${esc(row.store_name||'ហាងអ្នកលក់')}"><button class="home-vendor-media-open" type="button" aria-label="ពង្រីកវីដេអូ ${esc(row.store_name||'ហាងអ្នកលក់')}"><div class="home-vendor-media-player"><video src="${esc(row.media_url)}" muted loop playsinline preload="metadata"></video><span class="home-short-play-indicator" aria-hidden="true">▶</span></div></button><div class="home-vendor-media-store">${esc(row.store_name||'ហាងអ្នកលក់')}</div></article>`).join('');
-    const popup=$('homeShortsPopup'),popupVideo=$('homeShortsPopupFrame'),popupTitle=$('homeShortsPopupTitle');
-    if(popup&&!target.dataset.popupBound){
-      target.dataset.popupBound='1';
-      target.addEventListener('click',event=>{
-        const trigger=event.target.closest('.home-vendor-media-open');if(!trigger)return;
-        const card=trigger.closest('.home-vendor-media-card'),src=card?.dataset.shortVideoUrl;if(!src||!popupVideo)return;
-        popupTitle.textContent=card.dataset.shortStore||'វីដេអូ';
-        popupVideo.src=src;popupVideo.currentTime=0;if(!popup.open)popup.showModal();popupVideo.play().catch(()=>{});
-      });
-      const closePopup=()=>{if(popupVideo){popupVideo.pause();popupVideo.removeAttribute('src');popupVideo.load()}};
-      popup?.addEventListener('close',closePopup);popup?.addEventListener('click',event=>{if(event.target===popup)popup.close()});
-      $('homeShortsPopupClose')?.addEventListener('click',()=>popup.close());
-    }
-    const move=dir=>{const card=target.querySelector('.home-vendor-media-card');if(!card)return;const max=Math.max(0,target.scrollWidth-target.clientWidth),step=card.getBoundingClientRect().width+12;if(dir>0&&target.scrollLeft>=max-8)target.scrollTo({left:0,behavior:'smooth'});else if(dir<0&&target.scrollLeft<=8)target.scrollTo({left:max,behavior:'smooth'});else target.scrollBy({left:step*dir,behavior:'smooth'})};
-    if(state.homeVendorMediaTimer)clearInterval(state.homeVendorMediaTimer);let paused=false;
-    target.onpointerenter=()=>{paused=true};target.onpointerleave=()=>{paused=false};target.onfocusin=()=>{paused=true};target.onfocusout=()=>{paused=false};
-    state.homeVendorMediaTimer=setInterval(()=>{if(!paused&&!document.hidden&&rows.length>1)move(1)},5000);
-    // Play only Shorts that are actually visible in the viewport; pause them when scrolled away.
-    target._shortsVisibilityObserver?.disconnect();
-    if ('IntersectionObserver' in window) {
-      target._shortsVisibilityObserver = new IntersectionObserver(entries => {
-        entries.forEach(entry => {
-          const video = entry.target;
-          if (document.hidden || !entry.isIntersecting || entry.intersectionRatio < 0.2) {
-            video.pause();
-            return;
-          }
-          video.muted = true;
-          video.loop = true;
-          video.playsInline = true;
-          video.play().catch(() => {});
-        });
-      }, { threshold: [0, 0.2, 0.5] });
-      target.querySelectorAll('video').forEach(video => target._shortsVisibilityObserver.observe(video));
-    } else {
-      target.querySelectorAll('video').forEach(video => { video.muted = true; video.loop = true; video.play().catch(() => {}); });
-    }
-    if (!target.dataset.shortsVisibilityBound) {
-      target.dataset.shortsVisibilityBound = '1';
-      document.addEventListener('visibilitychange', () => {
-        target.querySelectorAll('video').forEach(video => {
-          if (document.hidden) video.pause();
-          else if (video.getBoundingClientRect().bottom > 0 && video.getBoundingClientRect().top < window.innerHeight) video.play().catch(() => {});
-        });
-      });
-    }
-    section.classList.remove('hidden');
-  }catch{section.classList.add('hidden')}
+ const section=$('homeVendorMediaSection'),target=$('homeVendorMediaList');if(!section||!target)return;
+ try{
+  const res=await api('/api/vendor-media');
+  const rows=(res.data||[]).filter(row=>row.media_type==='video'&&youtubeVideoId(row.media_url));
+  target._shortsVisibilityObserver?.disconnect();
+  if(target._shortLoopTimer)clearInterval(target._shortLoopTimer);
+  if(state.homeVendorMediaTimer)clearInterval(state.homeVendorMediaTimer);
+  target._shortPlayers?.forEach(item=>{try{item.player?.destroy()}catch{}});
+  target._shortPlayers=new Map();
+  if(!rows.length){section.classList.add('hidden');target.replaceChildren();return}
+  target.innerHTML=rows.map((row,index)=>'<article class="home-vendor-media-card" data-short-store="'+esc(row.store_name||'ហាងអ្នកលក់')+'" data-short-video-id="'+esc(youtubeVideoId(row.media_url))+'"><button class="home-vendor-media-open" type="button" aria-label="មើល YouTube Shorts"><div class="home-vendor-media-player"><div class="home-short-youtube-player" id="home-short-player-'+index+'"></div></div></button><div class="home-vendor-media-store">'+esc(row.store_name||'ហាងអ្នកលក់')+'</div></article>').join('');
+  const popup=$('homeShortsPopup'),stage=$('homeShortsPopupStage'),title=$('homeShortsPopupTitle');
+  const closePlayer=()=>{try{target._popupPlayer?.destroy()}catch{};target._popupPlayer=null;stage?.replaceChildren();target._shortPlayers?.forEach(item=>{if(item.visible){try{item.player?.mute();item.player?.playVideo()}catch{}}})};
+  if(!target.dataset.popupBound){
+   target.dataset.popupBound='1';
+   target.addEventListener('click',async event=>{
+    const trigger=event.target.closest('.home-vendor-media-open');if(!trigger)return;
+    const card=trigger.closest('.home-vendor-media-card'),videoId=card?.dataset.shortVideoId;if(!videoId||!popup||!stage)return;
+    target._shortPlayers?.forEach(item=>{try{item.player?.pauseVideo()}catch{}});
+    title.textContent=card.dataset.shortStore||'YouTube Shorts';stage.replaceChildren();
+    const mount=document.createElement('div');mount.id='homeShortsPopupPlayer';mount.style.width='100%';mount.style.height='100%';stage.appendChild(mount);
+    if(!popup.open)popup.showModal();
+    try{const YT=await loadYouTubeIframeApi();if(!popup.open)return;target._popupPlayer=new YT.Player('homeShortsPopupPlayer',{width:'100%',height:'100%',videoId,playerVars:{autoplay:1,controls:1,playsinline:1,rel:0,modestbranding:1,enablejsapi:1,origin:window.location.origin},events:{onReady:event=>event.target.playVideo()}})}
+    catch(error){toast(error.message||'មិនអាចបើក YouTube Shorts បានទេ។','error')}
+   });
+   popup?.addEventListener('close',closePlayer);
+   popup?.addEventListener('click',event=>{if(event.target===popup)popup.close()});
+   $('homeShortsPopupClose')?.addEventListener('click',()=>popup.close());
+  }
+  await loadYouTubeIframeApi();
+  rows.forEach((row,index)=>{
+   const item={player:null,visible:false,ready:false};target._shortPlayers.set(String(index),item);
+   item.player=new window.YT.Player('home-short-player-'+index,{width:'100%',height:'100%',videoId:youtubeVideoId(row.media_url),playerVars:{autoplay:0,controls:0,disablekb:1,fs:0,playsinline:1,rel:0,modestbranding:1,iv_load_policy:3,enablejsapi:1,origin:window.location.origin},events:{onReady:event=>{item.ready=true;event.target.mute();if(item.visible&&!document.hidden)event.target.playVideo()},onStateChange:event=>{if(event.data===window.YT.PlayerState.PLAYING&&item.visible)event.target.mute()}}});
+  });
+  target._shortsVisibilityObserver=new IntersectionObserver(entries=>entries.forEach(entry=>{
+   const item=target._shortPlayers.get(entry.target.dataset.shortPlayerKey);if(!item)return;
+   item.visible=entry.isIntersecting&&entry.intersectionRatio>=0.2;if(!item.ready)return;
+   try{if(document.hidden||!item.visible)item.player.pauseVideo();else{item.player.mute();item.player.playVideo()}}catch{}
+  }),{threshold:[0,0.2,0.5]});
+  target.querySelectorAll('.home-short-youtube-player').forEach((node,index)=>{node.dataset.shortPlayerKey=String(index);target._shortsVisibilityObserver.observe(node)});
+  target._shortLoopTimer=setInterval(()=>{if(document.hidden||popup?.open)return;target._shortPlayers?.forEach(item=>{if(!item.visible||!item.ready)return;try{if(item.player.getPlayerState()===window.YT.PlayerState.PLAYING&&item.player.getCurrentTime()>=1.95){item.player.seekTo(0,true);item.player.playVideo()}}catch{}})},100);
+  const move=dir=>{const card=target.querySelector('.home-vendor-media-card');if(!card)return;const max=Math.max(0,target.scrollWidth-target.clientWidth),step=card.getBoundingClientRect().width+12;if(dir>0&&target.scrollLeft>=max-8)target.scrollTo({left:0,behavior:'smooth'});else if(dir<0&&target.scrollLeft<=8)target.scrollTo({left:max,behavior:'smooth'});else target.scrollBy({left:step*dir,behavior:'smooth'})};
+  let paused=false;target.onpointerenter=()=>{paused=true};target.onpointerleave=()=>{paused=false};target.onfocusin=()=>{paused=true};target.onfocusout=()=>{paused=false};
+  state.homeVendorMediaTimer=setInterval(()=>{if(!paused&&!document.hidden&&rows.length>1)move(1)},5000);
+  if(!target.dataset.shortsVisibilityBound){target.dataset.shortsVisibilityBound='1';document.addEventListener('visibilitychange',()=>target._shortPlayers?.forEach(item=>{try{if(document.hidden)item.player?.pauseVideo();else if(item.visible&&!popup?.open){item.player?.mute();item.player?.playVideo()}}catch{}}))}
+  section.classList.remove('hidden');
+ }catch(error){console.warn('YouTube Shorts feed unavailable:',error.message);section.classList.add('hidden')}
 }
 async function loadSellerMediaSettings(){
  const form=$('sellerMediaForm'),list=$('sellerMediaList');if(!form||!list)return;
@@ -3080,7 +3081,7 @@ async function loadSellerMediaSettings(){
   const res=await api('/api/vendor/media-links'),rows=res.data||[];
   $('sellerMediaStatus').textContent=rows.length?`មានមាតិកា ${rows.length} ធាតុ។ អ្នកអាចបង្ហោះបន្ថែមបាន។`:'មិនទាន់មាន Shorts។ អ្នកអាចបង្ហោះដំបូងបាន។';
   list.innerHTML=rows.length?rows.map(row=>{const telegramVideo=String(row.media_url||'').startsWith('tgvideo:');return `<article class="seller-media-item">
-    <div class="seller-media-item-info"><b>${row.media_type==='video'?(telegramVideo?'Telegram Shorts · MP4':'YouTube Shorts (ចាស់)'):'Live ផ្សាយផ្ទាល់'} · ${row.is_active?'កំពុងបង្ហាញ':'បានផ្អាក'}</b>
+    <div class="seller-media-item-info"><b>${row.media_type==='video'?(telegramVideo?'Telegram Shorts · MP4':'YouTube Shorts'):'Live ផ្សាយផ្ទាល់'} · ${row.is_active?'កំពុងបង្ហាញ':'បានផ្អាក'}</b>
     ${telegramVideo?'<span>រក្សាទុកក្នុង Telegram Channel 7inone Short</span>':`<a href="${esc(row.media_url)}" target="_blank" rel="noopener noreferrer">${esc(row.media_url)}</a>`}
     <small>${row.created_at?new Date(row.created_at).toLocaleString('km-KH'):''}</small></div>
     <div class="seller-media-item-actions">
@@ -3933,24 +3934,23 @@ function bindEvents() {
   $('sellerOffers')?.addEventListener('click', async (e) => { const b = e.target.closest('[data-offer-action]'); if (!b) return; try { await api('/api/offers/' + encodeURIComponent(b.dataset.id), { method: 'PATCH', body: JSON.stringify({ status: b.dataset.offerAction }) }); await renderSeller(); toast('បានធ្វើបច្ចុប្បន្នភាពសំណើតម្លៃ។'); } catch (err) { toast(err.message || 'មិនអាចកែស្ថានភាពសំណើបានទេ។', 'error'); } });
   $('sellerOrders')?.addEventListener('click', async (e) => { const b = e.target.closest('[data-order-status]'); if (!b) return; try { await api('/api/vendor/orders/' + encodeURIComponent(b.dataset.orderId), { method: 'PATCH', body: JSON.stringify({ status: b.dataset.orderStatus }) }); await renderSeller(); toast('បានធ្វើបច្ចុប្បន្នភាពការបញ្ជាទិញ។'); } catch (err) { toast(err.message || 'មិនអាចកែស្ថានភាពការបញ្ជាទិញបានទេ។', 'error'); } });
   $('sellerShopProfileForm')?.addEventListener('submit', async (e) => { e.preventDefault(); const form = new FormData(); form.append('store_name', $('sellerShopName')?.value.trim() || ''); form.append('store_location', $('sellerShopLocation')?.value.trim() || ''); form.append('description', $('sellerShopDescription')?.value.trim() || ''); const logo = $('sellerShopLogo')?.files?.[0], cover = $('sellerShopCover')?.files?.[0]; if (logo) form.append('logo', logo); if (cover) form.append('cover', cover); try { await api('/api/vendor/profile', { method: 'PATCH', body: form }); await refreshSession(); await renderSeller(); toast('បានរក្សាទុកព័ត៌មានហាង។'); } catch (err) { toast(err.message || 'មិនអាចរក្សាទុកព័ត៌មានហាងបានទេ។', 'error'); } });
-  const syncSellerMediaFields=()=>{const video=$('sellerMediaType')?.value==='video';$('sellerMediaVideoWrap')?.classList.toggle('hidden',!video);$('sellerMediaUrlWrap')?.classList.toggle('hidden',video);if($('sellerMediaVideo'))$('sellerMediaVideo').required=video&&!editingSellerMediaId;if($('sellerMediaUrl'))$('sellerMediaUrl').required=!video;};
+  const syncSellerMediaFields=()=>{
+    const video=$('sellerMediaType')?.value==='video',label=$('sellerMediaUrlLabel'),input=$('sellerMediaUrl');
+    if(label)label.textContent=video?'Link YouTube Shorts *':'Link Live ផ្សាយផ្ទាល់ *';
+    if(input){input.required=true;input.placeholder=video?'https://www.youtube.com/shorts/VIDEO_ID':'https://...';}
+  };
   $('sellerMediaType')?.addEventListener('change',syncSellerMediaFields);syncSellerMediaFields();
-  $('sellerMediaForm')?.addEventListener('submit', async (e) => {
-    e.preventDefault(); if (!isVerifiedSeller()) { toast('សូមផ្ទៀងផ្ទាត់ហាងជាមុនសិន។', 'error'); return; }
-    const id=editingSellerMediaId,type=$('sellerMediaType')?.value||'video',url=id?`/api/vendor/media-links/${encodeURIComponent(id)}`:'/api/vendor/media-links',save=$('sellerMediaSave');
-    save.disabled=true;save.textContent='កំពុងបង្ហោះ...';
-    try {
-      if(id){await api(url,{method:'PATCH',body:JSON.stringify({media_type:type,media_url:$('sellerMediaUrl')?.value.trim()||''})});}
-      else{
-        const form=new FormData();form.append('media_type',type);
-        if(type==='video'){const file=$('sellerMediaVideo')?.files?.[0];if(!file)throw new Error('សូមជ្រើសរើសវីដេអូ MP4 ជាមុនសិន។');if(file.size>20*1024*1024)throw new Error('វីដេអូត្រូវមានទំហំមិនលើស 20MB។');form.append('video',file);}
-        else form.append('media_url',$('sellerMediaUrl')?.value.trim()||'');
-        await api(url,{method:'POST',body:form});
-      }
+  $('sellerMediaForm')?.addEventListener('submit',async e=>{
+    e.preventDefault();if(!isVerifiedSeller()){toast('សូមផ្ទៀងផ្ទាត់ហាងជាមុនសិន។','error');return}
+    const id=editingSellerMediaId,type=$('sellerMediaType')?.value||'video',url=id?'/api/vendor/media-links/'+encodeURIComponent(id):'/api/vendor/media-links',save=$('sellerMediaSave');
+    save.disabled=true;save.textContent='កំពុងរក្សាទុក...';
+    try{
+      await api(url,{method:id?'PATCH':'POST',body:JSON.stringify({media_type:type,media_url:$('sellerMediaUrl')?.value.trim()||''})});
       editingSellerMediaId=null;$('sellerMediaForm').reset();syncSellerMediaFields();
-      await loadHomeVendorMedia();await loadSellerMediaSettings();toast(id?'បានកែ Link ជោគជ័យ!':'បានបង្ហោះ Shorts ទៅ Telegram ជោគជ័យ!');
-    }catch(err){toast(err.message||'មិនអាចរក្សាទុកមាតិកាបានទេ។','error')}
-    finally{save.disabled=false;save.textContent='បង្ហោះ Shorts';}
+      await loadHomeVendorMedia();await loadSellerMediaSettings();
+      toast(id?'បានកែ Link ជោគជ័យ!':type==='video'?'បានបង្ហោះ YouTube Shorts ជោគជ័យ!':'បានបង្ហោះ Live Link ជោគជ័យ!');
+    }catch(err){toast(err.message||'មិនអាចរក្សាទុក Link បានទេ។','error')}
+    finally{save.disabled=false;save.textContent='បង្ហោះ'}
   });
   $('sellerMediaList')?.addEventListener('click',async(e)=>{
     const button=e.target.closest('[data-media-action]');if(!button||!isVerifiedSeller())return;
