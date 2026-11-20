@@ -6182,39 +6182,49 @@ body > footer {
 #view-product .product-gallery-stage.is-video{aspect-ratio:16/9!important}
 
 
-/* Product gallery thumbnails: larger 4:3 previews on desktop only. */
+/* Product gallery: compact 4:3 thumbnail rail, close to the main image, scrollbar hidden. */
 @media (min-width: 901px) {
   #view-product .product-detail-gallery {
-    grid-template-columns: 112px minmax(0, 1fr) !important;
-    column-gap: 14px !important;
+    grid-template-columns: 58px minmax(0, 1fr) !important;
+    column-gap: 8px !important;
+    align-items: start !important;
   }
 
   #view-product .product-gallery-thumbs {
-    width: 112px !important;
-    gap: 10px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    width: 58px !important;
+    max-height: min(640px, calc(100vh - 150px)) !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+    gap: 9px !important;
+    padding: 2px 0 !important;
+  }
+
+  #view-product .product-gallery-thumbs::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
   }
 
   #view-product .product-gallery-thumb,
   #view-product .product-gallery-video-thumb {
     box-sizing: border-box;
-    width: 112px !important;
-    height: 84px !important;
-    min-width: 112px !important;
-    min-height: 84px !important;
-    flex: 0 0 84px !important;
+    width: 58px !important;
+    height: 44px !important;
+    min-width: 58px !important;
+    min-height: 44px !important;
+    flex: 0 0 44px !important;
     aspect-ratio: 4 / 3;
     overflow: hidden;
-    border-radius: 12px;
+    border-radius: 9px;
   }
 
-  #view-product .product-gallery-thumb img {
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    image-rendering: auto;
-  }
-
+  #view-product .product-gallery-thumb img,
   #view-product .product-gallery-video-thumb img {
     display: block;
     width: 100%;
