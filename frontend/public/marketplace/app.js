@@ -3191,7 +3191,8 @@ function openListingVideoPopup(url, title = 'វីដេអូ') {
     '';
 
   stage.replaceChildren(playerShell);
-  if (!popup.open) popup.showModal();
+  // Non-modal floating player: keep the marketplace interactive behind it.
+  if (!popup.open) popup.show();
 
   const frameHost = playerShell.querySelector('#customYoutubeFrame');
   const seek = playerShell.querySelector('[data-video-seek]');
@@ -3531,6 +3532,9 @@ function bindEvents() {
       handle.setPointerCapture(event.pointerId);
       dialog.style.position = 'fixed';
       dialog.style.margin = '0';
+      dialog.style.transform = 'none';
+      dialog.style.left = rect.left + 'px';
+      dialog.style.top = rect.top + 'px';
       event.preventDefault();
     });
     handle.addEventListener('pointermove', event => {
@@ -3543,7 +3547,7 @@ function bindEvents() {
     const stopDrag = event => { if (dragState && event.pointerId === dragState.pointerId) dragState = null; };
     handle.addEventListener('pointerup', stopDrag);
     handle.addEventListener('pointercancel', stopDrag);
-    dialog.addEventListener('close', () => { dialog.style.left = ''; dialog.style.top = ''; dialog.style.position = ''; dialog.style.margin = ''; });
+    dialog.addEventListener('close', () => { dialog.style.left = ''; dialog.style.top = ''; dialog.style.position = ''; dialog.style.margin = ''; dialog.style.transform = ''; dialog.style.width = ''; dialog.style.height = ''; });
   })();
   $('homeShortsPopup')?.addEventListener('close', closeListingVideoPopup);
   document.addEventListener('click', event => {
