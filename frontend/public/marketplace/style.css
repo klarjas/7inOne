@@ -6089,4 +6089,4 @@ body > footer {
 .home-vendor-media-caption{display:block;max-width:100%;overflow:hidden;color:#94a3b8;font-size:10px;font-weight:500;text-overflow:ellipsis;white-space:nowrap;line-height:1.35}
 /* Keep YouTube's central playback overlay out of sight on both embedded players. */
 .home-vendor-media-player iframe,.home-shorts-popup-stage iframe{pointer-events:none!important}
-.home-shorts-popup-stage iframe{pointer-events:auto!important}
+.home-shorts-popup-stage iframe{pointer-events:none!important}
