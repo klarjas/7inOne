@@ -3173,19 +3173,6 @@ function openListingVideoPopup(url, title = 'វីដេអូ', meta = {}) {
     const currentId = String(meta.listingId || '');
     const vendorId = String(meta.vendorId || '');
     const category = String(meta.category || '');
-    const allProducts = Array.isArray(state.products) ? state.products : [];
-    const visibleProducts = allProducts.filter(product =>
-      product && product.listing_type === 'product' && String(product.id) !== currentId
-    );
-    const shopProducts = vendorId
-      ? visibleProducts.filter(product => String(product.vendor_id || '') === vendorId).slice(0, 4)
-      : [];
-    const similarProducts = category
-      ? visibleProducts.filter(product =>
-          String(product.vendor_id || '') !== vendorId &&
-          String(product.category || '') === category
-        ).slice(0, 4)
-      : [];
     const renderProductSection = (sectionTitle, products) => {
       if (!products.length) return '';
       const rows = products.map(product => {
@@ -3204,14 +3191,57 @@ function openListingVideoPopup(url, title = 'វីដេអូ', meta = {}) {
       }).join('');
       return '<section class="home-shorts-product-section"><h4>' + esc(sectionTitle) + '</h4><div class="home-shorts-related-list">' + rows + '</div></section>';
     };
-    metaHost.innerHTML =
+    const renderShopMeta = () =>
       '<div class="home-shorts-shop-meta">' +
         (shopAvatar ? '<img src="' + esc(shopAvatar) + '" alt="' + esc(shopName) + '">' : '<span class="home-shorts-shop-fallback">' + esc(Array.from(shopName)[0] || 'S') + '</span>') +
         '<span class="home-shorts-shop-name">' + esc(shopName) + '</span>' +
-      '</div>' +
-      renderProductSection('ផលិតផលរបស់ហាង', shopProducts) +
-      renderProductSection('ផលិតផលស្រដៀង', similarProducts);
+      '</div>';
+    metaHost.innerHTML = renderShopMeta() +
+      ((vendorId || category) ? '<p class="home-shorts-related-loading">កំពុងទាញយកផលិតផល...</p>' : '');
     metaHost.hidden = false;
+    if (vendorId || category) {
+      const loadRelatedProducts = async () => {
+        const requests = [];
+        if (vendorId) {
+          const params = new URLSearchParams({ vendor_id: vendorId, limit: '50' });
+          requests.push(api('/api/products?' + params.toString()).then(result => ({
+            type: 'shop',
+            products: Array.isArray(result.data) ? result.data : []
+          })));
+        }
+        if (category) {
+          const params = new URLSearchParams({ category, limit: '50' });
+          requests.push(api('/api/products?' + params.toString()).then(result => ({
+            type: 'similar',
+            products: Array.isArray(result.data) ? result.data : []
+          })));
+        }
+        const results = await Promise.allSettled(requests);
+        if (session !== listingVideoSession || !metaHost.isConnected) return;
+        let shopProducts = [];
+        let similarProducts = [];
+        results.forEach(result => {
+          if (result.status !== 'fulfilled') {
+            console.warn('Could not load popup related products:', result.reason);
+            return;
+          }
+          if (result.value.type === 'shop') {
+            shopProducts = result.value.products
+              .filter(product => product && String(product.id) !== currentId && String(product.vendor_id || '') === vendorId)
+              .slice(0, 4);
+          } else {
+            similarProducts = result.value.products
+              .filter(product => product && String(product.id) !== currentId &&
+                String(product.vendor_id || '') !== vendorId && String(product.category || '') === category)
+              .slice(0, 4);
+          }
+        });
+        metaHost.innerHTML = renderShopMeta() +
+          renderProductSection('ផលិតផលរបស់ហាង', shopProducts) +
+          renderProductSection('ផលិតផលស្រដៀង', similarProducts);
+      };
+      void loadRelatedProducts().catch(error => console.warn('Could not load popup related products:', error));
+    }
     metaHost.onclick = event => {
       const productButton = event.target.closest('[data-related-product-id]');
       if (productButton) {
