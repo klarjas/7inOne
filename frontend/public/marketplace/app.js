@@ -1535,6 +1535,7 @@ function renderProductDetail() {
         vendorId: p.vendor_id || popupVendor.id || '',
         category: p.category || '',
         source: 'product-gallery',
+        storeVerified: popupVendor.status === 'approved',
         productTitle: p.title || '',
         productPrice: p.price_label != null ? p.price_label : p.price,
         productImage: productImage(p) || (Array.isArray(p.image_urls) ? p.image_urls[0] : '') || p.image_url || p.cover_url || ''
@@ -3192,6 +3193,7 @@ function openListingVideoPopup(url, title = 'វីដេអូ', meta = {}) {
       '<div class="home-shorts-shop-meta">' +
         (shopAvatar ? '<img src="' + esc(shopAvatar) + '" alt="' + esc(shopName) + '">' : '<span class="home-shorts-shop-fallback">' + esc(Array.from(shopName)[0] || 'S') + '</span>') +
         '<span class="home-shorts-shop-name">' + esc(shopName) + '</span>' +
+        (meta.storeVerified ? verifiedStoreBadge(vendorId) : '') +
       '</div>';
     const renderCurrentProduct = () => {
       const image = meta.productImage || '';
@@ -3205,7 +3207,8 @@ function openListingVideoPopup(url, title = 'វីដេអូ', meta = {}) {
       if (!products.length && !isSimilar) return '';
       const rows = products.map(product => {
         const productImage = (Array.isArray(product.product_images) ? product.product_images.slice().sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0)).find(image => image?.image_url)?.image_url : '') ||
-          (Array.isArray(product.image_urls) ? product.image_urls[0] : '') || product.image_url || product.cover_url || '';
+          (Array.isArray(product.image_urls) ? product.image_urls.find(Boolean) : '') ||
+          product.image_url || product.cover_url || product.thumbnail_url || product.photo_url || '';
         const productPrice = product.price_label != null ? money(product.price_label) :
           product.price != null ? money(product.price) : '';
         return '<div class="home-shorts-related-row">' +
@@ -3216,7 +3219,8 @@ function openListingVideoPopup(url, title = 'វីដេអូ', meta = {}) {
           '</button>' +
         '</div>';
       }).join('');
-      return '<section class="home-shorts-product-section' + (isSimilar ? ' is-similar-products' : '') + '"><h4>' + esc(sectionTitle) + '</h4><div class="home-shorts-related-list">' + rows + '</div>' +
+      const content = rows || '<div class="home-shorts-related-empty">មិនទាន់មានផលិតផលស្រដៀងទេ</div>';
+      return '<section class="home-shorts-product-section' + (isSimilar ? ' is-similar-products' : '') + '"><h4>' + esc(sectionTitle) + '</h4><div class="home-shorts-related-list">' + content + '</div>' +
         (isSimilar ? '<button type="button" class="home-shorts-gallery-close" aria-label="បិទវីដេអូ">×</button>' : '') + '</section>';
     };
     const renderContext = (shopProducts = [], similarProducts = []) => isProductGalleryPopup
@@ -3225,7 +3229,7 @@ function openListingVideoPopup(url, title = 'វីដេអូ', meta = {}) {
       : renderShopMeta() + renderProductSection('ផលិតផលរបស់ហាង', shopProducts) + renderProductSection('ផលិតផលស្រដៀង', similarProducts);
     metaHost.innerHTML = renderContext();
     metaHost.hidden = false;
-    if (vendorId || category) {
+    {
       const loadRelatedProducts = async () => {
         const requests = [];
         if (vendorId) {
@@ -3234,8 +3238,9 @@ function openListingVideoPopup(url, title = 'វីដេអូ', meta = {}) {
             type: 'shop', products: Array.isArray(result.data) ? result.data : []
           })));
         }
-        if (category) {
-          const params = new URLSearchParams({ category, limit: '100' });
+        {
+          const params = new URLSearchParams({ limit: '100' });
+          if (category) params.set('category', category);
           requests.push(api('/api/products?' + params.toString()).then(result => ({
             type: 'similar', products: Array.isArray(result.data) ? result.data : []
           })));
@@ -3253,7 +3258,7 @@ function openListingVideoPopup(url, title = 'វីដេអូ', meta = {}) {
               String(product.vendor_id || '') === vendorId).slice(0, 4);
           } else {
             similarProducts = result.value.products.filter(product => product && String(product.id) !== currentId &&
-              (!vendorId || String(product.vendor_id || '') !== vendorId)).slice(0, 12);
+              (!category || String(product.category || '') === category)).slice(0, 12);
           }
         });
         metaHost.innerHTML = renderContext(shopProducts, similarProducts);
