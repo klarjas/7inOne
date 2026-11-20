@@ -3659,7 +3659,7 @@ function bindEvents() {
   $('homeShortsPopupClose')?.addEventListener('click', closeListingVideoPopup);
   (() => {
     const dialog = $('homeShortsPopup');
-    const handle = dialog?.querySelector('.home-shorts-popup-head') || dialog?.querySelector('#homeShortsPopupMeta');
+    const handle = dialog?.querySelector('#homeShortsPopupMeta') || dialog?.querySelector('.home-shorts-popup-head');
     if (!dialog || !handle || handle.dataset.dragBound) return;
     handle.dataset.dragBound = '1';
     let dragState = null;
