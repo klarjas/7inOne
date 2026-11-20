@@ -6267,3 +6267,7 @@ body > footer {
  .custom-youtube-volume{width:54px}
  .custom-youtube-center-play{width:52px;height:52px}
 }
+
+.custom-youtube-player:fullscreen{width:100vw;height:100vh;background:#000}
+.custom-youtube-player:fullscreen .custom-youtube-screen{flex:1;aspect-ratio:auto}
+.custom-youtube-player:fullscreen .custom-youtube-controls{flex:0 0 auto}
