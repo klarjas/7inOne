@@ -6567,3 +6567,8 @@ body > footer {
  #homeShortsPopup.is-product-gallery-popup .home-shorts-popup-context{grid-template-columns:minmax(110px,.8fr) minmax(130px,1fr) minmax(0,2fr)!important;}
  #homeShortsPopup.is-product-gallery-popup .home-shorts-product-section.is-similar-products{grid-column:auto!important;}
 }
+
+
+/* Auto-slide gallery: hide manual arrow controls; keep only the close button. */
+#homeShortsPopup.is-product-gallery-popup .home-shorts-related-scroll{display:none!important;}
+#homeShortsPopup.is-product-gallery-popup .home-shorts-related-controls{gap:0!important;}
