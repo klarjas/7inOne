@@ -6167,7 +6167,7 @@ body > footer {
 #productFormModal .product-youtube-preview-frame{width:100%;aspect-ratio:16/9;overflow:hidden;border-radius:9px;background:#000}
 #productFormModal .product-youtube-preview-frame iframe{display:block;width:100%;height:100%;border:0}
 #productFormModal .product-youtube-preview-invalid{margin:0;color:#F2A7A0;font-size:11px}
-#view-product .product-gallery-stage{width:70%!important;max-width:70%!important;margin-inline:auto!important}
+#view-product .product-gallery-stage{width:80%!important;max-width:80%!important;margin-inline:auto!important}
 #view-product .product-gallery-stage>img{width:100%!important;height:100%!important;max-height:none!important;object-fit:contain!important}
 #view-product .product-gallery-stage .product-gallery-video-frame{display:block;width:100%;height:100%;min-height:0;border:0;background:#000}
 #view-product .product-gallery-thumb{width:64px;height:64px;flex-basis:64px;transition:transform .2s ease,border-color .2s ease,opacity .2s ease}
@@ -6175,8 +6175,8 @@ body > footer {
 #view-product .product-gallery-video-thumb{position:relative;display:grid;place-items:center;flex:0 0 64px;overflow:hidden}
 #view-product .product-gallery-video-thumb img{width:100%;height:100%;object-fit:cover;opacity:.78}
 #view-product .product-gallery-video-thumb>span{position:absolute;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.24);color:#fff}
-@media(max-width:900px){#view-product .product-gallery-stage{width:70%!important;max-width:70%!important}}
-@media(max-width:560px){#view-product .product-gallery-stage{width:70%!important;max-width:70%!important}#view-product .product-gallery-thumb{width:62px;height:62px;flex-basis:62px}#view-product .product-gallery-video-thumb{flex-basis:62px}}
+@media(max-width:900px){#view-product .product-gallery-stage{width:80%!important;max-width:80%!important}}
+@media(max-width:560px){#view-product .product-gallery-stage{width:80%!important;max-width:80%!important}#view-product .product-gallery-thumb{width:62px;height:62px;flex-basis:62px}#view-product .product-gallery-video-thumb{flex-basis:62px}}
 
 #productFormModal .product-youtube-preview.hidden{display:none!important}
 #view-product .product-gallery-stage.is-video{aspect-ratio:16/9!important}

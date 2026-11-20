@@ -1402,7 +1402,7 @@ function renderProductDetail() {
   const related = state.products.filter((item) => String(item.id) !== String(p.id) && (item.category === p.category || String(item.vendor_id) === String(p.vendor_id))).slice(0, 6);
 
   const galleryHtml = galleryCount
-    ? `<div class="product-gallery-stage ${state.productGalleryVideoActive && hasVideo ? 'is-video' : ''}">${state.productGalleryVideoActive && hasVideo ? productGalleryVideoFrameMarkup(videoId, p.title, false) : (activeImage ? `<img id="productMainImage" src="${esc(activeImage.image_url)}" alt="${esc(p.title)}" data-gallery-zoom>` : ic('image', 48))}<span class="product-gallery-condition">${esc(p.condition || 'មិនបានបញ្ជាក់')}</span><button type="button" class="product-gallery-save" data-product-action="save" aria-pressed="${saved}">${ic('bookmark', 18)}</button>${galleryCount > 1 ? `<button type="button" class="product-gallery-arrow prev" data-gallery-step="-1">${ic('arrow', 17)}</button><button type="button" class="product-gallery-arrow next" data-gallery-step="1">${ic('arrow', 17)}</button>` : ''}<span class="product-gallery-counter">${state.productGalleryVideoActive && hasVideo ? galleryCount : state.productGalleryIndex + 1} / ${galleryCount}</span></div><div class="product-gallery-thumbs" id="productGalleryThumbs">${images.map((im, i) => `<button type="button" class="product-gallery-thumb ${!state.productGalleryVideoActive && i === state.productGalleryIndex ? 'active' : ''}" data-image="${i}"><img src="${esc(im.image_url)}" alt=""></button>`).join('')}${hasVideo ? `<button type="button" class="product-gallery-thumb product-gallery-video-thumb ${state.productGalleryVideoActive ? 'active' : ''}" data-gallery-video aria-label="មើលវីដេអូ YouTube"><img src="https://img.youtube.com/vi/${videoId}/hqdefault.jpg" alt="YouTube video"><span>${ic('play',18)}</span></button>` : ''}</div>`
+    ? `<div class="product-gallery-stage ${state.productGalleryVideoActive && hasVideo ? 'is-video' : ''}">${activeImage ? `<img id="productMainImage" src="${esc(activeImage.image_url)}" alt="${esc(p.title)}" data-gallery-zoom>` : ic('image', 48)}<span class="product-gallery-condition">${esc(p.condition || 'មិនបានបញ្ជាក់')}</span><button type="button" class="product-gallery-save" data-product-action="save" aria-pressed="${saved}">${ic('bookmark', 18)}</button>${galleryCount > 1 ? `<button type="button" class="product-gallery-arrow prev" data-gallery-step="-1">${ic('arrow', 17)}</button><button type="button" class="product-gallery-arrow next" data-gallery-step="1">${ic('arrow', 17)}</button>` : ''}<span class="product-gallery-counter">${state.productGalleryVideoActive && hasVideo ? galleryCount : state.productGalleryIndex + 1} / ${galleryCount}</span></div><div class="product-gallery-thumbs" id="productGalleryThumbs">${images.map((im, i) => `<button type="button" class="product-gallery-thumb ${!state.productGalleryVideoActive && i === state.productGalleryIndex ? 'active' : ''}" data-image="${i}"><img src="${esc(im.image_url)}" alt=""></button>`).join('')}${hasVideo ? `<button type="button" class="product-gallery-thumb product-gallery-video-thumb ${state.productGalleryVideoActive ? 'active' : ''}" data-gallery-video aria-label="មើលវីដេអូ YouTube"><img src="https://img.youtube.com/vi/${videoId}/hqdefault.jpg" alt="YouTube video"><span>${ic('play',18)}</span></button>` : ''}</div>`
     : `<div class="product-gallery-stage">${ic('image', 48)}</div>`;
 
   const reviewItems = (v.reviews || []).slice(0, 5);
@@ -1509,27 +1509,25 @@ function renderProductDetail() {
     state.productGalleryVideoActive = Boolean(hasVideo && nextIndex === images.length);
     if (!state.productGalleryVideoActive) state.productGalleryIndex = nextIndex;
     const stage = $('productDetail').querySelector('.product-gallery-stage');
-    stage?.classList.toggle('is-video', state.productGalleryVideoActive);
+    stage?.classList.remove('is-video');
     const currentFrame = stage?.querySelector('[data-product-gallery-video]');
     const currentImage = stage?.querySelector('#productMainImage');
-    if (state.productGalleryVideoActive) {
-      if (!currentFrame && stage) {
-        const frame = createProductGalleryVideoFrame(videoId, p.title, true);
-        if (currentImage) currentImage.replaceWith(frame);
-        else stage.prepend(frame);
-      }
-    } else {
-      if (currentFrame) {
+    if (currentFrame) {
+      if (images[state.productGalleryIndex]) {
         const image = document.createElement('img');
         image.id = 'productMainImage';
         image.src = images[state.productGalleryIndex].image_url;
         image.alt = p.title || 'រូបភាពផលិតផល';
         image.dataset.galleryZoom = '';
         currentFrame.replaceWith(image);
-      } else if (currentImage) {
-        currentImage.src = images[state.productGalleryIndex].image_url;
+      } else {
+        currentFrame.remove();
       }
+    } else if (!state.productGalleryVideoActive && currentImage) {
+      currentImage.src = images[state.productGalleryIndex].image_url;
     }
+    if (state.productGalleryVideoActive) openListingVideoPopup(p.youtube_video_url, p.title);
+    else closeListingVideoPopup();
     $('productGalleryThumbs')?.querySelectorAll('[data-image]').forEach((b) => b.classList.toggle('active', !state.productGalleryVideoActive && Number(b.dataset.image) === state.productGalleryIndex));
     $('productGalleryThumbs')?.querySelector('[data-gallery-video]')?.classList.toggle('active', state.productGalleryVideoActive);
     const counter = $('productDetail').querySelector('.product-gallery-counter');
