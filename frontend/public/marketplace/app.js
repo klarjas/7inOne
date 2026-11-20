@@ -3170,14 +3170,58 @@ function openListingVideoPopup(url, title = 'វីដេអូ', meta = {}) {
   if (metaHost) {
     const shopName = meta.storeName || 'ហាងអ្នកលក់';
     const shopAvatar = meta.storeAvatar || '';
-    const productImage = meta.productImage || '';
-    metaHost.innerHTML = '<div class="home-shorts-product-meta">' +
-      '<div class="home-shorts-shop-meta">' + (shopAvatar ? '<img src="' + esc(shopAvatar) + '" alt="">' : '<span class="home-shorts-shop-fallback">' + esc(Array.from(shopName)[0] || 'S') + '</span>') +
-      '<span class="home-shorts-shop-name">' + esc(shopName) + '</span></div>' +
-      '<div class="home-shorts-product-meta-card">' + (productImage ? '<img src="' + esc(productImage) + '" alt="">' : '') +
-      '<span class="home-shorts-product-meta-title">' + esc(meta.productTitle || title || 'ផលិតផល') + '</span>' +
-      '<strong>' + esc(meta.productPrice || '') + '</strong></div></div>';
+    const currentId = String(meta.listingId || '');
+    const vendorId = String(meta.vendorId || '');
+    const category = String(meta.category || '');
+    const relatedProducts = (state.products || [])
+      .filter(product => product && product.listing_type === 'product' &&
+        String(product.id) !== currentId &&
+        ((vendorId && String(product.vendor_id || '') === vendorId) ||
+         (category && String(product.category || '') === category)))
+      .sort((a, b) => {
+        const aSameShop = vendorId && String(a.vendor_id || '') === vendorId ? 1 : 0;
+        const bSameShop = vendorId && String(b.vendor_id || '') === vendorId ? 1 : 0;
+        return bSameShop - aSameShop;
+      })
+      .slice(0, 5);
+    const relatedHtml = relatedProducts.map(product => {
+      const productImage = (Array.isArray(product.image_urls) ? product.image_urls[0] : '') ||
+        product.image_url || product.cover_url ||
+        (Array.isArray(product.product_images) ? product.product_images[0]?.image_url : '') || '';
+      const productPrice = product.price_label != null ? money(product.price_label) :
+        product.price != null ? money(product.price) : '';
+      return '<div class="home-shorts-related-row" data-related-row="' + esc(product.id) + '">' +
+        '<button type="button" class="home-shorts-related-open" data-related-product-id="' + esc(product.id) + '">' +
+          (productImage ? '<img src="' + esc(productImage) + '" alt="" loading="lazy">' : '<span class="home-shorts-related-placeholder">' + ic('image',16) + '</span>') +
+          '<span class="home-shorts-related-title">' + esc(product.title || 'ផលិតផល') + '</span>' +
+          (productPrice ? '<strong>' + esc(productPrice) + '</strong>' : '') +
+        '</button>' +
+        '<button type="button" class="home-shorts-related-remove" data-remove-related="' + esc(product.id) + '" aria-label="ដកផលិតផលនេះចេញ" title="ដកចេញ">' + ic('x',14) + '</button>' +
+      '</div>';
+    }).join('');
+    metaHost.innerHTML =
+      '<div class="home-shorts-shop-meta">' +
+        (shopAvatar ? '<img src="' + esc(shopAvatar) + '" alt="">' : '<span class="home-shorts-shop-fallback">' + esc(Array.from(shopName)[0] || 'S') + '</span>') +
+        '<span class="home-shorts-shop-name">' + esc(shopName) + '</span>' +
+      '</div>' +
+      (relatedHtml ? '<div class="home-shorts-related-list">' + relatedHtml + '</div>' : '');
     metaHost.hidden = false;
+    metaHost.onclick = event => {
+      const removeButton = event.target.closest('[data-remove-related]');
+      if (removeButton) {
+        event.preventDefault();
+        event.stopPropagation();
+        removeButton.closest('[data-related-row]')?.remove();
+        return;
+      }
+      const productButton = event.target.closest('[data-related-product-id]');
+      if (productButton) {
+        event.preventDefault();
+        const productId = productButton.dataset.relatedProductId;
+        closeListingVideoPopup();
+        void openProduct(productId);
+      }
+    };
   }
 
   const playerShell = document.createElement('div');
@@ -3356,13 +3400,13 @@ function listingVideoButton(item) {
   const image = (Array.isArray(item.image_urls) ? item.image_urls[0] : '') || item.image_url || item.cover_url || '';
   const price = item.price_label == null ? '' : money(item.price_label);
   const meta = {
-    storeName: store.store_name || item.store_name || poster.display_name || 'ហាងអ្នកលក់',
-    storeAvatar: store.store_logo_url || store.logo_url || poster.avatar_url || '',
-    productImage: image,
-    productTitle: item.title || 'ផលិតផល',
-    productPrice: price
+    storeName: store.store_name || item.store_name || 'ហាងអ្នកលក់',
+    storeAvatar: store.store_logo_url || store.logo_url || '',
+    listingId: item.id || '',
+    vendorId: item.vendor_id || store.id || '',
+    category: item.category || ''
   };
-  return '<button type="button" class="listing-video-open" data-listing-video="' + esc(item.youtube_video_url) + '" data-listing-video-title="' + esc(item.title || 'វីដេអូប្រកាស') + '" data-video-store-name="' + esc(meta.storeName) + '" data-video-store-avatar="' + esc(meta.storeAvatar) + '" data-video-product-image="' + esc(meta.productImage) + '" data-video-product-title="' + esc(meta.productTitle) + '" data-video-product-price="' + esc(meta.productPrice) + '">' + ic('play',17) + '<span>មើលវីដេអូ YouTube</span></button>';
+  return '<button type="button" class="listing-video-open" data-listing-video="' + esc(item.youtube_video_url) + '" data-listing-video-title="' + esc(item.title || 'វីដេអូប្រកាស') + '" data-video-store-name="' + esc(meta.storeName) + '" data-video-store-avatar="' + esc(meta.storeAvatar) + '" data-video-listing-id="' + esc(meta.listingId) + '" data-video-vendor-id="' + esc(meta.vendorId) + '" data-video-category="' + esc(meta.category) + '">' + ic('play',17) + '<span>មើលវីដេអូ YouTube</span></button>';
 }
 
 async function syncVendorPresence() {
@@ -3612,9 +3656,9 @@ function bindEvents() {
     if (videoButton) openListingVideoPopup(videoButton.dataset.listingVideo, videoButton.dataset.listingVideoTitle || 'វីដេអូប្រកាស', {
       storeName: videoButton.dataset.videoStoreName,
       storeAvatar: videoButton.dataset.videoStoreAvatar,
-      productImage: videoButton.dataset.videoProductImage,
-      productTitle: videoButton.dataset.videoProductTitle,
-      productPrice: videoButton.dataset.videoProductPrice
+      listingId: videoButton.dataset.videoListingId,
+      vendorId: videoButton.dataset.videoVendorId,
+      category: videoButton.dataset.videoCategory
     });
   });
   $('marketplaceListingModal')?.addEventListener('click', (event) => {
