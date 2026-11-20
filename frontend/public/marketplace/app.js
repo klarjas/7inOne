@@ -3241,9 +3241,8 @@ function openListingVideoPopup(url, title = 'វីដេអូ') {
       } else if (action === 'settings') {
         settings.hidden = !settings.hidden;
       } else if (action === 'fullscreen') {
-        const target = playerShell.querySelector('.custom-youtube-screen');
         if (document.fullscreenElement) document.exitFullscreen?.();
-        else target.requestFullscreen?.();
+        else playerShell.requestFullscreen?.();
       }
     } catch {}
   });
@@ -3503,7 +3502,7 @@ function bindEvents() {
   });
   $('homeShortsPopupClose')?.addEventListener('click', closeListingVideoPopup);
   $('homeShortsPopup')?.addEventListener('click', event => { if (event.target === $('homeShortsPopup')) closeListingVideoPopup(); });
-  $('homeShortsPopup')?.addEventListener('close', () => $('homeShortsPopupStage')?.replaceChildren());
+  $('homeShortsPopup')?.addEventListener('close', closeListingVideoPopup);
   document.addEventListener('click', event => {
     const videoButton = event.target.closest('[data-listing-video]');
     if (videoButton) openListingVideoPopup(videoButton.dataset.listingVideo, videoButton.dataset.listingVideoTitle || 'វីដេអូប្រកាស');
