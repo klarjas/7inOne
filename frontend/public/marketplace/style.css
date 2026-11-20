@@ -6139,3 +6139,11 @@ body > footer {
 .seller-short-product-option b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .seller-short-product-option small{margin-left:auto;color:#60a5fa}
 @media(max-width:560px){.home-shorts-popup-stage{width:min(100%,calc(min(58dvh,560px)*.5625));height:auto;max-height:min(58dvh,560px);aspect-ratio:9/16}.home-shorts-shop-videos{max-height:140px}.seller-short-product-picker-head{align-items:stretch;flex-direction:column}.seller-short-product-picker-head input{max-width:none}}
+
+
+/* Product ID on marketplace product cards */
+.product-card-id-row{display:flex;align-items:center;gap:6px;min-width:0;margin:5px 0 7px;color:#64748b;font-size:10px;line-height:1.35}
+.product-card-id-row>span{flex:0 0 auto;font-weight:600}
+.product-card-id-row code{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#64748b;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10px}
+.product-card-copy-id{display:inline-flex;flex:0 0 auto;align-items:center;justify-content:center;width:24px;height:24px;border:1px solid #e2e8f0;border-radius:7px;background:transparent;color:#64748b;cursor:pointer}
+.product-card-copy-id:hover,.product-card-copy-id.is-copied{border-color:#10b981;color:#059669;background:rgba(16,185,129,.07)}
