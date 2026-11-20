@@ -6475,3 +6475,35 @@ body > footer {
 #homeShortsPopupMeta .home-shorts-related-open{gap:8px}
 #homeShortsPopupMeta .home-shorts-related-open img,#homeShortsPopupMeta .home-shorts-related-placeholder{width:42px;height:42px;flex-basis:42px}
 @media(max-width:560px){#homeShortsPopupMeta .home-shorts-related-list{grid-template-columns:1fr}}
+
+
+/* Product Detail / Gallery popup: reference layout only; other video popup modes stay unchanged. */
+#homeShortsPopup.is-product-gallery-popup .home-shorts-popup-head{display:none!important}
+#homeShortsPopup.is-product-gallery-popup .home-shorts-popup-layout{display:flex!important;flex-direction:column!important;gap:0!important;padding:0!important;overflow:hidden!important;max-height:none!important}
+#homeShortsPopup.is-product-gallery-popup #homeShortsPopupMeta{display:block!important;flex:0 0 auto!important;width:100%;padding:10px 12px!important;box-sizing:border-box;background:#111a26;border-bottom:1px solid rgba(148,163,184,.18)}
+#homeShortsPopup.is-product-gallery-popup .home-shorts-popup-context{display:grid;grid-template-columns:minmax(130px,.8fr) minmax(170px,1fr) minmax(240px,2fr);align-items:center;gap:14px;min-width:0}
+#homeShortsPopup.is-product-gallery-popup .home-shorts-shop-meta{display:flex;align-items:center;gap:9px;min-width:0;padding:4px 0}
+#homeShortsPopup.is-product-gallery-popup .home-shorts-shop-meta img,#homeShortsPopup.is-product-gallery-popup .home-shorts-shop-fallback{width:42px;height:42px;flex:0 0 42px;border-radius:50%;object-fit:cover}
+#homeShortsPopup.is-product-gallery-popup .home-shorts-shop-name{color:#e5edf6;font-size:13px;font-weight:750;white-space:normal;overflow-wrap:anywhere}
+#homeShortsPopup.is-product-gallery-popup .home-shorts-current-product{display:flex;align-items:center;gap:9px;min-width:0}
+#homeShortsPopup.is-product-gallery-popup .home-shorts-current-product>img,#homeShortsPopup.is-product-gallery-popup .home-shorts-current-product>.home-shorts-related-placeholder{width:54px;height:54px;flex:0 0 54px;border-radius:9px;object-fit:cover;background:#202b39}
+#homeShortsPopup.is-product-gallery-popup .home-shorts-current-product-info{display:flex;flex-direction:column;gap:5px;min-width:0}
+#homeShortsPopup.is-product-gallery-popup .home-shorts-current-product-info strong{color:#f1f5f9;font-size:12px;line-height:1.45;overflow-wrap:anywhere}
+#homeShortsPopup.is-product-gallery-popup .home-shorts-current-product-info span{color:#34d399;font-size:12px;font-weight:750}
+#homeShortsPopup.is-product-gallery-popup .home-shorts-product-section.is-similar-products{display:grid;grid-template-columns:minmax(0,1fr) 34px;grid-template-rows:auto auto;align-items:center;gap:5px 8px;min-width:0}
+#homeShortsPopup.is-product-gallery-popup .home-shorts-product-section.is-similar-products h4{grid-column:1;grid-row:1;margin:0;color:#aebed0;font-size:11px;font-weight:750}
+#homeShortsPopup.is-product-gallery-popup .home-shorts-product-section.is-similar-products .home-shorts-related-list{grid-column:1;grid-row:2;display:flex;flex-direction:row;gap:8px;min-width:0;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;scroll-snap-type:x proximity;padding:2px 0 5px}
+#homeShortsPopup.is-product-gallery-popup .home-shorts-product-section.is-similar-products .home-shorts-related-row{flex:0 0 190px;min-width:190px;scroll-snap-align:start;padding:5px 7px;border:1px solid rgba(148,163,184,.15);border-radius:9px;background:rgba(148,163,184,.05)}
+#homeShortsPopup.is-product-gallery-popup .home-shorts-related-open img,#homeShortsPopup.is-product-gallery-popup .home-shorts-related-placeholder{width:42px;height:42px;flex:0 0 42px}
+#homeShortsPopup.is-product-gallery-popup .home-shorts-related-title{font-size:10px}
+#homeShortsPopup.is-product-gallery-popup .home-shorts-related-open strong{font-size:10px}
+#homeShortsPopup.is-product-gallery-popup .home-shorts-gallery-close{grid-column:2;grid-row:1 / span 2;display:grid;place-items:center;width:34px;height:34px;border:1px solid rgba(148,163,184,.3);border-radius:9px;background:#202b39;color:#f1f5f9;font-size:24px;line-height:1;cursor:pointer}
+#homeShortsPopup.is-product-gallery-popup .home-shorts-gallery-close:hover{background:#34465b;color:#fff}
+#homeShortsPopup.is-product-gallery-popup .home-shorts-popup-stage{flex:0 0 auto!important;width:100%!important;height:auto!important;aspect-ratio:16/9!important}
+@media(max-width:700px){
+ #homeShortsPopup.is-product-gallery-popup .home-shorts-popup-context{grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:9px}
+ #homeShortsPopup.is-product-gallery-popup .home-shorts-product-section.is-similar-products{grid-column:1 / -1;grid-template-columns:minmax(0,1fr) 34px}
+ #homeShortsPopup.is-product-gallery-popup .home-shorts-shop-meta img,#homeShortsPopup.is-product-gallery-popup .home-shorts-shop-fallback{width:36px;height:36px;flex-basis:36px}
+ #homeShortsPopup.is-product-gallery-popup .home-shorts-current-product>img,#homeShortsPopup.is-product-gallery-popup .home-shorts-current-product>.home-shorts-related-placeholder{width:44px;height:44px;flex-basis:44px}
+ #homeShortsPopup.is-product-gallery-popup .home-shorts-product-section.is-similar-products .home-shorts-related-row{flex-basis:165px;min-width:165px}
+}
