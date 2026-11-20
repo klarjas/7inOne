@@ -2726,7 +2726,8 @@ app.post('/api/products', authenticate, async (req, res) => {
   const status = 'active'; // Active sellers may publish, whether verified or not.
   const location = clean(req.body.location, 100);
   const condition = clean(req.body.condition || 'ប្រើរួចស្អាត', 60);
-  const youtubeVideoUrl = normalizeYoutubeVideoUrl(req.body.youtube_video_url);\n  if (youtubeVideoUrl === false) return fail(res, 400, 'YouTube Video Link មិនត្រឹមត្រូវទេ។');
+  const youtubeVideoUrl = normalizeYoutubeVideoUrl(req.body.youtube_video_url);
+  if (youtubeVideoUrl === false) return fail(res, 400, 'YouTube Video Link មិនត្រឹមត្រូវទេ។');
   const { data, error } = await supabase.from('products')
     .insert({ vendor_id: vendor.id, title, description, category, price, stock, location, condition, youtube_video_url:youtubeVideoUrl, status, renewed_at:new Date().toISOString() }).select().single();
   if (error) return fail(res, 400, 'Could not create product');
