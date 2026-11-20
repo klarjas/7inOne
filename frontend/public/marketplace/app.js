@@ -3064,7 +3064,7 @@ async function loadHomeVendorMedia(){
    if(leftProducts){
     leftProducts.scrollLeft=0;
     if(target._popupProductSlideTimer)clearInterval(target._popupProductSlideTimer);
-    target._popupProductSlideTimer=setInterval(()=>{if(!popup?.open||leftProducts.matches(':hover'))return;const max=Math.max(0,leftProducts.scrollWidth-leftProducts.clientWidth);if(max<=0)return;if(leftProducts.scrollLeft>=max-8)leftProducts.scrollTo({left:0,behavior:'smooth'});else leftProducts.scrollBy({left:Math.max(180,leftProducts.clientWidth*.8),behavior:'smooth'})},3500);
+    target._popupProductSlideTimer=setInterval(()=>{if(!popup?.open||leftProducts.matches(':hover'))return;const first=leftProducts.querySelector('.home-shorts-product-card');if(!first)return;const max=Math.max(0,leftProducts.scrollHeight-leftProducts.clientHeight),step=first.getBoundingClientRect().height+9;if(max<=0)return;if(leftProducts.scrollTop>=max-8)leftProducts.scrollTo({top:0,behavior:'smooth'});else leftProducts.scrollBy({top:step,behavior:'smooth'})},3500);
    }
    const owner=Boolean(state.me?.vendor?.status==='approved'&&state.me?.vendor?.id&&String(state.me.vendor.id)===String(vendorId));
    sellerTools?.classList.toggle('hidden',!owner);
