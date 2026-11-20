@@ -1537,7 +1537,7 @@ function renderProductDetail() {
         source: 'product-gallery',
         productTitle: p.title || '',
         productPrice: p.price_label != null ? p.price_label : p.price,
-        productImage: (Array.isArray(p.image_urls) ? p.image_urls[0] : '') || p.image_url || p.cover_url || ''
+        productImage: productImage(p) || (Array.isArray(p.image_urls) ? p.image_urls[0] : '') || p.image_url || p.cover_url || ''
       });
     }
     else closeListingVideoPopup();
@@ -3204,9 +3204,8 @@ function openListingVideoPopup(url, title = 'វីដេអូ', meta = {}) {
     const renderProductSection = (sectionTitle, products, isSimilar = false) => {
       if (!products.length && !isSimilar) return '';
       const rows = products.map(product => {
-        const productImage = (Array.isArray(product.image_urls) ? product.image_urls[0] : '') ||
-          product.image_url || product.cover_url ||
-          (Array.isArray(product.product_images) ? product.product_images[0]?.image_url : '') || '';
+        const productImage = (Array.isArray(product.product_images) ? product.product_images.slice().sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0)).find(image => image?.image_url)?.image_url : '') ||
+          (Array.isArray(product.image_urls) ? product.image_urls[0] : '') || product.image_url || product.cover_url || '';
         const productPrice = product.price_label != null ? money(product.price_label) :
           product.price != null ? money(product.price) : '';
         return '<div class="home-shorts-related-row">' +
@@ -3236,7 +3235,7 @@ function openListingVideoPopup(url, title = 'វីដេអូ', meta = {}) {
           })));
         }
         if (category) {
-          const params = new URLSearchParams({ category, limit: '50' });
+          const params = new URLSearchParams({ category, limit: '100' });
           requests.push(api('/api/products?' + params.toString()).then(result => ({
             type: 'similar', products: Array.isArray(result.data) ? result.data : []
           })));
@@ -3254,7 +3253,7 @@ function openListingVideoPopup(url, title = 'វីដេអូ', meta = {}) {
               String(product.vendor_id || '') === vendorId).slice(0, 4);
           } else {
             similarProducts = result.value.products.filter(product => product && String(product.id) !== currentId &&
-              String(product.vendor_id || '') !== vendorId && String(product.category || '') === category).slice(0, 12);
+              (!vendorId || String(product.vendor_id || '') !== vendorId)).slice(0, 12);
           }
         });
         metaHost.innerHTML = renderContext(shopProducts, similarProducts);
@@ -3423,6 +3422,7 @@ function openListingVideoPopup(url, title = 'វីដេអូ', meta = {}) {
           captionsButton?.setAttribute('aria-pressed', 'false');
           captionsButton?.classList.remove('is-active');
           try { event.target.unloadModule('captions'); } catch {}
+          try { event.target.setOption('captions', 'track', {}); } catch {}
           event.target.setVolume(Number(volume.value));
           event.target.playVideo();
           stopListingVideoProgress();
@@ -3431,6 +3431,10 @@ function openListingVideoPopup(url, title = 'វីដេអូ', meta = {}) {
         onStateChange: event => {
           if (session !== listingVideoSession) return;
           setPlayingUi(event.data === YT.PlayerState.PLAYING);
+          if (!captionsEnabled) {
+            try { listingVideoPlayer?.unloadModule('captions'); } catch {}
+            try { listingVideoPlayer?.setOption('captions', 'track', {}); } catch {}
+          }
           if (event.data === YT.PlayerState.ENDED) {
             updateProgress();
             stopListingVideoProgress();
@@ -3655,17 +3659,17 @@ function bindEvents() {
   $('homeShortsPopupClose')?.addEventListener('click', closeListingVideoPopup);
   (() => {
     const dialog = $('homeShortsPopup');
-    const handle = dialog?.querySelector('.home-shorts-popup-head');
+    const handle = dialog?.querySelector('.home-shorts-popup-head') || dialog?.querySelector('#homeShortsPopupMeta');
     if (!dialog || !handle || handle.dataset.dragBound) return;
     handle.dataset.dragBound = '1';
     let dragState = null;
     handle.style.cursor = 'move';
-    handle.style.touchAction = 'none';
+    handle.style.touchAction = 'pan-y';
     handle.addEventListener('pointerdown', event => {
-      if (event.target.closest('button')) return;
+      if (event.target.closest('button, a, input, select, textarea, [data-related-product-id]')) return;
       const rect = dialog.getBoundingClientRect();
       dragState = { pointerId: event.pointerId, x: event.clientX, y: event.clientY, left: rect.left, top: rect.top };
-      handle.setPointerCapture(event.pointerId);
+      dialog.setPointerCapture(event.pointerId);
       dialog.style.position = 'fixed';
       dialog.style.margin = '0';
       dialog.style.transform = 'none';
@@ -3673,7 +3677,7 @@ function bindEvents() {
       dialog.style.top = rect.top + 'px';
       event.preventDefault();
     });
-    handle.addEventListener('pointermove', event => {
+    dialog.addEventListener('pointermove', event => {
       if (!dragState || event.pointerId !== dragState.pointerId) return;
       const left = Math.max(8, Math.min(window.innerWidth - dialog.offsetWidth - 8, dragState.left + event.clientX - dragState.x));
       const top = Math.max(8, Math.min(window.innerHeight - dialog.offsetHeight - 8, dragState.top + event.clientY - dragState.y));
@@ -3681,8 +3685,8 @@ function bindEvents() {
       dialog.style.top = top + 'px';
     });
     const stopDrag = event => { if (dragState && event.pointerId === dragState.pointerId) dragState = null; };
-    handle.addEventListener('pointerup', stopDrag);
-    handle.addEventListener('pointercancel', stopDrag);
+    dialog.addEventListener('pointerup', stopDrag);
+    dialog.addEventListener('pointercancel', stopDrag);
     ['n','s','e','w','ne','nw','se','sw'].forEach(edge => {
       const grip=document.createElement('span'); grip.className='home-shorts-resize-handle'; grip.dataset.edge=edge; grip.setAttribute('aria-hidden','true'); dialog.appendChild(grip);
       let resize=null;
