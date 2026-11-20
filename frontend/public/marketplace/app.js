@@ -3123,6 +3123,29 @@ function youtubeVideoId(value) {
 let listingVideoPlayer = null;
 let listingVideoProgressTimer = null;
 let listingVideoSession = 0;
+let listingProductAutoSlideTimer = null;
+
+function startListingProductAutoSlide(metaHost) {
+  if (listingProductAutoSlideTimer) clearInterval(listingProductAutoSlideTimer);
+  listingProductAutoSlideTimer = null;
+  const rail = metaHost?.querySelector('.is-similar-products .home-shorts-related-list');
+  if (!rail) return;
+  const originals = Array.from(rail.children);
+  if (originals.length < 2) return;
+  const originalWidth = rail.scrollWidth;
+  originals.forEach(item => rail.appendChild(item.cloneNode(true)));
+  let paused = false;
+  rail.addEventListener('mouseenter', () => { paused = true; });
+  rail.addEventListener('mouseleave', () => { paused = false; });
+  rail.addEventListener('pointerdown', () => { paused = true; });
+  rail.addEventListener('pointerup', () => { paused = false; });
+  rail.addEventListener('pointercancel', () => { paused = false; });
+  listingProductAutoSlideTimer = setInterval(() => {
+    if (paused || !rail.isConnected || document.hidden) return;
+    rail.scrollLeft += 0.7;
+    if (rail.scrollLeft >= originalWidth) rail.scrollLeft -= originalWidth;
+  }, 25);
+}
 let listingVideoApiPromise = null;
 
 function loadYouTubeIframeApi() {
@@ -3156,6 +3179,8 @@ function stopListingVideoProgress() {
 
 function closeListingVideoPopup() {
   listingVideoSession += 1;
+  if (listingProductAutoSlideTimer) clearInterval(listingProductAutoSlideTimer);
+  listingProductAutoSlideTimer = null;
   stopListingVideoProgress();
   if (listingVideoPlayer) {
     try { listingVideoPlayer.stopVideo(); } catch {}
@@ -3270,6 +3295,7 @@ function openListingVideoPopup(url, title = 'វីដេអូ', meta = {}) {
           }
         });
         metaHost.innerHTML = renderContext(shopProducts, similarProducts);
+        if (isProductGalleryPopup) startListingProductAutoSlide(metaHost);
       };
       void loadRelatedProducts().catch(error => console.warn('Could not load popup related products:', error));
     }
