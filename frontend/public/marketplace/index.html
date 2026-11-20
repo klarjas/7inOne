@@ -303,7 +303,21 @@
               <strong id="homeShortsPopupTitle">វីដេអូ</strong>
               <button id="homeShortsPopupClose" type="button" aria-label="បិទវីដេអូ">✕</button>
             </div>
-            <div id="homeShortsPopupStage" class="home-shorts-popup-stage" aria-label="YouTube Shorts player"></div>
+            <div class="home-shorts-popup-layout">
+              <aside class="home-shorts-products home-shorts-products-left" aria-label="ផលិតផលពេញនិយមក្នុងហាង">
+                <div class="home-shorts-products-heading"><strong>ផលិតផលពេញនិយមក្នុងហាង</strong><span>មើលច្រើន · ទិញច្រើន</span></div>
+                <div id="homeShortsPopularProducts" class="home-shorts-product-rail"></div>
+              </aside>
+              <div id="homeShortsPopupStage" class="home-shorts-popup-stage" aria-label="YouTube Shorts player"></div>
+              <aside class="home-shorts-products home-shorts-products-right" aria-label="ផលិតផលក្នុងវីដេអូ">
+                <div class="home-shorts-products-heading"><strong>ផលិតផលក្នុងវីដេអូ</strong><span id="homeShortsLinkedCount">0 ផលិតផល</span></div>
+                <div id="homeShortsSellerTools" class="home-shorts-seller-tools hidden">
+                  <input id="homeShortsProductSearch" type="search" placeholder="ស្វែងរកតាមឈ្មោះ ឬ Product ID..." aria-label="ស្វែងរកផលិតផលក្នុងហាង">
+                  <div id="homeShortsProductSearchResults" class="home-shorts-product-search-results"></div>
+                </div>
+                <div id="homeShortsLinkedProducts" class="home-shorts-linked-products"></div>
+              </aside>
+            </div>
           </dialog>
 
           <!-- Category Dock -->
