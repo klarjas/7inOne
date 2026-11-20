@@ -6177,3 +6177,6 @@ body > footer {
 #view-product .product-gallery-video-thumb>span{position:absolute;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.24);color:#fff}
 @media(max-width:900px){#view-product .product-gallery-stage{width:70%!important;max-width:70%!important}}
 @media(max-width:560px){#view-product .product-gallery-stage{width:70%!important;max-width:70%!important}#view-product .product-gallery-thumb{width:62px;height:62px;flex-basis:62px}#view-product .product-gallery-video-thumb{flex-basis:62px}}
+
+#productFormModal .product-youtube-preview.hidden{display:none!important}
+#view-product .product-gallery-stage.is-video{aspect-ratio:16/9!important}
