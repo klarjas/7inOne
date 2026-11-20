@@ -3198,10 +3198,10 @@ function openListingVideoPopup(url, title = 'វីដេអូ', meta = {}) {
     const renderCurrentProduct = () => {
       const image = meta.productImage || '';
       const price = meta.productPrice != null && meta.productPrice !== '' ? money(meta.productPrice) : '';
-      return '<div class="home-shorts-current-product">' +
+      return '<button type="button" class="home-shorts-current-product" data-related-product-id="' + esc(currentId) + '">' +
         (image ? '<img src="' + esc(image) + '" alt="" loading="lazy">' : '<span class="home-shorts-related-placeholder">' + ic('image',16) + '</span>') +
-        '<div class="home-shorts-current-product-info"><strong>' + esc(meta.productTitle || title || 'ផលិតផល') + '</strong>' +
-        (price ? '<span>' + esc(price) + '</span>' : '') + '</div></div>';
+        '<span class="home-shorts-current-product-info"><strong>' + esc(meta.productTitle || title || 'ផលិតផល') + '</strong>' +
+        (price ? '<span>' + esc(price) + '</span>' : '') + '</span></button>';
     };
     const renderProductSection = (sectionTitle, products, isSimilar = false) => {
       if (!products.length && !isSimilar) return '';
@@ -3221,12 +3221,19 @@ function openListingVideoPopup(url, title = 'វីដេអូ', meta = {}) {
         '</div>';
       }).join('');
       const content = rows || '<div class="home-shorts-related-empty">មិនទាន់មានផលិតផលស្រដៀងទេ</div>';
-      return '<section class="home-shorts-product-section' + (isSimilar ? ' is-similar-products' : '') + '"><h4>' + esc(sectionTitle) + '</h4><div class="home-shorts-related-list">' + content + '</div>' +
-        (isSimilar ? '<button type="button" class="home-shorts-gallery-close" aria-label="បិទវីដេអូ">×</button>' : '') + '</section>';
+      return '<section class="home-shorts-product-section' + (isSimilar ? ' is-similar-products' : '') + '">' +
+        (isSimilar
+          ? '<div class="home-shorts-related-heading"><h4>' + esc(sectionTitle) + '</h4><div class="home-shorts-related-controls">' +
+              '<button type="button" class="home-shorts-related-scroll" data-related-scroll="left" aria-label="រំកិលទៅឆ្វេង">‹</button>' +
+              '<button type="button" class="home-shorts-related-scroll" data-related-scroll="right" aria-label="រំកិលទៅស្ដាំ">›</button>' +
+              '<button type="button" class="home-shorts-gallery-close" aria-label="បិទវីដេអូ">×</button>' +
+            '</div></div>'
+          : '<h4>' + esc(sectionTitle) + '</h4>') +
+        '<div class="home-shorts-related-list">' + content + '</div></section>';
     };
     const renderContext = (shopProducts = [], similarProducts = []) => isProductGalleryPopup
       ? '<div class="home-shorts-popup-context">' + renderShopMeta() + renderCurrentProduct() +
-        renderProductSection('ផលិតផលស្រដៀង', similarProducts, true) + '</div>'
+        renderProductSection('ផលិតផលនៃវីដេអូ', similarProducts, true) + '</div>'
       : renderShopMeta() + renderProductSection('ផលិតផលរបស់ហាង', shopProducts) + renderProductSection('ផលិតផលស្រដៀង', similarProducts);
     metaHost.innerHTML = renderContext();
     metaHost.hidden = false;
@@ -3270,6 +3277,13 @@ function openListingVideoPopup(url, title = 'វីដេអូ', meta = {}) {
       if (event.target.closest('.home-shorts-gallery-close')) {
         event.preventDefault();
         closeListingVideoPopup();
+        return;
+      }
+      const scrollButton = event.target.closest('[data-related-scroll]');
+      if (scrollButton) {
+        event.preventDefault();
+        const rail = metaHost.querySelector('.is-similar-products .home-shorts-related-list');
+        if (rail) rail.scrollBy({ left: (scrollButton.dataset.relatedScroll === 'right' ? 1 : -1) * Math.max(160, rail.clientWidth * 0.75), behavior: 'smooth' });
         return;
       }
       const productButton = event.target.closest('[data-related-product-id]');
