@@ -1526,7 +1526,16 @@ function renderProductDetail() {
     } else if (!state.productGalleryVideoActive && currentImage) {
       currentImage.src = images[state.productGalleryIndex].image_url;
     }
-    if (state.productGalleryVideoActive) openListingVideoPopup(p.youtube_video_url, p.title);
+    if (state.productGalleryVideoActive) {
+      const popupVendor = p.vendors || p.vendor || {};
+      openListingVideoPopup(p.youtube_video_url, p.title, {
+        storeName: popupVendor.store_name || p.store_name || 'ហាងអ្នកលក់',
+        storeAvatar: popupVendor.store_logo_url || popupVendor.logo_url || p.store_logo_url || '',
+        listingId: p.id || '',
+        vendorId: p.vendor_id || popupVendor.id || '',
+        category: p.category || ''
+      });
+    }
     else closeListingVideoPopup();
     $('productGalleryThumbs')?.querySelectorAll('[data-image]').forEach((b) => b.classList.toggle('active', !state.productGalleryVideoActive && Number(b.dataset.image) === state.productGalleryIndex));
     $('productGalleryThumbs')?.querySelector('[data-gallery-video]')?.classList.toggle('active', state.productGalleryVideoActive);
@@ -3394,6 +3403,11 @@ function openListingVideoPopup(url, title = 'វីដេអូ', meta = {}) {
             return;
           }
           loading.hidden = true;
+          // Start with captions disabled; viewers can enable them with the CC control.
+          captionsEnabled = false;
+          captionsButton?.setAttribute('aria-pressed', 'false');
+          captionsButton?.classList.remove('is-active');
+          try { event.target.unloadModule('captions'); } catch {}
           event.target.setVolume(Number(volume.value));
           event.target.playVideo();
           stopListingVideoProgress();
