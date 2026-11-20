@@ -36,7 +36,8 @@ app.use('/api', rateLimit({ windowMs: 60_000, limit: 120, standardHeaders: 'draf
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024, files: 10 } });
 const fail = (res, status, message) => res.status(status).json({ error: message });
 const db = res => { if (!supabase) { fail(res, 503, 'Supabase is not configured'); return false; } return true; };
-const clean = (value, max = 500) => String(value ?? '').trim().slice(0, max);\nfunction normalizeYoutubeVideoUrl(value) {
+const clean = (value, max = 500) => String(value ?? '').trim().slice(0, max);
+function normalizeYoutubeVideoUrl(value) {
   const raw = clean(value, 1000);
   if (!raw) return null;
   try {
@@ -1495,6 +1496,8 @@ app.post('/api/jobs', authenticate, upload.fields([{name:'images',maxCount:10},{
   const body=req.body||{};
   const title=listingText(body.title,160);
   const category=listingText(body.category,40).toLowerCase();
+  const youtubeVideoUrl=normalizeYoutubeVideoUrl(body.youtube_video_url);
+  if(youtubeVideoUrl===false)return fail(res,400,'YouTube Video Link មិនត្រឹមត្រូវទេ។');
   const salaryMin=body.salary_min===''||body.salary_min==null?null:Number(body.salary_min);
   const salaryMax=body.salary_max===''||body.salary_max==null?null:Number(body.salary_max);
   const vacancies=Number(body.vacancies||1);
@@ -1518,7 +1521,7 @@ app.post('/api/jobs', authenticate, upload.fields([{name:'images',maxCount:10},{
       skills:listingArray(body.skills).map(v=>listingText(v,80)).filter(Boolean).slice(0,30),
       languages:listingArray(body.languages).map(v=>listingText(v,60)).filter(Boolean).slice(0,20),
       benefits:listingArray(body.benefits).map(v=>listingText(v,120)).filter(Boolean).slice(0,30),
-      specifications:listingObject(body.specifications),
+      specifications:listingObject(body.specifications),youtube_video_url:youtubeVideoUrl,
       image_file_id:primary?.fileId||null,image_message_id:primary?.messageId||null,image_mime_type:primary?.mimeType||null,
       image_gallery:uploaded.map(item=>({file_id:item.fileId,message_id:item.messageId,mime_type:item.mimeType})),status:'active',expires_at:new Date(Date.now()+7*86400000).toISOString()
     };
@@ -1536,6 +1539,8 @@ app.post('/api/real-estate', authenticate, upload.fields([{name:'images',maxCoun
   const body=req.body||{};
   const title=listingText(body.title,160);
   const category=listingText(body.category,40).toLowerCase();
+  const youtubeVideoUrl=normalizeYoutubeVideoUrl(body.youtube_video_url);
+  if(youtubeVideoUrl===false)return fail(res,400,'YouTube Video Link មិនត្រឹមត្រូវទេ។');
   const price=body.price===''||body.price==null?null:Number(body.price);
   const area=body.area_sqm===''||body.area_sqm==null?null:Number(body.area_sqm);
   if(title.length<2||!/^[a-z0-9_]{2,40}$/.test(category))return fail(res,400,'សូមបំពេញចំណងជើង និងប្រភេទអចលនទ្រព្យត្រឹមត្រូវ។');
@@ -1557,7 +1562,7 @@ app.post('/api/real-estate', authenticate, upload.fields([{name:'images',maxCoun
       price_period:['daily','monthly','yearly','total','negotiable'].includes(body.price_period)?body.price_period:'total',
       area_sqm:area,bedrooms:body.bedrooms===''||body.bedrooms==null?null:Math.max(0,Number(body.bedrooms)),
       bathrooms:body.bathrooms===''||body.bathrooms==null?null:Math.max(0,Number(body.bathrooms)),
-      specifications:listingObject(body.specifications),
+      specifications:listingObject(body.specifications),youtube_video_url:youtubeVideoUrl,
       image_file_id:primary?.fileId||null,image_message_id:primary?.messageId||null,image_mime_type:primary?.mimeType||null,
       image_gallery:uploaded.map(item=>({file_id:item.fileId,message_id:item.messageId,mime_type:item.mimeType})),status:'active',expires_at:new Date(Date.now()+7*86400000).toISOString()
     };
@@ -2720,7 +2725,8 @@ app.post('/api/products', authenticate, async (req, res) => {
 
   const status = 'active'; // Active sellers may publish, whether verified or not.
   const location = clean(req.body.location, 100);
-  const condition = clean(req.body.condition || 'ប្រើរួចស្អាត', 60);\n  const youtubeVideoUrl = normalizeYoutubeVideoUrl(req.body.youtube_video_url);\n  if (youtubeVideoUrl === false) return fail(res, 400, 'YouTube Video Link មិនត្រឹមត្រូវទេ។');
+  const condition = clean(req.body.condition || 'ប្រើរួចស្អាត', 60);
+  const youtubeVideoUrl = normalizeYoutubeVideoUrl(req.body.youtube_video_url);\n  if (youtubeVideoUrl === false) return fail(res, 400, 'YouTube Video Link មិនត្រឹមត្រូវទេ។');
   const { data, error } = await supabase.from('products')
     .insert({ vendor_id: vendor.id, title, description, category, price, stock, location, condition, youtube_video_url:youtubeVideoUrl, status, renewed_at:new Date().toISOString() }).select().single();
   if (error) return fail(res, 400, 'Could not create product');
@@ -2737,7 +2743,8 @@ app.patch('/api/products/:id', authenticate, async (req, res) => {
   if(isRenewal){const renewedAt=Date.parse(existing.renewed_at||existing.updated_at||existing.created_at||'');const age=Number.isFinite(renewedAt)?Date.now()-renewedAt:0;if(existing.status!=='active'||age>PRODUCT_AUTO_DELETE_AGE_MS)return fail(res,410,'This product is no longer eligible for renewal.');patch.renewed_at=new Date().toISOString();patch.status='active';}
   for (const key of ['title','description','category','location','condition']) if (req.body[key] !== undefined) patch[key] = clean(req.body[key], key === 'description' ? 5000 : key === 'title' ? 160 : 100);
   if (req.body.price !== undefined) patch.price = Number(req.body.price);
-  if (req.body.stock !== undefined) patch.stock = Number(req.body.stock);\n  if (req.body.youtube_video_url !== undefined) { const videoUrl = normalizeYoutubeVideoUrl(req.body.youtube_video_url); if (videoUrl === false) return fail(res, 400, 'YouTube Video Link មិនត្រឹមត្រូវទេ។'); patch.youtube_video_url = videoUrl; }
+  if (req.body.stock !== undefined) patch.stock = Number(req.body.stock);
+  if (req.body.youtube_video_url !== undefined) { const videoUrl = normalizeYoutubeVideoUrl(req.body.youtube_video_url); if (videoUrl === false) return fail(res, 400, 'YouTube Video Link មិនត្រឹមត្រូវទេ។'); patch.youtube_video_url = videoUrl; }
   if (patch.title !== undefined && patch.title.length < 2) return fail(res, 400, 'Invalid title');
   if (patch.price !== undefined && (!Number.isFinite(patch.price) || patch.price < 0)) return fail(res, 400, 'Invalid price');
   if (patch.stock !== undefined && (!Number.isInteger(patch.stock) || patch.stock < 0)) return fail(res, 400, 'Invalid stock');
