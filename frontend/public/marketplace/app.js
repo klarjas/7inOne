@@ -3088,6 +3088,43 @@ async function loadHomeVendorMedia(){
    if(stage)stage.style.backgroundImage='';
    target._shortPlayers?.forEach(item=>{try{item.player?.pauseVideo()}catch{}});
   };
+  if(!target.dataset.popupScrollBound){
+   target.dataset.popupScrollBound='1';
+   let popupScrollBusy=false,touchStartY=0,lastPopupScrollAt=0;
+   const movePopupShort=async direction=>{
+    if(popupScrollBusy||!popup?.open||!shopVideos)return;
+    const now=Date.now();if(now-lastPopupScrollAt<420)return;lastPopupScrollAt=now;
+    popupScrollBusy=true;
+    try{
+     let buttons=Array.from(shopVideos.querySelectorAll('[data-shop-short-id]'));
+     let index=buttons.findIndex(button=>String(button.dataset.shopShortId)===String(target._popupMediaId));
+     if(index<0)index=direction>0?-1:buttons.length;
+     let nextIndex=index+direction;
+     if(nextIndex<0)return;
+     if(nextIndex>=buttons.length&&!shopVideosMore?.classList.contains('hidden')){
+      await loadShopShorts(target._popupMediaId,target._popupVendorId);
+      buttons=Array.from(shopVideos.querySelectorAll('[data-shop-short-id]'));
+      index=buttons.findIndex(button=>String(button.dataset.shopShortId)===String(target._popupMediaId));
+      if(index<0)index=direction>0?-1:buttons.length;
+      nextIndex=index+direction;
+     }
+     if(nextIndex>=0&&nextIndex<buttons.length)buttons[nextIndex].click();
+    }finally{setTimeout(()=>{popupScrollBusy=false},260)}
+   };
+   stage?.addEventListener('wheel',event=>{
+    if(Math.abs(event.deltaY)<12)return;
+    event.preventDefault();void movePopupShort(event.deltaY>0?1:-1);
+   },{passive:false});
+   stage?.addEventListener('touchstart',event=>{touchStartY=event.changedTouches?.[0]?.clientY||0},{passive:true});
+   stage?.addEventListener('touchend',event=>{
+    const endY=event.changedTouches?.[0]?.clientY||0,delta=touchStartY-endY;
+    if(Math.abs(delta)>48)void movePopupShort(delta>0?1:-1);
+    touchStartY=0;
+   },{passive:true});
+   stage?.addEventListener('keydown',event=>{
+    if(event.key==='ArrowDown'||event.key==='ArrowUp'){event.preventDefault();void movePopupShort(event.key==='ArrowDown'?1:-1)}
+   });
+  }
   if(!target.dataset.popupBound){
    target.dataset.popupBound='1';
    target.addEventListener('click',async event=>{
