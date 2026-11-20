@@ -3035,20 +3035,21 @@ async function loadHomeVendorMedia(){
   target._shortPlayers?.forEach(item=>{try{item.player?.destroy()}catch{}});
   target._shortPlayers=new Map();
   if(!rows.length){section.classList.add('hidden');target.replaceChildren();return}
-  target.innerHTML=rows.map((row,index)=>'<article class="home-vendor-media-card" data-short-store="'+esc(row.store_name||'ហាងអ្នកលក់')+'" data-short-video-id="'+esc(youtubeVideoId(row.media_url))+'"><button class="home-vendor-media-open" type="button" aria-label="មើល YouTube Shorts"><div class="home-vendor-media-player"><div class="home-short-youtube-player" id="home-short-player-'+index+'"></div></div></button><div class="home-vendor-media-store">'+esc(row.store_name||'ហាងអ្នកលក់')+'</div></article>').join('');
+  target.innerHTML=rows.map((row,index)=>{const videoId=youtubeVideoId(row.media_url);return '<article class="home-vendor-media-card" data-short-store="'+esc(row.store_name||'ហាងអ្នកលក់')+'" data-short-video-id="'+esc(videoId)+'"><button class="home-vendor-media-open" type="button" aria-label="មើល YouTube Shorts"><div class="home-vendor-media-player"><div class="home-short-poster" style="background-image:url(https://i.ytimg.com/vi/'+videoId+'/hqdefault.jpg)" aria-hidden="true"><span class="home-short-poster-spinner"></span></div><div class="home-short-youtube-player" id="home-short-player-'+index+'"></div></div></button><div class="home-vendor-media-store">'+esc(row.store_name||'ហាងអ្នកលក់')+'</div></article>'}).join('');
   const popup=$('homeShortsPopup'),stage=$('homeShortsPopupStage'),title=$('homeShortsPopupTitle');
-  const closePlayer=()=>{try{target._popupPlayer?.destroy()}catch{};target._popupPlayer=null;stage?.replaceChildren();target._shortPlayers?.forEach(item=>{if(item.visible){try{item.player?.mute();item.player?.playVideo()}catch{}}})};
+  const closePlayer=()=>{try{target._popupPlayer?.destroy()}catch{};target._popupPlayer=null;stage?.replaceChildren();stage?.classList.remove('is-loading','is-ready');if(stage)stage.style.backgroundImage='';target._shortPlayers?.forEach(item=>{if(item.visible){try{item.player?.mute();item.player?.playVideo()}catch{}}})};
   if(!target.dataset.popupBound){
    target.dataset.popupBound='1';
    target.addEventListener('click',async event=>{
     const trigger=event.target.closest('.home-vendor-media-open');if(!trigger)return;
     const card=trigger.closest('.home-vendor-media-card'),videoId=card?.dataset.shortVideoId;if(!videoId||!popup||!stage)return;
     target._shortPlayers?.forEach(item=>{try{item.player?.pauseVideo()}catch{}});
-    title.textContent=card.dataset.shortStore||'YouTube Shorts';stage.replaceChildren();
+    title.textContent=card.dataset.shortStore||'YouTube Shorts';stage.replaceChildren();stage.classList.add('is-loading');stage.classList.remove('is-ready');stage.style.backgroundImage='';
+    const poster=document.createElement('div');poster.className='home-short-poster home-short-popup-poster';poster.style.backgroundImage='url(https://i.ytimg.com/vi/'+videoId+'/hqdefault.jpg)';poster.setAttribute('aria-hidden','true');poster.innerHTML='<span class="home-short-poster-spinner"></span>';stage.appendChild(poster);
     const mount=document.createElement('div');mount.id='homeShortsPopupPlayer';mount.style.width='100%';mount.style.height='100%';stage.appendChild(mount);
     if(!popup.open)popup.showModal();
-    try{const YT=await loadYouTubeIframeApi();if(!popup.open)return;target._popupPlayer=new YT.Player('homeShortsPopupPlayer',{width:'100%',height:'100%',videoId,playerVars:{autoplay:1,controls:1,playsinline:1,rel:0,modestbranding:1,enablejsapi:1,origin:window.location.origin},events:{onReady:event=>event.target.playVideo()}})}
-    catch(error){toast(error.message||'មិនអាចបើក YouTube Shorts បានទេ។','error')}
+    try{const YT=await loadYouTubeIframeApi();if(!popup.open)return;target._popupPlayer=new YT.Player('homeShortsPopupPlayer',{width:'100%',height:'100%',videoId,playerVars:{autoplay:1,controls:1,playsinline:1,rel:0,modestbranding:1,enablejsapi:1,origin:window.location.origin},events:{onReady:event=>event.target.playVideo(),onStateChange:event=>{if(event.data===window.YT.PlayerState.PLAYING){stage.classList.remove('is-loading');stage.classList.add('is-ready')}}}})}
+    catch(error){stage.classList.remove('is-loading');toast(error.message||'មិនអាចបើក YouTube Shorts បានទេ។','error')}
    });
    popup?.addEventListener('close',closePlayer);
    popup?.addEventListener('click',event=>{if(event.target===popup)popup.close()});
@@ -3057,7 +3058,7 @@ async function loadHomeVendorMedia(){
   await loadYouTubeIframeApi();
   rows.forEach((row,index)=>{
    const item={player:null,visible:false,ready:false};target._shortPlayers.set(String(index),item);
-   item.player=new window.YT.Player('home-short-player-'+index,{width:'100%',height:'100%',videoId:youtubeVideoId(row.media_url),playerVars:{autoplay:0,controls:0,disablekb:1,fs:0,playsinline:1,rel:0,modestbranding:1,iv_load_policy:3,enablejsapi:1,origin:window.location.origin},events:{onReady:event=>{item.ready=true;event.target.mute();if(item.visible&&!document.hidden)event.target.playVideo()},onStateChange:event=>{if(event.data===window.YT.PlayerState.PLAYING&&item.visible)event.target.mute()}}});
+   item.player=new window.YT.Player('home-short-player-'+index,{width:'100%',height:'100%',videoId:youtubeVideoId(row.media_url),playerVars:{autoplay:0,controls:0,disablekb:1,fs:0,playsinline:1,rel:0,modestbranding:1,iv_load_policy:3,enablejsapi:1,origin:window.location.origin},events:{onReady:event=>{item.ready=true;event.target.mute();if(item.visible&&!document.hidden)event.target.playVideo()},onStateChange:event=>{if(event.data===window.YT.PlayerState.PLAYING){if(item.visible)event.target.mute();event.target.getIframe()?.closest('.home-vendor-media-player')?.classList.add('is-ready')}}}});
   });
   target._shortsVisibilityObserver=new IntersectionObserver(entries=>entries.forEach(entry=>{
    const item=target._shortPlayers.get(entry.target.dataset.shortPlayerKey);if(!item)return;
