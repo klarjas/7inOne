@@ -1546,7 +1546,8 @@ function renderProductDetail() {
     const current = state.productGalleryVideoActive ? images.length : state.productGalleryIndex;
     updateGallery(current + Number(b.dataset.galleryStep));
   }));
-  $('productDetail').querySelector('[data-gallery-zoom]')?.addEventListener('click', openProductLightbox);
+  const initialZoomImage = $('productDetail').querySelector('[data-gallery-zoom]');
+  if (initialZoomImage) initialZoomImage.onclick = openProductLightbox;
 
   $('productDetail').querySelectorAll('[data-product-action]').forEach((btn) => {
     btn.addEventListener('click', () => {
