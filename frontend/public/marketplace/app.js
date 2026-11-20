@@ -3106,24 +3106,210 @@ function youtubeVideoId(value) {
     return /^[A-Za-z0-9_-]{11}$/.test(id) ? id : '';
   } catch { return ''; }
 }
+let listingVideoPlayer = null;
+let listingVideoProgressTimer = null;
+let listingVideoSession = 0;
+let listingVideoApiPromise = null;
+
+function loadYouTubeIframeApi() {
+  if (window.YT?.Player) return Promise.resolve(window.YT);
+  if (listingVideoApiPromise) return listingVideoApiPromise;
+  listingVideoApiPromise = new Promise((resolve, reject) => {
+    const previousReady = window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady = () => {
+      try { if (typeof previousReady === 'function') previousReady(); } catch {}
+      if (window.YT?.Player) resolve(window.YT);
+      else reject(new Error('YouTube Player API មិនអាចដំណើរការបានទេ។'));
+    };
+    let script = document.querySelector('script[src="https://www.youtube.com/iframe_api"]');
+    if (!script) {
+      script = document.createElement('script');
+      script.src = 'https://www.youtube.com/iframe_api';
+      script.async = true;
+      script.onerror = () => reject(new Error('មិនអាចផ្ទុក YouTube Player API បានទេ។'));
+      document.head.appendChild(script);
+    }
+  });
+  return listingVideoApiPromise;
+}
+
+function stopListingVideoProgress() {
+  if (listingVideoProgressTimer) {
+    window.clearInterval(listingVideoProgressTimer);
+    listingVideoProgressTimer = null;
+  }
+}
+
 function closeListingVideoPopup() {
-  const popup = $('homeShortsPopup'), stage = $('homeShortsPopupStage');
+  listingVideoSession += 1;
+  stopListingVideoProgress();
+  if (listingVideoPlayer) {
+    try { listingVideoPlayer.stopVideo(); } catch {}
+    try { listingVideoPlayer.destroy(); } catch {}
+    listingVideoPlayer = null;
+  }
+  const popup = $('homeShortsPopup');
+  const stage = $('homeShortsPopupStage');
   if (stage) stage.replaceChildren();
   if (popup?.open) popup.close();
 }
+
 function openListingVideoPopup(url, title = 'វីដេអូ') {
-  const videoId = youtubeVideoId(url), popup = $('homeShortsPopup'), stage = $('homeShortsPopupStage');
-  if (!videoId || !popup || !stage) { toast('YouTube Video Link មិនត្រឹមត្រូវទេ។', 'error'); return; }
-  stage.replaceChildren();
+  const videoId = youtubeVideoId(url);
+  const popup = $('homeShortsPopup');
+  const stage = $('homeShortsPopupStage');
+  if (!videoId || !popup || !stage) {
+    toast('YouTube Video Link មិនត្រឹមត្រូវទេ។', 'error');
+    return;
+  }
+
+  closeListingVideoPopup();
+  const session = listingVideoSession;
   $('homeShortsPopupTitle').textContent = title || 'វីដេអូប្រកាស';
-  const frame = document.createElement('iframe');
-  frame.src = 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(videoId) + '?autoplay=1&controls=1&rel=0&playsinline=1';
-  frame.title = title || 'YouTube video player';
-  frame.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
-  frame.allowFullscreen = true;
-  frame.referrerPolicy = 'strict-origin-when-cross-origin';
-  stage.appendChild(frame);
+
+  const playerShell = document.createElement('div');
+  playerShell.className = 'custom-youtube-player';
+  playerShell.innerHTML =
+    '<div class="custom-youtube-screen">' +
+      '<div class="custom-youtube-frame" id="customYoutubeFrame"></div>' +
+      '<button type="button" class="custom-youtube-center-play" data-video-action="toggle" aria-label="ចាក់វីដេអូ"><span data-video-play-icon>▶</span></button>' +
+      '<div class="custom-youtube-loading">កំពុងផ្ទុកវីដេអូ...</div>' +
+    '</div>' +
+    '<div class="custom-youtube-controls">' +
+      '<div class="custom-youtube-progress-row"><span class="custom-youtube-current">0:00</span><input class="custom-youtube-seek" data-video-seek type="range" min="0" max="1000" value="0" step="1" aria-label="ទីតាំងវីដេអូ"><span class="custom-youtube-duration">0:00</span></div>' +
+      '<div class="custom-youtube-control-row">' +
+        '<button type="button" data-video-action="toggle" aria-label="ចាក់ / ផ្អាក"><span data-video-play-icon>▶</span></button>' +
+        '<button type="button" data-video-action="back" aria-label="ថយក្រោយ 10 វិនាទី">−10</button>' +
+        '<button type="button" data-video-action="forward" aria-label="ទៅមុខ 10 វិនាទី">+10</button>' +
+        '<button type="button" data-video-action="mute" aria-label="បិទសំឡេង"><span data-video-volume-icon>🔊</span></button>' +
+        '<input class="custom-youtube-volume" data-video-volume type="range" min="0" max="100" value="85" aria-label="កម្រិតសំឡេង">' +
+        '<span class="custom-youtube-spacer"></span>' +
+        '<button type="button" data-video-action="settings" aria-label="ការកំណត់">⚙</button>' +
+        '<button type="button" data-video-action="fullscreen" aria-label="ពេញអេក្រង់">⛶</button>' +
+      '</div>' +
+      '<div class="custom-youtube-settings" hidden><label>ល្បឿនចាក់<select data-video-speed aria-label="ល្បឿនចាក់"><option value="0.5">0.5×</option><option value="0.75">0.75×</option><option value="1" selected>ធម្មតា 1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="1.75">1.75×</option><option value="2">2×</option></select></label></div>' +
+    '';
+
+  stage.replaceChildren(playerShell);
   if (!popup.open) popup.showModal();
+
+  const frameHost = playerShell.querySelector('#customYoutubeFrame');
+  const seek = playerShell.querySelector('[data-video-seek]');
+  const volume = playerShell.querySelector('[data-video-volume]');
+  const settings = playerShell.querySelector('.custom-youtube-settings');
+  const loading = playerShell.querySelector('.custom-youtube-loading');
+  const centerPlay = playerShell.querySelector('.custom-youtube-center-play');
+
+  const formatTime = seconds => {
+    const value = Math.max(0, Math.floor(Number(seconds) || 0));
+    return Math.floor(value / 60) + ':' + String(value % 60).padStart(2, '0');
+  };
+  const setPlayingUi = playing => {
+    playerShell.querySelectorAll('[data-video-play-icon]').forEach(node => {
+      node.textContent = playing ? 'Ⅱ' : '▶';
+    });
+    centerPlay.classList.toggle('is-playing', playing);
+    centerPlay.setAttribute('aria-label', playing ? 'ផ្អាកវីដេអូ' : 'ចាក់វីដេអូ');
+  };
+  const updateProgress = () => {
+    if (!listingVideoPlayer || session !== listingVideoSession) return;
+    try {
+      const duration = listingVideoPlayer.getDuration() || 0;
+      const current = listingVideoPlayer.getCurrentTime() || 0;
+      seek.value = duration ? String(Math.round(current / duration * 1000)) : '0';
+      playerShell.querySelector('.custom-youtube-current').textContent = formatTime(current);
+      playerShell.querySelector('.custom-youtube-duration').textContent = formatTime(duration);
+    } catch {}
+  };
+
+  playerShell.addEventListener('click', event => {
+    const button = event.target.closest('[data-video-action]');
+    if (!button || !listingVideoPlayer) return;
+    const action = button.dataset.videoAction;
+    try {
+      if (action === 'toggle') {
+        if (listingVideoPlayer.getPlayerState() === 1) listingVideoPlayer.pauseVideo();
+        else listingVideoPlayer.playVideo();
+      } else if (action === 'back') {
+        listingVideoPlayer.seekTo(Math.max(0, listingVideoPlayer.getCurrentTime() - 10), true);
+      } else if (action === 'forward') {
+        listingVideoPlayer.seekTo(Math.min(listingVideoPlayer.getDuration() || Infinity, listingVideoPlayer.getCurrentTime() + 10), true);
+      } else if (action === 'mute') {
+        if (listingVideoPlayer.isMuted()) listingVideoPlayer.unMute();
+        else listingVideoPlayer.mute();
+        playerShell.querySelector('[data-video-volume-icon]').textContent = listingVideoPlayer.isMuted() ? '🔇' : '🔊';
+      } else if (action === 'settings') {
+        settings.hidden = !settings.hidden;
+      } else if (action === 'fullscreen') {
+        const target = playerShell.querySelector('.custom-youtube-screen');
+        if (document.fullscreenElement) document.exitFullscreen?.();
+        else target.requestFullscreen?.();
+      }
+    } catch {}
+  });
+
+  seek.addEventListener('input', () => {
+    if (!listingVideoPlayer) return;
+    const duration = listingVideoPlayer.getDuration() || 0;
+    if (duration) playerShell.querySelector('.custom-youtube-current').textContent = formatTime(Number(seek.value) / 1000 * duration);
+  });
+  seek.addEventListener('change', () => {
+    if (!listingVideoPlayer) return;
+    const duration = listingVideoPlayer.getDuration() || 0;
+    if (duration) listingVideoPlayer.seekTo(Number(seek.value) / 1000 * duration, true);
+  });
+  volume.addEventListener('input', () => {
+    if (!listingVideoPlayer) return;
+    const level = Number(volume.value);
+    listingVideoPlayer.setVolume(level);
+    if (level > 0 && listingVideoPlayer.isMuted()) listingVideoPlayer.unMute();
+    playerShell.querySelector('[data-video-volume-icon]').textContent = level === 0 ? '🔇' : '🔊';
+  });
+  playerShell.querySelector('[data-video-speed]').addEventListener('change', event => {
+    try { listingVideoPlayer?.setPlaybackRate(Number(event.target.value)); } catch {}
+  });
+
+  loadYouTubeIframeApi().then(YT => {
+    if (session !== listingVideoSession || !frameHost.isConnected) return;
+    listingVideoPlayer = new YT.Player(frameHost, {
+      width: '100%',
+      height: '100%',
+      videoId,
+      playerVars: { autoplay: 1, controls: 0, disablekb: 1, fs: 0, modestbranding: 1, playsinline: 1, rel: 0, enablejsapi: 1, origin: window.location.origin },
+      events: {
+        onReady: event => {
+          if (session !== listingVideoSession) {
+            try { event.target.destroy(); } catch {}
+            return;
+          }
+          loading.hidden = true;
+          event.target.setVolume(Number(volume.value));
+          event.target.playVideo();
+          stopListingVideoProgress();
+          listingVideoProgressTimer = window.setInterval(updateProgress, 250);
+        },
+        onStateChange: event => {
+          if (session !== listingVideoSession) return;
+          setPlayingUi(event.data === YT.PlayerState.PLAYING);
+          if (event.data === YT.PlayerState.ENDED) {
+            updateProgress();
+            stopListingVideoProgress();
+          } else if (event.data === YT.PlayerState.PLAYING && !listingVideoProgressTimer) {
+            listingVideoProgressTimer = window.setInterval(updateProgress, 250);
+          }
+        },
+        onError: () => {
+          if (session !== listingVideoSession) return;
+          loading.textContent = 'មិនអាចចាក់វីដេអូនេះបានទេ។ សូមពិនិត្យ Link YouTube។';
+          loading.hidden = false;
+        }
+      }
+    });
+  }).catch(error => {
+    if (session !== listingVideoSession) return;
+    loading.textContent = error.message || 'មិនអាចផ្ទុក YouTube Player បានទេ។';
+    loading.hidden = false;
+  });
 }
 function listingVideoButton(item) {
   if (!item?.youtube_video_url || !youtubeVideoId(item.youtube_video_url)) return '';
