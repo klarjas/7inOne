@@ -6438,3 +6438,27 @@ body > footer {
 /* Caption toggle active state */
 .custom-youtube-control-row button.is-active{color:#7dd3fc;background:rgba(14,165,233,.2);box-shadow:inset 0 0 0 1px rgba(125,211,252,.45)}
 .home-shorts-resize-handle{background:transparent!important}
+
+
+/* Video popup: shop profile + compact related-product list (replaces old yellow product panel). */
+#homeShortsPopupMeta{display:flex;flex-direction:column;gap:8px;min-width:0}
+#homeShortsPopupMeta .home-shorts-shop-meta{display:flex;align-items:center;gap:9px;min-width:0;padding:2px 0}
+#homeShortsPopupMeta .home-shorts-shop-meta img,
+#homeShortsPopupMeta .home-shorts-shop-fallback{width:36px;height:36px;flex:0 0 36px;border-radius:50%;object-fit:cover;background:#263548}
+#homeShortsPopupMeta .home-shorts-shop-name{color:#e5edf6;font-size:13px;font-weight:700}
+.home-shorts-related-list{display:flex;flex-direction:column;gap:4px;min-width:0}
+.home-shorts-related-row{display:flex;align-items:center;gap:5px;min-width:0;padding:4px 6px;border-radius:8px;background:transparent}
+.home-shorts-related-open{display:flex;align-items:center;gap:9px;flex:1;min-width:0;padding:0;border:0;background:transparent;color:#dbe5ef;text-align:left;cursor:pointer}
+.home-shorts-related-open img,.home-shorts-related-placeholder{width:38px;height:38px;flex:0 0 38px;border-radius:6px;object-fit:cover;background:#1c2938}
+.home-shorts-related-placeholder{display:grid;place-items:center;color:#8193a8}
+.home-shorts-related-title{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;font-weight:600}
+.home-shorts-related-open strong{flex:0 0 auto;margin-left:auto;color:#34d399;font-size:11px;white-space:nowrap}
+.home-shorts-related-remove{display:grid;place-items:center;width:25px;height:25px;flex:0 0 25px;border:0;border-radius:6px;background:transparent;color:#94a3b8;cursor:pointer}
+.home-shorts-related-remove:hover{background:rgba(248,113,113,.12);color:#f87171}
+.home-shorts-related-open:hover .home-shorts-related-title{color:#7dd3fc}
+@media(max-width:560px){
+ #homeShortsPopupMeta{gap:6px}
+ #homeShortsPopupMeta .home-shorts-shop-meta img,#homeShortsPopupMeta .home-shorts-shop-fallback{width:32px;height:32px;flex-basis:32px}
+ .home-shorts-related-open img,.home-shorts-related-placeholder{width:34px;height:34px;flex-basis:34px}
+ .home-shorts-related-title,.home-shorts-related-open strong{font-size:10px}
+}
