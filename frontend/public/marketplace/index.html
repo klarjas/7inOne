@@ -294,16 +294,6 @@
 
         <!-- Center Content -->
         <div class="home-main-content">
-          <dialog id="homeShortsPopup" class="home-shorts-popup" aria-label="មើលវីដេអូ YouTube">
-            <div class="home-shorts-popup-head">
-              <strong id="homeShortsPopupTitle">វីដេអូប្រកាស</strong>
-              <button id="homeShortsPopupClose" type="button" aria-label="បិទវីដេអូ">✕</button>
-            </div>
-            <div class="home-shorts-popup-layout">
-              <div id="homeShortsPopupStage" class="home-shorts-popup-stage" aria-label="YouTube video player"></div>
-            </div>
-          </dialog>
-
           <!-- Category Dock -->
           <nav class="dock" id="categoryStrip" aria-label="ប្រភេទទំនិញ">
             <button type="button" class="dk active" data-category="all">
@@ -1252,6 +1242,17 @@
     <span data-nav-icon="chat"></span>
     <span id="sellerChatUnreadBadge" class="absolute -right-1 -top-1 hidden min-w-5 rounded-full bg-rose-600 px-1.5 py-0.5 text-[9px] font-bold text-white"></span>
   </button>
+
+  <!-- Global YouTube Video Popup: outside hidden marketplace views -->
+  <dialog id="homeShortsPopup" class="home-shorts-popup" aria-label="មើលវីដេអូ YouTube">
+    <div class="home-shorts-popup-head">
+      <strong id="homeShortsPopupTitle">វីដេអូប្រកាស</strong>
+      <button id="homeShortsPopupClose" type="button" aria-label="បិទវីដេអូ">✕</button>
+    </div>
+    <div class="home-shorts-popup-layout">
+      <div id="homeShortsPopupStage" class="home-shorts-popup-stage" aria-label="YouTube video player"></div>
+    </div>
+  </dialog>
 
   <!-- Image Lightbox -->
   <div class="product-lightbox" id="productLightbox" aria-hidden="true" role="dialog" aria-modal="true">
