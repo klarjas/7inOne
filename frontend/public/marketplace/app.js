@@ -107,6 +107,7 @@ const state = {
   currentVendor: null,
   currentMarketplaceListing: null,
   productGalleryIndex: 0,
+  productGalleryVideoActive: false,
   productLightboxOpen: false,
   productLightboxZoom: 1,
 
@@ -1146,6 +1147,7 @@ async function openMarketplaceListing(type, id, options = {}) {
     state.currentProduct = item;
     state.currentVendor = null;
     state.productGalleryIndex = 0;
+    state.productGalleryVideoActive = false;
     try {
       sessionStorage.setItem('ecomstore.activeView', 'product');
       sessionStorage.setItem('ecomstore.currentProductId', String(id));
@@ -1220,6 +1222,7 @@ async function openProduct(id, options = {}) {
     state.currentProduct = product;
     state.currentVendor = trust.data;
     state.productGalleryIndex = 0;
+    state.productGalleryVideoActive = false;
 
     await showView('product', { preserveScroll: Boolean(options.preserveScroll) });
     return true;
@@ -1388,14 +1391,18 @@ function renderProductDetail() {
 
   const descriptions = productDescriptionParts(p);
   const images = (p.product_images || []).filter((i) => i.image_url);
+  const videoId = youtubeVideoId(p.youtube_video_url);
+  const hasVideo = Boolean(videoId);
+  const galleryCount = images.length + (hasVideo ? 1 : 0);
+  if (!images.length && hasVideo) state.productGalleryVideoActive = true;
   const activeImage = images[state.productGalleryIndex] || images[0];
   const saved = state.savedIds.has(p.id);
   const stockKnown = p.stock !== undefined && p.stock !== null;
   const stockLabel = stockKnown ? (Number(p.stock) > 0 ? 'មានទំនិញ' : 'អស់ពីស្តុក') : 'អាចសាកសួរបាន';
   const related = state.products.filter((item) => String(item.id) !== String(p.id) && (item.category === p.category || String(item.vendor_id) === String(p.vendor_id))).slice(0, 6);
 
-  const galleryHtml = images.length
-    ? `<div class="product-gallery-stage"><img id="productMainImage" src="${esc(activeImage.image_url)}" alt="${esc(p.title)}" data-gallery-zoom><span class="product-gallery-condition">${esc(p.condition || 'មិនបានបញ្ជាក់')}</span><button type="button" class="product-gallery-save" data-product-action="save" aria-pressed="${saved}">${ic('bookmark', 18)}</button>${images.length > 1 ? `<button type="button" class="product-gallery-arrow prev" data-gallery-step="-1">${ic('arrow', 17)}</button><button type="button" class="product-gallery-arrow next" data-gallery-step="1">${ic('arrow', 17)}</button>` : ''}<span class="product-gallery-counter">${state.productGalleryIndex + 1} / ${images.length}</span></div><div class="product-gallery-thumbs" id="productGalleryThumbs">${images.map((im, i) => `<button type="button" class="product-gallery-thumb ${i === state.productGalleryIndex ? 'active' : ''}" data-image="${i}"><img src="${esc(im.image_url)}" alt=""></button>`).join('')}</div>`
+  const galleryHtml = galleryCount
+    ? `<div class="product-gallery-stage ${state.productGalleryVideoActive && hasVideo ? 'is-video' : ''}">${state.productGalleryVideoActive && hasVideo ? productGalleryVideoFrameMarkup(videoId, p.title, false) : (activeImage ? `<img id="productMainImage" src="${esc(activeImage.image_url)}" alt="${esc(p.title)}" data-gallery-zoom>` : ic('image', 48))}<span class="product-gallery-condition">${esc(p.condition || 'មិនបានបញ្ជាក់')}</span><button type="button" class="product-gallery-save" data-product-action="save" aria-pressed="${saved}">${ic('bookmark', 18)}</button>${galleryCount > 1 ? `<button type="button" class="product-gallery-arrow prev" data-gallery-step="-1">${ic('arrow', 17)}</button><button type="button" class="product-gallery-arrow next" data-gallery-step="1">${ic('arrow', 17)}</button>` : ''}<span class="product-gallery-counter">${state.productGalleryVideoActive && hasVideo ? galleryCount : state.productGalleryIndex + 1} / ${galleryCount}</span></div><div class="product-gallery-thumbs" id="productGalleryThumbs">${images.map((im, i) => `<button type="button" class="product-gallery-thumb ${!state.productGalleryVideoActive && i === state.productGalleryIndex ? 'active' : ''}" data-image="${i}"><img src="${esc(im.image_url)}" alt=""></button>`).join('')}${hasVideo ? `<button type="button" class="product-gallery-thumb product-gallery-video-thumb ${state.productGalleryVideoActive ? 'active' : ''}" data-gallery-video aria-label="មើលវីដេអូ YouTube"><img src="https://img.youtube.com/vi/${videoId}/hqdefault.jpg" alt="YouTube video"><span>${ic('play',18)}</span></button>` : ''}</div>`
     : `<div class="product-gallery-stage">${ic('image', 48)}</div>`;
 
   const reviewItems = (v.reviews || []).slice(0, 5);
@@ -1405,7 +1412,7 @@ function renderProductDetail() {
   $('productDetail').innerHTML = `
   <div class="product-detail-page">
     <section class="product-hero-grid">
-      <div class="product-detail-gallery">${galleryHtml}${listingVideoButton(p)}</div>
+      <div class="product-detail-gallery">${galleryHtml}</div>
       <div class="product-detail-info">
         <div class="product-top-meta">
           <span class="product-category-badge">${esc(CATEGORIES[p.category] || p.category || 'ទំនិញ')}</span>
@@ -1497,19 +1504,50 @@ function renderProductDetail() {
 
   bindListingDetailActions($('productDetail'), {...p,listing_type:'product'});
   const updateGallery = (idx) => {
-    if (!images.length) return;
-    state.productGalleryIndex = (idx + images.length) % images.length;
-    const main = $('productMainImage');
-    if (main) main.src = images[state.productGalleryIndex].image_url;
-    $('productGalleryThumbs')?.querySelectorAll('[data-image]').forEach((b) => b.classList.toggle('active', Number(b.dataset.image) === state.productGalleryIndex));
+    if (!galleryCount) return;
+    const nextIndex = (idx + galleryCount) % galleryCount;
+    state.productGalleryVideoActive = Boolean(hasVideo && nextIndex === images.length);
+    if (!state.productGalleryVideoActive) state.productGalleryIndex = nextIndex;
+    const stage = $('productDetail').querySelector('.product-gallery-stage');
+    stage?.classList.toggle('is-video', state.productGalleryVideoActive);
+    const currentFrame = stage?.querySelector('[data-product-gallery-video]');
+    const currentImage = stage?.querySelector('#productMainImage');
+    if (state.productGalleryVideoActive) {
+      if (!currentFrame && stage) {
+        const frame = createProductGalleryVideoFrame(videoId, p.title, true);
+        if (currentImage) currentImage.replaceWith(frame);
+        else stage.prepend(frame);
+      }
+    } else {
+      if (currentFrame) {
+        const image = document.createElement('img');
+        image.id = 'productMainImage';
+        image.src = images[state.productGalleryIndex].image_url;
+        image.alt = p.title || 'រូបភាពផលិតផល';
+        image.dataset.galleryZoom = '';
+        currentFrame.replaceWith(image);
+      } else if (currentImage) {
+        currentImage.src = images[state.productGalleryIndex].image_url;
+      }
+    }
+    $('productGalleryThumbs')?.querySelectorAll('[data-image]').forEach((b) => b.classList.toggle('active', !state.productGalleryVideoActive && Number(b.dataset.image) === state.productGalleryIndex));
+    $('productGalleryThumbs')?.querySelector('[data-gallery-video]')?.classList.toggle('active', state.productGalleryVideoActive);
     const counter = $('productDetail').querySelector('.product-gallery-counter');
-    if (counter) counter.textContent = `${state.productGalleryIndex + 1} / ${images.length}`;
-    if (state.productLightboxOpen) updateProductLightbox();
+    if (counter) counter.textContent = `${state.productGalleryVideoActive ? galleryCount : state.productGalleryIndex + 1} / ${galleryCount}`;
+    const zoomImage = $('productDetail').querySelector('[data-gallery-zoom]');
+    if (zoomImage) zoomImage.onclick = openProductLightbox;
+    if (state.productLightboxOpen && !state.productGalleryVideoActive) updateProductLightbox();
+    if (state.productGalleryVideoActive && state.productLightboxOpen) closeProductLightbox();
   };
 
   $('productDetail').querySelectorAll('[data-image]').forEach((b) => b.addEventListener('click', () => updateGallery(Number(b.dataset.image))));
-  $('productDetail').querySelectorAll('[data-gallery-step]').forEach((b) => b.addEventListener('click', () => updateGallery(state.productGalleryIndex + Number(b.dataset.galleryStep))));
-  $('productDetail').querySelector('[data-gallery-zoom]')?.addEventListener('click', openProductLightbox);
+  $('productDetail').querySelector('[data-gallery-video]')?.addEventListener('click', () => updateGallery(images.length));
+  $('productDetail').querySelectorAll('[data-gallery-step]').forEach((b) => b.addEventListener('click', () => {
+    const current = state.productGalleryVideoActive ? images.length : state.productGalleryIndex;
+    updateGallery(current + Number(b.dataset.galleryStep));
+  }));
+  const initialZoomImage = $('productDetail').querySelector('[data-gallery-zoom]');
+  if (initialZoomImage) initialZoomImage.onclick = openProductLightbox;
 
   $('productDetail').querySelectorAll('[data-product-action]').forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -1944,6 +1982,23 @@ function syncProductImageFileInput() {
   (state.selectedProductImages || []).filter((item) => item.kind === 'new').forEach((item) => transfer.items.add(item.file));
   input.files = transfer.files;
 }
+function updateProductYoutubePreview() {
+  const input = $('productYoutubeVideoUrl');
+  const preview = $('productYoutubePreview');
+  if (!input || !preview) return;
+  const value = input.value.trim();
+  const videoId = youtubeVideoId(value);
+  if (!value) {
+    preview.classList.add('hidden');
+    preview.innerHTML = '';
+    return;
+  }
+  preview.classList.remove('hidden');
+  preview.innerHTML = videoId
+    ? `<div class="product-youtube-preview-head"><span>${ic('play',15)} YouTube Preview</span><small>បង្ហាញជាមួយ Gallery ផលិតផល</small></div><div class="product-youtube-preview-frame">${productGalleryVideoFrameMarkup(videoId, $('productTitle')?.value || 'Product video', false)}</div>`
+    : '<p class="product-youtube-preview-invalid">សូមបញ្ចូល YouTube Link ដែលមានទម្រង់ត្រឹមត្រូវ។</p>';
+}
+
 function renderProductImageAlbum() {
   const album = $('productImageAlbum');
   const images = state.selectedProductImages || [];
@@ -2433,6 +2488,7 @@ function renderProductForm(product = null) {
   void initCambodiaLocationPicker($('productForm').querySelector('[data-location-picker]'), product?.location || '');
   renderProductImageAlbum();
   updateShortDescriptionCounter();
+  updateProductYoutubePreview();
   openModal('productFormModal');
 }
 
@@ -3024,13 +3080,31 @@ async function renderTelegramSecurity() {
   } catch {}
 }
 
+function createProductGalleryVideoFrame(videoId, title = 'Product video', autoplay = true) {
+  const frame = document.createElement('iframe');
+  frame.className = 'product-gallery-video-frame';
+  frame.dataset.productGalleryVideo = 'true';
+  frame.src = 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(videoId) + '?autoplay=' + (autoplay ? '1' : '0') + '&controls=1&rel=0&playsinline=1';
+  frame.title = title || 'Product video';
+  frame.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+  frame.allowFullscreen = true;
+  frame.referrerPolicy = 'strict-origin-when-cross-origin';
+  return frame;
+}
+function productGalleryVideoFrameMarkup(videoId, title = 'Product video', autoplay = false) {
+  return '<iframe class="product-gallery-video-frame" data-product-gallery-video="true" src="https://www.youtube-nocookie.com/embed/' +
+    encodeURIComponent(videoId) + '?autoplay=' + (autoplay ? '1' : '0') +
+    '&controls=1&rel=0&playsinline=1" title="' + esc(title || 'Product video') +
+    '" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>';
+}
+
 function youtubeVideoId(value) {
   try {
     const url = new URL(String(value || '').trim());
     const host = url.hostname.toLowerCase().replace(/^www\./, '');
     if (host === 'youtu.be') return url.pathname.split('/').filter(Boolean)[0]?.match(/^[A-Za-z0-9_-]{11}$/)?.[0] || '';
     if (!['youtube.com','m.youtube.com','youtube-nocookie.com'].includes(host)) return '';
-    const id = url.searchParams.get('v') || url.pathname.match(/^\/(?:embed|live)\/([A-Za-z0-9_-]{11})\/?$/)?.[1] || '';
+    const id = url.searchParams.get('v') || url.pathname.match(/^\/(?:embed|live|shorts)\/([A-Za-z0-9_-]{11})\/?$/)?.[1] || '';
     return /^[A-Za-z0-9_-]{11}$/.test(id) ? id : '';
   } catch { return ''; }
 }
@@ -3471,6 +3545,7 @@ function bindEvents() {
   $('sellerGateApply').addEventListener('click', openSellerModal);
   $('sellerVerifyNow').addEventListener('click', openSellerModal);
   $('productShortDesc')?.addEventListener('input', updateShortDescriptionCounter);
+  $('productYoutubeVideoUrl')?.addEventListener('input', updateProductYoutubePreview);
   $('productImage')?.addEventListener('change', (event) => {
     const selected = Array.from(event.currentTarget.files || []);
     const current = state.selectedProductImages || [];
