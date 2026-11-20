@@ -3058,7 +3058,8 @@ async function loadHomeVendorMedia(){
   const loadPopupProducts=async(mediaId,vendorId)=>{
    const results=await Promise.all([api('/api/vendor-media/'+encodeURIComponent(mediaId)+'/products'),api('/api/vendor-media/'+encodeURIComponent(mediaId)+'/shop-products')]);
    const linked=results[0].data||[],popular=results[1].data||[];
-   if(linkedProducts)linkedProducts.innerHTML=linked.length?linked.map(p=>productCard(p,String(state.me?.vendor?.id)===String(vendorId)?'data-short-remove-product="'+esc(p.id)+'" aria-label="ដកផលិតផល"':'')).join(''):'<p class="home-shorts-empty">មិនទាន់មានផលិតផលភ្ជាប់នឹងវីដេអូនេះទេ។</p>';
+   const owner=Boolean(state.me?.vendor?.status==='approved'&&state.me?.vendor?.id&&String(state.me.vendor.id)===String(vendorId));
+   if(linkedProducts)linkedProducts.innerHTML=linked.length?linked.map(p=>productCard(p,owner?'data-short-remove-product="'+esc(p.id)+'" aria-label="ដកផលិតផល"':'')).join(''):'<p class="home-shorts-empty">មិនទាន់មានផលិតផលភ្ជាប់នឹងវីដេអូនេះទេ។</p>';
    if($('homeShortsLinkedCount'))$('homeShortsLinkedCount').textContent=linked.length+' ផលិតផល';
    if(leftProducts)leftProducts.innerHTML=popular.length?popular.map(p=>productCard(p,'')).join(''):'<p class="home-shorts-empty">ហាងនេះមិនទាន់មានផលិតផលសកម្មទេ។</p>';
    if(leftProducts){
@@ -3066,7 +3067,6 @@ async function loadHomeVendorMedia(){
     if(target._popupProductSlideTimer)clearInterval(target._popupProductSlideTimer);
     target._popupProductSlideTimer=setInterval(()=>{if(!popup?.open||leftProducts.matches(':hover'))return;const first=leftProducts.querySelector('.home-shorts-product-card');if(!first)return;const max=Math.max(0,leftProducts.scrollHeight-leftProducts.clientHeight),step=first.getBoundingClientRect().height+9;if(max<=0)return;if(leftProducts.scrollTop>=max-8)leftProducts.scrollTo({top:0,behavior:'smooth'});else leftProducts.scrollBy({top:step,behavior:'smooth'})},3500);
    }
-   const owner=Boolean(state.me?.vendor?.status==='approved'&&state.me?.vendor?.id&&String(state.me.vendor.id)===String(vendorId));
    sellerTools?.classList.toggle('hidden',!owner);
    target._popupVendorProducts=[];
    if(owner){try{const own=await api('/api/vendor/products');target._popupVendorProducts=(own.data||[]).filter(p=>p.status==='active'&&Number(p.stock)>0);renderSellerProductSearch(searchInput?.value||'')}catch(error){toast(error.message||'មិនអាចទាញយកផលិតផលហាងបានទេ។','error')}}
