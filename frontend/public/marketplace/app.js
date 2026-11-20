@@ -3173,47 +3173,46 @@ function openListingVideoPopup(url, title = 'វីដេអូ', meta = {}) {
     const currentId = String(meta.listingId || '');
     const vendorId = String(meta.vendorId || '');
     const category = String(meta.category || '');
-    const relatedProducts = (state.products || [])
-      .filter(product => product && product.listing_type === 'product' &&
-        String(product.id) !== currentId &&
-        ((vendorId && String(product.vendor_id || '') === vendorId) ||
-         (category && String(product.category || '') === category)))
-      .sort((a, b) => {
-        const aSameShop = vendorId && String(a.vendor_id || '') === vendorId ? 1 : 0;
-        const bSameShop = vendorId && String(b.vendor_id || '') === vendorId ? 1 : 0;
-        return bSameShop - aSameShop;
-      })
-      .slice(0, 5);
-    const relatedHtml = relatedProducts.map(product => {
-      const productImage = (Array.isArray(product.image_urls) ? product.image_urls[0] : '') ||
-        product.image_url || product.cover_url ||
-        (Array.isArray(product.product_images) ? product.product_images[0]?.image_url : '') || '';
-      const productPrice = product.price_label != null ? money(product.price_label) :
-        product.price != null ? money(product.price) : '';
-      return '<div class="home-shorts-related-row" data-related-row="' + esc(product.id) + '">' +
-        '<button type="button" class="home-shorts-related-open" data-related-product-id="' + esc(product.id) + '">' +
-          (productImage ? '<img src="' + esc(productImage) + '" alt="" loading="lazy">' : '<span class="home-shorts-related-placeholder">' + ic('image',16) + '</span>') +
-          '<span class="home-shorts-related-title">' + esc(product.title || 'ផលិតផល') + '</span>' +
-          (productPrice ? '<strong>' + esc(productPrice) + '</strong>' : '') +
-        '</button>' +
-        '<button type="button" class="home-shorts-related-remove" data-remove-related="' + esc(product.id) + '" aria-label="ដកផលិតផលនេះចេញ" title="ដកចេញ">' + ic('x',14) + '</button>' +
-      '</div>';
-    }).join('');
+    const allProducts = Array.isArray(state.products) ? state.products : [];
+    const visibleProducts = allProducts.filter(product =>
+      product && product.listing_type === 'product' && String(product.id) !== currentId
+    );
+    const shopProducts = vendorId
+      ? visibleProducts.filter(product => String(product.vendor_id || '') === vendorId).slice(0, 4)
+      : [];
+    const similarProducts = category
+      ? visibleProducts.filter(product =>
+          String(product.vendor_id || '') !== vendorId &&
+          String(product.category || '') === category
+        ).slice(0, 4)
+      : [];
+    const renderProductSection = (sectionTitle, products) => {
+      if (!products.length) return '';
+      const rows = products.map(product => {
+        const productImage = (Array.isArray(product.image_urls) ? product.image_urls[0] : '') ||
+          product.image_url || product.cover_url ||
+          (Array.isArray(product.product_images) ? product.product_images[0]?.image_url : '') || '';
+        const productPrice = product.price_label != null ? money(product.price_label) :
+          product.price != null ? money(product.price) : '';
+        return '<div class="home-shorts-related-row">' +
+          '<button type="button" class="home-shorts-related-open" data-related-product-id="' + esc(product.id) + '">' +
+            (productImage ? '<img src="' + esc(productImage) + '" alt="" loading="lazy">' : '<span class="home-shorts-related-placeholder">' + ic('image',16) + '</span>') +
+            '<span class="home-shorts-related-title">' + esc(product.title || 'ផលិតផល') + '</span>' +
+            (productPrice ? '<strong>' + esc(productPrice) + '</strong>' : '') +
+          '</button>' +
+        '</div>';
+      }).join('');
+      return '<section class="home-shorts-product-section"><h4>' + esc(sectionTitle) + '</h4><div class="home-shorts-related-list">' + rows + '</div></section>';
+    };
     metaHost.innerHTML =
       '<div class="home-shorts-shop-meta">' +
-        (shopAvatar ? '<img src="' + esc(shopAvatar) + '" alt="">' : '<span class="home-shorts-shop-fallback">' + esc(Array.from(shopName)[0] || 'S') + '</span>') +
+        (shopAvatar ? '<img src="' + esc(shopAvatar) + '" alt="' + esc(shopName) + '">' : '<span class="home-shorts-shop-fallback">' + esc(Array.from(shopName)[0] || 'S') + '</span>') +
         '<span class="home-shorts-shop-name">' + esc(shopName) + '</span>' +
       '</div>' +
-      (relatedHtml ? '<div class="home-shorts-related-list">' + relatedHtml + '</div>' : '');
+      renderProductSection('ផលិតផលរបស់ហាង', shopProducts) +
+      renderProductSection('ផលិតផលស្រដៀង', similarProducts);
     metaHost.hidden = false;
     metaHost.onclick = event => {
-      const removeButton = event.target.closest('[data-remove-related]');
-      if (removeButton) {
-        event.preventDefault();
-        event.stopPropagation();
-        removeButton.closest('[data-related-row]')?.remove();
-        return;
-      }
       const productButton = event.target.closest('[data-related-product-id]');
       if (productButton) {
         event.preventDefault();
@@ -3357,7 +3356,7 @@ function openListingVideoPopup(url, title = 'វីដេអូ', meta = {}) {
       width: '100%',
       height: '100%',
       videoId,
-      playerVars: { autoplay: 1, controls: 0, disablekb: 1, fs: 0, modestbranding: 1, playsinline: 1, rel: 0, enablejsapi: 1, origin: window.location.origin },
+      playerVars: { autoplay: 1, cc_load_policy: 0, controls: 0, disablekb: 1, fs: 0, modestbranding: 1, playsinline: 1, rel: 0, enablejsapi: 1, origin: window.location.origin },
       events: {
         onReady: event => {
           if (session !== listingVideoSession) {
