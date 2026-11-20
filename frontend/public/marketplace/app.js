@@ -2418,7 +2418,8 @@ function renderProductForm(product = null) {
     $('productPrice').value = product.price;
     $('productCategory').value = product.category;
     $('productLocation').value = product.location || 'ភ្នំពេញ';
-    $('productCondition').value = product.condition || 'ប្រើរួចស្អាត';\n    $('productYoutubeVideoUrl').value = product.youtube_video_url || '';
+    $('productCondition').value = product.condition || 'ប្រើរួចស្អាត';
+    $('productYoutubeVideoUrl').value = product.youtube_video_url || '';
     const mapField = $('productForm').elements.google_map_url;
     if (mapField) mapField.value = product.specifications?.google_map_url || '';
     const desc = productDescriptionParts(product);
@@ -2506,7 +2507,6 @@ async function renderSeller() {
   $('sellerDashboardContent').classList.remove('hidden');
   $('sellerVerificationNotice').classList.toggle('hidden', isVerifiedSeller());
   $('sellerVerificationNotice').classList.toggle('flex', !isVerifiedSeller());
-  void loadSellerMediaSettings();
 
   try {
     const [stats, productsRes, offers, ordersRes] = await Promise.all([
@@ -3527,7 +3527,8 @@ function bindEvents() {
       title: $('productTitle').value.trim(), price: Number($('productPrice').value),
       category: $('productCategory').value, location: $('productLocation').value,
       condition: $('productCondition').value, short_description: shortDesc,
-      description: shortDesc + PRODUCT_DESC_SEPARATOR + fullDesc, stock: 1,\n      youtube_video_url: $('productYoutubeVideoUrl').value.trim()
+      description: shortDesc + PRODUCT_DESC_SEPARATOR + fullDesc, stock: 1,
+      youtube_video_url: $('productYoutubeVideoUrl').value.trim()
     };
     const originalSaveButtonHTML = saveButton?.innerHTML || '';
     if (saveButton) {
