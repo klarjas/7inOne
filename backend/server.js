@@ -1090,7 +1090,7 @@ app.post('/api/vendor/media-links',authenticate,requireVendor,async(req,res)=>{
   if(mediaType==='video'){
    const mediaUrl=normalizeYoutubeShortsUrl(req.body?.media_url);
    if(!mediaUrl)return fail(res,400,'សូមបញ្ចូល Link YouTube Shorts ត្រឹមត្រូវ (youtube.com/shorts/...)។');
-   const result=await supabase.rpc('create_vendor_youtube_short',{p_vendor_id:req.vendor.id,p_media_url:mediaUrl});
+   const result=await supabase.rpc('create_vendor_youtube_short',{p_vendor_id:req.vendor.id,p_media_url:mediaUrl,p_caption:clean(req.body?.caption,160)});
    data=Array.isArray(result.data)?result.data[0]:result.data;error=result.error;
    if(error){
     if(/daily shorts limit/i.test(error.message||''))return fail(res,429,'អ្នកបានបង្ហោះ Shorts គ្រប់ 5 ក្នុងថ្ងៃនេះហើយ។ សូមសាកល្បងថ្ងៃស្អែក។');
@@ -1114,6 +1114,7 @@ app.patch('/api/vendor/media-links/:id',authenticate,requireVendor,async(req,res
  const {data:current,error:loadError}=await supabase.from('vendor_media_links').select('id,media_url,media_type').eq('id',req.params.id).eq('vendor_id',req.vendor.id).maybeSingle();
  if(loadError)return fail(res,500,'Could not load Shorts / Live link');if(!current)return fail(res,404,'Shorts / Live link not found');
  const patch={updated_at:new Date().toISOString()};
+ if(typeof req.body?.caption==='string'&&current.media_type==='video')patch.caption=clean(req.body.caption,160);
  if(typeof req.body?.is_active==='boolean')patch.is_active=req.body.is_active;
  const legacyTelegram=String(current.media_url||'').startsWith('tgvideo:');
  if(legacyTelegram&&(req.body?.media_url!==undefined||req.body?.media_type!==undefined))return fail(res,409,'Telegram Shorts ចាស់មិនអាចកែបានទេ។ សូមលុបវា ហើយបង្ហោះ YouTube Shorts ថ្មី។');
@@ -1137,9 +1138,9 @@ app.delete('/api/vendor/media-links/:id',authenticate,requireVendor,async(req,re
 app.get('/api/vendor-media',async(_req,res)=>{
  if(!db(res))return;
  const cutoff=new Date(Date.now()-24*60*60*1000).toISOString();
- const {data,error}=await supabase.from('vendor_media_links').select('id,vendor_id,media_url,media_type,created_at,vendors!inner(id,store_name,status)').eq('is_active',true).eq('media_type','video').gte('created_at',cutoff).eq('vendors.status','approved').order('created_at',{ascending:false}).limit(60);
+ const {data,error}=await supabase.from('vendor_media_links').select('id,vendor_id,media_url,media_type,caption,created_at,vendors!inner(id,store_name,store_location,store_logo_file_id,status)').eq('is_active',true).eq('media_type','video').gte('created_at',cutoff).eq('vendors.status','approved').order('created_at',{ascending:false}).limit(60);
  if(error)return fail(res,500,'Could not load YouTube Shorts');
- return res.json({data:(data||[]).filter(row=>youtubeShortsId(row.media_url)).map(row=>({id:row.id,vendor_id:row.vendor_id,media_url:row.media_url,media_type:row.media_type,created_at:row.created_at,store_name:row.vendors?.store_name||'ហាងអ្នកលក់'}))});
+ return res.json({data:(data||[]).filter(row=>youtubeShortsId(row.media_url)).map(row=>({id:row.id,vendor_id:row.vendor_id,media_url:row.media_url,media_type:row.media_type,caption:row.caption||'',created_at:row.created_at,store_name:row.vendors?.store_name||'ហាងអ្នកលក់',store_location:row.vendors?.store_location||'',store_logo_url:mediaProxyUrl(row.vendors?.store_logo_file_id)}))});
 });
 let vendorShortCleanupPromise=null;
 async function cleanupExpiredVendorShorts(){
