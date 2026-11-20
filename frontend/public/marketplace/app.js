@@ -732,6 +732,26 @@ function verifiedStoreBadge(vendorId, showKhmerLabel = false) {
   return `<span class="verified-store-badge${onlineClass}" data-vendor-id="${esc(id)}"><span class="badge-container" tabindex="0" aria-label="បានផ្ទៀងផ្ទាត់"><svg class="verified-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="${points}" fill="currentColor" stroke="currentColor" stroke-width=".45" stroke-linejoin="round"/><path d="m7.8 12.2 2.7 2.7 5.8-6" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="badge-tooltip" role="tooltip">បានផ្ទៀងផ្ទាត់</span></span></span>${label}`;
 }
 
+function displayProductCode(product = {}) {
+  const savedCode=String(product.product_code||'').trim();
+  if(savedCode)return savedCode;
+  const compact=String(product.id||'').replace(/-/g,'').toUpperCase();
+  return compact ? 'P-'+compact.slice(0,12) : 'P-UNKNOWN';
+}
+async function copyProductCode(button) {
+  const code=String(button?.dataset.copyProductCode||'').trim();
+  if(!code)return;
+  try{
+    if(navigator.clipboard?.writeText)await navigator.clipboard.writeText(code);
+    else{
+      const field=document.createElement('textarea');field.value=code;field.style.position='fixed';field.style.opacity='0';document.body.appendChild(field);field.select();
+      const copied=document.execCommand('copy');field.remove();if(!copied)throw new Error('Copy unavailable');
+    }
+    const original=button.innerHTML;button.innerHTML=ic('check',12)+' បានចម្លង';button.classList.add('is-copied');
+    setTimeout(()=>{button.innerHTML=original;button.classList.remove('is-copied')},1300);
+  }catch{toast('មិនអាចចម្លង Product ID បានទេ។','error')}
+}
+
 function productCard(p, index) {
   const images = (p.product_images || []).filter((item) => item.image_url).sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0));
   const image = images[0]?.image_url || '';
@@ -757,6 +777,7 @@ function productCard(p, index) {
     <div class="cb">
       <h3 class="cursor-pointer hover:text-emerald-800" data-action="view" data-id="${esc(p.id)}">${esc(p.title)}</h3>
       <p class="pr"><span>${money(p.price)}</span></p>
+      <div class="product-card-id-row"><span>Product ID</span><code>${esc(displayProductCode(p))}</code><button type="button" class="product-card-copy-id" data-copy-product-code="${esc(displayProductCode(p))}" aria-label="ចម្លង Product ID" title="ចម្លង Product ID">${ic('copy',12)}</button></div>
       ${description ? `<p class="cd-description">${esc(description)}</p>` : ''}
       <div class="sh">
         <span class="sp" role="img" aria-label="រូប Logo ហាង">
@@ -3428,6 +3449,8 @@ function bindEvents() {
     });
   });
   $('productGrid').addEventListener('click', (e) => {
+    const copyId=e.target.closest('[data-copy-product-code]');
+    if(copyId){e.preventDefault();e.stopPropagation();void copyProductCode(copyId);return;}
     const otherListing = e.target.closest('[data-action="view-listing"]');
     if (otherListing) { openMarketplaceListing(otherListing.dataset.type, otherListing.dataset.id); return; }
     const heart = e.target.closest('[data-action="save"]');
