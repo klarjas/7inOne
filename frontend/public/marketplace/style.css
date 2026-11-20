@@ -6404,3 +6404,33 @@ body > footer {
   .home-shorts-popup{min-width:280px!important;min-height:200px!important;max-width:96vw!important;max-height:88dvh!important}
   .custom-youtube-controls{padding:24px 7px 7px!important}
 }
+
+/* Listing video popup: shop/product context + true 16:9 video with eight-way resize */
+.home-shorts-popup{resize:none!important;overflow:visible!important;width:min(76vw,1050px)!important;height:auto!important;min-width:320px!important;min-height:0!important;max-width:96vw!important;max-height:94dvh!important;padding:0!important;position:fixed;box-sizing:border-box}
+.home-shorts-popup[open]{display:flex!important;flex-direction:column!important}
+.home-shorts-popup-layout{display:flex!important;flex-direction:column!important;gap:10px!important;flex:0 1 auto!important;min-width:0!important;min-height:0!important;max-height:calc(94dvh - 58px)!important;overflow:auto!important;padding:12px!important}
+.home-shorts-popup-meta{flex:0 0 auto!important;min-width:0}
+.home-shorts-product-meta{display:flex;align-items:center;justify-content:space-between;gap:14px;min-width:0;padding:8px 10px;border:1px solid #334155;border-radius:12px;background:#151d29;color:#e5e7eb}
+.home-shorts-shop-meta{display:flex;align-items:center;gap:9px;min-width:0;flex:0 1 38%}
+.home-shorts-shop-meta img,.home-shorts-shop-fallback{width:38px;height:38px;flex:0 0 38px;border-radius:50%;object-fit:cover;background:#263548}
+.home-shorts-shop-fallback{display:grid;place-items:center;font-weight:700}
+.home-shorts-shop-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;font-weight:650}
+.home-shorts-product-meta-card{display:flex;align-items:center;gap:9px;min-width:0;flex:1;justify-content:flex-end}
+.home-shorts-product-meta-card img{width:48px;height:48px;flex:0 0 48px;border-radius:8px;object-fit:cover;background:#0b1119}
+.home-shorts-product-meta-title{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}
+.home-shorts-product-meta-card strong{white-space:nowrap;color:#34d399;font-size:13px}
+.home-shorts-popup-stage{width:100%!important;height:auto!important;max-width:100%!important;max-height:none!important;aspect-ratio:16/9!important;flex:0 0 auto!important;position:relative!important;overflow:hidden!important}
+.custom-youtube-player{width:100%!important;height:auto!important;display:block!important;aspect-ratio:16/9!important}
+.custom-youtube-screen{width:100%!important;height:auto!important;aspect-ratio:16/9!important;flex:none!important}
+.custom-youtube-frame,.custom-youtube-frame iframe{position:absolute!important;inset:0!important;width:100%!important;height:100%!important}
+.home-shorts-resize-handle{position:absolute;z-index:30;touch-action:none;user-select:none}
+.home-shorts-resize-handle[data-edge="n"],.home-shorts-resize-handle[data-edge="s"]{left:12px;right:12px;height:9px;cursor:ns-resize}
+.home-shorts-resize-handle[data-edge="n"]{top:-4px}.home-shorts-resize-handle[data-edge="s"]{bottom:-4px}
+.home-shorts-resize-handle[data-edge="e"],.home-shorts-resize-handle[data-edge="w"]{top:12px;bottom:12px;width:9px;cursor:ew-resize}
+.home-shorts-resize-handle[data-edge="e"]{right:-4px}.home-shorts-resize-handle[data-edge="w"]{left:-4px}
+.home-shorts-resize-handle[data-edge="ne"],.home-shorts-resize-handle[data-edge="sw"],.home-shorts-resize-handle[data-edge="nw"],.home-shorts-resize-handle[data-edge="se"]{width:18px;height:18px}
+.home-shorts-resize-handle[data-edge="ne"]{right:-5px;top:-5px;cursor:nesw-resize}
+.home-shorts-resize-handle[data-edge="sw"]{left:-5px;bottom:-5px;cursor:nesw-resize}
+.home-shorts-resize-handle[data-edge="nw"]{left:-5px;top:-5px;cursor:nwse-resize}
+.home-shorts-resize-handle[data-edge="se"]{right:-5px;bottom:-5px;cursor:nwse-resize}
+@media(max-width:560px){.home-shorts-popup{width:96vw!important;max-width:96vw!important}.home-shorts-popup-layout{padding:8px!important;gap:8px!important}.home-shorts-product-meta{gap:8px;padding:7px}.home-shorts-shop-meta img,.home-shorts-shop-fallback{width:32px;height:32px;flex-basis:32px}.home-shorts-product-meta-card img{width:38px;height:38px;flex-basis:38px}.home-shorts-product-meta-title,.home-shorts-shop-name,.home-shorts-product-meta-card strong{font-size:11px}}
