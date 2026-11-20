@@ -1533,7 +1533,11 @@ function renderProductDetail() {
         storeAvatar: popupVendor.store_logo_url || popupVendor.logo_url || p.store_logo_url || '',
         listingId: p.id || '',
         vendorId: p.vendor_id || popupVendor.id || '',
-        category: p.category || ''
+        category: p.category || '',
+        source: 'product-gallery',
+        productTitle: p.title || '',
+        productPrice: p.price_label != null ? p.price_label : p.price,
+        productImage: (Array.isArray(p.image_urls) ? p.image_urls[0] : '') || p.image_url || p.cover_url || ''
       });
     }
     else closeListingVideoPopup();
@@ -3174,6 +3178,8 @@ function openListingVideoPopup(url, title = 'វីដេអូ', meta = {}) {
 
   closeListingVideoPopup();
   const session = listingVideoSession;
+  const isProductGalleryPopup = meta.source === 'product-gallery';
+  popup.classList.toggle('is-product-gallery-popup', isProductGalleryPopup);
   $('homeShortsPopupTitle').textContent = title || 'វីដេអូប្រកាស';
   const metaHost = $('homeShortsPopupMeta');
   if (metaHost) {
@@ -3182,8 +3188,21 @@ function openListingVideoPopup(url, title = 'វីដេអូ', meta = {}) {
     const currentId = String(meta.listingId || '');
     const vendorId = String(meta.vendorId || '');
     const category = String(meta.category || '');
-    const renderProductSection = (sectionTitle, products) => {
-      if (!products.length) return '';
+    const renderShopMeta = () =>
+      '<div class="home-shorts-shop-meta">' +
+        (shopAvatar ? '<img src="' + esc(shopAvatar) + '" alt="' + esc(shopName) + '">' : '<span class="home-shorts-shop-fallback">' + esc(Array.from(shopName)[0] || 'S') + '</span>') +
+        '<span class="home-shorts-shop-name">' + esc(shopName) + '</span>' +
+      '</div>';
+    const renderCurrentProduct = () => {
+      const image = meta.productImage || '';
+      const price = meta.productPrice != null && meta.productPrice !== '' ? money(meta.productPrice) : '';
+      return '<div class="home-shorts-current-product">' +
+        (image ? '<img src="' + esc(image) + '" alt="" loading="lazy">' : '<span class="home-shorts-related-placeholder">' + ic('image',16) + '</span>') +
+        '<div class="home-shorts-current-product-info"><strong>' + esc(meta.productTitle || title || 'ផលិតផល') + '</strong>' +
+        (price ? '<span>' + esc(price) + '</span>' : '') + '</div></div>';
+    };
+    const renderProductSection = (sectionTitle, products, isSimilar = false) => {
+      if (!products.length && !isSimilar) return '';
       const rows = products.map(product => {
         const productImage = (Array.isArray(product.image_urls) ? product.image_urls[0] : '') ||
           product.image_url || product.cover_url ||
@@ -3198,15 +3217,14 @@ function openListingVideoPopup(url, title = 'វីដេអូ', meta = {}) {
           '</button>' +
         '</div>';
       }).join('');
-      return '<section class="home-shorts-product-section"><h4>' + esc(sectionTitle) + '</h4><div class="home-shorts-related-list">' + rows + '</div></section>';
+      return '<section class="home-shorts-product-section' + (isSimilar ? ' is-similar-products' : '') + '"><h4>' + esc(sectionTitle) + '</h4><div class="home-shorts-related-list">' + rows + '</div>' +
+        (isSimilar ? '<button type="button" class="home-shorts-gallery-close" aria-label="បិទវីដេអូ">×</button>' : '') + '</section>';
     };
-    const renderShopMeta = () =>
-      '<div class="home-shorts-shop-meta">' +
-        (shopAvatar ? '<img src="' + esc(shopAvatar) + '" alt="' + esc(shopName) + '">' : '<span class="home-shorts-shop-fallback">' + esc(Array.from(shopName)[0] || 'S') + '</span>') +
-        '<span class="home-shorts-shop-name">' + esc(shopName) + '</span>' +
-      '</div>';
-    metaHost.innerHTML = renderShopMeta() +
-      ((vendorId || category) ? '<p class="home-shorts-related-loading">កំពុងទាញយកផលិតផល...</p>' : '');
+    const renderContext = (shopProducts = [], similarProducts = []) => isProductGalleryPopup
+      ? '<div class="home-shorts-popup-context">' + renderShopMeta() + renderCurrentProduct() +
+        renderProductSection('ផលិតផលស្រដៀង', similarProducts, true) + '</div>'
+      : renderShopMeta() + renderProductSection('ផលិតផលរបស់ហាង', shopProducts) + renderProductSection('ផលិតផលស្រដៀង', similarProducts);
+    metaHost.innerHTML = renderContext();
     metaHost.hidden = false;
     if (vendorId || category) {
       const loadRelatedProducts = async () => {
@@ -3214,44 +3232,41 @@ function openListingVideoPopup(url, title = 'វីដេអូ', meta = {}) {
         if (vendorId) {
           const params = new URLSearchParams({ vendor_id: vendorId, limit: '50' });
           requests.push(api('/api/products?' + params.toString()).then(result => ({
-            type: 'shop',
-            products: Array.isArray(result.data) ? result.data : []
+            type: 'shop', products: Array.isArray(result.data) ? result.data : []
           })));
         }
         if (category) {
           const params = new URLSearchParams({ category, limit: '50' });
           requests.push(api('/api/products?' + params.toString()).then(result => ({
-            type: 'similar',
-            products: Array.isArray(result.data) ? result.data : []
+            type: 'similar', products: Array.isArray(result.data) ? result.data : []
           })));
         }
         const results = await Promise.allSettled(requests);
         if (session !== listingVideoSession || !metaHost.isConnected) return;
-        let shopProducts = [];
-        let similarProducts = [];
+        let shopProducts = [], similarProducts = [];
         results.forEach(result => {
           if (result.status !== 'fulfilled') {
             console.warn('Could not load popup related products:', result.reason);
             return;
           }
           if (result.value.type === 'shop') {
-            shopProducts = result.value.products
-              .filter(product => product && String(product.id) !== currentId && String(product.vendor_id || '') === vendorId)
-              .slice(0, 4);
+            shopProducts = result.value.products.filter(product => product && String(product.id) !== currentId &&
+              String(product.vendor_id || '') === vendorId).slice(0, 4);
           } else {
-            similarProducts = result.value.products
-              .filter(product => product && String(product.id) !== currentId &&
-                String(product.vendor_id || '') !== vendorId && String(product.category || '') === category)
-              .slice(0, 4);
+            similarProducts = result.value.products.filter(product => product && String(product.id) !== currentId &&
+              String(product.vendor_id || '') !== vendorId && String(product.category || '') === category).slice(0, 12);
           }
         });
-        metaHost.innerHTML = renderShopMeta() +
-          renderProductSection('ផលិតផលរបស់ហាង', shopProducts) +
-          renderProductSection('ផលិតផលស្រដៀង', similarProducts);
+        metaHost.innerHTML = renderContext(shopProducts, similarProducts);
       };
       void loadRelatedProducts().catch(error => console.warn('Could not load popup related products:', error));
     }
     metaHost.onclick = event => {
+      if (event.target.closest('.home-shorts-gallery-close')) {
+        event.preventDefault();
+        closeListingVideoPopup();
+        return;
+      }
       const productButton = event.target.closest('[data-related-product-id]');
       if (productButton) {
         event.preventDefault();
