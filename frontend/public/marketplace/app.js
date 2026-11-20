@@ -3746,7 +3746,7 @@ function bindEvents() {
         const horizontal=e.includes('e')?dx:e.includes('w')?-dx:0;
         const vertical=e.includes('s')?dy:e.includes('n')?-dy:0;
         const delta=horizontal || (vertical?vertical*16/9:0);
-        const width=Math.max(320,Math.min(window.innerWidth-16,resize.width+delta));
+        const maxWidth=Math.max(650,window.innerWidth-16); const width=Math.max(650,Math.min(maxWidth,resize.width+delta));
         dialog.style.width=width+'px';
         if(e.includes('w'))dialog.style.left=(resize.left+resize.width-width)+'px';
         if(e.includes('n'))dialog.style.top=Math.max(8,resize.top+(resize.width-width)*9/16)+'px';
