@@ -6079,3 +6079,14 @@ body > footer {
 .home-shorts-popup-poster{z-index:3}
 .home-shorts-popup-stage.is-ready .home-short-popup-poster{opacity:0;visibility:hidden;pointer-events:none}
 .home-shorts-popup-stage>div{width:100%;height:100%}
+
+/* YouTube Shorts: compact seller identity and one-line caption */
+.home-vendor-media-meta{display:flex;align-items:center;gap:7px;min-width:0;margin-top:7px;overflow:hidden}
+.home-vendor-media-store-avatar{width:25px;height:25px;flex:0 0 25px;display:grid;place-items:center;overflow:hidden;border-radius:50%;background:#26384a;color:#e2e8f0;font-size:11px;font-weight:800}
+.home-vendor-media-store-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.home-vendor-media-meta-text{display:flex;flex:1;flex-direction:column;min-width:0;gap:2px;overflow:hidden}
+.home-vendor-media-store{display:block;max-width:100%;margin:0;overflow:hidden;color:inherit;font-size:10.5px;font-weight:750;line-height:1.35;text-overflow:ellipsis;white-space:nowrap}
+.home-vendor-media-caption{display:block;max-width:100%;overflow:hidden;color:#94a3b8;font-size:10px;font-weight:500;text-overflow:ellipsis;white-space:nowrap;line-height:1.35}
+/* Keep YouTube's central playback overlay out of sight on both embedded players. */
+.home-vendor-media-player iframe,.home-shorts-popup-stage iframe{pointer-events:none!important}
+.home-shorts-popup-stage iframe{pointer-events:none!important}
