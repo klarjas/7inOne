@@ -3249,8 +3249,6 @@ function openListingVideoPopup(url, title = 'វីដេអូ', meta = {}) {
       return '<section class="home-shorts-product-section' + (isSimilar ? ' is-similar-products' : '') + '">' +
         (isSimilar
           ? '<div class="home-shorts-related-heading"><h4>' + esc(sectionTitle) + '</h4><div class="home-shorts-related-controls">' +
-              '<button type="button" class="home-shorts-related-scroll" data-related-scroll="left" aria-label="រំកិលទៅឆ្វេង">‹</button>' +
-              '<button type="button" class="home-shorts-related-scroll" data-related-scroll="right" aria-label="រំកិលទៅស្ដាំ">›</button>' +
               '<button type="button" class="home-shorts-gallery-close" aria-label="បិទវីដេអូ">×</button>' +
             '</div></div>'
           : '<h4>' + esc(sectionTitle) + '</h4>') +
