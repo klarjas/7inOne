@@ -1078,7 +1078,7 @@ function validateSellerMedia(mediaUrl,mediaType){
 }
 app.get('/api/vendor/media-links',authenticate,requireVendor,async(req,res)=>{
  if(req.vendor.status!=='approved')return fail(res,403,'Only verified sellers can manage Shorts / Live links');
- const {data,error}=await supabase.from('vendor_media_links').select('id,vendor_id,media_url,media_type,is_active,created_at,updated_at').eq('vendor_id',req.vendor.id).order('created_at',{ascending:false}).limit(200);
+ const {data,error}=await supabase.from('vendor_media_links').select('id,vendor_id,media_url,media_type,caption,is_active,created_at,updated_at').eq('vendor_id',req.vendor.id).order('created_at',{ascending:false}).limit(200);
  if(error)return fail(res,500,'Could not load shop media links');return res.json({data:data||[]});
 });
 app.post('/api/vendor/media-links',authenticate,requireVendor,async(req,res)=>{
