@@ -6,12 +6,12 @@ export function registerMyPostsRoutes(app, {
   const fail = (res, status, message) => res.status(status).json({ error: message });
   const nowIso = () => new Date().toISOString();
   const text = (value, max = 5000) => String(value ?? '').trim().slice(0, max);
-  const missingTable = error => ['42P01', 'PGRST205'].includes(error?.code);
+  const missingTable = error => ['42P01', 'PGRST205'].includes(error?.code);\n  const normalizeYoutubeVideoUrl = value => { const raw=String(value??'').trim(); if(!raw)return null; try { const url=new URL(raw); const host=url.hostname.toLowerCase().replace(/^www\\./,''); let id=''; if(host==='youtu.be')id=url.pathname.split('/').filter(Boolean)[0]||''; else if(['youtube.com','m.youtube.com','youtube-nocookie.com'].includes(host))id=url.searchParams.get('v')||url.pathname.match(/^\\/(?:embed|live)\\/([A-Za-z0-9_-]{11})\\/?$/)?.[1]||''; else return false; return /^[A-Za-z0-9_-]{11}$/.test(id)?'https://www.youtube.com/watch?v='+id:false; } catch{return false;} };
 
   const sources = [
-    { type:'job', label:'ការងារ', table:'jobs', fields:'id,user_id,title,description,category,location,company_name,salary_min,salary_max,status,expires_at,created_at,updated_at,image_file_id,image_message_id,image_mime_type,image_gallery' },
-    { type:'property', label:'អចលនទ្រព្យ', table:'property_listings', fields:'id,user_id,title,description,category,location,price,status,expires_at,created_at,updated_at,image_file_id,image_message_id,image_mime_type,image_gallery' },
-    { type:'rental', label:'ផ្ទះ/បន្ទប់ជួល', table:'rentals', fields:'id,user_id,title,description,category,location,rent_amount,status,expires_at,created_at,updated_at,image_file_id,image_message_id,image_mime_type' },
+    { type:'job', label:'ការងារ', table:'jobs', fields:'id,user_id,title,description,category,location,company_name,salary_min,salary_max,youtube_video_url,status,expires_at,created_at,updated_at,image_file_id,image_message_id,image_mime_type,image_gallery' },
+    { type:'property', label:'អចលនទ្រព្យ', table:'property_listings', fields:'id,user_id,title,description,category,location,price,youtube_video_url,status,expires_at,created_at,updated_at,image_file_id,image_message_id,image_mime_type,image_gallery' },
+    { type:'rental', label:'ផ្ទះ/បន្ទប់ជួល', table:'rentals', fields:'id,user_id,title,description,category,location,rent_amount,youtube_video_url,status,expires_at,created_at,updated_at,image_file_id,image_message_id,image_mime_type' },
     { type:'land', label:'ដី', table:'land_listings', fields:'id,user_id,title,description,category,location,price,status,expires_at,created_at,updated_at,image_file_id,image_message_id,image_mime_type' },
     { type:'house_sale', label:'ផ្ទះលក់', table:'house_sale_listings', fields:'id,user_id,title,description,category,location,price,status,expires_at,created_at,updated_at,image_file_id,image_message_id,image_mime_type' },
     { type:'social_post', label:'Community Post', table:'social_posts', fields:'id,user_id,caption,image_file_id,image_message_id,created_at' },
@@ -69,7 +69,7 @@ export function registerMyPostsRoutes(app, {
       const { data: vendor } = await vendorFor(req.user.id);
       if (vendor) {
         const { data, error } = await supabase.from('products')
-          .select('id,vendor_id,title,description,price,stock,category,location,condition,status,created_at,updated_at,renewed_at,product_images(id,file_id,image_url,telegram_message_id,sort_order)')
+          .select('id,vendor_id,title,description,price,stock,category,location,condition,youtube_video_url,status,created_at,updated_at,renewed_at,product_images(id,file_id,image_url,telegram_message_id,sort_order)')
           .eq('vendor_id', vendor.id).order('created_at', { ascending:false });
         if (error) throw error;
         results.push(...(data || []).map(row => normalized(row, 'product', 'ផលិតផល')));
@@ -122,7 +122,7 @@ export function registerMyPostsRoutes(app, {
           if (req.body.title !== undefined) patch.title = text(req.body.title,160);
           if (req.body.description !== undefined) patch.description = text(req.body.description,5000);
           if (req.body.category !== undefined) patch.category = text(req.body.category,80);
-          if (req.body.location !== undefined) patch.location = text(req.body.location,100);
+          if (req.body.location !== undefined) patch.location = text(req.body.location,100);\n          if (req.body.youtube_video_url !== undefined) { const videoUrl = normalizeYoutubeVideoUrl(req.body.youtube_video_url); if (videoUrl === false) return fail(res,400,'YouTube Video Link មិនត្រឹមត្រូវទេ។'); patch.youtube_video_url = videoUrl; }
           if (req.body.price !== undefined) patch.price = Number(req.body.price);
           if (req.body.stock !== undefined) patch.stock = Number(req.body.stock);
           if (patch.title !== undefined && patch.title.length < 2) return fail(res,400,'ចំណងជើងត្រូវមានយ៉ាងតិច ២ តួអក្សរ។');
@@ -177,7 +177,7 @@ export function registerMyPostsRoutes(app, {
         const patch = {};
         if (req.body.title !== undefined) patch.title = text(req.body.title,160);
         if (req.body.description !== undefined) patch.description = text(req.body.description,5000);
-        if (req.body.location !== undefined) patch.location = text(req.body.location,300);
+        if (req.body.location !== undefined) patch.location = text(req.body.location,300);\n        if (req.body.youtube_video_url !== undefined) { const videoUrl = normalizeYoutubeVideoUrl(req.body.youtube_video_url); if (videoUrl === false) return fail(res,400,'YouTube Video Link មិនត្រឹមត្រូវទេ។'); patch.youtube_video_url = videoUrl; }
         if (req.body.category !== undefined) patch.category = text(req.body.category,80);
         if (type === 'job') {
           for (const key of ['salary_min','salary_max']) if (req.body[key] !== undefined) patch[key] = req.body[key] === '' || req.body[key] == null ? null : Number(req.body[key]);
