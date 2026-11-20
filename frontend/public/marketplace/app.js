@@ -3172,7 +3172,6 @@ function openListingVideoPopup(url, title = 'វីដេអូ') {
   playerShell.innerHTML =
     '<div class="custom-youtube-screen">' +
       '<div class="custom-youtube-frame" id="customYoutubeFrame"></div>' +
-      '<button type="button" class="custom-youtube-center-play" data-video-action="toggle" aria-label="ចាក់វីដេអូ"><span data-video-play-icon>▶</span></button>' +
       '<div class="custom-youtube-loading">កំពុងផ្ទុកវីដេអូ...</div>' +
     '</div>' +
     '<div class="custom-youtube-controls">' +
@@ -3198,7 +3197,6 @@ function openListingVideoPopup(url, title = 'វីដេអូ') {
   const volume = playerShell.querySelector('[data-video-volume]');
   const settings = playerShell.querySelector('.custom-youtube-settings');
   const loading = playerShell.querySelector('.custom-youtube-loading');
-  const centerPlay = playerShell.querySelector('.custom-youtube-center-play');
 
   const formatTime = seconds => {
     const value = Math.max(0, Math.floor(Number(seconds) || 0));
@@ -3208,8 +3206,6 @@ function openListingVideoPopup(url, title = 'វីដេអូ') {
     playerShell.querySelectorAll('[data-video-play-icon]').forEach(node => {
       node.textContent = playing ? 'Ⅱ' : '▶';
     });
-    centerPlay.classList.toggle('is-playing', playing);
-    centerPlay.setAttribute('aria-label', playing ? 'ផ្អាកវីដេអូ' : 'ចាក់វីដេអូ');
   };
   const updateProgress = () => {
     if (!listingVideoPlayer || session !== listingVideoSession) return;
@@ -3247,16 +3243,27 @@ function openListingVideoPopup(url, title = 'វីដេអូ') {
     } catch {}
   });
 
+  let seekCommitFrame = 0;
+  const commitSeek = () => {
+    if (!listingVideoPlayer || session !== listingVideoSession) return;
+    const duration = listingVideoPlayer.getDuration() || 0;
+    if (!duration) return;
+    const targetTime = Math.max(0, Math.min(duration, Number(seek.value) / 1000 * duration));
+    playerShell.querySelector('.custom-youtube-current').textContent = formatTime(targetTime);
+    try { listingVideoPlayer.seekTo(targetTime, true); } catch {}
+  };
   seek.addEventListener('input', () => {
     if (!listingVideoPlayer) return;
     const duration = listingVideoPlayer.getDuration() || 0;
-    if (duration) playerShell.querySelector('.custom-youtube-current').textContent = formatTime(Number(seek.value) / 1000 * duration);
+    if (!duration) return;
+    const targetTime = Math.max(0, Math.min(duration, Number(seek.value) / 1000 * duration));
+    playerShell.querySelector('.custom-youtube-current').textContent = formatTime(targetTime);
+    if (seekCommitFrame) cancelAnimationFrame(seekCommitFrame);
+    seekCommitFrame = requestAnimationFrame(commitSeek);
   });
-  seek.addEventListener('change', () => {
-    if (!listingVideoPlayer) return;
-    const duration = listingVideoPlayer.getDuration() || 0;
-    if (duration) listingVideoPlayer.seekTo(Number(seek.value) / 1000 * duration, true);
-  });
+  seek.addEventListener('change', commitSeek);
+  seek.addEventListener('pointerup', commitSeek);
+  seek.addEventListener('keyup', event => { if (event.key.startsWith('Arrow') || event.key === 'Home' || event.key === 'End') commitSeek(); });
   volume.addEventListener('input', () => {
     if (!listingVideoPlayer) return;
     const level = Number(volume.value);
@@ -3501,7 +3508,35 @@ function bindEvents() {
     button.addEventListener('click', () => setListingType(button.dataset.listingType));
   });
   $('homeShortsPopupClose')?.addEventListener('click', closeListingVideoPopup);
-  $('homeShortsPopup')?.addEventListener('click', event => { if (event.target === $('homeShortsPopup')) closeListingVideoPopup(); });
+  (() => {
+    const dialog = $('homeShortsPopup');
+    const handle = dialog?.querySelector('.home-shorts-popup-head');
+    if (!dialog || !handle || handle.dataset.dragBound) return;
+    handle.dataset.dragBound = '1';
+    let dragState = null;
+    handle.style.cursor = 'move';
+    handle.style.touchAction = 'none';
+    handle.addEventListener('pointerdown', event => {
+      if (event.target.closest('button')) return;
+      const rect = dialog.getBoundingClientRect();
+      dragState = { pointerId: event.pointerId, x: event.clientX, y: event.clientY, left: rect.left, top: rect.top };
+      handle.setPointerCapture(event.pointerId);
+      dialog.style.position = 'fixed';
+      dialog.style.margin = '0';
+      event.preventDefault();
+    });
+    handle.addEventListener('pointermove', event => {
+      if (!dragState || event.pointerId !== dragState.pointerId) return;
+      const left = Math.max(8, Math.min(window.innerWidth - dialog.offsetWidth - 8, dragState.left + event.clientX - dragState.x));
+      const top = Math.max(8, Math.min(window.innerHeight - dialog.offsetHeight - 8, dragState.top + event.clientY - dragState.y));
+      dialog.style.left = left + 'px';
+      dialog.style.top = top + 'px';
+    });
+    const stopDrag = event => { if (dragState && event.pointerId === dragState.pointerId) dragState = null; };
+    handle.addEventListener('pointerup', stopDrag);
+    handle.addEventListener('pointercancel', stopDrag);
+    dialog.addEventListener('close', () => { dialog.style.left = ''; dialog.style.top = ''; dialog.style.position = ''; dialog.style.margin = ''; });
+  })();
   $('homeShortsPopup')?.addEventListener('close', closeListingVideoPopup);
   document.addEventListener('click', event => {
     const videoButton = event.target.closest('[data-listing-video]');
