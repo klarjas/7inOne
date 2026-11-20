@@ -7,7 +7,22 @@ export function registerMyPostsRoutes(app, {
   const nowIso = () => new Date().toISOString();
   const text = (value, max = 5000) => String(value ?? '').trim().slice(0, max);
   const missingTable = error => ['42P01', 'PGRST205'].includes(error?.code);
-  const normalizeYoutubeVideoUrl = value => { const raw=String(value??'').trim(); if(!raw)return null; try { const url=new URL(raw); const host=url.hostname.toLowerCase().replace(/^www\\./,''); let id=''; if(host==='youtu.be')id=url.pathname.split('/').filter(Boolean)[0]||''; else if(['youtube.com','m.youtube.com','youtube-nocookie.com'].includes(host))id=url.searchParams.get('v')||url.pathname.match(/^\\/(?:embed|live)\\/([A-Za-z0-9_-]{11})\\/?$/)?.[1]||''; else return false; return /^[A-Za-z0-9_-]{11}$/.test(id)?'https://www.youtube.com/watch?v='+id:false; } catch{return false;} };
+  const normalizeYoutubeVideoUrl = value => {
+    const raw = String(value ?? '').trim();
+    if (!raw) return null;
+    try {
+      const url = new URL(raw);
+      const hostname = url.hostname.toLowerCase();
+      const host = hostname.startsWith('www.') ? hostname.slice(4) : hostname;
+      let id = '';
+      if (host === 'youtu.be') id = url.pathname.split('/').filter(Boolean)[0] || '';
+      else if (['youtube.com','m.youtube.com','youtube-nocookie.com'].includes(host)) {
+        const parts = url.pathname.split('/').filter(Boolean);
+        id = url.searchParams.get('v') || (['embed','live'].includes(parts[0]) ? parts[1] : '') || '';
+      } else return false;
+      return /^[A-Za-z0-9_-]{11}$/.test(id) ? 'https://www.youtube.com/watch?v=' + id : false;
+    } catch { return false; }
+  };
 
   const sources = [
     { type:'job', label:'ការងារ', table:'jobs', fields:'id,user_id,title,description,category,location,company_name,salary_min,salary_max,youtube_video_url,status,expires_at,created_at,updated_at,image_file_id,image_message_id,image_mime_type,image_gallery' },
