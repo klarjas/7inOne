@@ -3669,12 +3669,12 @@ function bindEvents() {
     handle.dataset.dragBound = '1';
     let dragState = null;
     handle.style.cursor = 'move';
-    handle.style.touchAction = 'pan-y';
+    handle.style.touchAction = 'none';
     handle.addEventListener('pointerdown', event => {
       if (event.target.closest('button, a, input, select, textarea, [data-related-product-id]')) return;
       const rect = dialog.getBoundingClientRect();
       dragState = { pointerId: event.pointerId, x: event.clientX, y: event.clientY, left: rect.left, top: rect.top };
-      dialog.setPointerCapture(event.pointerId);
+      try { handle.setPointerCapture(event.pointerId); } catch {}
       dialog.style.position = 'fixed';
       dialog.style.margin = '0';
       dialog.style.transform = 'none';
