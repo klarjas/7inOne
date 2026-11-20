@@ -6406,7 +6406,7 @@ body > footer {
 }
 
 /* Listing video popup: shop/product context + true 16:9 video with eight-way resize */
-.home-shorts-popup{resize:none!important;overflow:visible!important;width:min(76vw,1050px)!important;height:auto!important;min-width:320px!important;min-height:0!important;max-width:96vw!important;max-height:94dvh!important;padding:0!important;position:fixed;box-sizing:border-box}
+.home-shorts-popup{resize:none!important;overflow:visible!important;width:min(76vw,1050px);height:auto!important;min-width:320px!important;min-height:0!important;max-width:96vw!important;max-height:94dvh!important;padding:0!important;position:fixed;box-sizing:border-box}
 .home-shorts-popup[open]{display:flex!important;flex-direction:column!important}
 .home-shorts-popup-layout{display:flex!important;flex-direction:column!important;gap:10px!important;flex:0 1 auto!important;min-width:0!important;min-height:0!important;max-height:calc(94dvh - 58px)!important;overflow:auto!important;padding:12px!important}
 .home-shorts-popup-meta{flex:0 0 auto!important;min-width:0}
@@ -6433,4 +6433,8 @@ body > footer {
 .home-shorts-resize-handle[data-edge="sw"]{left:-5px;bottom:-5px;cursor:nesw-resize}
 .home-shorts-resize-handle[data-edge="nw"]{left:-5px;top:-5px;cursor:nwse-resize}
 .home-shorts-resize-handle[data-edge="se"]{right:-5px;bottom:-5px;cursor:nwse-resize}
-@media(max-width:560px){.home-shorts-popup{width:96vw!important;max-width:96vw!important}.home-shorts-popup-layout{padding:8px!important;gap:8px!important}.home-shorts-product-meta{gap:8px;padding:7px}.home-shorts-shop-meta img,.home-shorts-shop-fallback{width:32px;height:32px;flex-basis:32px}.home-shorts-product-meta-card img{width:38px;height:38px;flex-basis:38px}.home-shorts-product-meta-title,.home-shorts-shop-name,.home-shorts-product-meta-card strong{font-size:11px}}
+@media(max-width:560px){.home-shorts-popup{width:96vw;max-width:96vw!important}.home-shorts-popup-layout{padding:8px!important;gap:8px!important}.home-shorts-product-meta{gap:8px;padding:7px}.home-shorts-shop-meta img,.home-shorts-shop-fallback{width:32px;height:32px;flex-basis:32px}.home-shorts-product-meta-card img{width:38px;height:38px;flex-basis:38px}.home-shorts-product-meta-title,.home-shorts-shop-name,.home-shorts-product-meta-card strong{font-size:11px}}
+
+/* Caption toggle active state */
+.custom-youtube-control-row button.is-active{color:#7dd3fc;background:rgba(14,165,233,.2);box-shadow:inset 0 0 0 1px rgba(125,211,252,.45)}
+.home-shorts-resize-handle{background:transparent!important}
