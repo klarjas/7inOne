@@ -1157,7 +1157,7 @@ app.get('/api/vendor-media/:id/shop-products',async(req,res)=>{
  if(!db(res))return;
  const {data:media,error:mediaError}=await supabase.from('vendor_media_links').select('id,vendor_id,media_type,is_active,vendors!inner(status)').eq('id',req.params.id).eq('media_type','video').eq('is_active',true).eq('vendors.status','approved').maybeSingle();
  if(mediaError||!media)return fail(res,404,'Short video not found');
- const {data:products,error}=await supabase.from('products').select('id,product_code,title,price,stock,status,view_count,vendor_id,product_images(id,file_id,image_url,sort_order),vendors!inner(id,store_name,status)').eq('vendor_id',media.vendor_id).eq('status','active').gt('stock',0).eq('vendors.status','approved').order('view_count',{ascending:false}).limit(40);
+ const {data:products,error}=await supabase.from('products').select('id,product_code,title,price,stock,status,view_count,vendor_id,product_images(id,file_id,image_url,sort_order),vendors!inner(id,store_name,status)').eq('vendor_id',media.vendor_id).eq('status','active').gt('stock',0).eq('vendors.status','approved').order('view_count',{ascending:false}).limit(200);
  if(error)return fail(res,500,'Could not load shop products');
  const ids=(products||[]).map(p=>p.id);let sold={};
  if(ids.length){const {data:orders,error:orderError}=await supabase.from('order_items').select('product_id,quantity,fulfillment_status').in('product_id',ids).eq('fulfillment_status','completed');if(orderError)return fail(res,500,'Could not rank shop products');for(const item of orders||[])sold[item.product_id]=(sold[item.product_id]||0)+Number(item.quantity||1)}
