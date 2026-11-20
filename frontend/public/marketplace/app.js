@@ -3154,7 +3154,7 @@ function closeListingVideoPopup() {
   if (popup?.open) popup.close();
 }
 
-function openListingVideoPopup(url, title = 'វីដេអូ') {
+function openListingVideoPopup(url, title = 'វីដេអូ', meta = {}) {
   const videoId = youtubeVideoId(url);
   const popup = $('homeShortsPopup');
   const stage = $('homeShortsPopupStage');
@@ -3166,6 +3166,19 @@ function openListingVideoPopup(url, title = 'វីដេអូ') {
   closeListingVideoPopup();
   const session = listingVideoSession;
   $('homeShortsPopupTitle').textContent = title || 'វីដេអូប្រកាស';
+  const metaHost = $('homeShortsPopupMeta');
+  if (metaHost) {
+    const shopName = meta.storeName || 'ហាងអ្នកលក់';
+    const shopAvatar = meta.storeAvatar || '';
+    const productImage = meta.productImage || '';
+    metaHost.innerHTML = '<div class="home-shorts-product-meta">' +
+      '<div class="home-shorts-shop-meta">' + (shopAvatar ? '<img src="' + esc(shopAvatar) + '" alt="">' : '<span class="home-shorts-shop-fallback">' + esc(Array.from(shopName)[0] || 'S') + '</span>') +
+      '<span class="home-shorts-shop-name">' + esc(shopName) + '</span></div>' +
+      '<div class="home-shorts-product-meta-card">' + (productImage ? '<img src="' + esc(productImage) + '" alt="">' : '') +
+      '<span class="home-shorts-product-meta-title">' + esc(meta.productTitle || title || 'ផលិតផល') + '</span>' +
+      '<strong>' + esc(meta.productPrice || '') + '</strong></div></div>';
+    metaHost.hidden = false;
+  }
 
   const playerShell = document.createElement('div');
   playerShell.className = 'custom-youtube-player';
@@ -3329,7 +3342,18 @@ function openListingVideoPopup(url, title = 'វីដេអូ') {
 }
 function listingVideoButton(item) {
   if (!item?.youtube_video_url || !youtubeVideoId(item.youtube_video_url)) return '';
-  return '<button type="button" class="listing-video-open" data-listing-video="' + esc(item.youtube_video_url) + '" data-listing-video-title="' + esc(item.title || 'វីដេអូប្រកាស') + '">' + ic('play',17) + '<span>មើលវីដេអូ YouTube</span></button>';
+  const store = item.vendors || item.vendor || {};
+  const poster = item.poster || {};
+  const image = (Array.isArray(item.image_urls) ? item.image_urls[0] : '') || item.image_url || item.cover_url || '';
+  const price = item.price_label == null ? '' : money(item.price_label);
+  const meta = {
+    storeName: store.store_name || item.store_name || poster.display_name || 'ហាងអ្នកលក់',
+    storeAvatar: store.store_logo_url || store.logo_url || poster.avatar_url || '',
+    productImage: image,
+    productTitle: item.title || 'ផលិតផល',
+    productPrice: price
+  };
+  return '<button type="button" class="listing-video-open" data-listing-video="' + esc(item.youtube_video_url) + '" data-listing-video-title="' + esc(item.title || 'វីដេអូប្រកាស') + '" data-video-store-name="' + esc(meta.storeName) + '" data-video-store-avatar="' + esc(meta.storeAvatar) + '" data-video-product-image="' + esc(meta.productImage) + '" data-video-product-title="' + esc(meta.productTitle) + '" data-video-product-price="' + esc(meta.productPrice) + '">' + ic('play',17) + '<span>មើលវីដេអូ YouTube</span></button>';
 }
 
 async function syncVendorPresence() {
@@ -3548,12 +3572,41 @@ function bindEvents() {
     const stopDrag = event => { if (dragState && event.pointerId === dragState.pointerId) dragState = null; };
     handle.addEventListener('pointerup', stopDrag);
     handle.addEventListener('pointercancel', stopDrag);
-    dialog.addEventListener('close', () => { dialog.style.left = ''; dialog.style.top = ''; dialog.style.position = ''; dialog.style.margin = ''; dialog.style.transform = ''; dialog.style.width = ''; dialog.style.height = ''; });
+    ['n','s','e','w','ne','nw','se','sw'].forEach(edge => {
+      const grip=document.createElement('span'); grip.className='home-shorts-resize-handle'; grip.dataset.edge=edge; grip.setAttribute('aria-hidden','true'); dialog.appendChild(grip);
+      let resize=null;
+      grip.addEventListener('pointerdown',event=>{
+        if(event.button!==0)return; const rect=dialog.getBoundingClientRect();
+        resize={id:event.pointerId,edge,x:event.clientX,y:event.clientY,left:rect.left,top:rect.top,width:rect.width};
+        grip.setPointerCapture(event.pointerId); dialog.style.position='fixed'; dialog.style.margin='0'; dialog.style.transform='none';
+        dialog.style.left=rect.left+'px'; dialog.style.top=rect.top+'px'; event.preventDefault(); event.stopPropagation();
+      });
+      grip.addEventListener('pointermove',event=>{
+        if(!resize||event.pointerId!==resize.id)return;
+        const dx=event.clientX-resize.x,dy=event.clientY-resize.y,e=resize.edge;
+        const horizontal=e.includes('e')?dx:e.includes('w')?-dx:0;
+        const vertical=e.includes('s')?dy:e.includes('n')?-dy:0;
+        const delta=horizontal || (vertical?vertical*16/9:0);
+        const width=Math.max(320,Math.min(window.innerWidth-16,resize.width+delta));
+        dialog.style.width=width+'px';
+        if(e.includes('w'))dialog.style.left=(resize.left+resize.width-width)+'px';
+        if(e.includes('n'))dialog.style.top=Math.max(8,resize.top+resize.width-width)+'px';
+      });
+      const stop=event=>{if(resize&&event.pointerId===resize.id)resize=null};
+      grip.addEventListener('pointerup',stop);grip.addEventListener('pointercancel',stop);
+    });
+    dialog.addEventListener('close', () => { dialog.querySelectorAll('.home-shorts-resize-handle').forEach(node=>node.remove()); dialog.style.left = ''; dialog.style.top = ''; dialog.style.position = ''; dialog.style.margin = ''; dialog.style.transform = ''; dialog.style.width = ''; dialog.style.height = ''; });
   })();
   $('homeShortsPopup')?.addEventListener('close', closeListingVideoPopup);
   document.addEventListener('click', event => {
     const videoButton = event.target.closest('[data-listing-video]');
-    if (videoButton) openListingVideoPopup(videoButton.dataset.listingVideo, videoButton.dataset.listingVideoTitle || 'វីដេអូប្រកាស');
+    if (videoButton) openListingVideoPopup(videoButton.dataset.listingVideo, videoButton.dataset.listingVideoTitle || 'វីដេអូប្រកាស', {
+      storeName: videoButton.dataset.videoStoreName,
+      storeAvatar: videoButton.dataset.videoStoreAvatar,
+      productImage: videoButton.dataset.videoProductImage,
+      productTitle: videoButton.dataset.videoProductTitle,
+      productPrice: videoButton.dataset.videoProductPrice
+    });
   });
   $('marketplaceListingModal')?.addEventListener('click', (event) => {
     if (event.target.matches('[data-close-marketplace-detail]')) {
