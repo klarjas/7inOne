@@ -6462,3 +6462,16 @@ body > footer {
  .home-shorts-related-open img,.home-shorts-related-placeholder{width:34px;height:34px;flex-basis:34px}
  .home-shorts-related-title,.home-shorts-related-open strong{font-size:10px}
 }
+
+
+/* 7inOne YouTube popup: clear shop/product sections and visible close control. */
+#homeShortsPopup .home-shorts-popup-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+#homeShortsPopup .home-shorts-popup-head>button{display:grid;place-items:center;width:34px;height:34px;flex:0 0 34px;border:1px solid rgba(148,163,184,.28);border-radius:9px;background:#202b39;color:#f1f5f9;font-size:22px;line-height:1;cursor:pointer}
+#homeShortsPopup .home-shorts-popup-head>button:hover{background:#34465b;color:#fff}
+#homeShortsPopupMeta .home-shorts-product-section{display:flex;flex-direction:column;gap:6px;min-width:0}
+#homeShortsPopupMeta .home-shorts-product-section h4{margin:2px 0 0;color:#aebed0;font-size:11px;font-weight:750}
+#homeShortsPopupMeta .home-shorts-related-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:6px}
+#homeShortsPopupMeta .home-shorts-related-row{min-width:0;padding:6px;border:1px solid rgba(148,163,184,.13);border-radius:9px;background:rgba(148,163,184,.045)}
+#homeShortsPopupMeta .home-shorts-related-open{gap:8px}
+#homeShortsPopupMeta .home-shorts-related-open img,#homeShortsPopupMeta .home-shorts-related-placeholder{width:42px;height:42px;flex-basis:42px}
+@media(max-width:560px){#homeShortsPopupMeta .home-shorts-related-list{grid-template-columns:1fr}}
