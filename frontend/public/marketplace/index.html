@@ -294,32 +294,13 @@
 
         <!-- Center Content -->
         <div class="home-main-content">
-          <!-- Seller Shorts: clean video strip -->
-          <section id="homeVendorMediaSection" class="home-vendor-media hidden" aria-label="Shorts">
-            <div id="homeVendorMediaList" class="home-vendor-media-list" tabindex="0" aria-label="អូសដើម្បីមើលវីដេអូ"></div>
-          </section>
-          <dialog id="homeShortsPopup" class="home-shorts-popup" aria-label="វីដេអូ Shorts ពង្រីក">
+          <dialog id="homeShortsPopup" class="home-shorts-popup" aria-label="មើលវីដេអូ YouTube">
             <div class="home-shorts-popup-head">
-              <strong id="homeShortsPopupTitle">វីដេអូ</strong>
+              <strong id="homeShortsPopupTitle">វីដេអូប្រកាស</strong>
               <button id="homeShortsPopupClose" type="button" aria-label="បិទវីដេអូ">✕</button>
             </div>
             <div class="home-shorts-popup-layout">
-              <aside class="home-shorts-products home-shorts-products-left" aria-label="ផលិតផលពេញនិយមក្នុងហាង">
-                <div class="home-shorts-products-heading"><strong>ផលិតផលពេញនិយមក្នុងហាង</strong><span>មើលច្រើន · ទិញច្រើន</span></div>
-                <div id="homeShortsPopularProducts" class="home-shorts-product-rail"></div>
-              </aside>
-              <div id="homeShortsPopupStage" class="home-shorts-popup-stage" aria-label="YouTube Shorts player"></div>
-              <aside class="home-shorts-products home-shorts-products-right" aria-label="ផលិតផលក្នុងវីដេអូ">
-                <div class="home-shorts-products-heading"><strong>ផលិតផលក្នុងវីដេអូ</strong><span id="homeShortsLinkedCount">0 ផលិតផល</span></div>
-                <div id="homeShortsSellerTools" class="home-shorts-seller-tools hidden">
-                  <input id="homeShortsProductSearch" type="search" placeholder="ស្វែងរកតាមឈ្មោះ ឬ Product ID..." aria-label="ស្វែងរកផលិតផលក្នុងហាង">
-                  <div id="homeShortsProductSearchResults" class="home-shorts-product-search-results"></div>
-                </div>
-                <div id="homeShortsLinkedProducts" class="home-shorts-linked-products"></div>
-                <div class="home-shorts-shop-videos-heading"><strong>Shorts ផ្សេងទៀតក្នុងហាង</strong><span id="homeShortsShopVideosCount"></span></div>
-                <div id="homeShortsShopVideos" class="home-shorts-shop-videos"></div>
-                <button id="homeShortsShopVideosMore" class="home-shorts-shop-videos-more" type="button">មើលបន្ថែម</button>
-              </aside>
+              <div id="homeShortsPopupStage" class="home-shorts-popup-stage" aria-label="YouTube video player"></div>
             </div>
           </dialog>
 
@@ -671,7 +652,6 @@
               <button type="button" class="seller-tab" data-seller-tab="orders"><span data-seller-icon="file"></span>ការបញ្ជាទិញ <b id="sellerOrdersCount" class="seller-tab-count">0</b></button>
               <button type="button" class="seller-tab" data-seller-tab="offers"><span data-seller-icon="tag"></span>សំណើតថ្លៃ <b id="sellerOffersCount" class="seller-tab-count">0</b></button>
               <button type="button" class="seller-tab" data-seller-tab="shop"><span data-seller-icon="store"></span>ព័ត៌មានហាង</button>
-              <button type="button" class="seller-tab" data-seller-tab="media"><span data-seller-icon="play"></span>Live / Video</button>
             </nav>
 
             <!-- Products Tab -->
@@ -723,16 +703,7 @@
             </section>
 
             <!-- Live / Video Media Tab -->
-            <section class="seller-tab-panel" id="sellerTabMedia" data-seller-panel="media" hidden>
-              <div id="sellerMediaVerifiedGate" class="seller-media-verified-gate hidden">មុខងារនេះអាចប្រើបានតែអ្នកលក់ដែលបានផ្ទៀងផ្ទាត់ប៉ុណ្ណោះ។</div>
-              <form id="sellerMediaForm" class="seller-media-form">
-                <label class="block"><span class="label">ប្រភេទមាតិកា</span><select id="sellerMediaType" class="field"><option value="video">YouTube Shorts</option><option value="live">Live ផ្សាយផ្ទាល់</option></select></label>
-                <label id="sellerMediaUrlWrap" class="block"><span id="sellerMediaUrlLabel" class="label">Link YouTube Shorts *</span><input id="sellerMediaUrl" class="field" type="url" maxlength="1000" required placeholder="https://www.youtube.com/shorts/VIDEO_ID" /><small class="mt-1 block text-[10px] text-slate-500">អ្នកលក់ដែលបាន Verify ប៉ុណ្ណោះ · អតិបរមា 5 Shorts ក្នុងមួយថ្ងៃ · Shorts នីមួយៗផុតកំណត់ក្រោយ 24 ម៉ោង</small></label>
-                <label id="sellerMediaCaptionWrap" class="block"><span class="label">Caption (មួយបន្ទាត់)</span><input id="sellerMediaCaption" class="field" type="text" maxlength="160" placeholder="សរសេរ Caption ខ្លីៗអំពីវីដេអូ..." /><small class="mt-1 block text-[10px] text-slate-500">Caption វែងនឹងបង្ហាញត្រឹមមួយបន្ទាត់ ហើយកាត់ដោយ ...</small></label>
-                <div class="flex flex-wrap items-center justify-between gap-2"><span id="sellerMediaStatus" class="text-[11px] text-slate-500">បញ្ចូល YouTube Shorts Link ដើម្បីបង្ហោះ</span><button id="sellerMediaSave" type="submit" class="brand-gradient rounded-full px-5 py-2 text-[11px] font-bold text-white">បង្ហោះ</button></div>
-              </form>
-              <div id="sellerMediaList" class="seller-media-list" aria-live="polite"></div>
-            </section>
+            
           </div>
         </div>
       </div>
@@ -1026,7 +997,7 @@
           
             <label class="block mt-2"><span class="label">Google Maps Link (មិនបាច់បំពេញក៏បាន)</span><input class="field" type="url" name="google_map_url" maxlength="1000" placeholder="https://maps.app.goo.gl/... ឬ https://www.google.com/maps/..."></label>
           </div>
-          <label><span class="label">ស្ថានភាព</span>
+          <label class="sm:col-span-2"><span class="label">YouTube Video Link (មិនបាច់បំពេញក៏បាន)</span><input class="field" id="productYoutubeVideoUrl" type="url" maxlength="1000" placeholder="https://www.youtube.com/watch?v=VIDEO_ID"><small class="text-[10px] text-slate-500">ប្រើ YouTube Video ធម្មតា 16:9 · 1 វីដេអូក្នុងមួយប្រកាស</small></label>\n          <label><span class="label">ស្ថានភាព</span>
             <select class="field" id="productCondition">
               <option>ប្រើរួចស្អាត</option><option>ថ្មី ១០០%</option><option>ល្អដូចថ្មី</option>
             </select>
@@ -1113,7 +1084,7 @@
           <label><span class="label">ចំនួនត្រូវជ្រើសរើស</span><input class="field" name="vacancies" type="number" min="1" max="999" value="1"></label>
           <label><span class="label">បទពិសោធន៍</span><input class="field" name="experience" placeholder="ឧ. 1-2 ឆ្នាំ / មិនទាមទារ"></label>
           <label><span class="label">កម្រិតសិក្សា</span><input class="field" name="education" placeholder="ឧ. បរិញ្ញាបត្រ / មិនកំណត់"></label>
-          <label class="sm:col-span-2"><span class="label">ព័ត៌មានលម្អិត និងតួនាទីការងារ *</span><textarea class="field min-h-[110px]" name="description" maxlength="5000" rows="5" placeholder="ពិពណ៌នាអំពីតួនាទី ភារកិច្ច និងលក្ខខណ្ឌ..." required></textarea></label>
+          <label class="sm:col-span-2"><span class="label">YouTube Video Link (មិនបាច់បំពេញក៏បាន)</span><input class="field" name="youtube_video_url" type="url" maxlength="1000" placeholder="https://www.youtube.com/watch?v=VIDEO_ID"><small class="text-[10px] text-slate-500">ភ្ជាប់វីដេអូណែនាំការងារ (16:9)</small></label>\n          <label class="sm:col-span-2"><span class="label">ព័ត៌មានលម្អិត និងតួនាទីការងារ *</span><textarea class="field min-h-[110px]" name="description" maxlength="5000" rows="5" placeholder="ពិពណ៌នាអំពីតួនាទី ភារកិច្ច និងលក្ខខណ្ឌ..." required></textarea></label>
           <label class="sm:col-span-2"><span class="label">ជំនាញដែលត្រូវការ (បំបែកដោយសញ្ញាក្បៀស)</span><input class="field" name="skills_text" placeholder="ឧ. Computer, Excel, Communication"></label>
           <label class="sm:col-span-2"><span class="label">អត្ថប្រយោជន៍ (បំបែកដោយសញ្ញាក្បៀស)</span><input class="field" name="benefits_text" placeholder="ឧ. ប្រាក់ខែបន្ថែម, ធានារ៉ាប់រង"></label>
           <div class="sm:col-span-2 listing-image-album" data-listing-image-album="job">
@@ -1167,7 +1138,7 @@
           
             <label class="block mt-2"><span class="label">Google Maps Link (មិនបាច់បំពេញក៏បាន)</span><input class="field" type="url" name="google_map_url" maxlength="1000" placeholder="https://maps.app.goo.gl/... ឬ https://www.google.com/maps/..."></label>
           </div>
-          <label class="sm:col-span-2"><span class="label">ការពិពណ៌នាលម្អិត *</span><textarea class="field min-h-[110px]" name="description" maxlength="5000" rows="5" placeholder="ពិពណ៌នាព័ត៌មានលម្អិត..." required></textarea></label>
+          <label class="sm:col-span-2"><span class="label">YouTube Video Link (មិនបាច់បំពេញក៏បាន)</span><input class="field" name="youtube_video_url" type="url" maxlength="1000" placeholder="https://www.youtube.com/watch?v=VIDEO_ID"><small class="text-[10px] text-slate-500">ភ្ជាប់វីដេអូណែនាំអចលនទ្រព្យ (16:9)</small></label>\n          <label class="sm:col-span-2"><span class="label">ការពិពណ៌នាលម្អិត *</span><textarea class="field min-h-[110px]" name="description" maxlength="5000" rows="5" placeholder="ពិពណ៌នាព័ត៌មានលម្អិត..." required></textarea></label>
           <div class="sm:col-span-2 listing-image-album" data-listing-image-album="property">
             <span class="label">រូបភាពអចលនទ្រព្យ (JPG/PNG/WEBP · អតិបរមា ១០ រូប · 8MB/រូប)</span>
             <label class="product-album-picker" data-listing-image-picker>
