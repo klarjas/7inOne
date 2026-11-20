@@ -4156,7 +4156,7 @@ async function boot() {
 }
 
 void boot();
-+Number(p.price||0).toLocaleString('en-US')+'</b><span>មើល '+Number(p.view_count||0).toLocaleString()+' · ទិញ '+Number(p.sold_count||0).toLocaleString()+'</span></div>'+(action?'<button type="button" '+action+'>+</button>':'')+'</article>'};
++Number(p.price||0).toLocaleString('en-US')+'</b><span>មើល '+Number(p.view_count||0).toLocaleString()+' · ទិញ '+Number(p.sold_count||0).toLocaleString()+'</span></div>'+(action?'<button type="button" '+action+'>'+(action.includes('remove')?'−':'+')+'</button>':'')+'</article>'};
   const loadPopupProducts=async mediaId,vendorId)=>{
    const [linkedRes,popularRes]=await Promise.all([api('/api/vendor-media/'+encodeURIComponent(mediaId)+'/products'),api('/api/vendor-media/'+encodeURIComponent(mediaId)+'/shop-products')]);
    const linked=linkedRes.data||[],popular=popularRes.data||[];
