@@ -6278,3 +6278,12 @@ body > footer {
 .home-shorts-popup-layout{min-height:0;overflow:auto;}
 .home-shorts-popup-stage{height:min(70dvh,680px);aspect-ratio:16/9;}
 @media(max-width:520px){.home-shorts-popup-stage{height:min(55dvh,520px);}}
+
+/* Modern outlined center play control */
+.custom-youtube-center-play{position:absolute;left:50%;top:50%;z-index:5;display:grid;place-items:center;width:66px;height:66px;padding:0;transform:translate(-50%,-50%);border:1px solid rgba(255,255,255,.48);border-radius:50%;background:rgba(10,16,24,.58);color:#fff;backdrop-filter:blur(10px);box-shadow:0 8px 28px rgba(0,0,0,.28);cursor:pointer;transition:opacity .18s ease,transform .18s ease,background .18s ease,border-color .18s ease;}
+.custom-youtube-center-play svg{display:block;width:27px;height:27px;}
+.custom-youtube-center-play:hover{background:rgba(14,165,233,.22);border-color:rgba(125,211,252,.9);transform:translate(-50%,-50%) scale(1.07);}
+.custom-youtube-center-play.is-playing{opacity:0;pointer-events:none;transform:translate(-50%,-46%) scale(.92);}
+.custom-youtube-screen:hover .custom-youtube-center-play.is-playing{opacity:1;pointer-events:auto;transform:translate(-50%,-50%);}
+.custom-youtube-control-row [data-video-play-icon] svg{display:block;width:18px;height:18px;}
+@media(max-width:560px){.custom-youtube-center-play{width:56px;height:56px}.custom-youtube-center-play svg{width:23px;height:23px}}
