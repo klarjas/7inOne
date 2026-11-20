@@ -3258,7 +3258,7 @@ function openListingVideoPopup(url, title = 'វីដេអូ', meta = {}) {
     };
     const renderContext = (shopProducts = [], similarProducts = []) => isProductGalleryPopup
       ? '<div class="home-shorts-popup-context">' + renderShopMeta() + renderCurrentProduct() +
-        renderProductSection('ផលិតផលនៃវីដេអូ', similarProducts, true) + '</div>'
+        renderProductSection('ផលិតផលស្រដៀង', similarProducts, true) + '</div>'
       : renderShopMeta() + renderProductSection('ផលិតផលរបស់ហាង', shopProducts) + renderProductSection('ផលិតផលស្រដៀង', similarProducts);
     metaHost.innerHTML = renderContext();
     metaHost.hidden = false;
