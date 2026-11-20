@@ -3595,7 +3595,7 @@ function bindEvents() {
       const stop=event=>{if(resize&&event.pointerId===resize.id)resize=null};
       grip.addEventListener('pointerup',stop);grip.addEventListener('pointercancel',stop);
     });
-    dialog.addEventListener('close', () => { dialog.querySelectorAll('.home-shorts-resize-handle').forEach(node=>node.remove()); dialog.style.left = ''; dialog.style.top = ''; dialog.style.position = ''; dialog.style.margin = ''; dialog.style.transform = ''; dialog.style.width = ''; dialog.style.height = ''; });
+    dialog.addEventListener('close', () => { dialog.style.left = ''; dialog.style.top = ''; dialog.style.position = ''; dialog.style.margin = ''; dialog.style.transform = ''; dialog.style.width = ''; dialog.style.height = ''; });
   })();
   $('homeShortsPopup')?.addEventListener('close', closeListingVideoPopup);
   document.addEventListener('click', event => {
