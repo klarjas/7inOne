@@ -2131,10 +2131,10 @@ function auroraProductMatchesCategory(product,category) {
   return true;
 }
 function renderAuroraProductList(products) {
-  if(!products.length) return '<div class="storefront-empty"><span>'+ic('package',30)+'</span><strong>មិនមានផលិតផលដែលត្រូវនឹងការស្វែងរកទេ</strong></div>';
+  if(!products.length) return '<div id="auroraProductList"><div class="storefront-empty"><span>'+ic('package',30)+'</span><strong>មិនមានផលិតផលដែលត្រូវនឹងការស្វែងរកទេ</strong></div></div>';
   const groups=new Map();
   products.forEach(p=>{const key=auroraProductGroup(p);if(!groups.has(key))groups.set(key,[]);groups.get(key).push(p);});
-  return Array.from(groups.entries()).map(entry=>{
+  return '<div id="auroraProductList">'+Array.from(groups.entries()).map(entry=>{
     const group=entry[0],items=entry[1];
     return '<section class="aurora-list-group"><h3>'+esc(group)+' <span>'+items.length+' មុខ</span></h3><div class="aurora-list-items">'+items.map(p=>{
       const img=(p.product_images||[]).filter(x=>x.image_url).sort((a,b)=>Number(a.sort_order||0)-Number(b.sort_order||0))[0]?.image_url||'';
@@ -2142,7 +2142,7 @@ function renderAuroraProductList(products) {
       const stock=Number(p.stock||0);
       return '<article class="aurora-product-row" data-aurora-edit="'+esc(p.id)+'" tabindex="0" role="button"><div class="aurora-product-thumb">'+(img?'<img src="'+esc(img)+'" alt="">':ic('image',24))+'</div><div class="aurora-product-info"><strong>'+esc(p.title||'')+'</strong><div class="aurora-product-specs">'+specs+'</div></div><div class="aurora-product-side"><strong>'+money(p.display_price??p.price)+'</strong><span class="'+(stock?'is-in-stock':'is-out-stock')+'">'+(stock?'ស្តុក '+stock:'អស់ស្តុក')+'</span>'+(isAdmin()?'<button type="button" class="aurora-edit-button" data-aurora-edit="'+esc(p.id)+'">'+ic('pencil',14)+' កែប្រែ</button>':'')+'</div></article>';
     }).join('')+'</div></section>';
-  }).join('');
+  }).join('')+'</div>';
 }
 function closeAuroraProductEditor(){const modal=$('auroraProductEditModal');if(modal)modal.remove();document.body.classList.remove('overflow-hidden');}
 function openAuroraProductEditor(productId){
@@ -2312,7 +2312,7 @@ function updateStorefrontProductResults() {
     (!query || (String(product.title || '') + ' ' + String(product.description || '')).toLowerCase().includes(query))
   );
   if (aurora) {
-    const current = section.querySelector('.aurora-list-group, .storefront-empty');
+    const current = section.querySelector('#auroraProductList');
     const markup = renderAuroraProductList(visible);
     if (current) current.outerHTML = markup; else section.insertAdjacentHTML('beforeend', markup);
   } else {
