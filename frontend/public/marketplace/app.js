@@ -2107,6 +2107,82 @@ async function loadMoreStoreProducts() {
   }
 }
 
+
+function isAuroraStorefront(data = state.currentStoreData) {
+  return Boolean(data && (String(data.public_shop_id || '').toUpperCase() === 'A001' || String(data.shop_code || '').toUpperCase() === 'A001' || String(data.store_name || '').trim().toLowerCase() === 'aurora computer'));
+}
+function auroraProductGroup(product = {}) {
+  const title=String(product.title||'').toLowerCase();
+  if(title.includes('expertbook')) return 'ASUS ExpertBook';
+  if(title.includes('vivobook')) return 'ASUS Vivobook';
+  const type=String(product.detail_type||product.listing_details?.detail_type||'').trim();
+  if(type==='Desktop PC') return 'Desktop PC';
+  if(/accessor/i.test(type)) return 'Accessories';
+  return type||'ផលិតផលផ្សេងៗ';
+}
+function auroraProductMatchesCategory(product,category) {
+  const group=auroraProductGroup(product).toLowerCase();
+  if(!category||category==='all') return true;
+  if(category==='laptop') return group.includes('asus')||group==='laptop';
+  if(category==='expertbook') return group.includes('expertbook');
+  if(category==='vivobook') return group.includes('vivobook');
+  if(category==='desktop') return group.includes('desktop');
+  if(category==='accessories') return group.includes('accessor');
+  return true;
+}
+function renderAuroraProductList(products) {
+  if(!products.length) return '<div class="storefront-empty"><span>'+ic('package',30)+'</span><strong>មិនមានផលិតផលដែលត្រូវនឹងការស្វែងរកទេ</strong></div>';
+  const groups=new Map();
+  products.forEach(p=>{const key=auroraProductGroup(p);if(!groups.has(key))groups.set(key,[]);groups.get(key).push(p);});
+  return Array.from(groups.entries()).map(entry=>{
+    const group=entry[0],items=entry[1];
+    return '<section class="aurora-list-group"><h3>'+esc(group)+' <span>'+items.length+' មុខ</span></h3><div class="aurora-list-items">'+items.map(p=>{
+      const img=(p.product_images||[]).filter(x=>x.image_url).sort((a,b)=>Number(a.sort_order||0)-Number(b.sort_order||0))[0]?.image_url||'';
+      const specs=productCardSpecs(p).map(x=>'<span><b>'+esc(x[0])+':</b> '+esc(x[1])+'</span>').join('');
+      const stock=Number(p.stock||0);
+      return '<article class="aurora-product-row" data-aurora-edit="'+esc(p.id)+'" tabindex="0" role="button"><div class="aurora-product-thumb">'+(img?'<img src="'+esc(img)+'" alt="">':ic('image',24))+'</div><div class="aurora-product-info"><strong>'+esc(p.title||'')+'</strong><div class="aurora-product-specs">'+specs+'</div></div><div class="aurora-product-side"><strong>'+money(p.display_price??p.price)+'</strong><span class="'+(stock?'is-in-stock':'is-out-stock')+'">'+(stock?'ស្តុក '+stock:'អស់ស្តុក')+'</span>'+(isAdmin()?'<button type="button" class="aurora-edit-button" data-aurora-edit="'+esc(p.id)+'">'+ic('pencil',14)+' កែប្រែ</button>':'')+'</div></article>';
+    }).join('')+'</div></section>';
+  }).join('');
+}
+function closeAuroraProductEditor(){const modal=$('auroraProductEditModal');if(modal)modal.remove();document.body.classList.remove('overflow-hidden');}
+function openAuroraProductEditor(productId){
+  if(!isAdmin())return;
+  const p=state.currentStoreProducts.find(x=>String(x.id)===String(productId));
+  if(!p){toast('រកមិនឃើញផលិតផលនេះទេ។','error');return;}
+  closeAuroraProductEditor();
+  const specs=normalizedProductSpecs(p),desc=productDescriptionParts(p);
+  const imgs=(p.product_images||[]).filter(x=>x.image_url);
+  const modal=document.createElement('div');modal.id='auroraProductEditModal';modal.className='aurora-edit-overlay';modal.setAttribute('role','dialog');modal.setAttribute('aria-modal','true');
+  modal.innerHTML='<div class="aurora-edit-panel"><header><div><small>AURORA COMPUTER · PRODUCT MANAGER</small><h2>កែប្រែផលិតផល</h2></div><button type="button" data-aurora-close aria-label="បិទ">×</button></header><form id="auroraProductEditForm" data-product-id="'+esc(p.id)+'">'+
+  '<label>ឈ្មោះផលិតផល<input class="field" name="title" required value="'+esc(p.title||'')+'"></label>'+
+  '<div class="aurora-edit-grid"><label>តម្លៃលក់ ($)<input class="field" name="price" type="number" min="0" step="0.01" required value="'+esc(p.display_price??p.price??0)+'"></label><label>ស្តុក<input class="field" name="stock" type="number" min="0" step="1" required value="'+esc(p.stock??0)+'"></label></div>'+
+  '<label>ប្រភេទ<input class="field" name="category" value="'+esc(p.category||'computers')+'"></label>'+
+  '<label>ការពិពណ៌នា<textarea class="field" name="description" rows="3">'+esc(desc.full||desc.short||'')+'</textarea></label>'+
+  '<div class="aurora-edit-section"><strong>លក្ខណៈបច្ចេកទេស</strong><div class="aurora-edit-grid">'+
+  '<label>CPU<input class="field" name="cpu_model" value="'+esc(specs.cpu_model||specs.processor||'')+'"></label><label>RAM<input class="field" name="ram_type_capacity" value="'+esc(specs.ram_type_capacity||specs.ram||'')+'"></label>'+
+  '<label>Storage<input class="field" name="storage_type_capacity" value="'+esc(specs.storage_type_capacity||specs.storage||specs.ssd||'')+'"></label><label>Display<input class="field" name="screen_size" value="'+esc(specs.screen_size||specs.display||'')+'"></label><label>GPU<input class="field" name="gpu_model_vram" value="'+esc(specs.gpu_model_vram||specs.gpu||'')+'"></label></div></div>'+
+  '<div class="aurora-edit-section"><strong>រូបភាពផលិតផល</strong><div class="aurora-edit-images">'+imgs.map(x=>'<img src="'+esc(x.image_url)+'" alt="">').join('')+'</div><input class="field" type="file" name="images" accept="image/jpeg,image/png,image/webp" multiple><small>រូបថ្មី Upload តាម Telegram ដើម។ រូបចាស់មិនត្រូវបានលុបដោយស្វ័យប្រវត្តិទេ។</small></div>'+
+  '<label class="aurora-edit-status"><input type="checkbox" name="active" '+(p.status==='active'?'checked':'')+'> បង្ហាញផលិតផលនៅលើហាង</label><footer><button type="button" data-aurora-close>បោះបង់</button><button type="submit" class="aurora-edit-save">រក្សាទុក</button></footer></form></div>';
+  modal.addEventListener('click',e=>{if(e.target===modal||e.target.closest('[data-aurora-close]'))closeAuroraProductEditor();});
+  modal.addEventListener('submit',async e=>{
+    if(e.target.id!=='auroraProductEditForm')return;e.preventDefault();
+    const form=e.target,data=new FormData(form),btn=form.querySelector('[type=submit]'),files=Array.from(form.elements.images.files||[]);
+    if(imgs.length+files.length>10){toast('រូបភាពសរុបមិនអាចលើស ១០ រូបទេ។','error');return;}
+    if(files.some(f=>!['image/jpeg','image/png','image/webp'].includes(f.type)||f.size>20*1024*1024)){toast('សូមប្រើ JPG / PNG / WEBP មិនលើស ២០MB ក្នុងមួយរូប។','error');return;}
+    btn.disabled=true;btn.textContent='កំពុងរក្សាទុក...';
+    try{
+      const payload={title:String(data.get('title')||'').trim(),price:Number(data.get('price')),stock:Number(data.get('stock')),category:String(data.get('category')||'').trim(),description:String(data.get('description')||'').trim(),location:p.location||'កម្ពុជា',condition:p.condition||'ថ្មី'};
+      await api('/api/products/'+encodeURIComponent(p.id),{method:'PATCH',body:JSON.stringify(payload)});
+      const next={...specs};['cpu_model','ram_type_capacity','storage_type_capacity','screen_size','gpu_model_vram'].forEach(k=>{const v=String(data.get(k)||'').trim();if(v)next[k]=v;else delete next[k];});
+      await api('/api/products/'+encodeURIComponent(p.id)+'/listing-details',{method:'PUT',body:JSON.stringify({category:payload.category,subcategory:p.subcategory||p.listing_details?.subcategory||'',detail_type:p.detail_type||p.listing_details?.detail_type||'Laptop',specifications:next})});
+      if(files.length){const fd=new FormData();files.forEach(f=>fd.append('images',f));await apiUploadWithProgress('/api/products/'+encodeURIComponent(p.id)+'/images',fd,n=>{btn.textContent='Upload '+n+'%';});}
+      if(Boolean(data.get('active'))!==(p.status==='active'))await api('/api/admin/products/'+encodeURIComponent(p.id),{method:'PATCH',body:JSON.stringify({status:data.get('active')?'active':'archived'})});
+      toast('បានរក្សាទុកការកែប្រែផលិតផល។');closeAuroraProductEditor();await openStorefront(state.currentStoreId,{preserveScroll:true});
+    }catch(err){toast(err.message||'មិនអាចរក្សាទុកផលិតផលបានទេ។','error');btn.disabled=false;btn.textContent='រក្សាទុក';}
+  });
+  document.body.appendChild(modal);document.body.classList.add('overflow-hidden');
+}
+
 function renderStorefront() {
   const root = $('storefrontContent');
   if (!root) return;
@@ -2143,16 +2219,17 @@ function renderStorefront() {
 
   const data = state.currentStoreData;
   const query = state.currentStoreSearch.trim().toLowerCase();
+  const aurora = isAuroraStorefront(data);
   const visible = state.currentStoreProducts.filter(product =>
-    (state.currentStoreCategory === 'all' || product.category === state.currentStoreCategory) &&
-    (!query || `${product.title || ''} ${product.description || ''}`.toLowerCase().includes(query))
+    (aurora ? auroraProductMatchesCategory(product, state.currentStoreCategory) : (state.currentStoreCategory === 'all' || product.category === state.currentStoreCategory)) &&
+    (!query || (String(product.title || '') + ' ' + String(product.description || '')).toLowerCase().includes(query))
   );
   const rating = Number(data.rating || 0);
   const ratingLabel = rating ? rating.toFixed(1) : '—';
   const reviewCount = Number(data.review_count || 0);
   const memberSince = data.created_at
     ? new Date(data.created_at).toLocaleDateString('km-KH', { year: 'numeric', month: 'short' }) : '—';
-  const categories = [['all', 'ទាំងអស់'], ...Object.entries(CATEGORIES)];
+  const categories = aurora ? [['all','ទាំងអស់'],['laptop','Laptop'],['expertbook','ASUS ExpertBook'],['vivobook','ASUS Vivobook'],['desktop','Desktop PC'],['accessories','Accessories']] : [['all', 'ទាំងអស់'], ...Object.entries(CATEGORIES)];
   const hasMore = state.currentStorePage * state.currentStoreLimit < state.currentStoreTotal;
   const reviews = Array.isArray(data.reviews) ? data.reviews : [];
 
@@ -2192,7 +2269,7 @@ function renderStorefront() {
     <section class="storefront-products-section">
       <div class="storefront-section-heading"><h2>ទំនិញក្នុងហាង</h2><span id="storeProductCount">${visible.length} មុខ</span></div>
       ${visible.length
-        ? `<div id="storeProductGrid">${visible.map(productCard).join('')}</div>`
+        ? (aurora ? renderAuroraProductList(visible) : `<div id="storeProductGrid">${visible.map(productCard).join('')}</div>`)
         : `<div class="storefront-empty"><span>${ic('package', 30)}</span><strong>មិនមានទំនិញដែលត្រូវនឹងការស្វែងរកទេ</strong><p>សូមសាកល្បងពាក្យស្វែងរក ឬប្រភេទទំនិញផ្សេងទៀត។</p></div>`}
       ${state.currentStoreMoreError ? '<div class="storefront-more-error">មិនអាចផ្ទុកទំនិញបន្ថែមបានទេ។ សូមព្យាយាមម្តងទៀត។</div>' : ''}
       ${hasMore ? `<div class="storefront-load-more-wrap"><button type="button" class="storefront-load-more" data-store-load-more ${state.currentStoreMoreLoading ? 'disabled' : ''}>${state.currentStoreMoreLoading ? '<span class="loader" aria-hidden="true"></span>' : 'បង្ហាញបន្ថែម'}</button></div>` : ''}
@@ -2229,20 +2306,19 @@ function updateStorefrontProductResults() {
   const section = root?.querySelector('.storefront-products-section');
   if (!section) return;
   const query = state.currentStoreSearch.trim().toLowerCase();
+  const aurora = isAuroraStorefront();
   const visible = state.currentStoreProducts.filter(product =>
-    (state.currentStoreCategory === 'all' || product.category === state.currentStoreCategory) &&
+    (aurora ? auroraProductMatchesCategory(product, state.currentStoreCategory) : (state.currentStoreCategory === 'all' || product.category === state.currentStoreCategory)) &&
     (!query || (String(product.title || '') + ' ' + String(product.description || '')).toLowerCase().includes(query))
   );
-  const current = section.querySelector('#storeProductGrid, .storefront-empty');
-  if (visible.length) {
-    const markup = '<div id="storeProductGrid">' + visible.map(productCard).join('') + '</div>';
-    if (current?.id === 'storeProductGrid') current.innerHTML = visible.map(productCard).join('');
-    else if (current) current.outerHTML = markup;
-    else section.insertAdjacentHTML('beforeend', markup);
+  if (aurora) {
+    const current = section.querySelector('.aurora-list-group, .storefront-empty');
+    const markup = renderAuroraProductList(visible);
+    if (current) current.outerHTML = markup; else section.insertAdjacentHTML('beforeend', markup);
   } else {
-    const markup = '<div class="storefront-empty"><span>' + ic('package', 30) + '</span><strong>មិនមានទំនិញដែលត្រូវនឹងការស្វែងរកទេ</strong><p>សូមសាកល្បងពាក្យស្វែងរក ឬប្រភេទទំនិញផ្សេងទៀត។</p></div>';
-    if (current) current.outerHTML = markup;
-    else section.insertAdjacentHTML('beforeend', markup);
+    const current = section.querySelector('#storeProductGrid, .storefront-empty');
+    if (visible.length) { const markup='<div id="storeProductGrid">'+visible.map(productCard).join('')+'</div>'; if(current?.id==='storeProductGrid')current.innerHTML=visible.map(productCard).join(''); else if(current)current.outerHTML=markup; else section.insertAdjacentHTML('beforeend',markup); }
+    else { const markup='<div class="storefront-empty"><span>'+ic('package',30)+'</span><strong>មិនមានទំនិញដែលត្រូវនឹងការស្វែងរកទេ</strong></div>'; if(current)current.outerHTML=markup; else section.insertAdjacentHTML('beforeend',markup); }
   }
   const resultCount = $('storeResultCount');
   const productCount = $('storeProductCount');
@@ -2257,6 +2333,8 @@ function handleStorefrontAction(event) {
   }
   if (event.target.closest('[data-store-load-more]')) { void loadMoreStoreProducts(); return; }
   if (event.target.closest('[data-store-chat]')) { void startStoreChat(state.currentStoreId); return; }
+  const auroraEdit=event.target.closest('[data-aurora-edit]');
+  if(auroraEdit){event.preventDefault();event.stopPropagation();openAuroraProductEditor(auroraEdit.dataset.auroraEdit);return;}
   const heart = event.target.closest('[data-action="save"]');
   if (heart) { event.preventDefault(); event.stopPropagation(); saveAction(heart.dataset.id, heart); return; }
   const view = event.target.closest('[data-action="view"]');
