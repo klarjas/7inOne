@@ -7360,3 +7360,54 @@ body > footer {
   cursor: wait;
   opacity: .65;
 }
+
+
+/* Product image upload progress */
+.product-upload-status {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 1px solid rgba(102, 192, 244, .24);
+  border-radius: 12px;
+  background: rgba(22, 32, 45, .72);
+  color: #C7D5E0;
+  font-size: 11px;
+}
+.product-upload-status[hidden] { display: none; }
+.product-upload-progress {
+  height: 5px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #2A475E;
+}
+.product-upload-progress > span {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #0EA5E9, #66C0F4);
+  transition: width .12s linear;
+}
+.header-shortcuts button,
+.account-shortcut-icon,
+.account-shortcut-arrow,
+.jobs-panel-icon,
+.jobs-empty-state > span,
+.listing-type-option > span,
+.product-album-picker-icon,
+.product-album-empty > span,
+.maintenance-gear-wrap {
+  display: inline-grid;
+  place-items: center;
+}
+.header-shortcuts button > span:first-child svg,
+.account-shortcut-icon svg,
+.account-shortcut-arrow svg,
+.jobs-panel-icon svg,
+.jobs-empty-state > span svg,
+.listing-type-option > span svg,
+.product-album-picker-icon svg,
+.product-album-empty > span svg {
+  display: block;
+}
