@@ -132,6 +132,7 @@ const state = {
   currentStoreLimit: 50,
   currentStoreTotal: 0,
   currentStoreLoading: false,
+  currentStoreSkeletonVisible: false,
   currentStoreLoadError: false,
   currentStoreMoreLoading: false,
   currentStoreMoreError: false,
@@ -983,13 +984,15 @@ function renderSocialStoriesSkeleton() {
 async function loadSocialStories() {
   const target = $('socialStoriesList');
   if (!target) return;
-  if (!state.socialStories.length) renderSocialStoriesSkeleton();
+  const cancelSkeleton = !state.socialStories.length ? scheduleSkeleton(renderSocialStoriesSkeleton) : () => {};
   try {
     const result = await api('/api/social/stories');
+    cancelSkeleton();
     state.socialStories = Array.isArray(result.data) ? result.data : [];
     renderSocialStories();
   } catch (error) {
-    target.innerHTML = '<div class="social-feed-empty">មិនអាចផ្ទុក Stories បានទេ។</div><label class="social-story-create" for="socialStoryImage"><span class="social-story-create-icon">＋</span><b>បង្កើត Story</b></label>';
+    cancelSkeleton();
+    target.innerHTML = '<div class="social-feed-empty">មិនអាចផ្ទុក Stories បានទេ.</div><label class="social-story-create" for="socialStoryImage"><span class="social-story-create-icon">＋</span><b>បង្កើត Story</b></label>';
   }
 }
 function clearSocialStoryImage() {
@@ -1069,14 +1072,16 @@ function renderSocialPostsSkeleton() {
 async function loadSocialPosts() {
   const target = $('socialFeedList');
   if (!target) return;
-  if (!state.socialPosts.length) renderSocialPostsSkeleton();
+  const cancelSkeleton = !state.socialPosts.length ? scheduleSkeleton(renderSocialPostsSkeleton) : () => {};
   try {
     const result = await api('/api/social/posts');
+    cancelSkeleton();
     state.socialPosts = Array.isArray(result.data) ? result.data : [];
     renderSocialPosts();
     syncSocialComposerIdentity();
   } catch (error) {
-    target.innerHTML = '<div class="social-feed-empty">មិនអាចផ្ទុកការផុសបានទេ។</div>';
+    cancelSkeleton();
+    target.innerHTML = '<div class="social-feed-empty">មិនអាចផ្ទុកការផុសបានទេ.</div>';
   }
 }
 function clearSocialImage() {
@@ -1369,7 +1374,7 @@ async function openMarketplaceListing(type, id, options = {}) {
   const isCurrent = () => options.routeSyncNavigationId == null || options.routeSyncNavigationId === state.routeSyncNavigationId;
   state.currentProduct = { id: String(id), listing_type: type };
   await showView('product', { preserveScroll: Boolean(options.preserveScroll), deferLoad: true });
-  renderProductDetailSkeleton();
+  const cancelSkeleton = scheduleSkeleton(renderProductDetailSkeleton);
 
   try {
     let item = state.products.find(row => row.listing_type === type && String(row.id) === String(id))
@@ -1379,6 +1384,7 @@ async function openMarketplaceListing(type, id, options = {}) {
       if (!isCurrent()) return false;
       item = (result.data || []).find(row => String(row.id) === String(id));
     }
+    cancelSkeleton();
     if (!item) throw new Error('មិនមានព័ត៌មានប្រកាសនេះទេ។');
     // Keep the listing type explicit so showView builds the shared detail route
     // as product/job/<id> instead of treating a job ID as a product ID.
@@ -1397,8 +1403,9 @@ async function openMarketplaceListing(type, id, options = {}) {
     await showView('product', { preserveScroll: Boolean(options.preserveScroll) });
     return true;
   } catch (error) {
+    cancelSkeleton();
     if (!isCurrent()) return false;
-    toast(error.message || 'មិនអាចបើកព័ត៌មានប្រកាសបានទេ។', 'error');
+    toast(error.message || 'មិនអាចបើកព័ត៌មានប្រកាសបានទេ., 'error');
     void showView('home');
     return false;
   }
@@ -1411,7 +1418,7 @@ async function openProduct(id, options = {}) {
 
   state.currentProduct = { id: productId };
   await showView('product', { preserveScroll: Boolean(options.preserveScroll), deferLoad: true });
-  renderProductDetailSkeleton();
+  const cancelSkeleton = scheduleSkeleton(renderProductDetailSkeleton);
 
   try {
     try {
@@ -1425,6 +1432,7 @@ async function openProduct(id, options = {}) {
     ]);
     if (!isCurrent()) return false;
 
+    cancelSkeleton();
     const product = result.data;
     if (!product) throw new Error('មិនមានព័ត៌មានទំនិញនេះទេ។');
     product.poster = state.products.find(row => row.listing_type === 'product' && String(row.id) === productId)?.poster || product.poster || null;
@@ -1440,6 +1448,7 @@ async function openProduct(id, options = {}) {
     renderProductDetail();
     return true;
   } catch (error) {
+    cancelSkeleton();
     if (!isCurrent()) return false;
     toast(error.message, 'error');
     void showView('home');
@@ -1922,7 +1931,7 @@ async function openStorefront(vendorId, options = {}) {
   Object.assign(state, {
     currentStoreId: storeId, currentStoreCategory: 'all', currentStoreSearch: '',
     currentStoreProducts: [], currentStorePage: 1, currentStoreLimit: 50,
-    currentStoreTotal: 0, currentStoreLoading: true, currentStoreLoadError: false,
+    currentStoreTotal: 0, currentStoreLoading: true, currentStoreSkeletonVisible: false, currentStoreLoadError: false,
     currentStoreMoreLoading: false, currentStoreMoreError: false
   });
   try {
@@ -1930,12 +1939,18 @@ async function openStorefront(vendorId, options = {}) {
     sessionStorage.setItem('ecomstore.activeView', 'store');
     await showView('store', { preserveScroll: Boolean(options.preserveScroll) });
     if (!isCurrent()) return false;
-    renderStorefront();
+    const cancelSkeleton = scheduleSkeleton(() => {
+      if (!isCurrent() || !state.currentStoreLoading) return;
+      state.currentStoreSkeletonVisible = true;
+      renderStorefront();
+    });
     const [result, catalogue] = await Promise.all([
       api('/api/vendors/' + encodeURIComponent(storeId) + '/ratings'),
       api('/api/products?page=1&limit=' + state.currentStoreLimit + '&vendor_id=' + encodeURIComponent(storeId))
     ]);
-    if (!isCurrent()) return false;
+    if (!isCurrent()) { cancelSkeleton(); return false; }
+    cancelSkeleton();
+    state.currentStoreSkeletonVisible = false;
     state.currentStoreData = result.data || null;
     state.currentStoreProducts = catalogue.data || [];
     state.currentStorePage = Number(catalogue.page || 1);
@@ -1946,6 +1961,7 @@ async function openStorefront(vendorId, options = {}) {
     return true;
   } catch (error) {
     if (!isCurrent()) return false;
+    state.currentStoreSkeletonVisible = false;
     state.currentStoreLoading = false;
     state.currentStoreLoadError = true;
     renderStorefront();
@@ -1983,6 +1999,7 @@ function renderStorefront() {
   const root = $('storefrontContent');
   if (!root) return;
   root.onclick = handleStorefrontAction;
+  if (state.currentStoreLoading && !state.currentStoreSkeletonVisible) return;
   if (state.currentStoreLoading) {
     const bar = (width, height, extra = '') => `<span class="skeleton store-sk-bar ${extra}" style="width:${width};height:${height}px" aria-hidden="true"></span>`;
     root.innerHTML = `<div class="storefront-skeleton" role="status" aria-label="កំពុងផ្ទុកព័ត៌មានហាង">
@@ -2189,7 +2206,7 @@ function renderProfileTabSkeleton() {
 }
 async function renderProfileTab() {
   if (!state.session) return;
-  renderProfileTabSkeleton();
+  const cancelSkeleton = scheduleSkeleton(renderProfileTabSkeleton);
   try {
     if (state.profileTab === 'saved') {
       const saved = await loadSaved();
@@ -2214,6 +2231,8 @@ async function renderProfileTab() {
     }
   } catch (e) {
     $('profileTabContent').innerHTML = `<p class="text-xs text-rose-600">${esc(e.message)}</p>`;
+  } finally {
+    cancelSkeleton();
   }
 }
 
@@ -4134,6 +4153,11 @@ function renderJobs() {
   }).join('');
 }
 
+function scheduleSkeleton(render, delay = 160) {
+  let timer = setTimeout(render, delay);
+  return () => { if (timer) { clearTimeout(timer); timer = null; } };
+}
+
 function renderJobsSkeleton() {
   const root = $('jobsList');
   if (!root) return;
@@ -4160,21 +4184,22 @@ async function loadJobs() {
   if (query) params.set('q', query);
   if (state.activeJobCategory && state.activeJobCategory !== 'all') params.set('category', state.activeJobCategory);
   const root = $('jobsList');
-  if (root) {
-    root.setAttribute('aria-busy','true');
-    renderJobsSkeleton();
-  }
+  if (root) root.setAttribute('aria-busy','true');
+  const cancelSkeleton = root ? scheduleSkeleton(renderJobsSkeleton) : () => {};
   try {
     const result = await api('/api/marketplace/listings?' + params.toString());
     if (requestId !== state.jobsRequestId) return;
+    cancelSkeleton();
     state.jobs = Array.isArray(result.data) ? result.data : [];
     renderJobs();
   } catch (error) {
     if (requestId !== state.jobsRequestId) return;
+    cancelSkeleton();
     state.jobs = [];
     renderJobs();
     toast('មិនអាចទាញយកការងារបានទេ៖ ' + error.message, 'error');
   } finally {
+    cancelSkeleton();
     if (requestId === state.jobsRequestId && root) root.setAttribute('aria-busy','false');
   }
 }
