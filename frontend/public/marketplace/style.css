@@ -8300,3 +8300,24 @@ body > footer {
 
 /* AURORA supplier image sync action */
 .admin-aurora-sync-images{align-self:flex-start;display:inline-flex;align-items:center;gap:7px;padding:9px 12px;border:1px solid var(--border,rgba(128,128,128,.2));border-radius:8px;background:var(--surface-secondary,rgba(128,128,128,.08));font-size:11px;font-weight:750;transition:background .15s,border-color .15s}.admin-aurora-sync-images:hover{background:var(--surface-tertiary,rgba(128,128,128,.14));border-color:var(--accent,#777)}.admin-aurora-sync-images:disabled{opacity:.55;cursor:wait}
+
+
+/* Keep four marketplace product cards per desktop row; tablet and mobile stay responsive. */
+@media(min-width:1200px){
+  .home-main-content #productGrid:not(.hidden),
+  .home-main-content #skeletonGrid:not(.hidden){
+    grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  }
+}
+@media(min-width:901px) and (max-width:1199px){
+  .home-main-content #productGrid:not(.hidden),
+  .home-main-content #skeletonGrid:not(.hidden){
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  }
+}
+@media(max-width:900px){
+  .home-main-content #productGrid:not(.hidden),
+  .home-main-content #skeletonGrid:not(.hidden){
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+}
