@@ -3292,6 +3292,33 @@ function renderSellerShopProfile(vendor) {
   $('sellerShopCoverPreview').innerHTML = vendor.store_cover_url ? `<img src="${esc(vendor.store_cover_url)}">` : '<span>រូប Cover ហាង</span>';
 }
 
+async function renderAdminManagedShop(vendors = null) {
+  const panel = $('adminManagedShopPanel');
+  if (!panel || !isAdmin()) return;
+  try {
+    const list = vendors || (await api('/api/admin/vendors')).data || [];
+    const shop = list.find(v => v.public_shop_id === 'A001' || v.shop_code === 'A001' || v.store_name === 'AURORA Computer');
+    const status = $('adminManagedShopStatus');
+    if (!shop) {
+      if (status) status.textContent = 'រកមិនឃើញហាង AURORA Computer (A001)។';
+      panel.dataset.vendorId = '';
+      return;
+    }
+    panel.dataset.vendorId = shop.id;
+    const form = $('adminManagedShopForm');
+    form.elements.store_name.value = shop.store_name || '';
+    form.elements.store_location.value = shop.store_location || shop.address || '';
+    form.elements.description.value = shop.description || '';
+    $('adminManagedShopId').value = shop.public_shop_id || shop.shop_code || '—';
+    $('adminManagedShopLogoPreview').innerHTML = shop.store_logo_url ? '<img class="h-16 w-16 rounded-full object-cover" src="' + esc(shop.store_logo_url) + '" alt="Shop logo">' : 'មិនទាន់មាន Logo';
+    $('adminManagedShopCoverPreview').innerHTML = shop.store_cover_url ? '<img class="h-20 w-full rounded-xl object-cover" src="' + esc(shop.store_cover_url) + '" alt="Shop cover">' : 'មិនទាន់មាន Cover';
+    if (status) status.textContent = shop.store_name + ' · ' + (shop.public_shop_id || 'A001') + ' · ' + shop.status;
+  } catch (error) {
+    const status = $('adminManagedShopStatus');
+    if (status) status.textContent = error.message || 'មិនអាចផ្ទុកព័ត៌មានហាងបានទេ។';
+  }
+}
+
 async function renderAdmin() {
   if (!isAdmin()) return;
   const b = state.siteBranding;
@@ -3303,6 +3330,39 @@ async function renderAdmin() {
   $('maintenanceToggle').checked = state.maintenanceMode;
   $('maintenanceMessageInput').value = state.maintenanceMessage;
 
+  const managedPanel = $('adminManagedShopPanel');
+  if (managedPanel && managedPanel.dataset.bound !== 'true') {
+    managedPanel.dataset.bound = 'true';
+    $('adminManagedShopReload')?.addEventListener('click', () => void renderAdminManagedShop());
+    $('adminManagedShopOpen')?.addEventListener('click', () => {
+      const vendorId = managedPanel.dataset.vendorId;
+      if (vendorId) { location.hash = 'store/' + encodeURIComponent(vendorId); }
+      else toast('មិនទាន់រកឃើញហាង AURORA Computer។', 'warning');
+    });
+    $('adminManagedShopForm')?.addEventListener('submit', async event => {
+      event.preventDefault();
+      const vendorId = managedPanel.dataset.vendorId;
+      if (!vendorId) return toast('មិនទាន់រកឃើញហាង AURORA Computer។', 'error');
+      const form = event.currentTarget;
+      const payload = new FormData();
+      payload.append('store_name', form.elements.store_name.value || '');
+      payload.append('store_location', form.elements.store_location.value || '');
+      payload.append('description', form.elements.description.value || '');
+      if (form.elements.logo.files[0]) payload.append('logo', form.elements.logo.files[0]);
+      if (form.elements.cover.files[0]) payload.append('cover', form.elements.cover.files[0]);
+      const button = form.querySelector('button[type="submit"]');
+      if (button) button.disabled = true;
+      try {
+        await api('/api/admin/vendors/' + encodeURIComponent(vendorId) + '/profile', { method: 'PATCH', body: payload });
+        form.elements.logo.value = '';
+        form.elements.cover.value = '';
+        toast('បានរក្សាទុកព័ត៌មាន AURORA Computer។');
+        await renderAdminManagedShop();
+      } catch (error) {
+        toast(error.message || 'មិនអាចរក្សាទុកព័ត៌មានហាងបានទេ។', 'error');
+      } finally { if (button) button.disabled = false; }
+    });
+  }
   try {
     const res = await api('/api/admin/vendors');
     const vendors = res.data || [];
@@ -3316,7 +3376,7 @@ async function renderAdmin() {
           ${v.status === 'pending' && v.document_url ? `<button data-admin-review="approved" data-id="${esc(v.id)}" class="rounded-full bg-emerald-600 px-4 py-1.5 text-[10px] font-bold text-white">អនុម័ត</button><button data-admin-review="rejected" data-id="${esc(v.id)}" class="rounded-full bg-rose-50 px-4 py-1.5 text-[10px] font-bold text-rose-600">បដិសេធ</button>` : ''}
         </div>
       </div>`).join('') || '<p class="py-6 text-center text-xs text-slate-400">មិនទាន់មានពាក្យស្នើសុំអ្នកលក់។</p>';
-    await renderAdminSupplierProducts();
+    await Promise.all([renderAdminSupplierProducts(), renderAdminManagedShop(vendors)]);
   } catch (e) {
     toast('មិនអាចផ្ទុក Admin៖ ' + e.message, 'error');
   }
