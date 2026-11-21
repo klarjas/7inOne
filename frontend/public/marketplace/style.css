@@ -8019,3 +8019,42 @@ body > footer {
   #view-product .product-detail-skeleton .sk-related-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
   #view-product .product-detail-skeleton .sk-spec-grid { grid-template-columns: 1fr 1fr; }
 }
+
+
+/* Content-shaped Jobs skeleton + soft smoke shimmer shared by skeleton blocks. */
+#view-home .jobs-skeleton-card{
+  pointer-events:none;
+  border-color:rgba(102,192,244,.07);
+  background:#101822;
+}
+#view-home .jobs-skeleton-block{
+  display:block;
+  flex:0 0 auto;
+  border-radius:6px;
+  background:linear-gradient(105deg,#17232f 0%,#1d2b39 38%,#293b4c 50%,#1d2b39 62%,#17232f 100%);
+  background-size:240% 100%;
+  animation:sevenSkeletonMist 1.05s ease-in-out infinite;
+}
+#view-home .jobs-sk-image{width:48px;height:48px;border-radius:8px}
+#view-home .jobs-skeleton-poster{display:flex;align-items:center;gap:6px;margin-bottom:3px}
+#view-home .jobs-sk-avatar{width:21px;height:21px;border-radius:50%}
+#view-home .jobs-sk-poster-name{width:92px;height:7px}
+#view-home .jobs-sk-time{width:46px;height:6px;margin-left:auto}
+#view-home .jobs-sk-title{width:72%;height:10px;margin:2px 0}
+#view-home .jobs-sk-title.is-short{width:54%}
+#view-home .jobs-sk-company{width:58%;height:7px}
+#view-home .jobs-sk-salary{width:34%;height:8px;margin-top:2px}
+#view-home .jobs-sk-arrow{width:7px;height:7px;border-radius:2px}
+.skeleton{
+  background:linear-gradient(105deg,#17232f 0%,#1d2b39 38%,#293b4c 50%,#1d2b39 62%,#17232f 100%);
+  background-size:240% 100%;
+  animation:sevenSkeletonMist 1.05s ease-in-out infinite;
+}
+#skeletonGrid .skeleton{animation:sevenSkeletonMist 1.05s ease-in-out infinite}
+@keyframes sevenSkeletonMist{
+  0%{background-position:120% 0}
+  100%{background-position:-120% 0}
+}
+@media(prefers-reduced-motion:reduce){
+  .skeleton,#view-home .jobs-skeleton-block,#skeletonGrid .skeleton{animation:none}
+}
