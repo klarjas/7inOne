@@ -2118,7 +2118,8 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .field{border:1px solid #2A475E;border-radius:12px;background:#101822;color:#C7D5E0;min-height:42px}
 .field:focus{border-color:#66C0F4;box-shadow:0 0 0 3px rgba(102,192,244,.14);background:#101822}
 .label{color:var(--muted)!important}
-.close-btn{border:0!important;background:#F5F5F7!important;color:var(--text)!important}
+.close-btn{border:0;background:#203244;color:#C7D5E0}
+.close-btn:hover{background:#2A475E;color:#66C0F4}
 .tab{border:0!important;border-radius:980px!important;color:var(--muted)!important}
 .tab.active{background:#F5F5F7!important;color:var(--text)!important}
 body > footer{
@@ -4853,15 +4854,15 @@ body > footer {
 /* Product form modal close button — Steam Dark */
 #productFormModal .close-btn,
 #productFormModal button.close-btn {
-  background:#101822!important;
-  color:#C7D5E0!important;
-  border:1px solid #2A475E!important;
-  box-shadow:none!important;
+  background:#203244;
+  color:#C7D5E0;
+  border:0;
+  box-shadow:none;
 }
 #productFormModal .close-btn:hover,
 #productFormModal button.close-btn:hover {
-  background:#2A475E!important;
-  color:#66C0F4!important;
+  background:#2A475E;
+  color:#66C0F4;
 }
 
 
