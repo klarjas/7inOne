@@ -3864,26 +3864,6 @@ app.post('/api/admin/supplier-import/import', authenticate, requireAdmin, async 
       });
       if (variantSourceError) throw variantSourceError;
     }
-    // Parent availability reflects whether at least one supplier configuration is available.
-    const parentAvailability = group.variants.some(item => item.availability !== 'out_of_stock') ? 1 : 0;
-    const { error: availabilityError } = await supabase.from('products')
-      .update({ stock: parentAvailability, updated_at: new Date().toISOString() })
-      .eq('id', targetProductId);
-    if (availabilityError) throw availabilityError;
-    // Refresh stock state for already-imported variants from the current supplier page.
-    for (const variant of group.variants) {
-      const supplierCode = String(variant.supplier_product_code || '').trim().toUpperCase();
-      const existingVariant = (existingProduct?.variants || []).find(item =>
-        String(item.sku || '').trim().toUpperCase() === supplierCode
-        || String(item.supplier_source?.supplier_product_code || '').trim().toUpperCase() === supplierCode
-      );
-      if (existingVariant) {
-        const { error: variantAvailabilityError } = await supabase.from('product_variants')
-          .update({ stock: variant.availability === 'out_of_stock' ? 0 : 1, updated_at: new Date().toISOString() })
-          .eq('id', existingVariant.id);
-        if (variantAvailabilityError) throw variantAvailabilityError;
-      }
-    }
     const currentPrices = (existingProduct?.variants || []).map(item => Number(item.price)).filter(Number.isFinite);
     const allPrices = currentPrices.concat(group.variants.map(item => Number(item.selling_price)).filter(Number.isFinite));
     if (allPrices.length) {
@@ -3912,6 +3892,26 @@ app.post('/api/admin/supplier-import/import', authenticate, requireAdmin, async 
       if (imageError) throw imageError;
       createdImageRows = true;
       createdImageProductId = targetProductId;
+    }
+    // Parent availability reflects whether at least one supplier configuration is available.
+    const parentAvailability = group.variants.some(item => item.availability !== 'out_of_stock') ? 1 : 0;
+    const { error: availabilityError } = await supabase.from('products')
+      .update({ stock: parentAvailability, updated_at: new Date().toISOString() })
+      .eq('id', targetProductId);
+    if (availabilityError) throw availabilityError;
+    // Refresh stock state for already-imported variants from the current supplier page.
+    for (const variant of group.variants) {
+      const supplierCode = String(variant.supplier_product_code || '').trim().toUpperCase();
+      const existingVariant = (existingProduct?.variants || []).find(item =>
+        String(item.sku || '').trim().toUpperCase() === supplierCode
+        || String(item.supplier_source?.supplier_product_code || '').trim().toUpperCase() === supplierCode
+      );
+      if (existingVariant) {
+        const { error: variantAvailabilityError } = await supabase.from('product_variants')
+          .update({ stock: variant.availability === 'out_of_stock' ? 0 : 1, updated_at: new Date().toISOString() })
+          .eq('id', existingVariant.id);
+        if (variantAvailabilityError) throw variantAvailabilityError;
+      }
     }
     res.status(201).json({
       success: true,
