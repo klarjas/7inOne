@@ -1813,7 +1813,7 @@ function renderStorefront() {
             : avatarFallbackMarkup(data.store_name || 'ហាងអ្នកលក់')}
         </div></div>
         <div class="storefront-identity">
-          <div class="storefront-title-line"><h1>${esc(data.store_name || 'ហាងអ្នកលក់')}</h1>${data.verified ? verifiedStoreBadge(data.id, true) : ''}</div>
+          <div class="storefront-title-line"><h1>${esc(data.store_name || 'ហាងអ្នកលក់')}</h1>${data.verified ? verifiedStoreBadge(data.id, true) : ''}<button type="button" class="storefront-chat-button" data-store-chat>${ic('chat', 15)}<span>ឆាតជាមួយហាង</span></button></div>
           <p class="storefront-meta"><span>${esc(data.store_location || 'កម្ពុជា')}</span>
             <span>${Number(data.active_listings || 0)} មុខទំនិញ</span>
             <span>${rating ? '★ ' + esc(ratingLabel) : 'មិនទាន់មានពិន្ទុ'} (${reviewCount} ពិនិត្យ)</span>
@@ -1833,10 +1833,10 @@ function renderStorefront() {
       <div class="storefront-toolbar-chips" id="storeCategoryFilters">
         ${categories.map(([key, label]) => `<button type="button" data-store-category="${esc(key)}" class="store-filter ${state.currentStoreCategory === key ? 'active' : ''}">${esc(label)}</button>`).join('')}
       </div>
-      <span class="storefront-result-count">${visible.length} / ${state.currentStoreTotal} មុខទំនិញ</span>
+      <span class="storefront-result-count" id="storeResultCount">${visible.length} / ${state.currentStoreTotal} មុខទំនិញ</span>
     </section>
     <section class="storefront-products-section">
-      <div class="storefront-section-heading"><h2>ទំនិញក្នុងហាង</h2><span>${visible.length} មុខ</span></div>
+      <div class="storefront-section-heading"><h2>ទំនិញក្នុងហាង</h2><span id="storeProductCount">${visible.length} មុខ</span></div>
       ${visible.length
         ? `<div id="storeProductGrid">${visible.map(productCard).join('')}</div>`
         : `<div class="storefront-empty"><span>${ic('package', 30)}</span><strong>មិនមានទំនិញដែលត្រូវនឹងការស្វែងរកទេ</strong><p>សូមសាកល្បងពាក្យស្វែងរក ឬប្រភេទទំនិញផ្សេងទៀត។</p></div>`}
@@ -1862,22 +1862,38 @@ function renderStorefront() {
 
   $('storeSearchInput')?.addEventListener('input', event => {
     state.currentStoreSearch = event.target.value;
-    const cursor = event.target.selectionStart;
-    renderStorefront();
-    const input = $('storeSearchInput');
-    input?.focus();
-    if (typeof cursor === 'number') input?.setSelectionRange(cursor, cursor);
+    updateStorefrontProductResults();
   });
   $('storeCategoryFilters')?.addEventListener('click', event => {
     const button = event.target.closest('[data-store-category]');
     if (button) { state.currentStoreCategory = button.dataset.storeCategory; renderStorefront(); }
   });
-  $('storeProductGrid')?.addEventListener('click', event => {
-    const heart = event.target.closest('[data-action="save"]');
-    if (heart) { event.preventDefault(); event.stopPropagation(); saveAction(heart.dataset.id, heart); return; }
-    const view = event.target.closest('[data-action="view"]');
-    if (view) void openProduct(view.dataset.id);
-  });
+}
+
+function updateStorefrontProductResults() {
+  const root = $('storefrontContent');
+  const section = root?.querySelector('.storefront-products-section');
+  if (!section) return;
+  const query = state.currentStoreSearch.trim().toLowerCase();
+  const visible = state.currentStoreProducts.filter(product =>
+    (state.currentStoreCategory === 'all' || product.category === state.currentStoreCategory) &&
+    (!query || (String(product.title || '') + ' ' + String(product.description || '')).toLowerCase().includes(query))
+  );
+  const current = section.querySelector('#storeProductGrid, .storefront-empty');
+  if (visible.length) {
+    const markup = '<div id="storeProductGrid">' + visible.map(productCard).join('') + '</div>';
+    if (current?.id === 'storeProductGrid') current.innerHTML = visible.map(productCard).join('');
+    else if (current) current.outerHTML = markup;
+    else section.insertAdjacentHTML('beforeend', markup);
+  } else {
+    const markup = '<div class="storefront-empty"><span>' + ic('package', 30) + '</span><strong>មិនមានទំនិញដែលត្រូវនឹងការស្វែងរកទេ</strong><p>សូមសាកល្បងពាក្យស្វែងរក ឬប្រភេទទំនិញផ្សេងទៀត។</p></div>';
+    if (current) current.outerHTML = markup;
+    else section.insertAdjacentHTML('beforeend', markup);
+  }
+  const resultCount = $('storeResultCount');
+  const productCount = $('storeProductCount');
+  if (resultCount) resultCount.textContent = visible.length + ' / ' + state.currentStoreTotal + ' មុខទំនិញ';
+  if (productCount) productCount.textContent = visible.length + ' មុខ';
 }
 
 function handleStorefrontAction(event) {
@@ -1885,7 +1901,12 @@ function handleStorefrontAction(event) {
     void openStorefront(state.currentStoreId, { preserveScroll: true });
     return;
   }
-  if (event.target.closest('[data-store-load-more]')) void loadMoreStoreProducts();
+  if (event.target.closest('[data-store-load-more]')) { void loadMoreStoreProducts(); return; }
+  if (event.target.closest('[data-store-chat]')) { void startStoreChat(state.currentStoreId); return; }
+  const heart = event.target.closest('[data-action="save"]');
+  if (heart) { event.preventDefault(); event.stopPropagation(); saveAction(heart.dataset.id, heart); return; }
+  const view = event.target.closest('[data-action="view"]');
+  if (view) void openProduct(view.dataset.id);
 }
 
 /* --------------------------------------------------------------------------
@@ -2969,6 +2990,20 @@ async function startListingPosterChat(item) {
   } catch (error) {
     toast(error.message || 'មិនអាចឆាតជាមួយអ្នកផុសបានទេ។', 'error');
   }
+}
+
+async function startStoreChat(vendorId) {
+  if (!requireLogin()) return;
+  const storeId = String(vendorId || '').trim();
+  if (!storeId) { toast('មិនមានព័ត៌មានហាងនេះទេ។', 'warning'); return; }
+  try {
+    await loadUnifiedSellerChatInbox();
+    const existing = state.chatInbox.find(conversation => String(conversation.vendor_id || conversation.vendor?.id || '') === storeId);
+    if (existing?.id) { await openSellerChat(existing.id, 'buyer', null); return; }
+    const result = await api('/api/seller-chat/store-conversations', { method: 'POST', body: JSON.stringify({ vendor_id: storeId }) });
+    if (!result.data?.id) throw new Error('មិនអាចបើកសន្ទនាជាមួយហាងបានទេ។');
+    await openSellerChat(result.data.id, 'buyer', null);
+  } catch (error) { toast(error.message || 'មិនអាចឆាតជាមួយហាងបានទេ។', 'error'); }
 }
 
 async function startBuyerSellerChat(productId) {
