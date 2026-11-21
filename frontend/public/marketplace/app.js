@@ -2037,6 +2037,83 @@ async function renderMyPosts() {
   renderMyPostsList();
 }
 
+function renderMyPostSimpleEditForm(post) {
+  return `
+    <form data-my-post-edit-form data-type="${esc(post.type)}" data-id="${esc(post.id)}" class="mt-3 grid gap-2 rounded-xl bg-slate-50 p-3">
+      ${post.type === 'social_post'
+        ? `<label class="text-[10px] font-semibold">Caption<textarea name="caption" class="field mt-1" maxlength="500" rows="3">${esc(post.caption || '')}</textarea></label>`
+        : `<label class="text-[10px] font-semibold">ចំណងជើង<input name="title" class="field mt-1" maxlength="160" required value="${esc(post.title || '')}"></label>
+           <label class="text-[10px] font-semibold">ពិពណ៌នា<textarea name="description" class="field mt-1" rows="3" maxlength="5000">${esc(post.description || '')}</textarea></label>
+           <label class="text-[10px] font-semibold">ទីតាំង<input name="location" class="field mt-1" maxlength="300" value="${esc(post.location || '')}"></label>
+           <label class="text-[10px] font-semibold">YouTube Video Link<input name="youtube_video_url" class="field mt-1" type="url" maxlength="1000" value="${esc(post.youtube_video_url || '')}"></label>
+           ${post.type === 'job'
+             ? `<div class="grid grid-cols-2 gap-2"><label class="text-[10px]">ប្រាក់ខែចាប់ពី<input name="salary_min" class="field mt-1" type="number" min="0" step="any" value="${esc(post.salary_min ?? '')}"></label><label class="text-[10px]">ប្រាក់ខែដល់<input name="salary_max" class="field mt-1" type="number" min="0" step="any" value="${esc(post.salary_max ?? '')}"></label></div>`
+             : post.type === 'product'
+               ? `<div class="grid grid-cols-2 gap-2"><label class="text-[10px]">តម្លៃ<input name="price" class="field mt-1" type="number" min="0" step="any" value="${esc(post.price ?? 0)}"></label><label class="text-[10px]">ស្តុក<input name="stock" class="field mt-1" type="number" min="0" step="1" value="${esc(post.stock ?? 0)}"></label></div>`
+               : `<label class="text-[10px]">តម្លៃ<input name="price" class="field mt-1" type="number" min="0" step="any" value="${esc(post.price ?? post.rent_amount ?? '')}"></label>`}`}
+      <div class="flex justify-end gap-2"><button type="button" data-my-post-action="cancel" data-type="${esc(post.type)}" data-id="${esc(post.id)}" class="rounded-full border border-slate-200 px-4 py-2 text-[10px] font-bold">បោះបង់</button><button type="submit" class="brand-gradient rounded-full px-4 py-2 text-[10px] font-bold text-white">រក្សាទុក</button></div>
+    </form>`;
+}
+
+function renderMyPostFullEditForm(post) {
+  const isJob = post.type === 'job';
+  const categories = Object.entries(isJob ? LISTING_TAXONOMY.jobs : LISTING_TAXONOMY.properties);
+  const categoryOptions = categories.map(([key, item]) => `<option value="${esc(key)}" ${post.category === key ? 'selected' : ''}>${esc(item.label || item.name || key)}</option>`).join('');
+  const images = Array.isArray(post.image_items) ? post.image_items : [];
+  const specs = post.specifications && typeof post.specifications === 'object' ? { ...post.specifications } : {};
+  const googleMapUrl = specs.google_map_url || '';
+  delete specs.google_map_url;
+  const imageMarkup = images.map((image, index) => `<label class="my-post-image-choice"><img src="${esc(image.image_url)}" alt="រូបភាព ${index + 1}" loading="lazy"><span><input type="checkbox" data-keep-listing-image value="${esc(image.key)}" checked> រក្សារូបនេះ</span></label>`).join('');
+  return `
+    <form data-my-post-edit-form data-type="${esc(post.type)}" data-id="${esc(post.id)}" class="my-post-full-edit-form mt-3 grid gap-3 rounded-xl p-3">
+      <div class="grid gap-3 sm:grid-cols-2">
+        <label class="sm:col-span-2"><span class="label">${isJob ? 'មុខតំណែង / Job Title' : 'ចំណងជើងអចលនទ្រព្យ'} *</span><input name="title" class="field mt-1" maxlength="160" required value="${esc(post.title || '')}"></label>
+        <label><span class="label">${isJob ? 'ប្រភេទការងារ' : 'ប្រភេទអចលនទ្រព្យ'} *</span><select name="category" class="field mt-1" required>${categoryOptions}</select></label>
+        ${isJob ? `<label><span class="label">ក្រុមហ៊ុន / អ្នកជ្រើសរើស</span><input name="company_name" class="field mt-1" maxlength="160" value="${esc(post.company_name || '')}"></label>` : `<label><span class="label">ផ្នែករង</span><input name="subcategory" class="field mt-1" maxlength="120" value="${esc(post.subcategory || '')}"></label>`}
+        <label><span class="label">ផ្នែករង</span><input name="subcategory" class="field mt-1" maxlength="120" value="${esc(post.subcategory || '')}"></label>
+        <label><span class="label">ប្រភេទលម្អិត</span><input name="detail_type" class="field mt-1" maxlength="120" value="${esc(post.detail_type || '')}"></label>
+        <label class="sm:col-span-2"><span class="label">ទីតាំង</span><input name="location" class="field mt-1" maxlength="120" value="${esc(post.location || '')}"></label>
+        ${isJob
+          ? `<label><span class="label">ចំនួនត្រូវជ្រើសរើស</span><input name="vacancies" class="field mt-1" type="number" min="1" max="999" value="${esc(post.vacancies ?? 1)}"></label>
+             <label><span class="label">ប្រភេទការងារ</span><select name="employment_type" class="field mt-1"><option value="full_time" ${post.employment_type === 'full_time' ? 'selected' : ''}>ពេញម៉ោង</option><option value="part_time" ${post.employment_type === 'part_time' ? 'selected' : ''}>ក្រៅម៉ោង</option><option value="contract" ${post.employment_type === 'contract' ? 'selected' : ''}>កិច្ចសន្យា</option><option value="internship" ${post.employment_type === 'internship' ? 'selected' : ''}>ហាត់ការ</option><option value="freelance" ${post.employment_type === 'freelance' ? 'selected' : ''}>Freelance</option></select></label>
+             <label><span class="label">ប្រាក់ខែចាប់ពី (USD)</span><input name="salary_min" class="field mt-1" type="number" min="0" step="any" value="${esc(post.salary_min ?? '')}"></label>
+             <label><span class="label">ប្រាក់ខែដល់ (USD)</span><input name="salary_max" class="field mt-1" type="number" min="0" step="any" value="${esc(post.salary_max ?? '')}"></label>
+             <label><span class="label">របៀបបង្ហាញប្រាក់ខែ</span><select name="salary_period" class="field mt-1"><option value="monthly" ${post.salary_period === 'monthly' ? 'selected' : ''}>ប្រចាំខែ</option><option value="daily" ${post.salary_period === 'daily' ? 'selected' : ''}>ប្រចាំថ្ងៃ</option><option value="hourly" ${post.salary_period === 'hourly' ? 'selected' : ''}>ប្រចាំម៉ោង</option><option value="negotiable" ${post.salary_period === 'negotiable' ? 'selected' : ''}>ចរចា</option></select></label>
+             <label><span class="label">ម៉ោងធ្វើការ</span><input name="work_schedule" class="field mt-1" value="${esc(post.work_schedule || '')}"></label>
+             <label><span class="label">ថ្ងៃឈប់សម្រាក</span><input name="days_off" class="field mt-1" value="${esc(post.days_off || '')}"></label>
+             <label><span class="label">បទពិសោធន៍</span><input name="experience" class="field mt-1" value="${esc(post.experience || '')}"></label>
+             <label><span class="label">កម្រិតសិក្សា</span><input name="education" class="field mt-1" value="${esc(post.education || '')}"></label>
+             <label class="sm:col-span-2"><span class="label">ជំនាញ (បំបែកដោយក្បៀស)</span><input name="skills_text" class="field mt-1" value="${esc(Array.isArray(post.skills) ? post.skills.join(', ') : '')}"></label>
+             <label class="sm:col-span-2"><span class="label">ភាសា (បំបែកដោយក្បៀស)</span><input name="languages_text" class="field mt-1" value="${esc(Array.isArray(post.languages) ? post.languages.join(', ') : '')}"></label>
+             <label class="sm:col-span-2"><span class="label">អត្ថប្រយោជន៍ (បំបែកដោយក្បៀស)</span><input name="benefits_text" class="field mt-1" value="${esc(Array.isArray(post.benefits) ? post.benefits.join(', ') : '')}"></label>`
+          : `<label><span class="label">តម្លៃ (USD)</span><input name="price" class="field mt-1" type="number" min="0" step="any" value="${esc(post.price ?? '')}"></label>
+             <label><span class="label">របៀបកំណត់តម្លៃ</span><select name="price_period" class="field mt-1"><option value="total" ${post.price_period === 'total' ? 'selected' : ''}>តម្លៃសរុប</option><option value="monthly" ${post.price_period === 'monthly' ? 'selected' : ''}>ប្រចាំខែ</option><option value="daily" ${post.price_period === 'daily' ? 'selected' : ''}>ប្រចាំថ្ងៃ</option><option value="yearly" ${post.price_period === 'yearly' ? 'selected' : ''}>ប្រចាំឆ្នាំ</option><option value="negotiable" ${post.price_period === 'negotiable' ? 'selected' : ''}>ចរចា</option></select></label>
+             <label><span class="label">ទំហំ (m²)</span><input name="area_sqm" class="field mt-1" type="number" min="0" step="any" value="${esc(post.area_sqm ?? '')}"></label>
+             <label><span class="label">បន្ទប់គេង</span><input name="bedrooms" class="field mt-1" type="number" min="0" step="1" value="${esc(post.bedrooms ?? '')}"></label>
+             <label><span class="label">បន្ទប់ទឹក</span><input name="bathrooms" class="field mt-1" type="number" min="0" step="1" value="${esc(post.bathrooms ?? '')}"></label>
+             <label><span class="label">អាសយដ្ឋានលម្អិត</span><input name="address" class="field mt-1" maxlength="300" value="${esc(post.address || '')}"></label>`}
+        <label class="sm:col-span-2"><span class="label">YouTube Video Link</span><input name="youtube_video_url" class="field mt-1" type="url" maxlength="1000" value="${esc(post.youtube_video_url || '')}"></label>
+        <label class="sm:col-span-2"><span class="label">Google Maps Link</span><input name="google_map_url" class="field mt-1" type="url" maxlength="1000" value="${esc(googleMapUrl)}"></label>
+        <label class="sm:col-span-2"><span class="label">ការពិពណ៌នាសង្ខេប</span><textarea name="short_description" class="field mt-1" rows="2" maxlength="300">${esc(post.short_description || '')}</textarea></label>
+        <label class="sm:col-span-2"><span class="label">ការពិពណ៌នាលម្អិត *</span><textarea name="description" class="field mt-1" rows="5" maxlength="5000" required>${esc(post.description || '')}</textarea></label>
+        <input type="hidden" name="specifications" value="${esc(JSON.stringify(specs))}">
+        <input type="hidden" name="keep_image_message_ids" value="[]">
+      </div>
+      <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <label><span class="label">Province Code</span><input name="province_code" class="field mt-1" maxlength="2" value="${esc(post.province_code || '')}"></label>
+        <label><span class="label">District Code</span><input name="district_code" class="field mt-1" maxlength="4" value="${esc(post.district_code || '')}"></label>
+        <label><span class="label">Commune Code</span><input name="commune_code" class="field mt-1" maxlength="6" value="${esc(post.commune_code || '')}"></label>
+        <label><span class="label">Village Code</span><input name="village_code" class="field mt-1" maxlength="8" value="${esc(post.village_code || '')}"></label>
+      </div>
+      <div class="grid gap-2">
+        <span class="label">រូបភាពបច្ចុប្បន្ន · ដោះធីករូបដែលចង់លុប</span>
+        <div class="my-post-image-grid">${imageMarkup || '<span class="text-[10px] text-slate-400">មិនទាន់មានរូបភាព</span>'}</div>
+        <label><span class="label">បន្ថែមរូបភាព (JPG / PNG / WEBP · 8MB/រូប · អតិបរមា ១០ រូបសរុប)</span><input class="field mt-1" type="file" name="images" accept="image/jpeg,image/png,image/webp" multiple></label>
+      </div>
+      <div class="flex justify-end gap-2"><button type="button" data-my-post-action="cancel" data-type="${esc(post.type)}" data-id="${esc(post.id)}" class="rounded-full border border-slate-200 px-4 py-2 text-[10px] font-bold">បោះបង់</button><button type="submit" class="brand-gradient rounded-full px-4 py-2 text-[10px] font-bold text-white">រក្សាទុកព័ត៌មានទាំងអស់</button></div>
+    </form>`;
+}
+
 function renderMyPostsList() {
   const target = $('myPostsList');
   if (!target) return;
@@ -2056,22 +2133,7 @@ function renderMyPostsList() {
       : post.status === 'closed' ? 'បានបិទ' : post.status;
     const amount = post.price ?? post.rent_amount ?? post.salary_min;
     const image = post.image_url ? `<img src="${esc(post.image_url)}" alt="" class="h-16 w-16 shrink-0 rounded-xl object-cover">` : `<div class="grid h-16 w-16 shrink-0 place-items-center rounded-xl bg-slate-100 text-slate-400">${ic('image',20)}</div>`;
-    const editForm = editing ? `
-      <form data-my-post-edit-form data-type="${esc(post.type)}" data-id="${esc(post.id)}" class="mt-3 grid gap-2 rounded-xl bg-slate-50 p-3">
-        ${post.type === 'social_post'
-          ? `<label class="text-[10px] font-semibold">Caption<textarea name="caption" class="field mt-1" maxlength="500" rows="3">${esc(post.caption || '')}</textarea></label>`
-          : `<label class="text-[10px] font-semibold">ចំណងជើង<input name="title" class="field mt-1" maxlength="160" required value="${esc(post.title || '')}"></label>
-             <label class="text-[10px] font-semibold">ពិពណ៌នា<textarea name="description" class="field mt-1" rows="3" maxlength="5000">${esc(post.description || '')}</textarea></label>
-             <label class="text-[10px] font-semibold">ទីតាំង<input name="location" class="field mt-1" maxlength="300" value="${esc(post.location || '')}"></label>
-             <label class="text-[10px] font-semibold">YouTube Video Link (មិនបាច់បំពេញក៏បាន)<input name="youtube_video_url" class="field mt-1" type="url" maxlength="1000" placeholder="https://www.youtube.com/watch?v=VIDEO_ID" value="${esc(post.youtube_video_url || '')}"></label>
-             ${post.type === 'job'
-               ? `<div class="grid grid-cols-2 gap-2"><label class="text-[10px]">ប្រាក់ខែចាប់ពី<input name="salary_min" class="field mt-1" type="number" min="0" step="any" value="${esc(post.salary_min ?? '')}"></label><label class="text-[10px]">ប្រាក់ខែដល់<input name="salary_max" class="field mt-1" type="number" min="0" step="any" value="${esc(post.salary_max ?? '')}"></label></div>`
-               : post.type === 'product'
-                 ? `<div class="grid grid-cols-2 gap-2"><label class="text-[10px]">តម្លៃ<input name="price" class="field mt-1" type="number" min="0" step="any" value="${esc(post.price ?? 0)}"></label><label class="text-[10px]">ស្តុក<input name="stock" class="field mt-1" type="number" min="0" step="1" value="${esc(post.stock ?? 0)}"></label></div>`
-                 : `<label class="text-[10px]">តម្លៃ<input name="price" class="field mt-1" type="number" min="0" step="any" value="${esc(post.price ?? post.rent_amount ?? '')}"></label>`}
-          `}
-        <div class="flex justify-end gap-2"><button type="button" data-my-post-action="cancel" data-type="${esc(post.type)}" data-id="${esc(post.id)}" class="rounded-full border border-slate-200 px-4 py-2 text-[10px] font-bold">បោះបង់</button><button type="submit" class="brand-gradient rounded-full px-4 py-2 text-[10px] font-bold text-white">រក្សាទុក</button></div>
-      </form>` : '';
+    const editForm = editing ? (['job','property'].includes(post.type) ? renderMyPostFullEditForm(post) : renderMyPostSimpleEditForm(post)) : '';
     return `
       <article class="rounded-2xl border border-slate-100 bg-white p-3" data-my-post-card="${esc(key)}">
         <div class="flex items-start gap-3">
@@ -4640,21 +4702,72 @@ function bindEvents() {
     e.preventDefault();
     const type = form.dataset.type, id = form.dataset.id, values = new FormData(form);
     const payload = { action:'edit' };
-    if (type === 'social_post') payload.caption = values.get('caption') || '';
-    else {
-      payload.title = values.get('title') || '';
-      payload.description = values.get('description') || '';
-      payload.location = values.get('location') || '';
+    let requestBody = null;
+    if (['job','property'].includes(type)) {
+      const get = name => String(values.get(name) ?? '');
+      payload.title = get('title');
+      payload.description = get('description');
+      payload.short_description = get('short_description');
+      payload.category = get('category');
+      payload.subcategory = get('subcategory');
+      payload.detail_type = get('detail_type');
+      payload.location = get('location');
+      payload.youtube_video_url = get('youtube_video_url');
+      payload.province_code = get('province_code');
+      payload.district_code = get('district_code');
+      payload.commune_code = get('commune_code');
+      payload.village_code = get('village_code');
+      const specsField = get('specifications');
+      let specifications = {};
+      try { specifications = JSON.parse(specsField || '{}'); } catch { toast('ព័ត៌មានបន្ថែមមិនត្រឹមត្រូវទេ។', 'error'); return; }
+      const googleMapUrl = get('google_map_url');
+      if (googleMapUrl) specifications.google_map_url = googleMapUrl;
+      else delete specifications.google_map_url;
+      payload.specifications = specifications;
       if (type === 'job') {
-        payload.salary_min = values.get('salary_min');
-        payload.salary_max = values.get('salary_max');
-      } else if (type === 'product') {
-        payload.price = values.get('price');
-        payload.stock = values.get('stock');
-      } else payload.price = values.get('price');
+        payload.company_name = get('company_name');
+        payload.vacancies = get('vacancies');
+        payload.salary_min = get('salary_min');
+        payload.salary_max = get('salary_max');
+        payload.salary_period = get('salary_period');
+        payload.employment_type = get('employment_type');
+        payload.work_schedule = get('work_schedule');
+        payload.days_off = get('days_off');
+        payload.experience = get('experience');
+        payload.education = get('education');
+        payload.skills = get('skills_text').split(',').map(value => value.trim()).filter(Boolean);
+        payload.languages = get('languages_text').split(',').map(value => value.trim()).filter(Boolean);
+        payload.benefits = get('benefits_text').split(',').map(value => value.trim()).filter(Boolean);
+      } else {
+        payload.address = get('address');
+        payload.price = get('price');
+        payload.price_period = get('price_period');
+        payload.area_sqm = get('area_sqm');
+        payload.bedrooms = get('bedrooms');
+        payload.bathrooms = get('bathrooms');
+      }
+      const keepImageIds = Array.from(form.querySelectorAll('[data-keep-listing-image]:checked')).map(input => input.value);
+      values.set('keep_image_message_ids', JSON.stringify(keepImageIds));
+      values.set('payload', JSON.stringify(payload));
+      requestBody = values;
+    } else {
+      if (type === 'social_post') payload.caption = values.get('caption') || '';
+      else {
+        payload.title = values.get('title') || '';
+        payload.description = values.get('description') || '';
+        payload.location = values.get('location') || '';
+        if (type === 'job') {
+          payload.salary_min = values.get('salary_min');
+          payload.salary_max = values.get('salary_max');
+        } else if (type === 'product') {
+          payload.price = values.get('price');
+          payload.stock = values.get('stock');
+        } else payload.price = values.get('price');
+      }
+      requestBody = JSON.stringify(payload);
     }
     try {
-      await api('/api/my-posts/' + encodeURIComponent(type) + '/' + encodeURIComponent(id), { method:'PATCH', body:JSON.stringify(payload) });
+      await api('/api/my-posts/' + encodeURIComponent(type) + '/' + encodeURIComponent(id), { method:'PATCH', body:requestBody });
       state.myPostEditing = null;
       toast('បានកែប្រែប្រកាសជោគជ័យ។');
       await renderMyPosts();
