@@ -6478,7 +6478,7 @@ body > footer {
 
 
 /* Product Detail / Gallery popup: reference layout only; other video popup modes stay unchanged. */
-#homeShortsPopup.is-product-gallery-popup{position:relative}
+#homeShortsPopup.is-product-gallery-popup{position:fixed!important;z-index:2147483000!important;top:50%!important;left:50%!important;right:auto!important;bottom:auto!important;transform:translate(-50%,-50%);margin:0!important}
 #homeShortsPopup.is-product-gallery-popup .home-shorts-popup-layout{display:flex!important;flex-direction:column!important;gap:0!important;padding:0!important;overflow:hidden!important;max-height:none!important}
 #homeShortsPopup.is-product-gallery-popup .home-shorts-popup-overlay-close{position:absolute;top:10px;right:10px;z-index:50;display:grid;place-items:center;width:36px;height:36px;border:1px solid rgba(148,163,184,.35);border-radius:9px;background:rgba(15,23,42,.82);color:#f8fafc;font-size:23px;line-height:1;cursor:pointer;backdrop-filter:blur(6px)}
 #homeShortsPopup.is-product-gallery-popup .home-shorts-popup-overlay-close:hover{background:rgba(51,65,85,.95);color:#fff}
