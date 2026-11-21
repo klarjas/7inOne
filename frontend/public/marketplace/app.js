@@ -1293,6 +1293,23 @@ function setPropertyType(type) {
   void loadProducts();
 }
 
+function renderProductDetailSkeleton() {
+  const root = $('productDetail');
+  if (!root) return;
+  root.innerHTML = `
+    <div class="product-detail-skeleton" aria-busy="true" aria-label="កំពុងផ្ទុកព័ត៌មានលម្អិត">
+      <div class="skeleton product-detail-skeleton-image"></div>
+      <div class="product-detail-skeleton-copy">
+        <div class="skeleton sk-badge"></div>
+        <div class="skeleton sk-title"></div>
+        <div class="skeleton sk-price"></div>
+        <div class="skeleton sk-btn"></div>
+        <div class="skeleton sk-box"></div>
+        <div class="skeleton sk-box"></div>
+      </div>
+    </div>`;
+}
+
 async function openMarketplaceListing(type, id, options = {}) {
   if (!id || !['job', 'real_estate'].includes(type)) return false;
   const isCurrent = () => options.routeSyncNavigationId == null || options.routeSyncNavigationId === state.routeSyncNavigationId;
