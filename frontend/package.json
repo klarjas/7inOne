@@ -6,8 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "predev": "node ../../scripts/build-marketplace-assets.mjs && node ../../scripts/build-marketplace-css.mjs",
-    "prebuild": "node ../../scripts/build-marketplace-assets.mjs && node ../../scripts/build-marketplace-css.mjs"
+    "predev": "node ../scripts/build-marketplace-assets.mjs && node ../scripts/build-marketplace-css.mjs",
+    "prebuild": "node ../scripts/build-marketplace-assets.mjs && node ../scripts/build-marketplace-css.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.0",
