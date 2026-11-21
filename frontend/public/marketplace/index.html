@@ -837,6 +837,24 @@
           <div id="adminSupplierProductsList" class="space-y-4"><p class="py-6 text-center text-xs text-slate-400">កំពុងផ្ទុកផលិតផល...</p></div>
         </section>
 
+        <!-- Admin-managed official shop -->
+        <section class="mb-6 rounded-3xl bg-white p-5 soft-shadow sm:p-6" id="adminManagedShopPanel">
+          <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
+            <div><p class="text-[10px] font-bold text-violet-700">OFFICIAL SHOP MANAGEMENT</p><h2 class="mt-1 text-xl font-bold">គ្រប់គ្រងហាងផ្លូវការ</h2><p class="mt-1 text-[10px] text-slate-500">គ្រប់គ្រង AURORA Computer ដាច់ដោយឡែកពីហាងអ្នកលក់ធម្មតា។</p></div>
+            <button type="button" id="adminManagedShopOpen" class="rounded-full bg-slate-900 px-4 py-2 text-[11px] font-bold text-white">មើលទំព័រហាង</button>
+          </div>
+          <div id="adminManagedShopStatus" class="mb-4 rounded-xl bg-slate-50 p-3 text-[11px] text-slate-500">កំពុងផ្ទុកព័ត៌មានហាង...</div>
+          <form id="adminManagedShopForm" class="grid gap-3 sm:grid-cols-2">
+            <label><span class="label">ឈ្មោះហាង</span><input class="field" name="store_name" required maxlength="80"></label>
+            <label><span class="label">Shop ID</span><input class="field" id="adminManagedShopId" readonly></label>
+            <label class="sm:col-span-2"><span class="label">ទីតាំងហាង</span><input class="field" name="store_location" maxlength="160"></label>
+            <label class="sm:col-span-2"><span class="label">ការពិពណ៌នាហាង</span><textarea class="field" name="description" rows="3" maxlength="1000"></textarea></label>
+            <label><span class="label">Logo ហាង</span><input class="field" name="logo" type="file" accept="image/jpeg,image/png,image/webp"><span id="adminManagedShopLogoPreview" class="mt-2 block text-[10px] text-slate-400">មិនទាន់មាន Logo</span></label>
+            <label><span class="label">Cover ហាង</span><input class="field" name="cover" type="file" accept="image/jpeg,image/png,image/webp"><span id="adminManagedShopCoverPreview" class="mt-2 block text-[10px] text-slate-400">មិនទាន់មាន Cover</span></label>
+            <div class="flex flex-wrap gap-2 sm:col-span-2"><button type="submit" class="brand-gradient rounded-full px-5 py-2.5 text-[11px] font-bold text-white">រក្សាទុកព័ត៌មានហាង</button><button type="button" id="adminManagedShopReload" class="rounded-full border border-slate-200 px-5 py-2.5 text-[11px] font-bold">ផ្ទុកឡើងវិញ</button></div>
+          </form>
+        </section>
+
         <!-- Vendor Verification Applications -->
         <div class="mb-5 grid grid-cols-3 gap-3">
           <div class="rounded-2xl bg-white p-4 soft-shadow"><p class="text-[10px] text-slate-500">កំពុងរង់ចាំ</p><b class="mt-1 block text-2xl" id="adminPendingCount">0</b></div>
