@@ -8239,3 +8239,5 @@ body > footer {
 .spec-filter-field input[type=checkbox]{margin-top:2px;accent-color:var(--green)}
 .spec-price-filter>div{grid-template-columns:1fr 1fr;gap:6px}
 .spec-price-filter input{width:100%;min-width:0;padding:7px 8px;border:1px solid var(--line);border-radius:8px;background:transparent;color:var(--ink);font-size:11px}
+
+.spec-filter-field select{width:100%;min-width:0;padding:7px 8px;border:1px solid var(--line);border-radius:8px;background:var(--page);color:var(--ink);font-size:11px}
