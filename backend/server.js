@@ -3010,6 +3010,7 @@ app.get('/api/vendors/:id/ratings', async (req, res) => {
     buyerNames = Object.fromEntries((buyers || []).map(row => [row.id, row.display_name]));
   }
   const profile = vendor.profiles || {};
+  res.set('Cache-Control', 'no-store');
   res.json({ data: {
     id: vendor.id, public_shop_id: vendor.public_shop_id, store_name: vendor.store_name, description: vendor.description, created_at: vendor.created_at,
     status: vendor.status, verified: vendor.status === 'approved', store_location: vendor.store_location || vendor.address || null,
@@ -3022,7 +3023,6 @@ app.get('/api/vendors/:id/ratings', async (req, res) => {
     total_views: (products || []).reduce((sum,row) => sum + Number(row.view_count || 0), 0),
     reviews: (reviews || []).map(row => ({ ...row, buyer_name: buyerNames[row.buyer_id] || 'អ្នកទិញ' }))
   } });
-  res.set('Cache-Control', 'no-store');
 });
 app.post('/api/vendors/:id/reviews', authenticate, async (req, res) => {
   const rating = Number(req.body.rating);
