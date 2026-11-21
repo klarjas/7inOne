@@ -3346,6 +3346,38 @@ function openListingVideoPopup(url, title = 'វីដេអូ', meta = {}) {
     '';
 
   stage.replaceChildren(playerShell);
+
+  // Drag the floating popup directly from the video surface with the left mouse button.
+  // Keep custom controls interactive while making the YouTube iframe click-through.
+  const videoScreen = playerShell.querySelector('.custom-youtube-screen');
+  if (videoScreen && !videoScreen.dataset.popupDragBound) {
+    videoScreen.dataset.popupDragBound = '1';
+    let videoDrag = null;
+    videoScreen.addEventListener('pointerdown', event => {
+      if (event.button !== 0 || event.target.closest('.custom-youtube-controls, button, input, select, a')) return;
+      const rect = popup.getBoundingClientRect();
+      videoDrag = { pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, left: rect.left, top: rect.top };
+      try { videoScreen.setPointerCapture(event.pointerId); } catch {}
+      popup.style.position = 'fixed';
+      popup.style.margin = '0';
+      popup.style.transform = 'none';
+      popup.style.left = rect.left + 'px';
+      popup.style.top = rect.top + 'px';
+      event.preventDefault();
+    });
+    videoScreen.addEventListener('pointermove', event => {
+      if (!videoDrag || event.pointerId !== videoDrag.pointerId) return;
+      const left = Math.max(8, Math.min(window.innerWidth - popup.offsetWidth - 8, videoDrag.left + event.clientX - videoDrag.startX));
+      const top = Math.max(8, Math.min(window.innerHeight - popup.offsetHeight - 8, videoDrag.top + event.clientY - videoDrag.startY));
+      popup.style.left = left + 'px';
+      popup.style.top = top + 'px';
+    });
+    const stopVideoDrag = event => {
+      if (videoDrag && event.pointerId === videoDrag.pointerId) videoDrag = null;
+    };
+    videoScreen.addEventListener('pointerup', stopVideoDrag);
+    videoScreen.addEventListener('pointercancel', stopVideoDrag);
+  }
   // Non-modal floating player: keep the marketplace interactive behind it.
   if (!popup.open) popup.show();
 
