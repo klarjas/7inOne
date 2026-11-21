@@ -118,6 +118,7 @@ const state = {
   currentVendor: null,
   currentVariantId: null,
   activeSpecFilters: {},
+  activeSubcategory: 'all',
   specPriceMin: '',
   specPriceMax: '',
   currentMarketplaceListing: null,
@@ -888,15 +889,18 @@ function renderCategorySpecFilters() {
     ['color','Color',['color','colour']],['resolution','Resolution',['resolution','display_resolution']],['os','Operating System',['operating_system','os']]
   ];
   const products = state.products.filter(item => item.listing_type === 'product');
+  const subcategories = [...new Set(products.map(item => String(item.subcategory || '').trim()).filter(Boolean))].sort((a,b) => a.localeCompare(b));
+  const scopedProducts = state.activeSubcategory === 'all' ? products : products.filter(item => String(item.subcategory || '') === state.activeSubcategory);
   const sections = definitions.map(([key,label,aliases]) => {
-    const values = [...new Set(products.map(item => specFilterValue(item,aliases)).filter(Boolean))].sort((a,b) => a.localeCompare(b));
+    const values = [...new Set(scopedProducts.map(item => specFilterValue(item,aliases)).filter(Boolean))].sort((a,b) => a.localeCompare(b));
     if (!values.length) return '';
     const selected = new Set(state.activeSpecFilters[key] || []);
     return `<div class="spec-filter-field"><b>${label}</b><div>${values.map(value => `<label><input type="checkbox" data-spec-filter="${key}" value="${esc(value)}" ${selected.has(value) ? 'checked' : ''}><span>${esc(value)}</span></label>`).join('')}</div></div>`;
   }).join('');
-  const hasPrice = products.some(item => Number.isFinite(Number(item.display_price ?? item.price)));
-  group.hidden = !sections && !hasPrice;
-  root.innerHTML = (sections || '') + (hasPrice ? `<div class="spec-filter-field spec-price-filter"><b>Price Range ($)</b><div><input type="number" min="0" step="1" data-price-filter="min" placeholder="Min" value="${esc(state.specPriceMin)}"><input type="number" min="0" step="1" data-price-filter="max" placeholder="Max" value="${esc(state.specPriceMax)}"></div></div>` : '');
+  const hasPrice = scopedProducts.some(item => Number.isFinite(Number(item.display_price ?? item.price)) && Number(item.display_price ?? item.price) > 0);
+  const subcategorySelect = subcategories.length ? '<div class="spec-filter-field"><b>ផ្នែករង / Subcategory</b><div><select data-subcategory-filter><option value="all">ទាំងអស់</option>' + subcategories.map(value => '<option value="' + esc(value) + '"' + (state.activeSubcategory === value ? ' selected' : '') + '>' + esc(value) + '</option>').join('') + '</select></div></div>' : '';
+  group.hidden = !sections && !hasPrice && !subcategorySelect;
+  root.innerHTML = subcategorySelect + (sections || '') + (hasPrice ? '<div class="spec-filter-field spec-price-filter"><b>Price Range ($)</b><div><input type="number" min="0" step="1" data-price-filter="min" placeholder="Min" value="' + esc(state.specPriceMin) + '"><input type="number" min="0" step="1" data-price-filter="max" placeholder="Max" value="' + esc(state.specPriceMax) + '"></div></div>' : '');
 }
 function verifiedStoreBadge(vendorId, showKhmerLabel = false) {
   const id = String(vendorId || '');
@@ -1244,6 +1248,7 @@ function renderProducts() {
       if (!(state.activeCondition === 'new' ? isNew : isUsed)) return false;
     }
     if (item.listing_type === 'product') {
+      if (state.activeSubcategory !== 'all' && String(item.subcategory || '') !== state.activeSubcategory) return false;
       for (const [key, selected] of Object.entries(state.activeSpecFilters || {})) {
         if (!selected?.length) continue;
         const aliases = {
@@ -1364,6 +1369,7 @@ function updateMarketplaceCategoryHeading() {
 
 function setCategory(category) {
   state.activeSpecFilters = {};
+  state.activeSubcategory = 'all';
   state.specPriceMin = '';
   state.specPriceMax = '';
   state.activeCategory = category;
@@ -1377,6 +1383,7 @@ function setCategory(category) {
 
 function setListingType(type) {
   state.activeSpecFilters = {};
+  state.activeSubcategory = 'all';
   state.specPriceMin = '';
   state.specPriceMax = '';
   state.activeListingType = ['all','product','job','real_estate'].includes(type) ? type : 'all';
@@ -4482,6 +4489,7 @@ function bindEvents() {
     state.searchTerm = '';
     state.activeCondition = 'all';
     state.activeSpecFilters = {};
+    state.activeSubcategory = 'all';
     state.specPriceMin = '';
     state.specPriceMax = '';
     document.querySelectorAll('[data-spec-filter]').forEach(input => { input.checked = false; });
@@ -4502,6 +4510,13 @@ function bindEvents() {
   };
   syncMarketplaceSortState();
   $('specificationFilters')?.addEventListener('change', event => {
+    const subcategoryInput = event.target.closest('[data-subcategory-filter]');
+    if (subcategoryInput) {
+      state.activeSubcategory = subcategoryInput.value || 'all';
+      state.activeSpecFilters = {};
+      renderProducts();
+      return;
+    }
     const input = event.target.closest('[data-spec-filter]');
     if (input) {
       const key = input.dataset.specFilter;
