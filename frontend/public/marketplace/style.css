@@ -7872,3 +7872,41 @@ body > footer {
     background-position: 50% 0 !important;
   }
 }
+
+/* Visible overlay shimmer: works even when skeleton backgrounds are overridden */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.skeleton::after {
+  content: "" !important;
+  display: block !important;
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 5 !important;
+  pointer-events: none !important;
+  transform: translateX(-120%);
+  background: linear-gradient(
+    105deg,
+    transparent 20%,
+    rgba(102, 192, 244, 0.06) 38%,
+    rgba(180, 220, 245, 0.30) 50%,
+    rgba(102, 192, 244, 0.06) 62%,
+    transparent 80%
+  ) !important;
+  animation: sevenInOneSkeletonSweep 1.35s ease-in-out infinite !important;
+}
+
+@keyframes sevenInOneSkeletonSweep {
+  0% { transform: translateX(-120%); }
+  100% { transform: translateX(120%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton::after {
+    animation: none !important;
+    display: none !important;
+  }
+}
