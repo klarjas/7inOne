@@ -458,12 +458,12 @@
               <button class="account-shortcut" data-profile-jump="history">
                 <span class="account-shortcut-icon bg-emerald-50 text-emerald-700" data-icon="clipboard"></span>
                 <span><b>ការទិញ និងសំណើតថ្លៃ</b><small>តាមដានប្រតិបត្តិការរបស់អ្នក</small></span>
-                <span class="account-shortcut-arrow">→</span>
+                <span class="account-shortcut-arrow" data-icon="arrow"></span>
               </button>
               <button class="account-shortcut" data-profile-jump="seller">
                 <span class="account-shortcut-icon bg-amber-50 text-amber-700" data-icon="store"></span>
                 <span><b>ស្ថានភាពហាង</b><small>គ្រប់គ្រងការផ្ទៀងផ្ទាត់អ្នកលក់</small></span>
-                <span class="account-shortcut-arrow">→</span>
+                <span class="account-shortcut-arrow" data-icon="arrow"></span>
               </button>
             </div>
           </div>
@@ -481,12 +481,12 @@
               <button type="button" data-open-profile-modal="profileInfoModal" class="flex w-full items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 text-left transition hover:border-emerald-300 hover:bg-emerald-50/40">
                 <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-emerald-50 text-emerald-700" data-icon="user" data-icon-size="20"></span>
                 <span class="min-w-0 flex-1"><b class="block text-[12px]">ព័ត៌មានផ្ទាល់ខ្លួន</b><small class="mt-1 block text-[10px] text-slate-500">កែឈ្មោះ លេខទូរស័ព្ទ ទីតាំង និងអំពីខ្ញុំ</small></span>
-                <span class="text-slate-400">›</span>
+                <span class="text-slate-400" data-icon="arrow"></span>
               </button>
               <button type="button" data-open-profile-modal="telegramSecurityModal" class="flex w-full items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 text-left transition hover:border-sky-300 hover:bg-sky-50/40">
                 <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-sky-50 text-sky-700" data-icon="shield" data-icon-size="20"></span>
                 <span class="min-w-0 flex-1"><b class="block text-[12px]">សុវត្ថិភាពគណនី</b><small class="mt-1 block text-[10px] text-slate-500">ភ្ជាប់ Telegram, ទទួល OTP និងប្ដូរ Password</small></span>
-                <span class="text-slate-400">›</span>
+                <span class="text-slate-400" data-icon="arrow"></span>
               </button>
             </div>
           </section>
@@ -495,7 +495,7 @@
             <div class="p-5 sm:p-6">
               <div class="mb-5 flex items-center justify-between gap-3">
                 <span></span>
-                <button type="button" data-close-profile-modal="profileInfoModal" aria-label="បិទ" class="grid h-9 w-9 place-items-center rounded-full bg-slate-100 text-lg text-slate-600 hover:bg-slate-200">×</button>
+                <button type="button" data-close-profile-modal="profileInfoModal" aria-label="បិទ" class="grid h-9 w-9 place-items-center rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200"><span data-icon="x" data-icon-size="16"></span></button>
               </div>
                           <div class="mb-5 flex items-center justify-between gap-3">
               <div>
@@ -523,7 +523,7 @@
             <div class="p-5 sm:p-6">
               <div class="mb-5 flex items-center justify-between gap-3">
                 <span></span>
-                <button type="button" data-close-profile-modal="telegramSecurityModal" aria-label="បិទ" class="grid h-9 w-9 place-items-center rounded-full bg-slate-100 text-lg text-slate-600 hover:bg-slate-200">×</button>
+                <button type="button" data-close-profile-modal="telegramSecurityModal" aria-label="បិទ" class="grid h-9 w-9 place-items-center rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200"><span data-icon="x" data-icon-size="16"></span></button>
               </div>
                           <!-- Telegram Account Security -->
             <div class="mt-6 border-t border-slate-100 pt-5">
@@ -1137,12 +1137,12 @@
           <div class="sm:col-span-2 listing-image-album" data-listing-image-album="property">
             <span class="label">រូបភាពអចលនទ្រព្យ (JPG/PNG/WEBP · អតិបរមា ១០ រូប · 8MB/រូប)</span>
             <label class="product-album-picker" data-listing-image-picker>
-              <span class="product-album-picker-icon">▧</span>
+              <span class="product-album-picker-icon" data-icon="image"></span>
               <span class="min-w-0 flex-1"><b>ជ្រើសរើសរូបភាពច្រើន</b><small data-listing-image-count>0 / ១០ រូបបានជ្រើសរើស</small></span>
               <span class="product-album-add">+ បន្ថែមរូប</span>
               <input class="sr-only" type="file" accept="image/jpeg,image/png,image/webp" multiple data-listing-image-input>
             </label>
-            <div class="product-image-album" data-listing-image-grid><div class="product-album-empty"><span>▧</span><b>មិនទាន់មានរូបភាពទេ</b><small>ជ្រើសរើសរូបភាពរហូតដល់ ១០ រូប</small></div></div>
+            <div class="product-image-album" data-listing-image-grid><div class="product-album-empty"><span data-icon="image"></span><b>មិនទាន់មានរូបភាពទេ</b><small>ជ្រើសរើសរូបភាពរហូតដល់ ១០ រូប</small></div></div>
             <p class="product-album-hint">រូបទី១ ជារូបមេ · អាចប្តូររូបមេ លុបរូប និងរៀបលំដាប់បាន</p>
           </div>
         </div>
@@ -1256,10 +1256,10 @@
 
   <!-- Image Lightbox -->
   <div class="product-lightbox" id="productLightbox" aria-hidden="true" role="dialog" aria-modal="true">
-    <button type="button" class="product-lightbox-close" id="productLightboxClose" aria-label="បិទរូបភាព">×</button>
-    <button type="button" class="product-lightbox-nav prev" id="productLightboxPrev" aria-label="រូបមុន">‹</button>
+    <button type="button" class="product-lightbox-close" id="productLightboxClose" aria-label="បិទរូបភាព"><span data-icon="x" data-icon-size="18"></span></button>
+    <button type="button" class="product-lightbox-nav prev" id="productLightboxPrev" aria-label="រូបមុន"><span data-icon="chevronLeft"></span></button>
     <img id="productLightboxImage" alt="រូបភាពទំនិញពង្រីក" />
-    <button type="button" class="product-lightbox-nav next" id="productLightboxNext" aria-label="រូបបន្ទាប់">›</button>
+    <button type="button" class="product-lightbox-nav next" id="productLightboxNext" aria-label="រូបបន្ទាប់"><span data-icon="chevronRight"></span></button>
     <span class="product-lightbox-count" id="productLightboxCount"></span>
   </div>
 
@@ -1283,7 +1283,7 @@
   <script src="./app.js" defer></script>
 <div id="marketplaceListingModal" class="marketplace-detail-overlay hidden" aria-hidden="true">
     <div class="marketplace-detail-dialog" role="dialog" aria-modal="true" aria-label="ព័ត៌មានប្រកាស">
-      <button type="button" class="marketplace-detail-close" data-close-marketplace-detail aria-label="បិទ">×</button>
+      <button type="button" class="marketplace-detail-close" data-close-marketplace-detail aria-label="បិទ"><span data-icon="x" data-icon-size="18"></span></button>
       <div id="marketplaceListingDetail"></div>
     </div>
   </div>
