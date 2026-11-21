@@ -6478,9 +6478,10 @@ body > footer {
 
 
 /* Product Detail / Gallery popup: reference layout only; other video popup modes stay unchanged. */
-#homeShortsPopup.is-product-gallery-popup .home-shorts-popup-head{display:none!important}
+#homeShortsPopup.is-product-gallery-popup{position:relative}
 #homeShortsPopup.is-product-gallery-popup .home-shorts-popup-layout{display:flex!important;flex-direction:column!important;gap:0!important;padding:0!important;overflow:hidden!important;max-height:none!important}
-#homeShortsPopup.is-product-gallery-popup #homeShortsPopupMeta{display:block!important;flex:0 0 auto!important;width:100%;padding:10px 12px!important;box-sizing:border-box;background:#111a26;border-bottom:1px solid rgba(148,163,184,.18)}
+#homeShortsPopup.is-product-gallery-popup .home-shorts-popup-overlay-close{position:absolute;top:10px;right:10px;z-index:50;display:grid;place-items:center;width:36px;height:36px;border:1px solid rgba(148,163,184,.35);border-radius:9px;background:rgba(15,23,42,.82);color:#f8fafc;font-size:23px;line-height:1;cursor:pointer;backdrop-filter:blur(6px)}
+#homeShortsPopup.is-product-gallery-popup .home-shorts-popup-overlay-close:hover{background:rgba(51,65,85,.95);color:#fff}
 #homeShortsPopup.is-product-gallery-popup .home-shorts-popup-context{display:grid;grid-template-columns:minmax(130px,.8fr) minmax(170px,1fr) minmax(240px,2fr);align-items:center;gap:14px;min-width:0}
 #homeShortsPopup.is-product-gallery-popup .home-shorts-shop-meta{display:flex;align-items:center;gap:9px;min-width:0;padding:4px 0}
 #homeShortsPopup.is-product-gallery-popup .home-shorts-shop-meta img,#homeShortsPopup.is-product-gallery-popup .home-shorts-shop-fallback{width:42px;height:42px;flex:0 0 42px;border-radius:50%;object-fit:cover}
