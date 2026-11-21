@@ -3203,6 +3203,49 @@ async function renderSeller() {
   }
 }
 
+async function renderAdminSupplierProducts() {
+  const target = $('adminSupplierProductsList');
+  if (!target || !isAdmin()) return;
+  target.innerHTML = '<p class="py-6 text-center text-xs text-slate-400">កំពុងផ្ទុក...</p>';
+  try {
+    const result = await api('/api/admin/supplier-products');
+    state.adminSupplierProducts = result.data || [];
+    const term = String($('adminSupplierSearch')?.value || '').trim().toLowerCase();
+    const products = state.adminSupplierProducts.filter(p => !term || [p.title,p.category,p.supplier_source?.supplier_name].some(v => String(v || '').toLowerCase().includes(term)));
+    target.innerHTML = products.map(p => {
+      const source=p.supplier_source||{}, variants=p.product_variants||[], image=productImage(p);
+      return `<article class="rounded-2xl border border-slate-200 p-4" data-admin-supplier-product="${esc(p.id)}">
+        <div class="flex flex-wrap items-start gap-3"><div class="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-slate-100">${image ? `<img class="h-full w-full object-cover" src="${esc(image)}" alt="">` : ''}</div>
+        <div class="min-w-0 flex-1"><b class="block text-sm">${esc(p.title)}</b><p class="mt-1 text-[10px] text-slate-500">${esc(p.category||'General')} · ${esc(p.status||'')}</p><p class="mt-1 text-[11px] font-bold">តម្លៃចម្បង៖ ${money(p.price)} · ស្តុក៖ ${Number(p.stock||0)}</p></div></div>
+        <form class="admin-supplier-source-form mt-4 grid gap-2 rounded-xl bg-slate-50 p-3 sm:grid-cols-2" data-product-id="${esc(p.id)}"><b class="text-[11px] sm:col-span-2">ព័ត៌មាន Supplier (Admin only)</b>
+          <label><span class="label">Supplier</span><input class="field bg-white" name="supplier_name" value="${esc(source.supplier_name||'')}"></label>
+          <label><span class="label">Supplier URL</span><input class="field bg-white" name="supplier_url" type="url" value="${esc(source.supplier_url||'')}"></label>
+          <label><span class="label">Supplier Price ($)</span><input class="field bg-white" name="supplier_price" type="number" min="0" step="0.01" value="${Number(source.supplier_price||0)}"></label>
+          <label><span class="label">Supplier Product Code</span><input class="field bg-white" name="supplier_product_code" value="${esc(source.supplier_product_code||'')}"></label>
+          <div class="sm:col-span-2"><button class="rounded-full border border-slate-300 bg-white px-4 py-2 text-[10px] font-bold" type="submit">រក្សាទុក Supplier Info</button></div>
+        </form>
+        <div class="mt-4"><b class="mb-2 block text-[11px]">Storage Variants (${variants.length})</b>
+          ${variants.map(v=>{const vs=v.supplier_source||{};return `<form class="admin-supplier-variant-form mb-2 grid gap-2 rounded-xl border border-slate-100 p-3 sm:grid-cols-6" data-product-id="${esc(p.id)}" data-variant-id="${esc(v.id)}">
+            <label><span class="label">Storage</span><input class="field" name="option_value" value="${esc(v.option_value||'')}" required></label>
+            <label><span class="label">Retail Price ($)</span><input class="field" name="price" type="number" min="0" step="0.01" value="${Number(v.price||0)}" required></label>
+            <label><span class="label">Stock</span><input class="field" name="stock" type="number" min="0" step="1" value="${Number(v.stock||0)}"></label>
+            <label><span class="label">Supplier Cost ($)</span><input class="field" name="supplier_price" type="number" min="0" step="0.01" value="${Number(vs.supplier_price||0)}"></label>
+            <label><span class="label">Supplier Code</span><input class="field" name="supplier_product_code" value="${esc(vs.supplier_product_code||v.sku||'')}"></label>
+            <div class="flex items-end gap-1"><button class="rounded-full bg-slate-900 px-3 py-2 text-[10px] font-bold text-white" type="submit">រក្សាទុក</button><button class="rounded-full bg-rose-50 px-3 py-2 text-[10px] font-bold text-rose-600" type="button" data-admin-variant-delete="${esc(v.id)}">លុប</button></div>
+            <label class="sm:col-span-6"><span class="label">Supplier URL</span><input class="field" name="supplier_url" type="url" value="${esc(vs.supplier_url||source.supplier_url||'')}"></label></form>`;}).join('')||'<p class="rounded-xl bg-slate-50 p-3 text-[10px] text-slate-400">មិនទាន់មាន Variant ទេ។</p>'}
+          <form class="admin-supplier-add-variant-form mt-3 grid gap-2 rounded-xl border border-dashed border-slate-300 p-3 sm:grid-cols-3" data-product-id="${esc(p.id)}"><b class="text-[11px] sm:col-span-3">បន្ថែម Storage Variant</b>
+            <label><span class="label">Storage / Option</span><input class="field" name="option_value" placeholder="512GB SSD" required></label>
+            <label><span class="label">Retail Price ($)</span><input class="field" name="price" type="number" min="0" step="0.01" required></label>
+            <label><span class="label">Stock</span><input class="field" name="stock" type="number" min="0" step="1" value="0"></label>
+            <label><span class="label">Supplier Cost ($)</span><input class="field" name="supplier_price" type="number" min="0" step="0.01" value="0"></label>
+            <label><span class="label">Supplier Code</span><input class="field" name="supplier_product_code"></label>
+            <label><span class="label">Supplier URL</span><input class="field" name="supplier_url" type="url"></label>
+            <div class="sm:col-span-3"><button class="brand-gradient rounded-full px-4 py-2 text-[10px] font-bold text-white" type="submit">បន្ថែម Variant</button><small class="ml-2 text-[9px] text-slate-400">អាចកំណត់តម្លៃលក់ដោយដៃ ឬគណនា Supplier Cost + $5។</small></div></form>
+        </div></article>`;
+    }).join('')||'<p class="py-8 text-center text-xs text-slate-400">មិនទាន់មានផលិតផល Supplier ទេ។</p>';
+  } catch(error){target.innerHTML='<p class="py-6 text-center text-xs text-rose-500">មិនអាចផ្ទុក Supplier Products បានទេ។</p>';toast(error.message||'មិនអាចផ្ទុកផលិតផល Supplier បានទេ។','error');}
+}
+
 function renderSellerProductList() {
   const target = $('sellerProducts');
   if (!target) return;
@@ -3262,6 +3305,7 @@ async function renderAdmin() {
           ${v.status === 'pending' && v.document_url ? `<button data-admin-review="approved" data-id="${esc(v.id)}" class="rounded-full bg-emerald-600 px-4 py-1.5 text-[10px] font-bold text-white">អនុម័ត</button><button data-admin-review="rejected" data-id="${esc(v.id)}" class="rounded-full bg-rose-50 px-4 py-1.5 text-[10px] font-bold text-rose-600">បដិសេធ</button>` : ''}
         </div>
       </div>`).join('') || '<p class="py-6 text-center text-xs text-slate-400">មិនទាន់មានពាក្យស្នើសុំអ្នកលក់។</p>';
+    await renderAdminSupplierProducts();
   } catch (e) {
     toast('មិនអាចផ្ទុក Admin៖ ' + e.message, 'error');
   }
@@ -5303,6 +5347,34 @@ function bindEvents() {
     } finally {
       if (button) { button.disabled = false; button.textContent = 'ពិនិត្យស្ថានភាព'; }
     }
+  });
+  $('adminSupplierRefresh')?.addEventListener('click',()=>void renderAdminSupplierProducts());
+  $('adminSupplierSearch')?.addEventListener('input',()=>void renderAdminSupplierProducts());
+  $('adminSupplierCreateForm')?.addEventListener('submit',async event=>{
+    event.preventDefault();const form=event.currentTarget,data=Object.fromEntries(new FormData(form).entries());
+    try{const created=await api('/api/products',{method:'POST',body:JSON.stringify({title:data.title,category:data.category,description:data.description||'',price:Number(data.price),stock:Number(data.stock||0),location:'Cambodia',condition:'ថ្មី'})});const id=created.data?.id;if(!id)throw new Error('មិនទទួលបាន Product ID');
+      await api('/api/admin/supplier-products/'+encodeURIComponent(id)+'/source',{method:'PUT',body:JSON.stringify({supplier_name:data.supplier_name||'',supplier_url:data.supplier_url||'',supplier_price:Number(data.supplier_price||0),supplier_product_code:data.supplier_product_code||''})});
+      form.reset();toast('បានបង្កើតផលិតផល Supplier ជោគជ័យ។');await renderAdminSupplierProducts();
+    }catch(error){toast(error.message||'មិនអាចបង្កើតផលិតផលបានទេ។','error');}
+  });
+  $('adminSupplierProductsList')?.addEventListener('submit',async event=>{
+    const form=event.target.closest('form');if(!form)return;const data=Object.fromEntries(new FormData(form).entries());
+    try{
+      if(form.matches('.admin-supplier-source-form')){event.preventDefault();await api('/api/admin/supplier-products/'+encodeURIComponent(form.dataset.productId)+'/source',{method:'PUT',body:JSON.stringify({...data,supplier_price:Number(data.supplier_price||0)})});toast('បានរក្សាទុក Supplier Info។');}
+      else if(form.matches('.admin-supplier-variant-form')){event.preventDefault();const base='/api/admin/supplier-products/'+encodeURIComponent(form.dataset.productId)+'/variants/'+encodeURIComponent(form.dataset.variantId);
+        await api(base,{method:'PATCH',body:JSON.stringify({option_value:data.option_value,price:Number(data.price),stock:Number(data.stock||0)})});
+        await api(base+'/source',{method:'PUT',body:JSON.stringify({supplier_price:Number(data.supplier_price||0),supplier_product_code:data.supplier_product_code||'',supplier_url:data.supplier_url||''})});toast('បានរក្សាទុក Variant។');}
+      else if(form.matches('.admin-supplier-add-variant-form')){event.preventDefault();const base='/api/admin/supplier-products/'+encodeURIComponent(form.dataset.productId)+'/variants';
+        const result=await api(base,{method:'POST',body:JSON.stringify({option_name:'Storage',option_value:data.option_value,price:Number(data.price),stock:Number(data.stock||0),sku:data.supplier_product_code||''})});const id=result.data?.id;if(!id)throw new Error('មិនទទួលបាន Variant ID');
+        await api(base+'/'+encodeURIComponent(id)+'/source',{method:'PUT',body:JSON.stringify({supplier_price:Number(data.supplier_price||0),supplier_product_code:data.supplier_product_code||'',supplier_url:data.supplier_url||''})});toast('បានបន្ថែម Storage Variant។');}
+      else return;await renderAdminSupplierProducts();
+    }catch(error){toast(error.message||'មិនអាចរក្សាទុកទិន្នន័យបានទេ។','error');}
+  });
+  $('adminSupplierProductsList')?.addEventListener('click',async event=>{
+    const button=event.target.closest('[data-admin-variant-delete]');if(!button)return;if(!window.confirm('តើអ្នកចង់លុប Variant នេះមែនទេ?'))return;
+    const article=button.closest('[data-admin-supplier-product]');
+    try{await api('/api/admin/supplier-products/'+encodeURIComponent(article.dataset.adminSupplierProduct)+'/variants/'+encodeURIComponent(button.dataset.adminVariantDelete),{method:'DELETE'});toast('បានលុប Variant។');await renderAdminSupplierProducts();}
+    catch(error){toast(error.message||'មិនអាចលុប Variant បានទេ។','error');}
   });
   $('adminApplications')?.addEventListener('click', async (e) => { const b = e.target.closest('[data-admin-review]'); if (!b) return; try { await api('/api/admin/vendors/' + encodeURIComponent(b.dataset.id), { method: 'PATCH', body: JSON.stringify({ status: b.dataset.adminReview }) }); await renderAdmin(); toast('បានធ្វើបច្ចុប្បន្នភាពពាក្យស្នើសុំ។'); } catch (err) { toast(err.message || 'មិនអាចពិនិត្យពាក្យស្នើសុំបានទេ។', 'error'); } });
 
