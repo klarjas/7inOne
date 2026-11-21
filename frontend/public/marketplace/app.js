@@ -973,9 +973,17 @@ function renderSocialStories() {
     </button>`;
   }).join('');
 }
+function renderSocialStoriesSkeleton() {
+  const target = $('socialStoriesList');
+  if (!target) return;
+  const bar = (width, height, extra = '') => `<span class="skeleton social-sk-bar ${extra}" style="width:${width};height:${height}px" aria-hidden="true"></span>`;
+  target.innerHTML = '<label class="social-story-create" for="socialStoryImage"><span class="social-story-create-icon">＋</span><b>បង្កើត Story</b></label>' +
+    Array.from({ length: 5 }, () => `<div class="social-story-card social-story-skeleton" aria-hidden="true"><span class="skeleton social-story-sk-photo"></span><span class="skeleton social-story-sk-avatar"></span>${bar('64%',7,'social-story-sk-name')}</div>`).join('');
+}
 async function loadSocialStories() {
   const target = $('socialStoriesList');
   if (!target) return;
+  if (!state.socialStories.length) renderSocialStoriesSkeleton();
   try {
     const result = await api('/api/social/stories');
     state.socialStories = Array.isArray(result.data) ? result.data : [];
@@ -1046,10 +1054,22 @@ function renderSocialPosts() {
     </article>`;
   }).join('');
 }
+function renderSocialPostsSkeleton() {
+  const target = $('socialFeedList');
+  if (!target) return;
+  const bar = (width, height) => `<span class="skeleton social-feed-sk-bar" style="width:${width};height:${height}px" aria-hidden="true"></span>`;
+  target.innerHTML = Array.from({ length: 2 }, (_, index) => `
+    <article class="social-feed-card social-feed-skeleton" aria-hidden="true">
+      <div class="social-post-author"><span class="skeleton social-feed-sk-avatar"></span><div class="social-feed-sk-author-lines">${bar('112px',8)}${bar('68px',6)}</div></div>
+      <div class="social-feed-sk-caption">${bar(index ? '76%' : '92%',8)}${bar('54%',8)}</div>
+      <span class="skeleton social-feed-sk-image"></span>
+      <div class="social-feed-sk-actions">${bar('70px',8)}${bar('88px',8)}</div>
+    </article>`).join('');
+}
 async function loadSocialPosts() {
   const target = $('socialFeedList');
   if (!target) return;
-  if (!state.socialPosts.length) target.innerHTML = '<div class="social-feed-loading">កំពុងផ្ទុកការផុស...</div>';
+  if (!state.socialPosts.length) renderSocialPostsSkeleton();
   try {
     const result = await api('/api/social/posts');
     state.socialPosts = Array.isArray(result.data) ? result.data : [];
@@ -1964,9 +1984,22 @@ function renderStorefront() {
   if (!root) return;
   root.onclick = handleStorefrontAction;
   if (state.currentStoreLoading) {
-    root.innerHTML = `<div class="global-loading" role="status" aria-label="កំពុងផ្ទុកព័ត៌មានហាង">
-      <div class="loader" aria-hidden="true"></div>
-      <span>កំពុងផ្ទុកព័ត៌មានហាង...</span>
+    const bar = (width, height, extra = '') => `<span class="skeleton store-sk-bar ${extra}" style="width:${width};height:${height}px" aria-hidden="true"></span>`;
+    root.innerHTML = `<div class="storefront-skeleton" role="status" aria-label="កំពុងផ្ទុកព័ត៌មានហាង">
+      <section class="storefront-public store-sk-shell">
+        <div class="skeleton store-sk-cover"></div>
+        <div class="store-sk-profile"><span class="skeleton store-sk-avatar"></span><div class="store-sk-identity">
+          ${bar('42%',18)}${bar('64%',8)}${bar('82%',8)}
+        </div></div>
+        <div class="store-sk-stats">${Array.from({length:4},()=>`<div>${bar('48%',15)}${bar('72%',7)}</div>`).join('')}</div>
+      </section>
+      <div class="store-sk-toolbar">${bar('32%',34)}${bar('44%',30)}${bar('14%',10)}</div>
+      <section class="storefront-products-section"><div class="storefront-section-heading"><h2>ទំនិញក្នុងហាង</h2></div>
+        <div class="storefront-skeleton-grid">${Array.from({length:8},()=>`<div class="storefront-skeleton-card"><span class="skeleton"></span>${bar('82%',10)}${bar('48%',9)}${bar('36%',8)}</div>`).join('')}</div>
+      </section>
+      <section class="storefront-reviews"><div class="storefront-section-heading"><h2>មតិយោបល់ពីអ្នកទិញ</h2></div>
+        <div class="store-sk-review-list">${Array.from({length:2},()=>`<div>${bar('26%',9)}${bar('18%',8)}${bar('84%',8)}${bar('62%',8)}</div>`).join('')}</div>
+      </section>
     </div>`;
     return;
   }
@@ -2146,8 +2179,17 @@ async function renderProfile() {
   await renderProfileTab();
 }
 
+function renderProfileTabSkeleton() {
+  const root = $('profileTabContent');
+  if (!root) return;
+  const bar = (width, height) => `<span class="skeleton profile-sk-bar" style="width:${width};height:${height}px" aria-hidden="true"></span>`;
+  root.innerHTML = `<div class="profile-sk-list" role="status" aria-label="កំពុងផ្ទុកព័ត៌មាន">
+    ${Array.from({length:3},()=>`<div class="profile-sk-card"><span class="skeleton profile-sk-thumb"></span><div>${bar('76%',10)}${bar('54%',8)}${bar('38%',8)}</div></div>`).join('')}
+  </div>`;
+}
 async function renderProfileTab() {
   if (!state.session) return;
+  renderProfileTabSkeleton();
   try {
     if (state.profileTab === 'saved') {
       const saved = await loadSaved();
