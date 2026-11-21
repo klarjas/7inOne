@@ -54,6 +54,10 @@ const ICON_PATHS = {
   volumeOff: '<path d="M11 5 6 9H3v6h3l5 4z"/><path d="m16 9 5 6m0-6-5 6"/>',
   sliders: '<path d="M4 6h16M4 12h16M4 18h16"/><circle cx="8" cy="6" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="10" cy="18" r="2"/>',
   maximize: '<path d="M8 3H5a2 2 0 0 0-2 2v3m13-5h3a2 2 0 0 1 2 2v3M3 16v3a2 2 0 0 0 2 2h3m8 0h3a2 2 0 0 0 2-2v-3"/>',
+  clipboard: '<path d="M9 4h6a2 2 0 0 1 2 2v1h3v14H4V7h3V6a2 2 0 0 1 2-2Z"/><path d="M9 4v3h6V4M8 12h8M8 16h8"/>',
+  settings: '<circle cx="12" cy="12" r="3"/><path d="m19.4 15 .1.1 1.4 1.1-1.4 2.4-1.7-.6a8 8 0 0 1-1.8 1l-.3 1.8h-2.8l-.3-1.8a8 8 0 0 1-1.8-1l-1.7.6-1.4-2.4 1.4-1.1a8 8 0 0 1 0-2l-1.4-1.1 1.4-2.4 1.7.6a8 8 0 0 1 1.8-1l.3-1.8h2.8l.3 1.8a8 8 0 0 1 1.8 1l1.7-.6 1.4 2.4-1.4 1.1a8 8 0 0 1 0 2Z"/>',
+  briefcase: '<rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18m-11 0v2h4v-2"/>',
+  arrowUpRight: '<path d="M7 17 17 7M7 7h10v10"/>',
   alert: '<circle cx="12" cy="12" r="9"/><path d="M12 8v4m0 4h.01"/>'
 };
 
@@ -378,6 +382,26 @@ async function api(path, options = {}) {
 
   if (!response.ok) throw new Error(payload.error || `សំណើមិនជោគជ័យ (${response.status})`);
   return payload;
+}
+
+async function apiUploadWithProgress(path, formData, onProgress, allowRefresh = true) {
+  const send = () => new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', path, true);
+    if (state.session?.access_token) xhr.setRequestHeader('Authorization', 'Bearer ' + state.session.access_token);
+    xhr.upload.addEventListener('progress', event => { if (event.lengthComputable && typeof onProgress === 'function') onProgress(Math.min(100, Math.round(event.loaded / event.total * 100))); });
+    xhr.onload = () => { let payload = {}; try { payload = JSON.parse(xhr.responseText || '{}'); } catch {} resolve({ status: xhr.status, payload }); };
+    xhr.onerror = () => reject(new Error('ការតភ្ជាប់ Upload ត្រូវបានផ្អាក។'));
+    xhr.onabort = () => reject(new Error('ការបញ្ចូលរូបភាពត្រូវបានបោះបង់។'));
+    xhr.send(formData);
+  });
+  let response = await send();
+  if (response.status === 401 && allowRefresh && state.session?.refresh_token && state.supabase) {
+    try { const { data, error } = await state.supabase.auth.refreshSession(); if (!error && data.session?.access_token) { state.session = data.session; response = await send(); } }
+    catch (error) { console.warn('Upload session refresh failed:', error.message); }
+  }
+  if (response.status < 200 || response.status >= 300) throw new Error(response.payload.error || `Upload មិនជោគជ័យ (${response.status})`);
+  return response.payload;
 }
 
 const isAdmin = () => Boolean(state.me?.isAdmin);
@@ -3714,6 +3738,7 @@ function initIcons() {
   $('sellerDocThumb').innerHTML = ic('file', 22);
   $('year').textContent = new Date().getFullYear();
 
+  document.querySelectorAll('[data-icon]').forEach((node) => { node.innerHTML = ic(node.dataset.icon, Number(node.dataset.iconSize) || 18); });
   document.querySelectorAll('[data-seller-icon]').forEach((node) => { node.innerHTML = ic(node.dataset.sellerIcon, 16); });
   document.querySelectorAll('[data-nav-icon]').forEach((node) => { node.innerHTML = ic(node.dataset.navIcon, node.dataset.navIcon === 'chat' ? 22 : 19); });
   document.querySelectorAll('.close-btn').forEach((b) => { b.innerHTML = ic('x', 16); });
@@ -4274,12 +4299,25 @@ function bindEvents() {
         }
       }
       let uploadedImages = [];
-      if (newImages.length) {
+      const uploadStatus = $('productUploadStatus');
+      const uploadProgress = $('productUploadProgressBar');
+      if (uploadStatus) uploadStatus.hidden = newImages.length === 0;
+      if (uploadProgress) uploadProgress.style.width = '0%';
+      for (let index = 0; index < newImages.length; index++) {
         const form = new FormData();
-        newImages.forEach((item) => form.append('images', item.file));
-        const uploaded = await api('/api/products/' + encodeURIComponent(productId) + '/images', { method: 'POST', body: form });
-        uploadedImages = uploaded.data || [];
+        form.append('images', newImages[index].file);
+        if (uploadStatus) uploadStatus.textContent = 'កំពុង Upload រូបភាពទី ' + (index + 1) + '/' + newImages.length + ' · 0%';
+        const uploaded = await apiUploadWithProgress(
+          '/api/products/' + encodeURIComponent(productId) + '/images',
+          form,
+          percent => {
+            if (uploadStatus) uploadStatus.textContent = 'កំពុង Upload រូបភាពទី ' + (index + 1) + '/' + newImages.length + ' · ' + percent + '%';
+            if (uploadProgress) uploadProgress.style.width = percent + '%';
+          }
+        );
+        uploadedImages.push(...(uploaded.data || []));
       }
+      if (uploadStatus) uploadStatus.hidden = true;
       const uploadedByFile = new Map(newImages.map((item, index) => [item, uploadedImages[index]]));
       const orderedIds = selectedImages.map((item) => item.kind === 'existing' ? item.id : uploadedByFile.get(item)?.id).filter(Boolean);
       if (orderedIds.length) {
@@ -4311,6 +4349,7 @@ function bindEvents() {
     } catch (err) {
       toast(err.message || 'មិនអាចរក្សាទុកទំនិញបានទេ។', 'error');
     } finally {
+      if ($('productUploadStatus')) $('productUploadStatus').hidden = true;
       if (saveButton) {
         saveButton.disabled = false;
         saveButton.removeAttribute('aria-busy');
