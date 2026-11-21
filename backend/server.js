@@ -3189,6 +3189,42 @@ app.get('/api/admin/vendors', authenticate, requireAdmin, async (_req, res) => {
   });
   res.json({ data: enriched });
 });
+app.patch('/api/admin/vendors/:id/profile', authenticate, requireAdmin, upload.fields([{ name: 'logo', maxCount: 1 }, { name: 'cover', maxCount: 1 }]), async (req, res) => {
+  const { data: vendor, error: vendorError } = await supabase.from('vendors')
+    .select('id,store_name,description,store_location,address,status,store_logo_file_id,store_logo_message_id,store_cover_file_id,store_cover_message_id,public_shop_id,shop_code')
+    .eq('id', req.params.id).maybeSingle();
+  if (vendorError || !vendor) return fail(res, 404, 'Store not found.');
+  const store_name = clean(req.body.store_name, 80);
+  const store_location = clean(req.body.store_location, 160);
+  const description = clean(req.body.description, 1000);
+  if (store_name.length < 2) return fail(res, 400, 'Store name must contain at least 2 characters.');
+  const logo = req.files?.logo?.[0], cover = req.files?.cover?.[0];
+  for (const file of [logo, cover].filter(Boolean)) {
+    const invalid = imageUploadError(file);
+    if (invalid) return fail(res, 400, invalid);
+  }
+  const uploaded = [];
+  try {
+    const logoMedia = logo ? await uploadToTelegram(logo) : null;
+    if (logoMedia) uploaded.push(logoMedia);
+    const coverMedia = cover ? await uploadToTelegram(cover) : null;
+    if (coverMedia) uploaded.push(coverMedia);
+    const patch = { store_name, store_location, address: store_location, description };
+    if (logoMedia) Object.assign(patch, { store_logo_file_id: logoMedia.fileId, store_logo_message_id: logoMedia.messageId });
+    if (coverMedia) Object.assign(patch, { store_cover_file_id: coverMedia.fileId, store_cover_message_id: coverMedia.messageId });
+    const { data, error } = await supabase.from('vendors').update(patch).eq('id', vendor.id).select().single();
+    if (error) throw error;
+    if (logoMedia && vendor.store_logo_message_id) await deleteTelegramMessage(vendor.store_logo_message_id);
+    if (coverMedia && vendor.store_cover_message_id) await deleteTelegramMessage(vendor.store_cover_message_id);
+    res.set('Cache-Control', 'no-store');
+    return res.json({ data: publicVendor(data) });
+  } catch (error) {
+    for (const item of uploaded) await deleteTelegramMessage(item.messageId);
+    console.error('Admin shop profile update failed:', error.message);
+    return fail(res, 500, 'Could not save shop profile.');
+  }
+});
+
 app.get('/api/admin/vendors/:id/document', authenticate, requireAdmin, async (req, res) => {
   try {
     const { data: vendor, error } = await supabase.from('vendors')
