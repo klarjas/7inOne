@@ -7798,3 +7798,55 @@ body > footer {
 .product-detail-id button.is-copied {
   color: #86EFAC;
 }
+
+
+/* Steam Dark Product Detail Skeleton */
+#view-product .product-detail-skeleton {
+  display: grid;
+  grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.88fr);
+  gap: clamp(18px, 2vw, 32px);
+  padding: clamp(16px, 2.2vw, 28px);
+  border: 1px solid #2A475E;
+  border-radius: 22px;
+  background: linear-gradient(145deg, #172535 0%, #111C29 100%);
+}
+
+#view-product .product-detail-skeleton .skeleton {
+  background: linear-gradient(110deg, #101822 8%, #1B2B3C 18%, #24394E 33%, #1B2B3C 48%, #101822 65%) !important;
+  background-size: 220% 100% !important;
+  border: 1px solid rgba(102, 192, 244, 0.08);
+  animation: skeletonShimmer 1.4s linear infinite;
+}
+
+#view-product .product-detail-skeleton-image {
+  width: 90%;
+  max-width: 560px;
+  aspect-ratio: 1 / 1;
+  min-height: 320px;
+  margin-inline: auto;
+  border-radius: 16px;
+}
+
+#view-product .product-detail-skeleton-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 8px 0;
+}
+
+#view-product .product-detail-skeleton-copy .sk-badge { width: 35%; height: 24px; border-radius: 999px; }
+#view-product .product-detail-skeleton-copy .sk-title { width: 85%; height: 36px; border-radius: 10px; }
+#view-product .product-detail-skeleton-copy .sk-price { width: 45%; height: 32px; border-radius: 10px; }
+#view-product .product-detail-skeleton-copy .sk-btn   { width: 100%; height: 50px; border-radius: 12px; }
+#view-product .product-detail-skeleton-copy .sk-box   { width: 100%; height: 110px; border-radius: 16px; }
+
+@media (max-width: 900px) {
+  #view-product .product-detail-skeleton {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 16px;
+  }
+  #view-product .product-detail-skeleton-image {
+    width: 100%;
+    min-height: 280px;
+  }
+}
