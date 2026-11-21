@@ -874,9 +874,9 @@ function productCardSpecs(product = {}) {
   };
   const values = [
     ['CPU', find(['cpu','processor','cpu_model','processor_model'])],
-    ['RAM', find(['ram','memory','memory_ram'])],
+    ['RAM', find(['ram','memory','memory_ram','ram_type_capacity'])],
     ['Display', find(['display','display_size','screen','screen_size'])],
-    ['GPU', find(['gpu','graphics','graphics_card','graphics_processor'])]
+    ['GPU', find(['gpu','graphics','graphics_card','graphics_processor','gpu_model_vram'])]
   ];
   return values.every(([, value]) => value) ? values : [];
 }
@@ -895,7 +895,7 @@ function renderCategorySpecFilters() {
   if (!root || !group) return;
   const definitions = [
     ['brand','ម៉ាក',['brand','manufacturer']],['cpu','CPU',['cpu','processor','cpu_model','processor_model']],
-    ['ram','RAM',['ram','memory','memory_ram']],['storage','Storage',['storage','ssd','hard_drive','capacity']],
+    ['ram','RAM',['ram','memory','memory_ram']],['storage','Storage',['storage','ssd','hard_drive','capacity','storage_type_capacity']],
     ['display','Display Size',['display','display_size','screen','screen_size']],['gpu','GPU',['gpu','graphics','graphics_card','graphics_processor']],
     ['color','Color',['color','colour']],['resolution','Resolution',['resolution','display_resolution']],['os','Operating System',['operating_system','os']]
   ];
@@ -2687,7 +2687,7 @@ const PRODUCT_DETAIL_SPEC_FIELDS = {
   'Motherboard': ['Brand & Model','CPU Socket','Chipset','Form Factor (ATX / mATX / ITX)','RAM Type & Slots','M.2 / SATA Slots'],
   'Power Supply': ['Wattage (W)','80 PLUS Rating','Modular Type (Full / Semi / Non)','Connector Support'],
   'Monitor': ['Screen Size (inch)','Resolution (FHD / QHD / 4K)','Refresh Rate (Hz)','Panel (IPS / VA / OLED)','Ports (HDMI / DP / USB-C)'],
-  'Laptop': ['CPU Model','RAM Type & Capacity','GPU Model & VRAM','Storage Type & Capacity','Screen Size','Battery Health'],
+  'Laptop': ['Brand','CPU Model','RAM Type & Capacity','GPU Model & VRAM','Storage Type & Capacity','Screen Size','Battery Health'],
   'Desktop PC': ['CPU Model','RAM Type & Capacity','GPU Model & VRAM','Storage Type & Capacity','Motherboard','Power Supply Wattage']
 };
 function renderProductTaxonomy(category) {
@@ -2702,9 +2702,14 @@ function renderProductTaxonomy(category) {
 function renderProductSpecFields(category) {
   const detail = $('productDetailType')?.value || '';
   const fields = PRODUCT_DETAIL_SPEC_FIELDS[detail] || PRODUCT_SPEC_FIELDS[category] || [];
+  const stableKeys = {
+    'Brand':'brand','CPU Model':'cpu_model','RAM Type & Capacity':'ram_type_capacity',
+    'GPU Model & VRAM':'gpu_model_vram','Storage Type & Capacity':'storage_type_capacity',
+    'Screen Size':'screen_size','Battery Health':'battery_health'
+  };
   $('productSpecificationFields').innerHTML = fields.length
     ? '<h3 class="sm:col-span-2 text-xs font-bold text-slate-300">លក្ខណៈសម្បត្តិផលិតផល</h3>' + fields.map((label,index) =>
-      '<label><span class="label">' + esc(label) + '</span><input class="field" data-listing-spec="' + esc('spec_' + index) + '" placeholder="' + esc(label) + '"></label>'
+      '<label><span class="label">' + esc(label) + '</span><input class="field" data-listing-spec="' + esc(stableKeys[label] || 'spec_' + index) + '" placeholder="' + esc(label) + '"></label>'
     ).join('')
     : '';
 }
