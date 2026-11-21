@@ -3404,19 +3404,26 @@ function extractCcSupplierProducts(html, baseUrl) {
     seen.add(code);
     const containing = blocks.filter(block => block.start <= found.index && block.end >= found.index && block.html.length <= 40000)
       .sort((a, b) => a.html.length - b.html.length);
-    const card = containing.find(block => /\$\s*[\d,]+(?:\.\d{1,2})?/.test(block.html) && /<img\b/i.test(block.html))?.html
-      || containing.find(block => /\$\s*[\d,]+(?:\.\d{1,2})?/.test(block.html))?.html
+    const detailCard = containing.find(block => /\$\s*[\d,]+(?:\.\d{1,2})?/.test(block.html))?.html
       || html.slice(Math.max(0, found.index - 3500), Math.min(html.length, found.index + 1200));
+    const imageCard = containing.find(block => /<img\b/i.test(block.html))?.html || detailCard;
+    const card = detailCard;
     const text = supplierPlainText(card);
+    const parentText = imageCard === card ? text : supplierPlainText(imageCard);
     const priceMatches = [...card.matchAll(/\$\s*([\d,]+(?:\.\d{1,2})?)/g)];
     const supplierPrice = priceMatches.length ? Number(priceMatches[priceMatches.length - 1][1].replace(/,/g, '')) : NaN;
     const headings = [...card.matchAll(/<(?:h1|h2|h3|h4)\b[^>]*>([\s\S]*?)<\/(?:h1|h2|h3|h4)>/gi)]
       .map(item => supplierPlainText(item[1])).filter(Boolean);
+    const parentHeadings = imageCard === card ? [] : [...imageCard.matchAll(/<(?:h1|h2|h3|h4)\b[^>]*>([\s\S]*?)<\/(?:h1|h2|h3|h4)>/gi)]
+      .map(item => supplierPlainText(item[1])).filter(Boolean);
     const title = headings.find(value => /asus|vivobook|expertbook|zenbook|tuf|rog|msi|acer|lenovo|dell|hp|macbook/i.test(value))
+      || parentHeadings.find(value => /asus|vivobook|expertbook|zenbook|tuf|rog|msi|acer|lenovo|dell|hp|macbook/i.test(value))
       || text.split('\n').map(line => line.trim()).find(line => /asus|vivobook|expertbook|zenbook|tuf|rog|msi|acer|lenovo|dell|hp|macbook/i.test(line) && line.length > 5 && line.length < 180)
+      || parentText.split('\n').map(line => line.trim()).find(line => /asus|vivobook|expertbook|zenbook|tuf|rog|msi|acer|lenovo|dell|hp|macbook/i.test(line) && line.length > 5 && line.length < 180)
       || '';
     const specs = text.split('\n').map(line => line.trim()).filter(line => line && !/^(?:Code|Product\s*Code)\s*:/i.test(line) && !/^\$/.test(line) && !/^Free\s*:/i.test(line) && !/^[-_]{3,}$/.test(line));
     const imageUrls = supplierImageCandidates(card, baseUrl).slice(0, 5);
+    if (!imageUrls.length) imageUrls.push(...supplierImageCandidates(imageCard, baseUrl).slice(0, 5));
     const searchable = (title + ' ' + text).toLowerCase();
     const identitySearch = (title + ' ' + specs.slice(0, 5).join(' ')).toLowerCase();
     const titleSearch = title.toLowerCase();
@@ -3444,6 +3451,7 @@ function extractCcSupplierProducts(html, baseUrl) {
     else if (/\b(monitor|display screen)\b/i.test(identitySearch)) { subcategory = 'monitor'; detailType = 'Monitor'; }
     let productUrl = baseUrl;
     const links = [...card.matchAll(/<a\b[^>]*href\s*=\s*(?:"([^"]+)"|'([^']+)'|([^\s>]+))/gi)];
+    if (!links.length && imageCard !== card) links.push(...imageCard.matchAll(/<a\b[^>]*href\s*=\s*(?:"([^"]+)"|'([^']+)'|([^\s>]+))/gi));
     for (const link of links) {
       try {
         const candidate = new URL(decodeSupplierHtml(link[1] || link[2] || link[3] || ''), baseUrl);
