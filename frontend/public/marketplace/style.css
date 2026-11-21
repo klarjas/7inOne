@@ -7411,3 +7411,45 @@ body > footer {
 .product-album-empty > span svg {
   display: block;
 }
+
+
+/* Full edit form for user-owned job and property listings */
+.my-post-full-edit-form {
+  border: 1px solid #2A475E;
+  background: #101D2A;
+  color: #C7D5E0;
+}
+.my-post-full-edit-form .label {
+  color: #AAB8C7;
+}
+.my-post-image-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+  gap: 9px;
+}
+.my-post-image-choice {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  padding: 6px;
+  border: 1px solid #2A475E;
+  border-radius: 10px;
+  background: #162638;
+  color: #C7D5E0;
+  font-size: 10px;
+}
+.my-post-image-choice img {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 7px;
+  object-fit: cover;
+  background: #101822;
+}
+.my-post-image-choice span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.my-post-image-choice input {
+  accent-color: #38BDF8;
+}
