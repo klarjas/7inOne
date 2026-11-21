@@ -866,7 +866,7 @@ function productCardSpecs(product = {}) {
     ['Display', find(['display','display_size','screen','screen_size'])],
     ['GPU', find(['gpu','graphics','graphics_card','graphics_processor'])]
   ];
-  return values.some(([, value]) => value) ? values : [];
+  return values.every(([, value]) => value) ? values : [];
 }
 function specFilterValue(product, keys) {
   const specs = product.specifications && typeof product.specifications === 'object' ? product.specifications : {};
@@ -3533,6 +3533,8 @@ function openCheckout(p) {
       submit.textContent = 'កំពុងបញ្ជាទិញ...';
       try {
         const paymentMethod = new FormData($('checkoutForm')).get('payment_method') || 'cash_on_delivery';
+        const checkoutProduct = state.currentProduct;
+        const checkoutVariant = (checkoutProduct?.variants || []).find(item => String(item.id) === String(state.currentVariantId)) || (checkoutProduct?.variants || [])[0] || null;
         await api('/api/orders', {
           method: 'POST',
           body: JSON.stringify({
@@ -3540,7 +3542,7 @@ function openCheckout(p) {
             customer_phone: $('checkoutPhone').value.trim(),
             delivery_address: $('checkoutAddress').value.trim(),
             payment_method: paymentMethod,
-            items: [{ product_id: state.currentProduct.id, variant_id: selectedVariant?.id || null, quantity: 1 }]
+            items: [{ product_id: checkoutProduct.id, variant_id: checkoutVariant?.id || null, quantity: 1 }]
           })
         });
         closeModal('checkoutModal');
