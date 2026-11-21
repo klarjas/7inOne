@@ -1669,7 +1669,7 @@ app.get('/api/products', async (req, res) => {
   const productIds = (data || []).map(row => row.id).filter(Boolean);
   const [listingDetailsResult, variantsResult] = productIds.length ? await Promise.all([
     supabase.from('product_listing_details').select('product_id,specifications,subcategory,detail_type').in('product_id', productIds),
-    supabase.from('product_variants').select('id,product_id,price,stock,option_name,option_value,sku,attributes,sort_order').eq('is_active', true).in('product_id', productIds).order('sort_order').order('price')
+    supabase.from('product_variants').select('product_id,price').eq('is_active', true).in('product_id', productIds).order('sort_order').order('price')
   ]) : [{ data: [] }, { data: [] }];
   const specificationsByProduct = new Map((listingDetailsResult.data || []).map(row => [String(row.product_id), row]));
   const variantsByProduct = new Map();
@@ -1745,7 +1745,7 @@ app.get('/api/products/:id', async (req, res) => {
   }
   const { data: activeVariants, error: variantsError } = await supabase
     .from('product_variants')
-    .select('id,sku,option_name,option_value,price,stock,attributes,sort_order')
+    .select('id,sku,option_name,option_value,price,stock,sort_order')
     .eq('product_id', data.id).eq('is_active', true)
     .order('sort_order', { ascending: true }).order('price', { ascending: true });
   if (variantsError) {
