@@ -27,9 +27,9 @@ export function registerMyPostsRoutes(app, {
   const sources = [
     { type:'job', label:'ការងារ', table:'jobs', fields:'*' },
     { type:'property', label:'អចលនទ្រព្យ', table:'property_listings', fields:'*' },
-    { type:'rental', label:'ផ្ទះ/បន្ទប់ជួល', table:'rentals', fields:'id,user_id,title,description,category,location,rent_amount,youtube_video_url,status,expires_at,created_at,updated_at,image_file_id,image_message_id,image_mime_type' },
-    { type:'land', label:'ដី', table:'land_listings', fields:'id,user_id,title,description,category,location,price,youtube_video_url,status,expires_at,created_at,updated_at,image_file_id,image_message_id,image_mime_type' },
-    { type:'house_sale', label:'ផ្ទះលក់', table:'house_sale_listings', fields:'id,user_id,title,description,category,location,price,youtube_video_url,status,expires_at,created_at,updated_at,image_file_id,image_message_id,image_mime_type' },
+    { type:'rental', label:'ផ្ទះ/បន្ទប់ជួល', table:'rentals', fields:'*' },
+    { type:'land', label:'ដី', table:'land_listings', fields:'*' },
+    { type:'house_sale', label:'ផ្ទះលក់', table:'house_sale_listings', fields:'*' },
     { type:'social_post', label:'Community Post', table:'social_posts', fields:'id,user_id,caption,image_file_id,image_message_id,created_at' },
     { type:'story', label:'Story', table:'social_stories', fields:'id,user_id,image_file_id,image_message_id,created_at,expires_at' }
   ];
@@ -115,7 +115,7 @@ export function registerMyPostsRoutes(app, {
     }
   });
 
-  app.patch('/api/my-posts/:type/:id', authenticate, upload.array('images', 10), async (req, res) => {
+  app.patch('/api/my-posts/:type/:id', authenticate, upload.fields([{name:'images',maxCount:10},{name:'image',maxCount:1}]), async (req, res) => {
     const type = text(req.params.type, 30);
     const id = text(req.params.id, 80);
     const multipartBody = req.body || {};
@@ -229,6 +229,18 @@ export function registerMyPostsRoutes(app, {
           if (patch.salary_max != null && (!Number.isFinite(patch.salary_max) || patch.salary_max < 0)) return fail(res,400,'ប្រាក់ខែមិនត្រឹមត្រូវ។');
           if (patch.salary_min != null && patch.salary_max != null && patch.salary_max < patch.salary_min) return fail(res,400,'ប្រាក់ខែអតិបរមាត្រូវធំជាងប្រាក់ខែអប្បបរមា។');
           if (patch.vacancies !== undefined && (!Number.isInteger(patch.vacancies) || patch.vacancies < 1)) return fail(res,400,'ចំនួនបុគ្គលិកមិនត្រឹមត្រូវ។');
+        } else if (type === 'rental') {
+          for (const key of ['address','property_type','rent_period','furnished']) if (body[key] !== undefined) patch[key] = text(body[key], key === 'address' ? 300 : 120);
+          if (body.price !== undefined) patch.rent_amount = body.price === '' ? null : Number(body.price);
+          for (const key of ['bedrooms','bathrooms','area_sqm']) if (body[key] !== undefined) patch[key] = body[key] === '' ? null : Number(body[key]);
+        } else if (type === 'land') {
+          for (const key of ['address','land_type','title_deed','road_access']) if (body[key] !== undefined) patch[key] = text(body[key], key === 'address' ? 300 : 160);
+          if (body.price !== undefined) patch.price = body.price === '' ? null : Number(body.price);
+          if (body.area_sqm !== undefined) patch.area_sqm = body.area_sqm === '' ? null : Number(body.area_sqm);
+        } else if (type === 'house_sale') {
+          for (const key of ['address','property_type','furnished','title_deed']) if (body[key] !== undefined) patch[key] = text(body[key], key === 'address' ? 300 : 120);
+          if (body.price !== undefined) patch.price = body.price === '' ? null : Number(body.price);
+          for (const key of ['bedrooms','bathrooms','area_sqm']) if (body[key] !== undefined) patch[key] = body[key] === '' ? null : Number(body[key]);
         } else if (type === 'property') {
           for (const key of ['short_description','subcategory','detail_type','address','province_code','district_code','commune_code','village_code','price_period']) {
             if (body[key] !== undefined) patch[key] = text(body[key], key === 'address' ? 300 : 160);
@@ -251,7 +263,36 @@ export function registerMyPostsRoutes(app, {
         if (patch.title !== undefined && patch.title.length < 2) return fail(res,400,'ចំណងជើងត្រូវមានយ៉ាងតិច ២ តួអក្សរ។');
         for (const key of ['price','rent_amount']) if (patch[key] !== undefined && patch[key] !== null && (!Number.isFinite(patch[key]) || patch[key] < 0)) return fail(res,400,'តម្លៃមិនត្រឹមត្រូវ។');
 
-        const imageEditRequested = Object.prototype.hasOwnProperty.call(body,'keep_image_message_ids') || (req.files || []).length > 0;
+        const uploadFiles = Array.isArray(req.files) ? req.files : [...(req.files?.images || []), ...(req.files?.image || [])];
+        const imageEditRequested = Object.prototype.hasOwnProperty.call(body,'keep_image_message_ids') || uploadFiles.length > 0;
+        if (imageEditRequested && ['rental','land','house_sale'].includes(type)) {
+          const currentGallery = row.image_file_id ? [{ file_id:row.image_file_id,message_id:row.image_message_id,mime_type:row.image_mime_type }] : [];
+          const keyOf = item => String(item?.message_id || item?.file_id || '');
+          const oldImage = currentGallery[0] || null;
+          const keepOld = oldImage && keepIds.includes(keyOf(oldImage));
+          const files = req.files?.image || [];
+          if (files.length > 1) return fail(res,400,'សម្រាប់ប្រកាសប្រភេទនេះ អាចបញ្ចូលរូបថ្មីបាន ១ រូបប៉ុណ្ណោះ។');
+          if (files[0]) {
+            const problem = imageUploadError(files[0],8*1024*1024);
+            if (problem) return fail(res,400,problem);
+            try {
+              const uploaded = await uploadToTelegram(files[0],8*1024*1024);
+              uploadedListingImages.push(uploaded);
+              patch.image_file_id = uploaded.fileId;
+              patch.image_message_id = uploaded.messageId;
+              patch.image_mime_type = uploaded.mimeType;
+              removedListingImages = currentGallery;
+            } catch (imageError) {
+              for (const item of uploadedListingImages) if (item?.messageId) await deleteTelegramMessage(item.messageId);
+              throw imageError;
+            }
+          } else if (!keepOld) {
+            patch.image_file_id = null;
+            patch.image_message_id = null;
+            patch.image_mime_type = null;
+            removedListingImages = currentGallery;
+          }
+        }
         if (imageEditRequested && ['job','property'].includes(type)) {
           let keepIds = [];
           try {
@@ -264,7 +305,7 @@ export function registerMyPostsRoutes(app, {
           const keyOf = item => String(item?.message_id || item?.file_id || '');
           const oldByKey = new Map(currentGallery.map(item => [keyOf(item), item]));
           const retained = keepIds.map(value => oldByKey.get(String(value))).filter(Boolean);
-          const files = req.files || [];
+          const files = req.files?.images || uploadFiles;
           if (retained.length + files.length > 10) return fail(res,400,'អាចដាក់រូបភាពបានអតិបរមា ១០ រូប។');
           for (const file of files) {
             const problem = imageUploadError(file,8*1024*1024);
