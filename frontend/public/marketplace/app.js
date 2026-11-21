@@ -104,6 +104,7 @@ const state = {
   activeListingType: 'all',
   activePropertyType: 'all',
   activeCondition: 'all',
+  marketplaceSort: 'newest',
   searchTerm: '',
   currentProduct: null,
   currentVendor: null,
@@ -1019,6 +1020,16 @@ function renderProducts() {
     const isNew = condition.includes('new') || condition.includes('ថ្មី');
     const isUsed = condition.includes('used') || condition.includes('second') || condition.includes('មួយទឹក') || condition.includes('ប្រើរួច');
     return state.activeCondition === 'new' ? isNew : isUsed;
+  });
+  const getSortPrice = (item) => {
+    const rawPrice = item.price_label ?? item.price ?? '';
+    const match = String(rawPrice).replace(/,/g, '').match(/-?\\d+(?:\\.\\d+)?/);
+    return match ? Number(match[0]) : Number.POSITIVE_INFINITY;
+  };
+  list.sort((a, b) => {
+    if (state.marketplaceSort === 'low') return getSortPrice(a) - getSortPrice(b);
+    if (state.marketplaceSort === 'high') return getSortPrice(b) - getSortPrice(a);
+    return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
   });
   $('productGrid').innerHTML = list.map(marketplaceCard).join('');
   $('resultCount').textContent = `${list.length} ប្រកាស`;
@@ -3895,6 +3906,26 @@ function bindEvents() {
     document.querySelector('[data-condition-filter][value="all"]')?.click();
     $('searchInput').value = '';
     setCategory('all');
+  });
+
+  // Marketplace sort controls
+  const sortButtons = document.querySelectorAll('[data-sort-value]');
+  const syncMarketplaceSortState = () => {
+    sortButtons.forEach((button) => {
+      const active = button.dataset.sortValue === state.marketplaceSort;
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-pressed', String(active));
+    });
+  };
+  syncMarketplaceSortState();
+  document.querySelector('.amazon-filter-sidebar')?.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-sort-value]');
+    if (!button) return;
+    const sortValue = button.dataset.sortValue;
+    if (!['low', 'high', 'newest'].includes(sortValue)) return;
+    state.marketplaceSort = sortValue;
+    syncMarketplaceSortState();
+    renderProducts();
   });
 
   // Product Grid Delegation
