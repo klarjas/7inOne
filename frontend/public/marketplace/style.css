@@ -7238,3 +7238,31 @@ body > footer {
   cursor: pointer;
   transition: background .16s ease, border-color .16s ease, color .16s ease;
 }
+
+
+/* Final polish: seller-chat draft close control and mobile navigation/search. */
+#sellerChatProductBanner .seller-chat-draft-close {
+  border-color: rgba(42, 71, 94, 0.55);
+}
+
+#sellerChatProductBanner .seller-chat-draft-close:hover,
+#sellerChatProductBanner .seller-chat-draft-close:focus-visible {
+  border-color: rgba(182, 90, 107, 0.7);
+}
+
+.mobile-market-nav #mobileMarketPost [data-nav-icon="plus"],
+.mobile-market-nav #mobileMarketPost [data-nav-icon="plus"] svg {
+  color: #FFFFFF;
+  stroke: currentColor;
+}
+
+@media (max-width: 639px) {
+  #searchForm #searchCategory {
+    display: none;
+  }
+
+  #searchForm #searchInput {
+    flex: 1 1 0%;
+    min-width: 0;
+  }
+}
