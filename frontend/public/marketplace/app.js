@@ -2058,7 +2058,7 @@ async function openStorefront(vendorId, options = {}) {
     });
     const [result, catalogue] = await Promise.all([
       api('/api/vendors/' + encodeURIComponent(storeId) + '/ratings'),
-      api('/api/products?page=1&limit=' + state.currentStoreLimit + '&vendor_id=' + encodeURIComponent(storeId))
+      api('/api/products?page=1&limit=' + state.currentStoreLimit + '&vendor_id=' + encodeURIComponent(storeId) + '&include_out_of_stock=true')
     ]);
     if (!isCurrent()) { cancelSkeleton(); return false; }
     cancelSkeleton();
@@ -2091,7 +2091,7 @@ async function loadMoreStoreProducts() {
   const nextPage = state.currentStorePage + 1;
   try {
     const result = await api('/api/products?page=' + nextPage + '&limit=' +
-      state.currentStoreLimit + '&vendor_id=' + encodeURIComponent(state.currentStoreId));
+      state.currentStoreLimit + '&vendor_id=' + encodeURIComponent(state.currentStoreId) + '&include_out_of_stock=true');
     const existing = new Set(state.currentStoreProducts.map(product => String(product.id)));
     state.currentStoreProducts = state.currentStoreProducts.concat(
       (result.data || []).filter(product => !existing.has(String(product.id)))
