@@ -1160,10 +1160,13 @@ function renderProducts() {
     return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
   });
   $('productGrid').innerHTML = list.map(marketplaceCard).join('');
-  $('resultCount').textContent = `${list.length} ប្រកាស`;
+  const resultCount = $('resultCount');
+  if (resultCount) resultCount.textContent = `${list.length} ប្រកាស`;
   const typeTitles = { all: 'ប្រកាសថ្មីៗទាំងអស់', product: 'ផលិតផល', job: 'ការងារ', real_estate: 'អចលនទ្រព្យ' };
-  $('listingTitle').textContent = typeTitles[state.activeListingType] || typeTitles.all;
-  $('listingSub').textContent = state.searchTerm ? `លទ្ធផលស្វែងរកសម្រាប់ «${esc(state.searchTerm)}»` : 'ផលិតផល ការងារ ផ្ទះជួល និងដីលក់ បង្ហាញតាមពេលបង្ហោះថ្មីបំផុត';
+  const listingTitle = $('listingTitle');
+  if (listingTitle) listingTitle.textContent = typeTitles[state.activeListingType] || typeTitles.all;
+  const listingSub = $('listingSub');
+  if (listingSub) listingSub.textContent = state.searchTerm ? `លទ្ធផលស្វែងរកសម្រាប់ «${esc(state.searchTerm)}»` : 'ផលិតផល ការងារ ផ្ទះជួល និងដីលក់ បង្ហាញតាមពេលបង្ហោះថ្មីបំផុត';
   $('emptyHome').classList.toggle('hidden', list.length > 0);
   $('productGrid').classList.toggle('hidden', list.length === 0);
   $('skeletonGrid').classList.add('hidden');
