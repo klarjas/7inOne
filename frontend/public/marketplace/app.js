@@ -2140,7 +2140,8 @@ function renderAuroraProductList(products) {
       const img=(p.product_images||[]).filter(x=>x.image_url).sort((a,b)=>Number(a.sort_order||0)-Number(b.sort_order||0))[0]?.image_url||'';
       const specs=productCardSpecs(p).map(x=>'<span><b>'+esc(x[0])+':</b> '+esc(x[1])+'</span>').join('');
       const stock=Number(p.stock||0);
-      return '<article class="aurora-product-row" '+(isAdmin()?'data-aurora-edit="'+esc(p.id)+'"':'data-action="view" data-id="'+esc(p.id)+'"')+' tabindex="0" role="button"><div class="aurora-product-thumb">'+(img?'<img src="'+esc(img)+'" alt="">':ic('image',24))+'</div><div class="aurora-product-info"><strong>'+esc(p.title||'')+'</strong><div class="aurora-product-specs">'+specs+'</div></div><div class="aurora-product-side"><strong>'+money(p.display_price??p.price)+'</strong><span class="'+(stock?'is-in-stock':'is-out-stock')+'">'+(stock?'ស្តុក '+stock:'អស់ស្តុក')+'</span>'+(isAdmin()?'<button type="button" class="aurora-edit-button" data-aurora-edit="'+esc(p.id)+'">'+ic('pencil',14)+' កែប្រែ</button>':'')+'</div></article>';
+      const hasVideo=Boolean(youtubeVideoId(p.youtube_video_url));
+      return '<article class="aurora-product-row" '+(isAdmin()?'data-aurora-edit="'+esc(p.id)+'"':'data-action="view" data-id="'+esc(p.id)+'"')+' tabindex="0" role="button"><div class="aurora-product-thumb">'+(img?'<img src="'+esc(img)+'" alt="">':ic('image',24))+'</div><div class="aurora-product-info"><strong>'+esc(p.title||'')+'</strong>'+(hasVideo?'<span class="aurora-video-indicator">'+ic('play',12)+' មានវីដេអូ</span>':'')+'<div class="aurora-product-specs">'+specs+'</div></div><div class="aurora-product-side"><strong>'+money(p.display_price??p.price)+'</strong><span class="'+(stock?'is-in-stock':'is-out-stock')+'">'+(stock?'ស្តុក '+stock:'អស់ស្តុក')+'</span>'+(isAdmin()?'<button type="button" class="aurora-edit-button" data-aurora-edit="'+esc(p.id)+'">'+ic('pencil',14)+' កែប្រែ</button>':'')+'</div></article>';
     }).join('')+'</div></section>';
   }).join('')+'</div>';
 }
@@ -2158,6 +2159,7 @@ function openAuroraProductEditor(productId){
   '<div class="aurora-edit-grid"><label>តម្លៃលក់ ($)<input class="field" name="price" type="number" min="0" step="0.01" required value="'+esc(p.display_price??p.price??0)+'"></label><label>ស្តុក<input class="field" name="stock" type="number" min="0" step="1" required value="'+esc(p.stock??0)+'"></label></div>'+
   '<label>ប្រភេទ<input class="field" name="category" value="'+esc(p.category||'computers')+'"></label>'+
   '<label>ការពិពណ៌នា<textarea class="field" name="description" rows="3">'+esc(desc.full||desc.short||'')+'</textarea></label>'+
+  '<label>YouTube Video Link<input class="field" name="youtube_video_url" type="url" maxlength="1000" placeholder="https://www.youtube.com/watch?v=..." value="'+esc(p.youtube_video_url||'')+'"><small>អាចទុកទទេ ហើយបន្ថែមវីដេអូនៅពេលក្រោយបាន។</small></label>'+
   '<div class="aurora-edit-section"><strong>លក្ខណៈបច្ចេកទេស</strong><div class="aurora-edit-grid">'+
   '<label>CPU<input class="field" name="cpu_model" value="'+esc(specs.cpu_model||specs.processor||'')+'"></label><label>RAM<input class="field" name="ram_type_capacity" value="'+esc(specs.ram_type_capacity||specs.ram||'')+'"></label>'+
   '<label>Storage<input class="field" name="storage_type_capacity" value="'+esc(specs.storage_type_capacity||specs.storage||specs.ssd||'')+'"></label><label>Display<input class="field" name="screen_size" value="'+esc(specs.screen_size||specs.display||'')+'"></label><label>GPU<input class="field" name="gpu_model_vram" value="'+esc(specs.gpu_model_vram||specs.gpu||'')+'"></label></div></div>'+
@@ -2171,7 +2173,7 @@ function openAuroraProductEditor(productId){
     if(files.some(f=>!['image/jpeg','image/png','image/webp'].includes(f.type)||f.size>20*1024*1024)){toast('សូមប្រើ JPG / PNG / WEBP មិនលើស ២០MB ក្នុងមួយរូប។','error');return;}
     btn.disabled=true;btn.textContent='កំពុងរក្សាទុក...';
     try{
-      const payload={title:String(data.get('title')||'').trim(),price:Number(data.get('price')),stock:Number(data.get('stock')),category:String(data.get('category')||'').trim(),description:String(data.get('description')||'').trim(),location:p.location||'កម្ពុជា',condition:p.condition||'ថ្មី'};
+      const payload={title:String(data.get('title')||'').trim(),price:Number(data.get('price')),stock:Number(data.get('stock')),category:String(data.get('category')||'').trim(),description:String(data.get('description')||'').trim(),youtube_video_url:String(data.get('youtube_video_url')||'').trim(),location:p.location||'កម្ពុជា',condition:p.condition||'ថ្មី'};
       await api('/api/products/'+encodeURIComponent(p.id),{method:'PATCH',body:JSON.stringify(payload)});
       const next={...specs};['cpu_model','ram_type_capacity','storage_type_capacity','screen_size','gpu_model_vram'].forEach(k=>{const v=String(data.get(k)||'').trim();if(v)next[k]=v;else delete next[k];});
       await api('/api/products/'+encodeURIComponent(p.id)+'/listing-details',{method:'PUT',body:JSON.stringify({category:payload.category,subcategory:p.subcategory||p.listing_details?.subcategory||'',detail_type:p.detail_type||p.listing_details?.detail_type||'Laptop',specifications:next})});
@@ -3346,7 +3348,7 @@ function openAdminAuroraProductEditor(productId) {
     '<section class="admin-aurora-form-section"><h3>ព័ត៌មានផលិតផល</h3><label>ឈ្មោះផលិតផល<input class="field" name="title" required maxlength="160" value="'+esc(p.title||'')+'"></label>'+
     '<div class="admin-aurora-form-grid"><label>តម្លៃលក់ ($)<input class="field" name="price" type="number" min="0" step="0.01" required value="'+Number(p.price||0)+'"></label><label>ស្តុក<input class="field" name="stock" type="number" min="0" step="1" required value="'+Number(p.stock||0)+'"></label>'+
     '<label>Category<input class="field" name="category" value="'+esc(p.category||'computers')+'"></label><label>ប្រភេទលម្អិត<input class="field" name="detail_type" value="'+esc(details.detail_type||'Laptop')+'"></label></div>'+
-    '<label>ការពិពណ៌នា<textarea class="field" name="description" rows="3">'+esc(p.description||'')+'</textarea></label><label>ស្ថានភាពលក់<select class="field" name="status">'+statusOptions+'</select></label></section>'+
+    '<label>ការពិពណ៌នា<textarea class="field" name="description" rows="3">'+esc(p.description||'')+'</textarea></label><label>YouTube Video Link<input class="field" name="youtube_video_url" type="url" maxlength="1000" placeholder="https://www.youtube.com/watch?v=..." value="'+esc(p.youtube_video_url||'')+'"><small>អាចទុកទទេ ហើយបន្ថែមវីដេអូនៅពេលក្រោយបាន។</small></label><label>ស្ថានភាពលក់<select class="field" name="status">'+statusOptions+'</select></label></section>'+
     '<section class="admin-aurora-form-section"><h3>លក្ខណៈបច្ចេកទេស</h3><div class="admin-aurora-form-grid">'+
     '<label>CPU<input class="field" name="cpu_model" value="'+esc(specs.cpu_model||specs.processor||'')+'"></label><label>RAM<input class="field" name="ram_type_capacity" value="'+esc(specs.ram_type_capacity||specs.ram||'')+'"></label>'+
     '<label>Storage<input class="field" name="storage_type_capacity" value="'+esc(specs.storage_type_capacity||specs.storage||specs.ssd||'')+'"></label><label>Display<input class="field" name="screen_size" value="'+esc(specs.screen_size||specs.display||'')+'"></label><label>GPU<input class="field" name="gpu_model_vram" value="'+esc(specs.gpu_model_vram||specs.gpu||'')+'"></label></div></section>'+
@@ -3402,7 +3404,7 @@ function openAdminAuroraProductEditor(productId) {
     const get=name=>String(data.get(name)||'').trim();
     button.disabled=true;button.textContent='កំពុងរក្សាទុក...';
     try{
-      const payload={title:get('title'),price:Number(get('price')),stock:Number(get('stock')),category:get('category'),description:get('description')};
+      const payload={title:get('title'),price:Number(get('price')),stock:Number(get('stock')),category:get('category'),description:get('description'),youtube_video_url:get('youtube_video_url')};
       await api('/api/products/'+encodeURIComponent(p.id),{method:'PATCH',body:JSON.stringify(payload)});
       const next={...specs};['cpu_model','ram_type_capacity','storage_type_capacity','screen_size','gpu_model_vram'].forEach(key=>{const value=get(key);if(value)next[key]=value;else delete next[key];});
       await api('/api/admin/supplier-products/'+encodeURIComponent(p.id)+'/details',{method:'PUT',body:JSON.stringify({category:payload.category,subcategory:details.subcategory||'',detail_type:get('detail_type')||'Laptop',specifications:next})});
