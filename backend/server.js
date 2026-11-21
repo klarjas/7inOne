@@ -3216,7 +3216,8 @@ app.use((error, _req, res, _next) => {
 
 await nextApp.prepare();
 app.use((req, res) => nextHandler(req, res));
-app.listen(port, () => console.log(`7inOne full-stack service listening on ${port}`));
+const server = app.listen(port, '0.0.0.0', () => console.log(`7inOne full-stack service listening on 0.0.0.0:${port}`));
+server.on('error', error => console.error('7inOne HTTP server failed to bind:', error));
 async function cleanupExpiredSocialStories() {
   if (!supabase) return;
   try {
