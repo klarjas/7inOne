@@ -7606,13 +7606,13 @@ body > footer {
 .app-dialog-cancel {
   background: #101822;
 }
-.app-dialog-submit {
-  border-color: #2563A6 !important;
+ .app-dialog-box .app-dialog-submit {
+  border-color: #2563A6;
   background: #2563A6;
-  color: #FFFFFF !important;
+  color: #FFFFFF;
 }
-.app-dialog-submit.is-danger {
-  border-color: #9F3434 !important;
+.app-dialog-box .app-dialog-submit.is-danger {
+  border-color: #9F3434;
   background: #9F3434;
 }
 
