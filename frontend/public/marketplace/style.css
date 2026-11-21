@@ -7453,3 +7453,22 @@ body > footer {
 .my-post-image-choice input {
   accent-color: #38BDF8;
 }
+
+
+/* SVG icon alignment for account, listing and lightbox controls */
+.account-shortcut-arrow svg,
+.product-lightbox-close svg,
+.product-lightbox-nav svg,
+.marketplace-detail-close svg {
+  display: block;
+}
+.account-shortcut-arrow svg {
+  width: 16px;
+  height: 16px;
+}
+.product-lightbox-nav span,
+.product-lightbox-close span,
+.marketplace-detail-close span {
+  display: inline-grid;
+  place-items: center;
+}
