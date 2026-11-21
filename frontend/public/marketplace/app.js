@@ -338,11 +338,11 @@ function appDialog({ mode = 'confirm', title = 'បញ្ជាក់សកម�
     wrap.setAttribute('aria-hidden', 'true');
     const isPrompt = mode === 'prompt';
     const field = isPrompt
-      ? `<label class="app-dialog-field"><span>មូលហេតុ</span><textarea id="appDialogInput" class="field" rows="4" minlength="3" maxlength="1200" required placeholder="${esc(placeholder)}"></textarea></label>`
+      ? `<label class="app-dialog-field"><span>មូលហេតុ</span><textarea id="appDialogInput" class="field" rows="4" maxlength="1200" placeholder="${esc(placeholder)}"></textarea></label>`
       : '';
     wrap.innerHTML = `<section class="modal-box app-dialog-box" role="dialog" aria-modal="true" aria-labelledby="appDialogTitle" aria-describedby="appDialogMessage">
       <div class="app-dialog-heading"><span class="app-dialog-icon">${ic(isPrompt ? 'flag' : 'alert', 19)}</span><div><h2 id="appDialogTitle">${esc(title)}</h2><p id="appDialogMessage">${esc(message)}</p></div></div>
-      <form id="appDialogForm" class="app-dialog-form">${field}
+      <form id="appDialogForm" class="app-dialog-form" novalidate>${field}
         <div class="app-dialog-actions">
           <button type="button" class="app-dialog-cancel" id="appDialogCancel">បោះបង់</button>
           <button type="submit" class="app-dialog-submit ${danger ? 'is-danger' : ''}">${esc(confirmLabel || (isPrompt ? 'ផ្ញើរបាយការណ៍' : 'យល់ព្រម'))}</button>
@@ -366,7 +366,7 @@ function appDialog({ mode = 'confirm', title = 'បញ្ជាក់សកម�
     $('appDialogForm').addEventListener('submit', event => {
       event.preventDefault();
       const value = isPrompt ? $('appDialogInput').value.trim() : true;
-      if (isPrompt && value.length < 3) return;
+      if (isPrompt && value.length < 3) { $('appDialogInput').setAttribute('aria-invalid','true'); $('appDialogInput').focus(); return; }
       finish(value);
     });
     wrap.addEventListener('click', event => {
@@ -4218,13 +4218,6 @@ function bindEvents() {
       vendorId: videoButton.dataset.videoVendorId,
       category: videoButton.dataset.videoCategory
     });
-  });
-  $('marketplaceListingModal')?.addEventListener('click', (event) => {
-    if (event.target.matches('[data-close-marketplace-detail]')) {
-      $('marketplaceListingModal').classList.add('hidden');
-      $('marketplaceListingModal').setAttribute('aria-hidden','true');
-      document.body.classList.remove('overflow-hidden');
-    }
   });
   $('searchForm').addEventListener('submit', (e) => {
     e.preventDefault();
