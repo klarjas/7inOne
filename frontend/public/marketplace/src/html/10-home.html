@@ -1,0 +1,176 @@
+    <!-- 1. HOME VIEW -->
+    <section class="view" id="view-home">
+      <div class="home-layout-shell amazon-store-body shell">
+        <!-- Amazon-style filters: existing category and sort actions are preserved. -->
+        <aside class="home-sidebar amazon-filter-sidebar" aria-label="តម្រងទំនិញ">
+          <section class="store-filter-group marketplace-type-filter">
+            <h3>ប្រភេទប្រកាស</h3>
+            <button class="store-filter-link active" type="button" data-listing-type="all">ទាំងអស់</button>
+            <button class="store-filter-link" type="button" data-listing-type="product">ផលិតផល</button>
+            <button class="store-filter-link" type="button" data-listing-type="job">ការងារ</button>
+            <button class="store-filter-link" type="button" data-listing-type="real_estate">អចលនទ្រព្យ</button>
+          </section>
+          <section class="store-filter-group" id="marketplaceCategoryGroups">
+            <div class="marketplace-category-group" data-marketplace-category-group="all" hidden>
+              <h3 id="marketplaceCategoryHeading">ប្រភេទទាំងអស់</h3>
+              <button class="store-filter-link active" type="button" data-listing-type="all">ប្រកាសទាំងអស់</button>
+            </div>
+            <div class="marketplace-category-group" data-marketplace-category-group="product" hidden>
+              <h3>ប្រភេទផលិតផល</h3>
+              <button class="store-filter-link active" type="button" data-category="all">ទំនិញទាំងអស់</button>
+              <button class="store-filter-link" type="button" data-category="phones">ទូរស័ព្ទ និង អេឡិចត្រូនិក</button>
+              <button class="store-filter-link" type="button" data-category="vehicles">រថយន្ត និង ម៉ូតូ</button>
+              <button class="store-filter-link" type="button" data-category="property">អចលនទ្រព្យ</button>
+              <button class="store-filter-link" type="button" data-category="fashion">សម្លៀកបំពាក់</button>
+              <button class="store-filter-link" type="button" data-category="furniture">គ្រឿងសង្ហារិម</button>
+            </div>
+            <div class="marketplace-category-group" data-marketplace-category-group="job" hidden>
+              <h3>ប្រភេទការងារ</h3>
+              <button class="store-filter-link active" type="button" data-marketplace-job-category="all">ការងារទាំងអស់</button>
+              <button class="store-filter-link" type="button" data-marketplace-job-category="it">IT &amp; Technology</button>
+              <button class="store-filter-link" type="button" data-marketplace-job-category="office">ការិយាល័យ និង រដ្ឋបាល</button>
+              <button class="store-filter-link" type="button" data-marketplace-job-category="sales">លក់ និង ទីផ្សារ</button>
+              <button class="store-filter-link" type="button" data-marketplace-job-category="transport">ដឹកជញ្ជូន</button>
+              <button class="store-filter-link" type="button" data-marketplace-job-category="hospitality">ភោជនីយដ្ឋាន និង សណ្ឋាគារ</button>
+              <button class="store-filter-link" type="button" data-marketplace-job-category="construction">សំណង់ និង វិស្វកម្ម</button>
+              <button class="store-filter-link" type="button" data-marketplace-job-category="education">អប់រំ</button>
+              <button class="store-filter-link" type="button" data-marketplace-job-category="healthcare">សុខាភិបាល</button>
+              <button class="store-filter-link" type="button" data-marketplace-job-category="factory">រោងចក្រ និង ផលិតកម្ម</button>
+              <button class="store-filter-link" type="button" data-marketplace-job-category="agriculture">កសិកម្ម</button>
+              <button class="store-filter-link" type="button" data-marketplace-job-category="services">សម្រស់ និង សេវាកម្ម</button>
+              <button class="store-filter-link" type="button" data-marketplace-job-category="other">ការងារផ្សេងៗ</button>
+            </div>
+            <div class="marketplace-category-group" data-marketplace-category-group="real_estate" hidden>
+              <h3>ប្រភេទអចលនទ្រព្យ</h3>
+              <button class="store-filter-link active" type="button" data-property-type="all">អចលនទ្រព្យទាំងអស់</button>
+              <button class="store-filter-link" type="button" data-property-type="house_sale">ផ្ទះលក់</button>
+              <button class="store-filter-link" type="button" data-property-type="house_rent">ផ្ទះជួល</button>
+              <button class="store-filter-link" type="button" data-property-type="condo_sale">ខុនដូសម្រាប់លក់</button>
+              <button class="store-filter-link" type="button" data-property-type="apartment_rent">អាផាតមិនសម្រាប់ជួល</button>
+              <button class="store-filter-link" type="button" data-property-type="land">ដីលក់</button>
+              <button class="store-filter-link" type="button" data-property-type="land_rent">ដីសម្រាប់ជួល</button>
+              <button class="store-filter-link" type="button" data-property-type="commercial_sale">អចលនទ្រព្យពាណិជ្ជកម្មសម្រាប់លក់</button>
+              <button class="store-filter-link" type="button" data-property-type="commercial_rent">អចលនទ្រព្យពាណិជ្ជកម្មសម្រាប់ជួល</button>
+              <button class="store-filter-link" type="button" data-property-type="room_rent">បន្ទប់ជួល</button>
+              <button class="store-filter-link" type="button" data-property-type="properties_wanted">ត្រូវការអចលនទ្រព្យ</button>
+              <button class="store-filter-link" type="button" data-property-type="agent_services">សេវាកម្មភ្នាក់ងារ</button>
+              <button class="store-filter-link" type="button" data-property-type="others_properties">ផ្សេងទៀត</button>
+            </div>
+          </section>
+          <section class="store-filter-group">
+            <h3>ស្ថានភាព</h3>
+            <label class="store-filter-radio"><input type="radio" name="conditionFilter" value="all" data-condition-filter checked /> ទាំងអស់</label>
+            <label class="store-filter-radio"><input type="radio" name="conditionFilter" value="new" data-condition-filter /> ថ្មី</label>
+            <label class="store-filter-radio"><input type="radio" name="conditionFilter" value="used" data-condition-filter /> មួយទឹក / ប្រើរួច</label>
+          </section>
+          <section class="store-filter-group">
+            <h3>តម្រៀបតម្លៃ</h3>
+            <button class="store-filter-link" type="button" data-sort-value="low">តម្លៃទាបទៅខ្ពស់</button>
+            <button class="store-filter-link" type="button" data-sort-value="high">តម្លៃខ្ពស់ទៅទាប</button>
+            <button class="store-filter-link active" type="button" data-sort-value="newest" aria-pressed="true">បង្ហោះថ្មីៗ</button>
+          </section>
+        </aside>
+
+        <!-- Center Content -->
+        <div class="home-main-content">
+          <!-- Category Dock -->
+          <nav class="dock" id="categoryStrip" aria-label="ប្រភេទទំនិញ">
+            <button type="button" class="dk active" data-category="all">
+              <span class="ico"><span id="catAll"></span></span>
+              <span class="lb">ទាំងអស់</span>
+            </button>
+            <button type="button" class="dk" data-category="phones">
+              <span class="ico"><span id="catPhone"></span></span>
+              <span class="lb">ទូរស័ព្ទ &amp; អេឡិចត្រូនិក</span>
+            </button>
+            <button type="button" class="dk" data-category="vehicles">
+              <span class="ico"><span id="catCar"></span></span>
+              <span class="lb">រថយន្ត &amp; ម៉ូតូ</span>
+            </button>
+            <button type="button" class="dk" data-category="property">
+              <span class="ico"><span id="catHome"></span></span>
+              <span class="lb">អចលនទ្រព្យ</span>
+            </button>
+            <button type="button" class="dk" data-category="fashion">
+              <span class="ico"><span id="catFashion"></span></span>
+              <span class="lb">សម្លៀកបំពាក់</span>
+            </button>
+            <button type="button" class="dk" data-category="furniture">
+              <span class="ico"><span id="catFurniture"></span></span>
+              <span class="lb">គ្រឿងសង្ហារិម</span>
+            </button>
+          </nav>
+
+          <!-- Listing Header -->
+                    <!-- Skeleton & Product Grid -->
+          <div id="skeletonGrid" class="steam-loader-wrap global-loading" role="status" aria-live="polite">
+            <div class="loader" aria-hidden="true"></div>
+            <span>កំពុងផ្ទុកទំនិញ...</span>
+          </div>
+          <div class="hidden pb-10" id="productGrid"></div>
+
+          <!-- Empty State -->
+          <div class="hidden rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center" id="emptyHome">
+            <div class="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-emerald-50 text-emerald-800" id="emptyIcon"></div>
+            <h3 class="mt-4 font-bold">រកមិនឃើញទំនិញទេ</h3>
+            <p class="mt-1 text-[12px] text-slate-500">សាកល្បងពាក្យស្វែងរក ឬប្រភេទផ្សេងទៀត។</p>
+            <button class="mt-4 rounded-full bg-emerald-50 px-5 py-2 text-[12px] font-bold text-emerald-800" id="clearFilters">បង្ហាញទំនិញទាំងអស់</button>
+          </div>
+        </div>
+
+        <!-- Jobs panel replaces the homepage Community Photo Feed UI. -->
+        <aside class="home-promo-rail home-jobs-rail" id="homeJobsRail" aria-label="ការងារ 7inOne">
+          <section class="jobs-panel" aria-label="បញ្ជីការងារ">
+            <div class="jobs-panel-heading">
+              <div>
+                <span class="jobs-panel-kicker">7INONE CAREERS</span>
+                <h2>ការងារ</h2>
+                <p>ស្វែងរកឱកាសការងារនៅកម្ពុជា</p>
+              </div>
+              <span class="jobs-panel-icon" data-icon="arrowUpRight" aria-hidden="true"></span>
+            </div>
+            <label class="jobs-search">
+              <span data-icon="search" aria-hidden="true"></span>
+              <input id="jobsSearchInput" type="search" placeholder="ស្វែងរកការងារ ឬក្រុមហ៊ុន..." autocomplete="off">
+            </label>
+            <div class="jobs-filter-heading">
+              <b>ប្រភេទការងារ</b>
+            </div>
+            <div class="jobs-category-list" id="jobsCategoryList">
+              <button type="button" data-job-category="all" class="is-active">ការងារទាំងអស់</button>
+              <button type="button" data-job-category="it">IT &amp; Technology</button>
+              <button type="button" data-job-category="office">Office &amp; Administration</button>
+              <button type="button" data-job-category="sales">Sales &amp; Marketing</button>
+              <button type="button" data-job-category="transport">Transport &amp; Delivery</button>
+              <button type="button" data-job-category="hospitality">Restaurant &amp; Hotel</button>
+              <button type="button" data-job-category="construction">Construction &amp; Engineering</button>
+              <button type="button" data-job-category="education">Education</button>
+              <button type="button" data-job-category="healthcare">Healthcare</button>
+              <button type="button" data-job-category="factory">Factory &amp; Manufacturing</button>
+              <button type="button" data-job-category="agriculture">Agriculture</button>
+              <button type="button" data-job-category="services">Beauty &amp; Services</button>
+              <button type="button" data-job-category="other">Other Jobs</button>
+            </div>
+            <div class="jobs-subcategory-list" id="jobsSubcategoryList" hidden></div>
+            <div class="jobs-results-heading">
+              <div><b>ការងារទាំងអស់</b><small id="jobsResultCount">0 ការងារ</small></div>
+              <select id="jobsSortSelect" aria-label="តម្រៀបការងារ">
+                <option value="newest">បង្ហោះថ្មីៗ</option>
+                <option value="salary_asc">តម្លៃទាបទៅខ្ពស់</option>
+                <option value="salary_desc">តម្លៃខ្ពស់ទៅទាប</option>
+              </select>
+            </div>
+            <div class="jobs-list" id="jobsList" aria-live="polite">
+              <div class="jobs-empty-state">
+                <span data-icon="briefcase" aria-hidden="true"></span>
+                <b>មិនទាន់មានការងារបង្ហោះទេ</b>
+                <p>ការងារថ្មីៗនឹងបង្ហាញនៅទីនេះ នៅពេលនិយោជកចាប់ផ្តើមប្រកាសជ្រើសរើសបុគ្គលិក។</p>
+              </div>
+            </div>
+            <div class="home-promo-slot tall jobs-promo-slot" data-promo-slot="tall" hidden></div>
+          </section>
+        </aside>
+
+      </div>
+    </section>
+
