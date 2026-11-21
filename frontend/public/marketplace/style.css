@@ -7108,7 +7108,9 @@ body > footer {
   #view-product .product-detail-page:has(.product-primary-actions) .product-detail-title {
     font-size: 22px;
   }
-}\n\n/* Dark-theme marketplace filter controls */
+}
+
+/* Dark-theme marketplace filter controls */
 #view-home .store-filter-link {
   display: block;
   width: 100%;
