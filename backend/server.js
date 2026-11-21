@@ -3230,9 +3230,9 @@ app.get('/api/admin/supplier-products', authenticate, requireAdmin, async (_req,
   const sourceById = new Map(sources.map(row => [row.product_id, row]));
   const detailById = new Map(details.map(row => [row.product_id, row]));
   const variantSourceById = new Map(variantSources.map(row => [row.variant_id, row]));
-  res.json({ data: (products || []).map(product => ({
+  res.json({ data: (products || []).filter(product => sourceById.has(product.id)).map(product => ({
     ...publicProduct(product),
-    supplier_source: sourceById.get(product.id) || null,
+    supplier_source: sourceById.get(product.id),
     listing_details: detailById.get(product.id) || null,
     product_variants: (product.product_variants || []).map(variant => ({
       ...variant, supplier_source: variantSourceById.get(variant.id) || null
