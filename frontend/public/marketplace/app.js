@@ -2145,7 +2145,7 @@ function storeCategoryLabel(category) {
   return STORE_CATEGORY_LABELS[key] || key || 'ផ្សេងៗ';
 }
 function storePublicProducts(products = state.currentStoreProducts) {
-  return (products || []).filter(product => product && product.status === 'active' && Number(product.stock) > 0);
+  return (products || []).filter(product => product && Number(product.stock) > 0);
 }
 function storeCategoryOptions(products = state.currentStoreProducts) {
   const keys = [...new Set(storePublicProducts(products).map(product => String(product.category || '').trim()).filter(Boolean))].sort();
@@ -2156,7 +2156,7 @@ function storeSubcategoryOptions(category = state.currentStoreCategory, products
   return [...new Set(scoped.map(product => String(product.subcategory || '').trim()).filter(Boolean))].sort().map(value => [value, value]);
 }
 function storeProductMatchesFilters(product) {
-  if (product.status !== 'active' || Number(product.stock) <= 0) return false;
+  if (Number(product.stock) <= 0) return false;
   if (state.currentStoreCategory !== 'all' && String(product.category || '') !== state.currentStoreCategory) return false;
   if (state.currentStoreSubcategory !== 'all' && String(product.subcategory || '') !== state.currentStoreSubcategory) return false;
   const query = state.currentStoreSearch.trim().toLowerCase();
