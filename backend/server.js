@@ -3380,6 +3380,23 @@ function extractCcSupplierProducts(html, baseUrl) {
       || '';
     const specs = text.split('\n').map(line => line.trim()).filter(line => line && !/^(?:Code|Product\s*Code)\s*:/i.test(line) && !/^\$/.test(line) && !/^Free\s*:/i.test(line) && !/^[-_]{3,}$/.test(line));
     const imageUrls = supplierImageCandidates(card, baseUrl).slice(0, 5);
+    const searchable = (title + ' ' + text).toLowerCase();
+    const pickSpec = pattern => specs.find(line => pattern.test(line)) || '';
+    const color = pickSpec(/(?:color|colour|ពណ៌)\\s*:/i).replace(/^(?:color|colour|ពណ៌)\\s*:/i, '').trim();
+    const weight = pickSpec(/(?:weight|ទម្ងន់)\\s*:/i).replace(/^(?:weight|ទម្ងន់)\\s*:/i, '').trim();
+    const battery = pickSpec(/(?:battery|ថ្ម)\\s*:/i).replace(/^(?:battery|ថ្ម)\\s*:/i, '').trim();
+    let category = 'computers';
+    let subcategory = 'other';
+    let detailType = 'Computer';
+    if (/\\b(laptop|notebook|vivobook|expertbook|zenbook|macbook|thinkpad)\\b/i.test(searchable)) { subcategory = 'laptop'; detailType = 'Laptop'; }
+    else if (/\\b(all[- ]in[- ]one|aio)\\b/i.test(searchable)) { subcategory = 'all_in_one'; detailType = 'All-in-One'; }
+    else if (/\\b(desktop|tower|mini pc|mini computer)\\b/i.test(searchable)) { subcategory = 'desktop'; detailType = 'Desktop'; }
+    else if (/\\b(monitor|display screen)\\b/i.test(searchable)) { subcategory = 'monitor'; detailType = 'Monitor'; }
+    else if (/\\b(keyboard)\\b/i.test(searchable)) { category = 'computer_accessories'; subcategory = 'keyboard'; detailType = 'Keyboard'; }
+    else if (/\\b(mouse|mice)\\b/i.test(searchable)) { category = 'computer_accessories'; subcategory = 'mouse'; detailType = 'Mouse'; }
+    else if (/\\b(charger|power adapter|ac adapter)\\b/i.test(searchable)) { category = 'computer_accessories'; subcategory = 'charger'; detailType = 'Charger'; }
+    else if (/\\b(cable|usb hub|adapter|dongle)\\b/i.test(searchable)) { category = 'computer_accessories'; subcategory = 'cable_adapter'; detailType = 'Cable / Adapter'; }
+    else if (/\\b(laptop bag|notebook bag|computer bag)\\b/i.test(searchable)) { category = 'computer_accessories'; subcategory = 'bag'; detailType = 'Computer Bag'; }
     let productUrl = baseUrl;
     const links = [...card.matchAll(/<a\b[^>]*href\s*=\s*(?:"([^"]+)"|'([^']+)'|([^\s>]+))/gi)];
     for (const link of links) {
@@ -3394,12 +3411,18 @@ function extractCcSupplierProducts(html, baseUrl) {
       supplier_price: supplierPrice,
       selling_price: Number.isFinite(supplierPrice) ? Math.round((supplierPrice + 5) * 100) / 100 : null,
       description: clean(specs.join('\n'), 5000),
+      category,
+      subcategory,
+      detail_type: detailType,
       specifications: {
-        cpu_model: specs.find(line => /^-?\s*CPU\s*:/i.test(line))?.replace(/^-?\s*CPU\s*:/i, '').trim() || '',
-        ram_type_capacity: specs.find(line => /^-?\s*RAM\s*:/i.test(line))?.replace(/^-?\s*RAM\s*:/i, '').trim() || '',
-        storage_type_capacity: specs.find(line => /^-?\s*SSD\s*:/i.test(line))?.replace(/^-?\s*SSD\s*:/i, '').trim() || '',
+        cpu_model: specs.find(line => /^-?\\s*CPU\\s*:/i.test(line))?.replace(/^-?\\s*CPU\\s*:/i, '').trim() || '',
+        ram_type_capacity: specs.find(line => /^-?\\s*RAM\\s*:/i.test(line))?.replace(/^-?\\s*RAM\\s*:/i, '').trim() || '',
+        storage_type_capacity: specs.find(line => /^-?\\s*SSD\\s*:/i.test(line))?.replace(/^-?\\s*SSD\\s*:/i, '').trim() || '',
         screen_size: specs.find(line => /display|inch|screen/i.test(line)) || '',
-        gpu_model_vram: specs.find(line => /^-?\s*GPU\s*:/i.test(line))?.replace(/^-?\s*GPU\s*:/i, '').trim() || '',
+        gpu_model_vram: specs.find(line => /^-?\\s*GPU\\s*:/i.test(line))?.replace(/^-?\\s*GPU\\s*:/i, '').trim() || '',
+        color,
+        weight,
+        battery,
         full_specs: specs
       },
       supplier_url: productUrl,
@@ -3420,7 +3443,13 @@ async function loadCcSupplierCatalog(url) {
 app.post('/api/admin/supplier-import/scan', authenticate, requireAdmin, async (req, res) => {
   if (!supabase) return fail(res, 503, 'Supabase is not configured.');
   try {
-    const { url, products } = await loadCcSupplierCatalog(clean(req.body.url, 1000));
+    const { url, products: scannedProducts } = await loadCcSupplierCatalog(clean(req.body.url, 1000));
+    const requestedOffset = Math.max(0, Number.parseInt(req.body.offset, 10) || 0);
+    const parsedUrl = new URL(url);
+    const isSingleProductUrl = parsedUrl.pathname !== '/' && parsedUrl.pathname !== '';
+    const products = isSingleProductUrl ? scannedProducts.slice(0, 1) : scannedProducts;
+    const batchSize = isSingleProductUrl ? 1 : 10;
+    const batch = products.slice(requestedOffset, requestedOffset + batchSize);
     const { data: vendor, error: vendorError } = await supabase.from('vendors').select('id').ilike('store_name', 'AURORA Computer').maybeSingle();
     if (vendorError || !vendor) return fail(res, 404, 'AURORA Computer shop was not found.');
     const [{ data: sources, error: sourceError }, { data: existing, error: productError }] = await Promise.all([
@@ -3430,12 +3459,16 @@ app.post('/api/admin/supplier-import/scan', authenticate, requireAdmin, async (r
     if (sourceError || productError) throw sourceError || productError;
     const knownCodes = new Set((sources || []).map(row => String(row.supplier_product_code || '').trim().toUpperCase()).filter(Boolean));
     const knownTitles = new Set((existing || []).map(row => String(row.title || '').trim().toLowerCase()).filter(Boolean));
-    const data = products.map(product => {
+    const data = batch.map(product => {
       const duplicate = knownCodes.has(product.supplier_product_code) || knownTitles.has(product.title.toLowerCase());
       const status = duplicate ? 'duplicate' : product.verified ? 'ready' : 'needs_review';
       return { ...product, duplicate, status };
     });
-    res.json({ data, summary: { total: data.length, ready: data.filter(item => item.status === 'ready').length, duplicate: data.filter(item => item.duplicate).length, needs_review: data.filter(item => item.status === 'needs_review').length } });
+    res.json({
+      data,
+      pagination: { offset: requestedOffset, limit: batchSize, total: products.length, next_offset: requestedOffset + data.length, has_more: !isSingleProductUrl && requestedOffset + data.length < products.length, single_product: isSingleProductUrl },
+      summary: { total: products.length, batch: data.length, ready: data.filter(item => item.status === 'ready').length, duplicate: data.filter(item => item.duplicate).length, needs_review: data.filter(item => item.status === 'needs_review').length }
+    });
   } catch (error) {
     console.error('CC COMPUTER supplier scan failed:', error.message);
     return fail(res, 502, 'Could not scan supplier catalog: ' + clean(error.message, 180));
@@ -3464,7 +3497,7 @@ app.post('/api/admin/supplier-import/import', authenticate, requireAdmin, async 
     if ((sameTitle || []).length) return fail(res, 409, 'A product with the same title already exists in AURORA.');
     const { data: created, error: createError } = await supabase.from('products').insert({
       vendor_id: vendor.id, title: product.title, description: product.description,
-      category: 'computers', price: product.selling_price, stock: 0,
+      category: product.category || 'computers', price: product.selling_price, stock: 0,
       location: 'Cambodia', condition: 'ថ្មី', status: 'active', renewed_at: new Date().toISOString()
     }).select().single();
     if (createError) throw createError;
@@ -3476,7 +3509,7 @@ app.post('/api/admin/supplier-import/import', authenticate, requireAdmin, async 
     });
     if (sourceError) throw sourceError;
     const { error: detailsError } = await supabase.from('product_listing_details').upsert({
-      product_id: created.id, category: 'computers', detail_type: 'Laptop',
+      product_id: created.id, category: product.category || 'computers', subcategory: product.subcategory || 'other', detail_type: product.detail_type || 'Computer',
       specifications: product.specifications, updated_at: new Date().toISOString()
     }, { onConflict: 'product_id' });
     if (detailsError) throw detailsError;
