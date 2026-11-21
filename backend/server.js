@@ -3445,8 +3445,7 @@ app.post('/api/admin/supplier-import/scan', authenticate, requireAdmin, async (r
   try {
     const { url, products: scannedProducts } = await loadCcSupplierCatalog(clean(req.body.url, 1000));
     const requestedOffset = Math.max(0, Number.parseInt(req.body.offset, 10) || 0);
-    const parsedUrl = new URL(url);
-    const isSingleProductUrl = parsedUrl.pathname !== '/' && parsedUrl.pathname !== '';
+    const isSingleProductUrl = scannedProducts.length <= 1;
     const products = isSingleProductUrl ? scannedProducts.slice(0, 1) : scannedProducts;
     const batchSize = isSingleProductUrl ? 1 : 10;
     const batch = products.slice(requestedOffset, requestedOffset + batchSize);
