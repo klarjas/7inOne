@@ -1668,7 +1668,7 @@ app.get('/api/products', async (req, res) => {
   // Attach category specifications and the lowest active variant price to public product cards.
   const productIds = (data || []).map(row => row.id).filter(Boolean);
   const [listingDetailsResult, variantsResult] = productIds.length ? await Promise.all([
-    supabase.from('product_listing_details').select('product_id,specifications,subcategory').in('product_id', productIds),
+    supabase.from('product_listing_details').select('product_id,specifications,subcategory,detail_type').in('product_id', productIds),
     supabase.from('product_variants').select('id,product_id,price,stock,option_name,option_value,sku,attributes,sort_order').eq('is_active', true).in('product_id', productIds).order('sort_order').order('price')
   ]) : [{ data: [] }, { data: [] }];
   const specificationsByProduct = new Map((listingDetailsResult.data || []).map(row => [String(row.product_id), row]));
@@ -1685,6 +1685,7 @@ app.get('/api/products', async (req, res) => {
       ...row,
       specifications: details?.specifications || {},
       subcategory: details?.subcategory || null,
+      detail_type: details?.detail_type || null,
       display_price: variants.length ? Math.min(...variants.map(item => Number(item.price))) : row.price
     };
   });
