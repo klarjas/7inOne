@@ -172,8 +172,8 @@
         </button>
         <button aria-label="ប្រកាស" class="grid h-10 w-10 place-items-center brand-gradient text-white sm:hidden" id="mobilePostBtn"></button>
         <div class="header-shortcuts">
-          <button type="button" data-home-side="saved" aria-label="ទំនិញដែលបានរក្សាទុក">♡ <span>រក្សាទុក</span></button>
-          <button type="button" data-home-side="orders" aria-label="ការបញ្ជាទិញ">▤ <span>ការបញ្ជាទិញ</span></button>
+          <button type="button" data-home-side="saved" aria-label="ទំនិញដែលបានរក្សាទុក"><span data-icon="heart" data-icon-size="16"></span><span>រក្សាទុក</span></button>
+          <button type="button" data-home-side="orders" aria-label="ការបញ្ជាទិញ"><span data-icon="clipboard" data-icon-size="16"></span><span>ការបញ្ជាទិញ</span></button>
         </div>
 
         <!-- Notifications -->
@@ -348,10 +348,10 @@
                 <h2>ការងារ</h2>
                 <p>ស្វែងរកឱកាសការងារនៅកម្ពុជា</p>
               </div>
-              <span class="jobs-panel-icon" aria-hidden="true">↗</span>
+              <span class="jobs-panel-icon" data-icon="arrowUpRight" aria-hidden="true"></span>
             </div>
             <label class="jobs-search">
-              <span aria-hidden="true">⌕</span>
+              <span data-icon="search" aria-hidden="true"></span>
               <input id="jobsSearchInput" type="search" placeholder="ស្វែងរកការងារ ឬក្រុមហ៊ុន..." autocomplete="off">
             </label>
             <div class="jobs-filter-heading">
@@ -383,7 +383,7 @@
             </div>
             <div class="jobs-list" id="jobsList" aria-live="polite">
               <div class="jobs-empty-state">
-                <span aria-hidden="true">▤</span>
+                <span data-icon="briefcase" aria-hidden="true"></span>
                 <b>មិនទាន់មានការងារបង្ហោះទេ</b>
                 <p>ការងារថ្មីៗនឹងបង្ហាញនៅទីនេះ នៅពេលនិយោជកចាប់ផ្តើមប្រកាសជ្រើសរើសបុគ្គលិក។</p>
               </div>
@@ -451,17 +451,17 @@
 
             <div class="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-3">
               <button class="account-shortcut" data-profile-jump="saved">
-                <span class="account-shortcut-icon bg-rose-50 text-rose-600">♡</span>
+                <span class="account-shortcut-icon bg-rose-50 text-rose-600" data-icon="heart"></span>
                 <span><b>ទំនិញដែលបានរក្សាទុក</b><small>ផលិតផលដែលអ្នកចាប់អារម្មណ៍</small></span>
-                <span class="account-shortcut-arrow">→</span>
+                <span class="account-shortcut-arrow" data-icon="arrow"></span>
               </button>
               <button class="account-shortcut" data-profile-jump="history">
-                <span class="account-shortcut-icon bg-emerald-50 text-emerald-700">↗</span>
+                <span class="account-shortcut-icon bg-emerald-50 text-emerald-700" data-icon="clipboard"></span>
                 <span><b>ការទិញ និងសំណើតថ្លៃ</b><small>តាមដានប្រតិបត្តិការរបស់អ្នក</small></span>
                 <span class="account-shortcut-arrow">→</span>
               </button>
               <button class="account-shortcut" data-profile-jump="seller">
-                <span class="account-shortcut-icon bg-amber-50 text-amber-700">▣</span>
+                <span class="account-shortcut-icon bg-amber-50 text-amber-700" data-icon="store"></span>
                 <span><b>ស្ថានភាពហាង</b><small>គ្រប់គ្រងការផ្ទៀងផ្ទាត់អ្នកលក់</small></span>
                 <span class="account-shortcut-arrow">→</span>
               </button>
@@ -479,12 +479,12 @@
             </div>
             <div class="grid gap-3 sm:grid-cols-2">
               <button type="button" data-open-profile-modal="profileInfoModal" class="flex w-full items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 text-left transition hover:border-emerald-300 hover:bg-emerald-50/40">
-                <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-emerald-50 text-lg text-emerald-700">👤</span>
+                <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-emerald-50 text-emerald-700" data-icon="user" data-icon-size="20"></span>
                 <span class="min-w-0 flex-1"><b class="block text-[12px]">ព័ត៌មានផ្ទាល់ខ្លួន</b><small class="mt-1 block text-[10px] text-slate-500">កែឈ្មោះ លេខទូរស័ព្ទ ទីតាំង និងអំពីខ្ញុំ</small></span>
                 <span class="text-slate-400">›</span>
               </button>
               <button type="button" data-open-profile-modal="telegramSecurityModal" class="flex w-full items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 text-left transition hover:border-sky-300 hover:bg-sky-50/40">
-                <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-sky-50 text-lg text-sky-700">🔐</span>
+                <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-sky-50 text-sky-700" data-icon="shield" data-icon-size="20"></span>
                 <span class="min-w-0 flex-1"><b class="block text-[12px]">សុវត្ថិភាពគណនី</b><small class="mt-1 block text-[10px] text-slate-500">ភ្ជាប់ Telegram, ទទួល OTP និងប្ដូរ Password</small></span>
                 <span class="text-slate-400">›</span>
               </button>
@@ -1010,6 +1010,10 @@
           </label>
           <input accept="image/jpeg,image/png,image/webp" class="hidden" id="productImage" multiple type="file" />
           <div id="productImageAlbum" class="product-image-album" aria-live="polite"></div>
+          <div id="productUploadStatus" class="product-upload-status" role="status" aria-live="polite" hidden>
+            <span>កំពុង Upload រូបភាព...</span>
+            <div class="product-upload-progress"><span id="productUploadProgressBar"></span></div>
+          </div>
           <p class="product-album-hint">ចុច «កំណត់ជារូបមេ» លើរូបដែលអ្នកចង់ឲ្យបង្ហាញមុនគេ។ អាចដាក់បានអតិបរមា ១០ រូប។</p>
         </div>
         <div class="flex justify-end gap-2 pt-3">
@@ -1029,9 +1033,9 @@
         <button class="close-btn" data-close="listingTypeModal" type="button" aria-label="បិទ"></button>
       </div>
       <div class="listing-type-grid">
-        <button type="button" class="listing-type-option" data-create-kind="product"><span>▣</span><b>ផលិតផល</b><small>ទំនិញថ្មី និងមួយទឹក</small></button>
-        <button type="button" class="listing-type-option" data-create-kind="job"><span>▤</span><b>ការងារ</b><small>ជ្រើសរើសបុគ្គលិក និងប្រកាសការងារ</small></button>
-        <button type="button" class="listing-type-option" data-create-kind="real_estate"><span>⌂</span><b>អចលនទ្រព្យ</b><small>ផ្ទះ ដី ខុនដូ និងអចលនទ្រព្យផ្សេងៗ</small></button>
+        <button type="button" class="listing-type-option" data-create-kind="product"><span data-icon="package"></span><b>ផលិតផល</b><small>ទំនិញថ្មី និងមួយទឹក</small></button>
+        <button type="button" class="listing-type-option" data-create-kind="job"><span data-icon="briefcase"></span><b>ការងារ</b><small>ជ្រើសរើសបុគ្គលិក និងប្រកាសការងារ</small></button>
+        <button type="button" class="listing-type-option" data-create-kind="real_estate"><span data-icon="home"></span><b>អចលនទ្រព្យ</b><small>ផ្ទះ ដី ខុនដូ និងអចលនទ្រព្យផ្សេងៗ</small></button>
       </div>
     </section>
   </div>
@@ -1080,12 +1084,12 @@
           <div class="sm:col-span-2 listing-image-album" data-listing-image-album="job">
             <span class="label">រូបភាពការងារ / Logo (JPG/PNG/WEBP · អតិបរមា ១០ រូប · 8MB/រូប)</span>
             <label class="product-album-picker" data-listing-image-picker>
-              <span class="product-album-picker-icon">▧</span>
+              <span class="product-album-picker-icon" data-icon="image"></span>
               <span class="min-w-0 flex-1"><b>ជ្រើសរើសរូបភាពច្រើន</b><small data-listing-image-count>0 / ១០ រូបបានជ្រើសរើស</small></span>
               <span class="product-album-add">+ បន្ថែមរូប</span>
               <input class="sr-only" type="file" accept="image/jpeg,image/png,image/webp" multiple data-listing-image-input>
             </label>
-            <div class="product-image-album" data-listing-image-grid><div class="product-album-empty"><span>▧</span><b>មិនទាន់មានរូបភាពទេ</b><small>ជ្រើសរើសរូបភាពរហូតដល់ ១០ រូប</small></div></div>
+            <div class="product-image-album" data-listing-image-grid><div class="product-album-empty"><span data-icon="image"></span><b>មិនទាន់មានរូបភាពទេ</b><small>ជ្រើសរើសរូបភាពរហូតដល់ ១០ រូប</small></div></div>
             <p class="product-album-hint">រូបទី១ ជារូបមេ · អាចប្តូររូបមេ លុបរូប និងរៀបលំដាប់បាន</p>
           </div>
         </div>
@@ -1262,7 +1266,7 @@
   <!-- Maintenance Mode Overlay -->
   <div aria-hidden="true" class="maintenance-overlay hidden" id="maintenanceOverlay">
     <div class="maintenance-glass-card">
-      <div class="maintenance-gear-wrap">⚙</div>
+      <div class="maintenance-gear-wrap" data-icon="settings" data-icon-size="34"></div>
       <p class="text-[10px] font-bold tracking-widest text-emerald-300">7INONE · SYSTEM UPDATE</p>
       <h1 class="mt-2 text-2xl font-bold">ប្រព័ន្ធកំពុងអភិវឌ្ឍន៍</h1>
       <p class="mt-3 text-xs leading-6 text-white/80" id="maintenanceOverlayMessage"></p>
