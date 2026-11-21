@@ -7851,23 +7851,23 @@ body > footer {
   }
 }
 
-/* Dedicated, reliable shimmer motion for the product detail skeleton */
-#view-product .product-detail-skeleton .skeleton {
+/* Global 7inOne skeleton shimmer — applies to every page and section */
+.skeleton {
   background-position: 220% 0 !important;
-  animation: productDetailSkeletonShimmer 1.45s ease-in-out infinite !important;
+  animation: sevenInOneSkeletonShimmer 1.45s linear infinite !important;
 }
 
-#view-product .product-detail-skeleton .skeleton::after {
-  display: none;
+.skeleton::after {
+  display: none !important;
 }
 
-@keyframes productDetailSkeletonShimmer {
-  from { background-position: 220% 0; }
-  to { background-position: -220% 0; }
+@keyframes sevenInOneSkeletonShimmer {
+  0% { background-position: 220% 0; }
+  100% { background-position: -220% 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  #view-product .product-detail-skeleton .skeleton {
+  .skeleton {
     animation: none !important;
     background-position: 50% 0 !important;
   }
