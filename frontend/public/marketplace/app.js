@@ -119,6 +119,7 @@ const state = {
   currentVariantId: null,
   activeSpecFilters: {},
   activeSubcategory: 'all',
+  activeDetailType: 'all',
   specPriceMin: '',
   specPriceMax: '',
   currentMarketplaceListing: null,
@@ -901,7 +902,9 @@ function renderCategorySpecFilters() {
   ];
   const products = state.products.filter(item => item.listing_type === 'product');
   const subcategories = [...new Set(products.map(item => String(item.subcategory || '').trim()).filter(Boolean))].sort((a,b) => a.localeCompare(b));
-  const scopedProducts = state.activeSubcategory === 'all' ? products : products.filter(item => String(item.subcategory || '') === state.activeSubcategory);
+  const subcategoryProducts = state.activeSubcategory === 'all' ? products : products.filter(item => String(item.subcategory || '') === state.activeSubcategory);
+  const detailTypes = [...new Set(subcategoryProducts.map(item => String(item.detail_type || '').trim()).filter(Boolean))].sort((a,b) => a.localeCompare(b));
+  const scopedProducts = state.activeDetailType === 'all' ? subcategoryProducts : subcategoryProducts.filter(item => String(item.detail_type || '') === state.activeDetailType);
   const sections = definitions.map(([key,label,aliases]) => {
     const values = [...new Set(scopedProducts.map(item => specFilterValue(item,aliases)).filter(Boolean))].sort((a,b) => a.localeCompare(b));
     if (!values.length) return '';
@@ -910,8 +913,9 @@ function renderCategorySpecFilters() {
   }).join('');
   const hasPrice = scopedProducts.some(item => Number.isFinite(Number(item.display_price ?? item.price)) && Number(item.display_price ?? item.price) > 0);
   const subcategorySelect = subcategories.length ? '<div class="spec-filter-field"><b>ផ្នែករង / Subcategory</b><div><select data-subcategory-filter><option value="all">ទាំងអស់</option>' + subcategories.map(value => '<option value="' + esc(value) + '"' + (state.activeSubcategory === value ? ' selected' : '') + '>' + esc(value) + '</option>').join('') + '</select></div></div>' : '';
-  group.hidden = !sections && !hasPrice && !subcategorySelect;
-  root.innerHTML = subcategorySelect + (sections || '') + (hasPrice ? '<div class="spec-filter-field spec-price-filter"><b>Price Range ($)</b><div><input type="number" min="0" step="1" data-price-filter="min" placeholder="Min" value="' + esc(state.specPriceMin) + '"><input type="number" min="0" step="1" data-price-filter="max" placeholder="Max" value="' + esc(state.specPriceMax) + '"></div></div>' : '');
+  const detailTypeSelect = detailTypes.length ? '<div class="spec-filter-field"><b>ប្រភេទលម្អិត / Detailed Type</b><div><select data-detail-type-filter><option value="all">ទាំងអស់</option>' + detailTypes.map(value => '<option value="' + esc(value) + '"' + (state.activeDetailType === value ? ' selected' : '') + '>' + esc(value) + '</option>').join('') + '</select></div></div>' : '';
+  group.hidden = !sections && !hasPrice && !subcategorySelect && !detailTypeSelect;
+  root.innerHTML = subcategorySelect + detailTypeSelect + (sections || '') + (hasPrice ? '<div class="spec-filter-field spec-price-filter"><b>Price Range ($)</b><div><input type="number" min="0" step="1" data-price-filter="min" placeholder="Min" value="' + esc(state.specPriceMin) + '"><input type="number" min="0" step="1" data-price-filter="max" placeholder="Max" value="' + esc(state.specPriceMax) + '"></div></div>' : '');
 }
 function verifiedStoreBadge(vendorId, showKhmerLabel = false) {
   const id = String(vendorId || '');
@@ -1260,6 +1264,7 @@ function renderProducts() {
     }
     if (item.listing_type === 'product') {
       if (state.activeSubcategory !== 'all' && String(item.subcategory || '') !== state.activeSubcategory) return false;
+      if (state.activeDetailType !== 'all' && String(item.detail_type || '') !== state.activeDetailType) return false;
       for (const [key, selected] of Object.entries(state.activeSpecFilters || {})) {
         if (!selected?.length) continue;
         const aliases = {
@@ -1381,6 +1386,7 @@ function updateMarketplaceCategoryHeading() {
 function setCategory(category) {
   state.activeSpecFilters = {};
   state.activeSubcategory = 'all';
+  state.activeDetailType = 'all';
   state.specPriceMin = '';
   state.specPriceMax = '';
   state.activeCategory = category;
@@ -1395,6 +1401,7 @@ function setCategory(category) {
 function setListingType(type) {
   state.activeSpecFilters = {};
   state.activeSubcategory = 'all';
+  state.activeDetailType = 'all';
   state.specPriceMin = '';
   state.specPriceMax = '';
   state.activeListingType = ['all','product','job','real_estate'].includes(type) ? type : 'all';
@@ -4506,6 +4513,7 @@ function bindEvents() {
     state.activeCondition = 'all';
     state.activeSpecFilters = {};
     state.activeSubcategory = 'all';
+    state.activeDetailType = 'all';
     state.specPriceMin = '';
     state.specPriceMax = '';
     document.querySelectorAll('[data-spec-filter]').forEach(input => { input.checked = false; });
@@ -4529,6 +4537,14 @@ function bindEvents() {
     const subcategoryInput = event.target.closest('[data-subcategory-filter]');
     if (subcategoryInput) {
       state.activeSubcategory = subcategoryInput.value || 'all';
+      state.activeDetailType = 'all';
+      state.activeSpecFilters = {};
+      renderProducts();
+      return;
+    }
+    const detailTypeInput = event.target.closest('[data-detail-type-filter]');
+    if (detailTypeInput) {
+      state.activeDetailType = detailTypeInput.value || 'all';
       state.activeSpecFilters = {};
       renderProducts();
       return;
