@@ -61,6 +61,7 @@ const ICON_PATHS = {
   chevronLeft: '<path d="m15 18-6-6 6-6"/>',
   chevronRight: '<path d="m9 18 6-6-6-6"/>',
   wrench: '<path d="m14.7 6.3 3 3M4 20l6.5-6.5m-1.2-1.2 4.8-4.8a4 4 0 0 0 5.3-5.3l-2.2 2.2-2.8-.7-.7-2.8L16 0.7a4 4 0 0 0-5.3 5.3L5.9 10.8a2.8 2.8 0 0 0 0 4L9.2 18a2.8 2.8 0 0 0 4 0l1.1-1.1"/>',
+  flag: '<path d="M4 21V5"/><path d="M4 5c5-4 8 4 16 0v10c-8 4-11-4-16 0"/>',
   alert: '<circle cx="12" cy="12" r="9"/><path d="M12 8v4m0 4h.01"/>'
 };
 
@@ -1598,6 +1599,7 @@ function renderProductDetail() {
           <span class="product-category-badge">${esc(CATEGORIES[p.category] || p.category || 'ទំនិញ')}</span>
           <span class="product-meta-item">${ic('clock', 14)} ${fmtDate(p.created_at)}</span>
           <span class="product-meta-item">${ic('eye', 14)} ${Number(p.view_count || 0).toLocaleString()} Views</span>
+          <span class="product-meta-item product-detail-id"><span>Product ID</span><code>${esc(displayProductCode(p))}</code><button type="button" data-copy-product-code="${esc(displayProductCode(p))}" aria-label="ចម្លង Product ID" title="ចម្លង Product ID">${ic('clipboard', 12)}</button></span>
         </div>
 
         <div class="product-heading-block">
