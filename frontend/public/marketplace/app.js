@@ -3735,58 +3735,89 @@ function bindEvents() {
   $('homeShortsPopupClose')?.addEventListener('click', closeListingVideoPopup);
   (() => {
     const dialog = $('homeShortsPopup');
-    const handle = dialog?.querySelector('#homeShortsPopupMeta') || dialog?.querySelector('.home-shorts-popup-head');
-    if (!dialog || !handle || handle.dataset.dragBound) return;
-    handle.dataset.dragBound = '1';
-    let dragState = null;
-    handle.style.cursor = 'move';
-    handle.style.touchAction = 'none';
-    handle.addEventListener('pointerdown', event => {
-      if (event.target.closest('button, a, input, select, textarea, [data-related-product-id]')) return;
-      const rect = dialog.getBoundingClientRect();
-      dragState = { pointerId: event.pointerId, x: event.clientX, y: event.clientY, left: rect.left, top: rect.top };
-      try { handle.setPointerCapture(event.pointerId); } catch {}
-      dialog.style.position = 'fixed';
-      dialog.style.margin = '0';
-      dialog.style.transform = 'none';
-      dialog.style.left = rect.left + 'px';
-      dialog.style.top = rect.top + 'px';
-      event.preventDefault();
-    });
-    dialog.addEventListener('pointermove', event => {
-      if (!dragState || event.pointerId !== dragState.pointerId) return;
-      const left = Math.max(8, Math.min(window.innerWidth - dialog.offsetWidth - 8, dragState.left + event.clientX - dragState.x));
-      const top = Math.max(8, Math.min(window.innerHeight - dialog.offsetHeight - 8, dragState.top + event.clientY - dragState.y));
-      dialog.style.left = left + 'px';
-      dialog.style.top = top + 'px';
-    });
-    const stopDrag = event => { if (dragState && event.pointerId === dragState.pointerId) dragState = null; };
-    dialog.addEventListener('pointerup', stopDrag);
-    dialog.addEventListener('pointercancel', stopDrag);
+    if (!dialog || dialog.dataset.popupControlsBound) return;
+    dialog.dataset.popupControlsBound = '1';
+
+    // Keep dragging optional: the old metadata/header strip is intentionally removed.
+    const handle = dialog.querySelector('#homeShortsPopupMeta') || dialog.querySelector('.home-shorts-popup-head');
+    if (handle) {
+      let dragState = null;
+      handle.dataset.dragBound = '1';
+      handle.style.cursor = 'move';
+      handle.style.touchAction = 'none';
+      handle.addEventListener('pointerdown', event => {
+        if (event.target.closest('button, a, input, select, textarea, [data-related-product-id]')) return;
+        const rect = dialog.getBoundingClientRect();
+        dragState = { pointerId: event.pointerId, x: event.clientX, y: event.clientY, left: rect.left, top: rect.top };
+        try { handle.setPointerCapture(event.pointerId); } catch {}
+        dialog.style.position = 'fixed';
+        dialog.style.margin = '0';
+        dialog.style.transform = 'none';
+        dialog.style.left = rect.left + 'px';
+        dialog.style.top = rect.top + 'px';
+        event.preventDefault();
+      });
+      dialog.addEventListener('pointermove', event => {
+        if (!dragState || event.pointerId !== dragState.pointerId) return;
+        const left = Math.max(8, Math.min(window.innerWidth - dialog.offsetWidth - 8, dragState.left + event.clientX - dragState.x));
+        const top = Math.max(8, Math.min(window.innerHeight - dialog.offsetHeight - 8, dragState.top + event.clientY - dragState.y));
+        dialog.style.left = left + 'px';
+        dialog.style.top = top + 'px';
+      });
+      const stopDrag = event => { if (dragState && event.pointerId === dragState.pointerId) dragState = null; };
+      dialog.addEventListener('pointerup', stopDrag);
+      dialog.addEventListener('pointercancel', stopDrag);
+    }
+
+    // Resize handles must be installed even when the popup header is absent.
     ['n','s','e','w','ne','nw','se','sw'].forEach(edge => {
-      const grip=document.createElement('span'); grip.className='home-shorts-resize-handle'; grip.dataset.edge=edge; grip.setAttribute('aria-hidden','true'); dialog.appendChild(grip);
-      let resize=null;
-      grip.addEventListener('pointerdown',event=>{
-        if(event.button!==0)return; const rect=dialog.getBoundingClientRect();
-        resize={id:event.pointerId,edge,x:event.clientX,y:event.clientY,left:rect.left,top:rect.top,width:rect.width};
-        grip.setPointerCapture(event.pointerId); dialog.style.position='fixed'; dialog.style.margin='0'; dialog.style.transform='none';
-        dialog.style.left=rect.left+'px'; dialog.style.top=rect.top+'px'; event.preventDefault(); event.stopPropagation();
+      const grip = document.createElement('span');
+      grip.className = 'home-shorts-resize-handle';
+      grip.dataset.edge = edge;
+      grip.setAttribute('aria-hidden', 'true');
+      dialog.appendChild(grip);
+      let resize = null;
+      grip.addEventListener('pointerdown', event => {
+        if (event.button !== 0) return;
+        const rect = dialog.getBoundingClientRect();
+        resize = { id: event.pointerId, edge, x: event.clientX, y: event.clientY, left: rect.left, top: rect.top, width: rect.width };
+        grip.setPointerCapture(event.pointerId);
+        dialog.style.position = 'fixed';
+        dialog.style.margin = '0';
+        dialog.style.transform = 'none';
+        dialog.style.left = rect.left + 'px';
+        dialog.style.top = rect.top + 'px';
+        event.preventDefault();
+        event.stopPropagation();
       });
-      grip.addEventListener('pointermove',event=>{
-        if(!resize||event.pointerId!==resize.id)return;
-        const dx=event.clientX-resize.x,dy=event.clientY-resize.y,e=resize.edge;
-        const horizontal=e.includes('e')?dx:e.includes('w')?-dx:0;
-        const vertical=e.includes('s')?dy:e.includes('n')?-dy:0;
-        const delta=horizontal || (vertical?vertical*16/9:0);
-        const maxWidth=Math.max(650,window.innerWidth-16); const width=Math.max(650,Math.min(maxWidth,resize.width+delta));
-        dialog.style.width=width+'px';
-        if(e.includes('w'))dialog.style.left=(resize.left+resize.width-width)+'px';
-        if(e.includes('n'))dialog.style.top=Math.max(8,resize.top+(resize.width-width)*9/16)+'px';
+      grip.addEventListener('pointermove', event => {
+        if (!resize || event.pointerId !== resize.id) return;
+        const dx = event.clientX - resize.x;
+        const dy = event.clientY - resize.y;
+        const e = resize.edge;
+        const horizontal = e.includes('e') ? dx : e.includes('w') ? -dx : 0;
+        const vertical = e.includes('s') ? dy : e.includes('n') ? -dy : 0;
+        const delta = horizontal || (vertical ? vertical * 16 / 9 : 0);
+        const maxWidth = Math.max(650, window.innerWidth - 16);
+        const width = Math.max(650, Math.min(maxWidth, resize.width + delta));
+        dialog.style.width = width + 'px';
+        if (e.includes('w')) dialog.style.left = (resize.left + resize.width - width) + 'px';
+        if (e.includes('n')) dialog.style.top = Math.max(8, resize.top + (resize.width - width) * 9 / 16) + 'px';
       });
-      const stop=event=>{if(resize&&event.pointerId===resize.id)resize=null};
-      grip.addEventListener('pointerup',stop);grip.addEventListener('pointercancel',stop);
+      const stop = event => { if (resize && event.pointerId === resize.id) resize = null; };
+      grip.addEventListener('pointerup', stop);
+      grip.addEventListener('pointercancel', stop);
     });
-    dialog.addEventListener('close', () => { dialog.style.left = ''; dialog.style.top = ''; dialog.style.position = ''; dialog.style.margin = ''; dialog.style.transform = ''; dialog.style.width = ''; dialog.style.height = ''; });
+
+    dialog.addEventListener('close', () => {
+      dialog.style.left = '';
+      dialog.style.top = '';
+      dialog.style.position = '';
+      dialog.style.margin = '';
+      dialog.style.transform = '';
+      dialog.style.width = '';
+      dialog.style.height = '';
+    });
   })();
   $('homeShortsPopup')?.addEventListener('close', closeListingVideoPopup);
   document.addEventListener('click', event => {
