@@ -261,7 +261,7 @@ export function registerMyPostsRoutes(app, {
           if (body.price !== undefined) patch.price = Number(body.price);
         }
         if (patch.title !== undefined && patch.title.length < 2) return fail(res,400,'ចំណងជើងត្រូវមានយ៉ាងតិច ២ តួអក្សរ។');
-        for (const key of ['price','rent_amount']) if (patch[key] !== undefined && patch[key] !== null && (!Number.isFinite(patch[key]) || patch[key] < 0)) return fail(res,400,'តម្លៃមិនត្រឹមត្រូវ។');
+        for (const key of ['price','rent_amount','area_sqm','bedrooms','bathrooms']) if (patch[key] !== undefined && patch[key] !== null && (!Number.isFinite(patch[key]) || patch[key] < 0)) return fail(res,400,'តម្លៃ ឬទំហំមិនត្រឹមត្រូវ។');
 
         const uploadFiles = Array.isArray(req.files) ? req.files : [...(req.files?.images || []), ...(req.files?.image || [])];
         const imageEditRequested = Object.prototype.hasOwnProperty.call(body,'keep_image_message_ids') || uploadFiles.length > 0;
