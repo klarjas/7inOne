@@ -1296,17 +1296,51 @@ function setPropertyType(type) {
 function renderProductDetailSkeleton() {
   const root = $('productDetail');
   if (!root) return;
+  const bar = (className = '') => `<div class="skeleton ${className}"></div>`;
   root.innerHTML = `
-    <div class="product-detail-skeleton" aria-busy="true" aria-label="កំពុងផ្ទុកព័ត៌មានលម្អិត">
-      <div class="skeleton product-detail-skeleton-image"></div>
-      <div class="product-detail-skeleton-copy">
-        <div class="skeleton sk-badge"></div>
-        <div class="skeleton sk-title"></div>
-        <div class="skeleton sk-price"></div>
-        <div class="skeleton sk-btn"></div>
-        <div class="skeleton sk-box"></div>
-        <div class="skeleton sk-box"></div>
-      </div>
+    <div class="product-detail-page product-detail-skeleton-page" aria-busy="true" aria-label="កំពុងផ្ទុកព័ត៌មានលម្អិត">
+      <section class="product-hero-grid product-detail-skeleton-hero">
+        <div class="product-detail-gallery product-detail-skeleton-gallery">
+          <div class="product-gallery-thumbs product-detail-skeleton-thumbs">
+            ${Array.from({ length: 4 }, () => bar('sk-thumb')).join('')}
+          </div>
+          <div class="product-gallery-stage skeleton sk-main-image"></div>
+        </div>
+        <div class="product-detail-info product-detail-skeleton-info">
+          <div class="product-top-meta">${bar('sk-meta')} ${bar('sk-meta short')}</div>
+          <div class="product-heading-block">
+            ${bar('sk-title')}${bar('sk-title medium')}
+            <div class="product-price-stock-row">${bar('sk-price')} ${bar('sk-stock')}</div>
+            ${bar('sk-summary')}${bar('sk-summary short')}
+          </div>
+          <div class="product-detail-skeleton-actions">${bar('sk-action')}${bar('sk-action secondary')}</div>
+          <div class="product-detail-skeleton-seller">
+            ${bar('sk-avatar')}
+            <div class="sk-seller-copy">${bar('sk-line')}${bar('sk-line short')}</div>
+            ${bar('sk-store-button')}
+          </div>
+          <section class="product-detail-skeleton-panel">
+            ${bar('sk-section-title')}
+            <div class="sk-spec-grid">${Array.from({ length: 6 }, () => `<div>${bar('sk-line short')}${bar('sk-line')}</div>`).join('')}</div>
+          </section>
+          <section class="product-detail-skeleton-panel">
+            ${bar('sk-section-title')}${bar('sk-paragraph')}${bar('sk-paragraph')}${bar('sk-paragraph short')}
+          </section>
+        </div>
+      </section>
+      <section class="product-trust-reviews-grid product-detail-skeleton-lower">
+        <div class="product-detail-skeleton-panel">
+          ${bar('sk-section-title')}
+          <div class="sk-review-layout">${bar('sk-rating')}${bar('sk-review-lines')}</div>
+        </div>
+        <div class="product-detail-skeleton-panel">
+          ${bar('sk-section-title')}${bar('sk-paragraph')}${bar('sk-paragraph')}${bar('sk-paragraph')}
+        </div>
+      </section>
+      <section class="product-detail-skeleton-related">
+        ${bar('sk-section-title')}
+        <div class="sk-related-grid">${Array.from({ length: 4 }, () => `<div>${bar('sk-related-image')}${bar('sk-line')}${bar('sk-line short')}</div>`).join('')}</div>
+      </section>
     </div>`;
 }
 
