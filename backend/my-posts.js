@@ -71,18 +71,16 @@ export function registerMyPostsRoutes(app, {
       renewable = ['active','archived'].includes(status);
     }
     let gallery = Array.isArray(row.image_gallery) ? row.image_gallery : [];
-    if (!gallery.length && row.image_file_id) gallery = [{ file_id: row.image_file_id, message_id: row.image_message_id, mime_type: row.image_mime_type }];
+    if (!gallery.length && row.image_file_id) gallery = [{ file_id:row.image_file_id, message_id:row.image_message_id, mime_type:row.image_mime_type }];
     const imageItems = gallery.map(item => ({
-      key: String(item.message_id || item.file_id || ''),
-      image_url: item.file_id ? mediaProxyUrl(item.file_id, item.mime_type) : null
+      key:String(item.message_id || item.file_id || ''),
+      image_url:item.file_id ? mediaProxyUrl(item.file_id, item.mime_type) : null
     })).filter(item => item.image_url);
     return {
       ...row, type, type_label:label, status, renewable,
       editable: type !== 'story',
-      image_url: row.image_file_id ? mediaProxyUrl(row.image_file_id, row.image_mime_type) :
-        (imageItems[0]?.image_url || null),
-      image_urls: imageItems.map(item => item.image_url),
-      image_items: imageItems
+      image_url: row.image_file_id ? mediaProxyUrl(row.image_file_id, row.image_mime_type) : (imageItems[0]?.image_url || null),
+      image_items:imageItems
     };
   }
 
@@ -124,7 +122,7 @@ export function registerMyPostsRoutes(app, {
     let body = multipartBody;
     if (typeof multipartBody.payload === 'string') {
       try { body = { ...JSON.parse(multipartBody.payload), ...multipartBody }; delete body.payload; }
-      catch { return fail(res, 400, 'ព័ត៌មានដែលបានបញ្ជូនមិនត្រឹមត្រូវទេ។'); }
+      catch { return fail(res,400,'ព័ត៌មានដែលបានបញ្ជូនមិនត្រឹមត្រូវទេ។'); }
     }
     const action = text(body.action, 20);
     const now = new Date();
@@ -147,7 +145,68 @@ export function registerMyPostsRoutes(app, {
           const { error:updateError } = await supabase.from('products').update({ renewed_at:new Date(now.getTime() - 8 * 86400000).toISOString(), updated_at:nowIso() }).eq('id',id);
           if (updateError) throw updateError;
         } else if (action === 'edit') {
-          if (body.title !== undefined) patch.title = text(body.title,160);
+          const patch = {};
+          if (req.body.title !== undefined) patch.title = text(req.body.title,160);
+          if (req.body.description !== undefined) patch.description = text(req.body.description,5000);
+          if (req.body.category !== undefined) patch.category = text(req.body.category,80);
+          if (req.body.location !== undefined) patch.location = text(req.body.location,100);
+          if (req.body.youtube_video_url !== undefined) { const videoUrl = normalizeYoutubeVideoUrl(req.body.youtube_video_url); if (videoUrl === false) return fail(res,400,'YouTube Video Link មិនត្រឹមត្រូវទេ។'); patch.youtube_video_url = videoUrl; }
+          if (req.body.price !== undefined) patch.price = Number(req.body.price);
+          if (req.body.stock !== undefined) patch.stock = Number(req.body.stock);
+          if (patch.title !== undefined && patch.title.length < 2) return fail(res,400,'ចំណងជើងត្រូវមានយ៉ាងតិច ២ តួអក្សរ។');
+          if (patch.price !== undefined && (!Number.isFinite(patch.price) || patch.price < 0)) return fail(res,400,'តម្លៃមិនត្រឹមត្រូវ។');
+          if (patch.stock !== undefined && (!Number.isInteger(patch.stock) || patch.stock < 0)) return fail(res,400,'ស្តុកមិនត្រឹមត្រូវ។');
+          if (!Object.keys(patch).length) return fail(res,400,'មិនមានព័ត៌មានត្រូវកែទេ។');
+          patch.updated_at = nowIso();
+          const { error:updateError } = await supabase.from('products').update(patch).eq('id',id).eq('vendor_id',vendor.id);
+          if (updateError) throw updateError;
+        } else return fail(res,400,'សកម្មភាពមិនត្រឹមត្រូវ។');
+        return res.json({ success:true });
+      }
+
+      if (type === 'social_post') {
+        const { data: row, error } = await supabase.from('social_posts').select('id,image_message_id').eq('id',id).eq('user_id',req.user.id).maybeSingle();
+        if (error) throw error;
+        if (!row) return fail(res,404,'រកមិនឃើញប្រកាសនេះទេ។');
+        if (action !== 'edit') return fail(res,400,'សកម្មភាពមិនត្រឹមត្រូវ។');
+        const { error:updateError } = await supabase.from('social_posts').update({ caption:text(req.body.caption,500) }).eq('id',id).eq('user_id',req.user.id);
+        if (updateError) throw updateError;
+        return res.json({ success:true });
+      }
+
+      if (type === 'story') {
+        const { data: row, error } = await supabase.from('social_stories').select('id').eq('id',id).eq('user_id',req.user.id).maybeSingle();
+        if (error) throw error;
+        if (!row) return fail(res,404,'រកមិនឃើញ Story នេះទេ។');
+        if (action === 'renew') {
+          const { error:updateError } = await supabase.from('social_stories').update({ expires_at:new Date(now.getTime()+86400000).toISOString() }).eq('id',id).eq('user_id',req.user.id);
+          if (updateError) throw updateError;
+        } else if (action === 'expire') {
+          const { error:updateError } = await supabase.from('social_stories').update({ expires_at:nowIso() }).eq('id',id).eq('user_id',req.user.id);
+          if (updateError) throw updateError;
+        } else return fail(res,400,'សកម្មភាពមិនត្រឹមត្រូវ។');
+        return res.json({ success:true });
+      }
+
+      const source = sources.find(item => item.type === type && !['social_post','story'].includes(item.type));
+      if (!source) return fail(res,400,'ប្រភេទប្រកាសមិនត្រឹមត្រូវ។');
+      const { data: row, error } = await supabase.from(source.table).select('*').eq('id',id).eq('user_id',req.user.id).maybeSingle();
+      if (error) throw error;
+      if (!row) return fail(res,404,'រកមិនឃើញប្រកាសនេះទេ។');
+      if (action === 'renew') {
+        if (['sold','rented','closed'].includes(row.status)) return fail(res,409,'ប្រកាសដែលបានបិទ/លក់រួច មិនអាច Renew បានទេ។');
+        const { error:updateError } = await supabase.from(source.table).update({ status:'active', expires_at:new Date(now.getTime()+7*86400000).toISOString(), updated_at:nowIso() }).eq('id',id).eq('user_id',req.user.id);
+        if (updateError) throw updateError;
+      } else if (action === 'expire') {
+        if (['sold','rented','closed'].includes(row.status)) return fail(res,409,'ប្រកាសនេះបានបិទរួចហើយ។');
+        const { error:updateError } = await supabase.from(source.table).update({ status:'archived', expires_at:nowIso(), updated_at:nowIso() }).eq('id',id).eq('user_id',req.user.id);
+        if (updateError) throw updateError;
+      } else if (action === 'edit') {
+      } else if (action === 'edit') {
+        const patch = {};
+        let uploadedListingImages = [];
+        let removedListingImages = [];
+        if (body.title !== undefined) patch.title = text(body.title,160);
         if (body.description !== undefined) patch.description = text(body.description,5000);
         if (body.location !== undefined) patch.location = text(body.location,300);
         if (body.youtube_video_url !== undefined) { const videoUrl = normalizeYoutubeVideoUrl(body.youtube_video_url); if (videoUrl === false) return fail(res,400,'YouTube Video Link មិនត្រឹមត្រូវទេ។'); patch.youtube_video_url = videoUrl; }
@@ -192,6 +251,7 @@ export function registerMyPostsRoutes(app, {
         }
         if (patch.title !== undefined && patch.title.length < 2) return fail(res,400,'ចំណងជើងត្រូវមានយ៉ាងតិច ២ តួអក្សរ។');
         for (const key of ['price','rent_amount']) if (patch[key] !== undefined && patch[key] !== null && (!Number.isFinite(patch[key]) || patch[key] < 0)) return fail(res,400,'តម្លៃមិនត្រឹមត្រូវ។');
+
         const imageEditRequested = Object.prototype.hasOwnProperty.call(body,'keep_image_message_ids') || (req.files || []).length > 0;
         if (imageEditRequested && ['job','property'].includes(type)) {
           let keepIds = [];
@@ -233,72 +293,6 @@ export function registerMyPostsRoutes(app, {
           throw updateError;
         }
         for (const item of removedListingImages) if (item?.message_id) await deleteTelegramMessage(item.message_id);
-      } else return fail(res,400,'សកម្មភាពមិនត្រឹមត្រូវ។');
-        return res.json({ success:true });
-      }
-
-      if (type === 'social_post') {
-        const { data: row, error } = await supabase.from('social_posts').select('id,image_message_id').eq('id',id).eq('user_id',req.user.id).maybeSingle();
-        if (error) throw error;
-        if (!row) return fail(res,404,'រកមិនឃើញប្រកាសនេះទេ។');
-        if (action !== 'edit') return fail(res,400,'សកម្មភាពមិនត្រឹមត្រូវ។');
-        const { error:updateError } = await supabase.from('social_posts').update({ caption:text(body.caption,500) }).eq('id',id).eq('user_id',req.user.id);
-        if (updateError) throw updateError;
-        return res.json({ success:true });
-      }
-
-      if (type === 'story') {
-        const { data: row, error } = await supabase.from('social_stories').select('id').eq('id',id).eq('user_id',req.user.id).maybeSingle();
-        if (error) throw error;
-        if (!row) return fail(res,404,'រកមិនឃើញ Story នេះទេ។');
-        if (action === 'renew') {
-          const { error:updateError } = await supabase.from('social_stories').update({ expires_at:new Date(now.getTime()+86400000).toISOString() }).eq('id',id).eq('user_id',req.user.id);
-          if (updateError) throw updateError;
-        } else if (action === 'expire') {
-          const { error:updateError } = await supabase.from('social_stories').update({ expires_at:nowIso() }).eq('id',id).eq('user_id',req.user.id);
-          if (updateError) throw updateError;
-        } else return fail(res,400,'សកម្មភាពមិនត្រឹមត្រូវ។');
-        return res.json({ success:true });
-      }
-
-      const source = sources.find(item => item.type === type && !['social_post','story'].includes(item.type));
-      if (!source) return fail(res,400,'ប្រភេទប្រកាសមិនត្រឹមត្រូវ។');
-      const { data: row, error } = await supabase.from(source.table).select('*').eq('id',id).eq('user_id',req.user.id).maybeSingle();
-      if (error) throw error;
-      if (!row) return fail(res,404,'រកមិនឃើញប្រកាសនេះទេ។');
-      if (action === 'renew') {
-        if (['sold','rented','closed'].includes(row.status)) return fail(res,409,'ប្រកាសដែលបានបិទ/លក់រួច មិនអាច Renew បានទេ។');
-        const { error:updateError } = await supabase.from(source.table).update({ status:'active', expires_at:new Date(now.getTime()+7*86400000).toISOString(), updated_at:nowIso() }).eq('id',id).eq('user_id',req.user.id);
-        if (updateError) throw updateError;
-      } else if (action === 'expire') {
-        if (['sold','rented','closed'].includes(row.status)) return fail(res,409,'ប្រកាសនេះបានបិទរួចហើយ។');
-        const { error:updateError } = await supabase.from(source.table).update({ status:'archived', expires_at:nowIso(), updated_at:nowIso() }).eq('id',id).eq('user_id',req.user.id);
-        if (updateError) throw updateError;
-      } else if (action === 'edit') {
-        const patch = {};
-        if (body.title !== undefined) patch.title = text(body.title,160);
-        if (body.description !== undefined) patch.description = text(body.description,5000);
-        if (body.location !== undefined) patch.location = text(body.location,300);
-        if (body.youtube_video_url !== undefined) { const videoUrl = normalizeYoutubeVideoUrl(body.youtube_video_url); if (videoUrl === false) return fail(res,400,'YouTube Video Link មិនត្រឹមត្រូវទេ។'); patch.youtube_video_url = videoUrl; }
-        if (body.category !== undefined) patch.category = text(body.category,80);
-        if (type === 'job') {
-          for (const key of ['salary_min','salary_max']) if (req.body[key] !== undefined) patch[key] = req.body[key] === '' || req.body[key] == null ? null : Number(req.body[key]);
-          if (patch.salary_min != null && (!Number.isFinite(patch.salary_min) || patch.salary_min < 0)) return fail(res,400,'ប្រាក់ខែមិនត្រឹមត្រូវ។');
-          if (patch.salary_max != null && (!Number.isFinite(patch.salary_max) || patch.salary_max < 0)) return fail(res,400,'ប្រាក់ខែមិនត្រឹមត្រូវ។');
-          if (patch.salary_min != null && patch.salary_max != null && patch.salary_max < patch.salary_min) return fail(res,400,'ប្រាក់ខែអតិបរមាត្រូវធំជាងប្រាក់ខែអប្បបរមា។');
-        } else if (type === 'property') {
-          if (body.price !== undefined) patch.price = body.price === '' ? null : Number(body.price);
-        } else if (type === 'rental') {
-          if (body.price !== undefined) patch.rent_amount = Number(body.price);
-        } else if (['land','house_sale'].includes(type)) {
-          if (body.price !== undefined) patch.price = Number(body.price);
-        }
-        if (patch.title !== undefined && patch.title.length < 2) return fail(res,400,'ចំណងជើងត្រូវមានយ៉ាងតិច ២ តួអក្សរ។');
-        for (const key of ['price','rent_amount']) if (patch[key] !== undefined && patch[key] !== null && (!Number.isFinite(patch[key]) || patch[key] < 0)) return fail(res,400,'តម្លៃមិនត្រឹមត្រូវ។');
-        if (!Object.keys(patch).length) return fail(res,400,'មិនមានព័ត៌មានត្រូវកែទេ។');
-        patch.updated_at = nowIso();
-        const { error:updateError } = await supabase.from(source.table).update(patch).eq('id',id).eq('user_id',req.user.id);
-        if (updateError) throw updateError;
       } else return fail(res,400,'សកម្មភាពមិនត្រឹមត្រូវ។');
       return res.json({ success:true });
     } catch (error) {
