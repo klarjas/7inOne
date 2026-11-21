@@ -9,3 +9,6 @@ create table if not exists public.product_supplier_variant_sources (
 
 alter table public.product_supplier_variant_sources enable row level security;
 revoke all on table public.product_supplier_variant_sources from anon, authenticated;
+
+-- Backend accesses this table with the Supabase service-role client.
+grant all privileges on table public.product_supplier_variant_sources to service_role;
