@@ -2684,6 +2684,24 @@ app.post('/api/vendors/register', authenticate, upload.single('document'), async
     return fail(res, 502, 'Could not submit seller registration. Please try again.');
   }
 });
+app.get('/api/vendor/name-history', authenticate, requireVendor, async (req, res) => {
+  const { data, error } = await supabase.from('vendor_shop_name_history')
+    .select('id,previous_store_name,new_store_name,changed_at')
+    .eq('vendor_id', req.vendor.id).order('changed_at', { ascending: false }).limit(100);
+  if (error) return fail(res, 500, 'Could not load shop name history.');
+  return res.json({ data: data || [] });
+});
+app.get('/api/admin/vendors/:id/name-history', authenticate, requireAdmin, async (req, res) => {
+  const { data: vendor, error: vendorError } = await supabase.from('vendors')
+    .select('id,store_name').eq('id', req.params.id).maybeSingle();
+  if (vendorError || !vendor) return fail(res, 404, 'Store not found.');
+  const { data, error } = await supabase.from('vendor_shop_name_history')
+    .select('id,previous_store_name,new_store_name,changed_at')
+    .eq('vendor_id', vendor.id).order('changed_at', { ascending: false }).limit(100);
+  if (error) return fail(res, 500, 'Could not load shop name history.');
+  return res.json({ data: data || [], current_store_name: vendor.store_name });
+});
+
 app.patch('/api/vendor/profile', authenticate, upload.fields([{ name: 'logo', maxCount: 1 }, { name: 'cover', maxCount: 1 }]), async (req, res) => {
   const { data: vendor, error: vendorError } = await vendorFor(req.user.id);
   if (vendorError || !vendor) return fail(res, 404, 'Seller account not found.');
