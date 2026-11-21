@@ -7770,3 +7770,29 @@ body > footer {
 .detail-map-frame iframe {
   background: #16202D;
 }
+
+
+.product-detail-id {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 7px;
+  border: 1px solid #2A475E;
+  border-radius: 7px;
+  background: #101822;
+  color: #8F98A0;
+  font-size: 9px;
+}
+.product-detail-id code {
+  color: #C7D5E0;
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+}
+.product-detail-id button {
+  display: inline-grid;
+  place-items: center;
+  color: #66C0F4;
+}
+.product-detail-id button.is-copied {
+  color: #86EFAC;
+}
