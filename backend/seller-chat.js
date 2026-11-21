@@ -135,6 +135,37 @@ export function registerSellerChat(app, { supabase, authenticate, requireVendor,
     } catch (error) { console.error('Seller chat conversation create failed:', error.message); return fail(res, 500, 'មិនអាចបើកសន្ទនាជាមួយអ្នកលក់បានទេ។'); }
   });
 
+  app.post('/api/seller-chat/store-conversations', authenticate, async (req, res) => {
+    const vendorId = clean(req.body?.vendor_id, 80);
+    if (!vendorId) return fail(res, 400, 'សូមជ្រើសរើសហាងជាមុនសិន។');
+    try {
+      const { data: vendor, error: vendorError } = await supabase.from('vendors').select('id,user_id,status,store_name').eq('id', vendorId).maybeSingle();
+      if (vendorError || !vendor || vendor.status !== 'approved') return fail(res, 404, 'រកមិនឃើញហាងដែលអាចទាក់ទងបានទេ។');
+      if (vendor.user_id === req.user.id) return fail(res, 400, 'អ្នកមិនអាចឆាតទៅហាងរបស់ខ្លួនឯងបានទេ។');
+      let { data: conversation, error } = await supabase.from('seller_conversations').select('id,unread_seller_count').eq('vendor_id', vendor.id).eq('buyer_id', req.user.id).maybeSingle();
+      if (error) throw error;
+      if (!conversation) {
+        const created = await supabase.from('seller_conversations').insert({ product_id: null, vendor_id: vendor.id, buyer_id: req.user.id, status: 'open', last_message_at: new Date().toISOString() }).select('id,unread_seller_count').single();
+        if (created.error) {
+          if (created.error.code !== '23505') throw created.error;
+          const retry = await supabase.from('seller_conversations').select('id,unread_seller_count').eq('vendor_id', vendor.id).eq('buyer_id', req.user.id).single();
+          if (retry.error) throw retry.error;
+          conversation = retry.data;
+        } else conversation = created.data;
+      }
+      const preview = 'ចាប់ផ្តើមសន្ទនាជាមួយហាង៖ ' + clean(vendor.store_name || 'ហាងអ្នកលក់', 100);
+      const now = new Date().toISOString();
+      const message = await supabase.from('seller_messages').insert({ conversation_id: conversation.id, sender_id: req.user.id, sender_role: 'buyer', body: preview, message_type: 'text' }).select('id').single();
+      if (message.error) throw message.error;
+      const updated = await supabase.from('seller_conversations').update({ status: 'open', last_message_at: now, last_message_preview: preview.slice(0, 180), unread_seller_count: Number(conversation.unread_seller_count || 0) + 1, updated_at: now }).eq('id', conversation.id);
+      if (updated.error) throw updated.error;
+      return res.status(200).json({ data: { id: conversation.id } });
+    } catch (error) {
+      console.error('Store chat conversation create failed:', error.message);
+      return fail(res, 500, 'មិនអាចបើកសន្ទនាជាមួយហាងបានទេ។');
+    }
+  });
+
   app.post('/api/seller-chat/listing-conversations', authenticate, async (req, res) => {
     const listingType = clean(req.body?.listing_type, 20);
     const listingId = clean(req.body?.listing_id, 80);
