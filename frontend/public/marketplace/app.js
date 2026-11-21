@@ -2069,7 +2069,7 @@ function renderMyPostFullEditForm(post) {
       <div class="grid gap-3 sm:grid-cols-2">
         <label class="sm:col-span-2"><span class="label">${isJob ? 'មុខតំណែង / Job Title' : 'ចំណងជើងអចលនទ្រព្យ'} *</span><input name="title" class="field mt-1" maxlength="160" required value="${esc(post.title || '')}"></label>
         <label><span class="label">${isJob ? 'ប្រភេទការងារ' : 'ប្រភេទអចលនទ្រព្យ'} *</span><select name="category" class="field mt-1" required>${categoryOptions}</select></label>
-        ${isJob ? `<label><span class="label">ក្រុមហ៊ុន / អ្នកជ្រើសរើស</span><input name="company_name" class="field mt-1" maxlength="160" value="${esc(post.company_name || '')}"></label>` : `<label><span class="label">ផ្នែករង</span><input name="subcategory" class="field mt-1" maxlength="120" value="${esc(post.subcategory || '')}"></label>`}
+        ${isJob ? `<label><span class="label">ក្រុមហ៊ុន / អ្នកជ្រើសរើស</span><input name="company_name" class="field mt-1" maxlength="160" value="${esc(post.company_name || '')}"></label>` : ''}
         <label><span class="label">ផ្នែករង</span><input name="subcategory" class="field mt-1" maxlength="120" value="${esc(post.subcategory || '')}"></label>
         <label><span class="label">ប្រភេទលម្អិត</span><input name="detail_type" class="field mt-1" maxlength="120" value="${esc(post.detail_type || '')}"></label>
         <label class="sm:col-span-2"><span class="label">ទីតាំង</span><input name="location" class="field mt-1" maxlength="120" value="${esc(post.location || '')}"></label>
