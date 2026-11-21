@@ -3697,6 +3697,7 @@ app.post('/api/admin/supplier-import/import', authenticate, requireAdmin, async 
   let createdParentSourceProductId = null;
   let createdImageRows = false;
   let createdImageProductId = null;
+  let existingProductSnapshot = null;
   try {
     if (!code || !Number.isFinite(expectedPrice) || expectedPrice <= 0) return fail(res, 400, 'Missing verified product code or supplier price.');
     const { url, products } = await loadCcSupplierCatalog(catalogUrl);
@@ -3711,6 +3712,12 @@ app.post('/api/admin/supplier-import/import', authenticate, requireAdmin, async 
     const titleKey = supplierModelKey(group);
     const titleMatches = index.products.filter(item => supplierModelKey(item) === titleKey);
     const existingProduct = titleMatches.find(item => supplierProductsCompatible(group, item)) || null;
+    if (existingProduct) existingProductSnapshot = {
+      id: existingProduct.id,
+      price: existingProduct.price,
+      listing_details: existingProduct.listing_details,
+      supplier_source: existingProduct.supplier_source
+    };
     if (titleMatches.length && !existingProduct) return fail(res, 409, 'A similar product title exists with different core specifications. Admin review is required.');
     const existingConfigKeys = new Set();
     const existingParentCode = String(existingProduct?.supplier_source?.supplier_product_code || '').trim().toUpperCase();
@@ -3870,6 +3877,23 @@ app.post('/api/admin/supplier-import/import', authenticate, requireAdmin, async 
       await supabase.from('product_listing_details').delete().eq('product_id', createdProductId);
       await supabase.from('product_supplier_sources').delete().eq('product_id', createdProductId);
       await supabase.from('products').delete().eq('id', createdProductId);
+    } else if (existingProductSnapshot) {
+      await supabase.from('products').update({ price: existingProductSnapshot.price, updated_at: new Date().toISOString() }).eq('id', existingProductSnapshot.id);
+      if (existingProductSnapshot.listing_details) {
+        await supabase.from('product_listing_details').upsert(existingProductSnapshot.listing_details, { onConflict: 'product_id' });
+      } else {
+        await supabase.from('product_listing_details').delete().eq('product_id', existingProductSnapshot.id);
+      }
+      if (existingProductSnapshot.supplier_source && !createdParentSource) {
+        const source = existingProductSnapshot.supplier_source;
+        await supabase.from('product_supplier_sources').update({
+          supplier_name: source.supplier_name, supplier_url: source.supplier_url,
+          supplier_price: source.supplier_price, supplier_product_code: source.supplier_product_code,
+          notes: source.notes, updated_at: source.updated_at
+        }).eq('product_id', existingProductSnapshot.id);
+      } else if (createdParentSource && createdParentSourceProductId) {
+        await supabase.from('product_supplier_sources').delete().eq('product_id', createdParentSourceProductId);
+      }
     } else if (createdParentSource && createdParentSourceProductId) {
       await supabase.from('product_supplier_sources').delete().eq('product_id', createdParentSourceProductId);
     }
