@@ -7190,3 +7190,51 @@ body > footer {
   text-overflow: ellipsis;
 }
 
+
+
+/* Consistent spacing and selected states for the home filter sidebar. */
+#view-home .amazon-filter-sidebar .store-filter-link,
+#view-home .amazon-filter-sidebar .store-filter-radio {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 36px;
+  padding: 8px 12px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  box-sizing: border-box;
+}
+
+#view-home .amazon-filter-sidebar .store-filter-group h3 {
+  padding: 0 10px 4px;
+}
+
+#view-home .amazon-filter-sidebar .store-filter-link {
+  background: transparent;
+  color: #C7D5E0;
+  text-align: left;
+  text-decoration: none;
+  transition: background .16s ease, border-color .16s ease, color .16s ease;
+}
+
+#view-home .amazon-filter-sidebar .store-filter-link:hover,
+#view-home .amazon-filter-sidebar .store-filter-radio:hover {
+  background: rgba(102, 192, 244, 0.08);
+  color: #66C0F4;
+  text-decoration: none;
+}
+
+#view-home .amazon-filter-sidebar .store-filter-link.active,
+#view-home .amazon-filter-sidebar .store-filter-radio:has(input:checked) {
+  background: #203244;
+  border-color: rgba(102, 192, 244, 0.25);
+  color: #66C0F4;
+  font-weight: 700;
+}
+
+#view-home .amazon-filter-sidebar .store-filter-radio {
+  gap: 8px;
+  color: #C7D5E0;
+  cursor: pointer;
+  transition: background .16s ease, border-color .16s ease, color .16s ease;
+}
