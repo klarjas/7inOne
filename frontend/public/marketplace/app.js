@@ -132,6 +132,7 @@ const state = {
   currentStoreId: null,
   currentStoreData: null,
   currentStoreProducts: [],
+  currentStoreCategoryData: [],
   currentStoreCategory: 'all',
   currentStoreSubcategory: 'all',
   currentStoreSearch: '',
@@ -2043,7 +2044,7 @@ async function openStorefront(vendorId, options = {}) {
   const isCurrent = () => options.routeSyncNavigationId == null || options.routeSyncNavigationId === state.routeSyncNavigationId;
   Object.assign(state, {
     currentStoreId: storeId, currentStoreCategory: 'all', currentStoreSubcategory: 'all', currentStoreSearch: '',
-    currentStoreProducts: [], currentStorePage: 1, currentStoreLimit: 50,
+    currentStoreProducts: [], currentStoreCategoryData: [], currentStorePage: 1, currentStoreLimit: 50,
     currentStoreTotal: 0, currentStoreLoading: true, currentStoreSkeletonVisible: false, currentStoreLoadError: false,
     currentStoreMoreLoading: false, currentStoreMoreError: false
   });
@@ -2057,15 +2058,17 @@ async function openStorefront(vendorId, options = {}) {
       state.currentStoreSkeletonVisible = true;
       renderStorefront();
     });
-    const [result, catalogue] = await Promise.all([
+    const [result, catalogue, taxonomy] = await Promise.all([
       api('/api/vendors/' + encodeURIComponent(storeId) + '/ratings'),
-      api('/api/products?page=1&limit=' + state.currentStoreLimit + '&vendor_id=' + encodeURIComponent(storeId) + '&include_out_of_stock=true')
+      api('/api/products?page=1&limit=' + state.currentStoreLimit + '&vendor_id=' + encodeURIComponent(storeId) + '&include_out_of_stock=true'),
+      api('/api/vendors/' + encodeURIComponent(storeId) + '/categories')
     ]);
     if (!isCurrent()) { cancelSkeleton(); return false; }
     cancelSkeleton();
     state.currentStoreSkeletonVisible = false;
     state.currentStoreData = result.data || null;
     state.currentStoreProducts = catalogue.data || [];
+    state.currentStoreCategoryData = taxonomy.data || [];
     state.currentStorePage = Number(catalogue.page || 1);
     state.currentStoreTotal = Number(catalogue.total || 0);
     state.currentStoreLoading = false;
@@ -2148,10 +2151,14 @@ function storePublicProducts(products = state.currentStoreProducts) {
   return (products || []).filter(product => product && Number(product.stock) > 0);
 }
 function storeCategoryOptions(products = state.currentStoreProducts) {
-  const keys = [...new Set(storePublicProducts(products).map(product => String(product.category || '').trim()).filter(Boolean))].sort();
+  const taxonomy = Array.isArray(state.currentStoreCategoryData) ? state.currentStoreCategoryData : [];
+  const keys = taxonomy.length ? taxonomy.map(item => String(item.category || '').trim()).filter(Boolean) : [...new Set(storePublicProducts(products).map(product => String(product.category || '').trim()).filter(Boolean))].sort();
   return keys.map(key => [key, storeCategoryLabel(key)]);
 }
 function storeSubcategoryOptions(category = state.currentStoreCategory, products = state.currentStoreProducts) {
+  const taxonomy = Array.isArray(state.currentStoreCategoryData) ? state.currentStoreCategoryData : [];
+  const entry = taxonomy.find(item => String(item.category || '') === category);
+  if (entry) return (entry.subcategories || []).map(value => [String(value), String(value)]);
   const scoped = storePublicProducts(products).filter(product => category === 'all' || String(product.category || '') === category);
   return [...new Set(scoped.map(product => String(product.subcategory || '').trim()).filter(Boolean))].sort().map(value => [value, value]);
 }
