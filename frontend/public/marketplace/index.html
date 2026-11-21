@@ -817,10 +817,12 @@
         <!-- Admin Supplier Product Management -->
         <section class="mb-6 rounded-3xl bg-white p-5 soft-shadow sm:p-6" id="adminSupplierProductsPanel">
           <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
-            <div><p class="text-[10px] font-bold text-emerald-700">SUPPLIER PRODUCT STUDIO</p><h2 class="mt-1 text-xl font-bold">គ្រប់គ្រងផលិតផល Supplier</h2><p class="mt-1 text-[10px] text-slate-500">គ្រប់គ្រងផលិតផល តម្លៃលក់ និង Storage Variants នៅទីនេះ។ ព័ត៌មាន Supplier បង្ហាញតែ Admin។</p></div>
+            <div><p class="text-[10px] font-bold text-emerald-700">AURORA COMPUTER · PRODUCT MANAGEMENT</p><h2 class="mt-1 text-xl font-bold">គ្រប់គ្រងផលិតផល AURORA Computer</h2><p class="mt-1 text-[10px] text-slate-500">បញ្ជីផលិតផល ASUS ទាំងអស់រៀបជា List។ ចុចលើផលិតផលដើម្បីបើក Popup កែប្រែ។ ព័ត៌មាន Supplier បង្ហាញតែ Admin។</p></div>
             <button type="button" id="adminSupplierRefresh" class="rounded-full border border-slate-200 px-4 py-2 text-[11px] font-bold">ផ្ទុកឡើងវិញ</button>
           </div>
-          <form id="adminSupplierCreateForm" class="mb-5 grid gap-3 rounded-2xl bg-slate-50 p-4 sm:grid-cols-2">
+          <details class="mb-5 rounded-2xl border border-slate-200 bg-slate-50">
+            <summary class="cursor-pointer px-4 py-3 text-[11px] font-bold">＋ បន្ថែមផលិតផលថ្មី</summary>
+          <form id="adminSupplierCreateForm" class="grid gap-3 border-t border-slate-200 p-4 sm:grid-cols-2">
             <div class="sm:col-span-2"><b class="text-[12px]">បង្កើតផលិតផលថ្មី</b></div>
             <label><span class="label">ឈ្មោះផលិតផល *</span><input class="field bg-white" name="title" required maxlength="160" placeholder="ឧ. ASUS ExpertBook B3605CCA"></label>
             <label><span class="label">Category *</span><input class="field bg-white" name="category" required maxlength="80" placeholder="Laptop"></label>
@@ -833,8 +835,9 @@
             <label><span class="label">Supplier Product Code</span><input class="field bg-white" name="supplier_product_code"></label>
             <div class="flex items-center justify-end sm:col-span-2"><button class="brand-gradient rounded-full px-5 py-2.5 text-[11px] font-bold text-white" type="submit">បង្កើតផលិតផល</button></div>
           </form>
+          </details>
           <label class="mb-4 block"><span class="label">ស្វែងរកផលិតផល</span><input class="field" id="adminSupplierSearch" placeholder="ស្វែងរកតាមឈ្មោះ ឬ Category..."></label>
-          <div id="adminSupplierProductsList" class="space-y-4"><p class="py-6 text-center text-xs text-slate-400">កំពុងផ្ទុកផលិតផល...</p></div>
+          <div class="mb-2 text-[10px] text-slate-500">ចុចលើជួរផលិតផល ឬប៊ូតុង «កែប្រែ» ដើម្បីបើក Popup។</div><div id="adminSupplierProductsList"><p class="py-6 text-center text-xs text-slate-400">កំពុងផ្ទុកផលិតផល...</p></div>
         </section>
 
         <!-- Admin-managed official shop -->
