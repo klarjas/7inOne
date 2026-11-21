@@ -8175,39 +8175,47 @@ body > footer {
   text-decoration: none;
 }
 
-/* Marketplace subcategory list: isolated styles for the left sidebar only. */
+/* Marketplace subcategory chips: isolated styles for the left sidebar only. */
 #view-home .amazon-filter-sidebar .marketplace-category-group:not([hidden]) {
   display: flex;
-  flex-direction: column;
-  gap: 3px;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+}
+#view-home .amazon-filter-sidebar .marketplace-category-group > h3 {
+  flex: 0 0 100%;
 }
 #view-home .amazon-filter-sidebar .marketplace-category-group .store-filter-link {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  width: 100%;
-  min-height: 31px;
-  padding: 6px 9px;
-  border: 0;
-  border-radius: 8px;
+  justify-content: center;
+  width: auto;
+  min-height: 0;
+  padding: 5px 8px;
+  border: 1px solid #2A475E;
+  border-radius: 7px;
   box-sizing: border-box;
-  background: transparent;
+  background: #101822;
   color: #9FB2C3;
-  text-align: left;
-  font-size: 10px;
+  text-align: center;
+  font-size: 9px;
   font-weight: 400;
-  line-height: normal;
+  line-height: 1.4;
   text-decoration: none;
-  transition: background .16s ease, color .16s ease;
+  white-space: normal;
+  transition: background .16s ease, border-color .16s ease, color .16s ease;
 }
 #view-home .amazon-filter-sidebar .marketplace-category-group .store-filter-link:hover {
-  background: transparent;
+  border-color: #66C0F4;
+  background: #16202D;
   color: #66C0F4;
   text-decoration: none;
 }
 #view-home .amazon-filter-sidebar .marketplace-category-group .store-filter-link.active,
 #view-home .amazon-filter-sidebar .marketplace-category-group .store-filter-link.active:hover {
-  background: #203D55;
-  color: #66C0F4;
-  font-weight: 700;
+  border-color: #344256;
+  background: #202D3D;
+  color: #B7C5D8;
+  font-weight: 600;
   text-decoration: none;
 }
