@@ -7164,3 +7164,29 @@ body > footer {
   outline: 2px solid rgba(102, 192, 244, .45);
   outline-offset: 2px;
 }\n
+
+/* Hide the right-rail promotion slot until an enabled banner is available. */
+#homeJobsRail .jobs-promo-slot[hidden] {
+  display: none;
+}
+
+/* Improve readability of marketplace card metadata in the dark theme. */
+#view-home .cd .mt {
+  color: #9FB2C3;
+}
+#view-home .cd .mt .cd-time-meta,
+#view-home .cd .mt .cd-location-meta {
+  color: #9FB2C3;
+}
+#view-home .cd .mt .cd-location-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+#view-home .cd .mt .cd-location-meta > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
