@@ -6551,3 +6551,14 @@ body > footer {
 /* Let the video surface receive pointer input for dragging the floating popup. */
 .custom-youtube-screen .custom-youtube-frame,
 .custom-youtube-screen .custom-youtube-frame iframe{pointer-events:none!important}
+
+/* 7inOne brand-gradient color override */
+.brand-gradient,
+#view-seller .brand-gradient,
+#view-admin .brand-gradient,
+.product-mobile-actions button.brand-gradient,
+#view-product .product-mobile-actions button.brand-gradient,
+#profileForm button.brand-gradient {
+  background: #1e5575;
+  color: #8f98a0;
+}
