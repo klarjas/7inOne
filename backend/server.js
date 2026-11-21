@@ -3754,7 +3754,33 @@ app.post('/api/admin/supplier-import/import', authenticate, requireAdmin, async 
       return variantCode && index.knownCodes.has(variantCode) && !existingProduct;
     });
     if (codeConflict) return fail(res, 409, 'One or more supplier product codes are already linked to another product.');
-    if (!variantsToAdd.length) return fail(res, 409, 'All configurations for this product have already been imported.');
+    if (!variantsToAdd.length) {
+      if (existingProduct) {
+        const parentAvailability = group.variants.some(item => item.availability !== 'out_of_stock') ? 1 : 0;
+        const { error: parentStockError } = await supabase.from('products')
+          .update({ stock: parentAvailability, updated_at: new Date().toISOString() }).eq('id', existingProduct.id);
+        if (parentStockError) throw parentStockError;
+        for (const variant of group.variants) {
+          const supplierCode = String(variant.supplier_product_code || '').trim().toUpperCase();
+          const existingVariant = (existingProduct.variants || []).find(item =>
+            String(item.sku || '').trim().toUpperCase() === supplierCode
+            || String(item.supplier_source?.supplier_product_code || '').trim().toUpperCase() === supplierCode
+          );
+          if (existingVariant) {
+            const { error: variantStockError } = await supabase.from('product_variants')
+              .update({ stock: variant.availability === 'out_of_stock' ? 0 : 1, updated_at: new Date().toISOString() })
+              .eq('id', existingVariant.id);
+            if (variantStockError) throw variantStockError;
+          }
+        }
+        return res.json({ success: true, data: {
+          id: existingProduct.id, title: group.title, existing_product: true,
+          created_variants: 0, total_variants: (existingProduct.variants || []).length,
+          availability_updated: true, availability: parentAvailability ? 'available' : 'out_of_stock'
+        } });
+      }
+      return fail(res, 409, 'All configurations for this product have already been imported.');
+    }
     const productId = existingProduct?.id || null;
     let targetProductId = productId;
     if (!targetProductId) {
