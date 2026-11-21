@@ -2171,7 +2171,7 @@ function renderStorefront() {
             <span>${Number(data.active_listings || 0)} មុខទំនិញ</span>
             <span>${rating ? '★ ' + esc(ratingLabel) : 'មិនទាន់មានពិន្ទុ'} (${reviewCount} ពិនិត្យ)</span>
           </p>
-          <p class="storefront-shop-id"><span>Shop ID</span> <code>${esc(data.id || '')}</code></p>
+          <p class="storefront-shop-id"><span>Shop ID</span> <code>${esc(data.public_shop_id || '—')}</code></p>
           ${data.description ? `<div class="storefront-bio"><span class="storefront-bio-label">Bio ហាង</span><p class="storefront-description">${esc(data.description)}</p></div>` : ''}
         </div>
       </div>
