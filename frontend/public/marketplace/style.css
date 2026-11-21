@@ -6562,3 +6562,14 @@ body > footer {
   background: #1e5575;
   color: #8f98a0;
 }
+
+/* Product detail primary buy button — requested dark blue style */
+#view-product .product-buy-primary {
+  min-height: 50px;
+  border: 0;
+  border-radius: 980px;
+  background: #316282;
+  color: #FFFFFF;
+  box-shadow: none;
+  font-size: 14px;
+}
