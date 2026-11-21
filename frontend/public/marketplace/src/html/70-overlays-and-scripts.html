@@ -1,0 +1,426 @@
+  <!-- 1. Auth Modal -->
+  <div aria-hidden="true" class="modal" id="authModal">
+    <section class="modal-box max-w-[440px] p-6 sm:p-7">
+      <div class="mb-5 flex items-start justify-between">
+        <div>
+          <p class="text-[10px] font-bold text-emerald-700">7INONE ACCOUNT</p>
+          <h2 class="mt-1 text-xl font-bold" id="authTitle">សូមស្វាគមន៍មកកាន់ 7inOne</h2>
+        </div>
+        <button class="close-btn" data-close="authModal"></button>
+      </div>
+
+      <div class="mb-4 grid grid-cols-2 rounded-full bg-slate-100 p-1">
+        <button class="auth-tab rounded-full bg-white py-2 text-[11px] font-bold shadow-sm" data-auth-mode="login">ចូលគណនី</button>
+        <button class="auth-tab rounded-full py-2 text-[11px] font-bold text-slate-500" data-auth-mode="register">បង្កើតគណនី</button>
+      </div>
+
+      <form class="space-y-3" id="authForm">
+        <label class="hidden block" id="authNameWrap"><span class="label">ឈ្មោះពេញ</span><input class="field" id="authName" placeholder="ឈ្មោះរបស់អ្នក" /></label>
+        <label class="block"><span class="label">លេខទូរស័ព្ទ ឬ អ៊ីមែល</span><input class="field" id="authIdentity" placeholder="012 345 678 ឬ name@email.com" required /></label>
+        <label class="block"><span class="label">ពាក្យសម្ងាត់</span><input class="field" id="authPassword" minlength="6" placeholder="បញ្ចូលពាក្យសម្ងាត់" required type="password" /></label>
+        <label class="hidden block" id="authOtpWrap"><span class="label">លេខកូដផ្ទៀងផ្ទាត់ SMS</span><input class="field" id="authOtp" inputmode="numeric" maxlength="8" placeholder="បញ្ចូលលេខកូដ SMS" type="text" /></label>
+        <button class="brand-gradient w-full rounded-full py-3 text-[12px] font-bold text-white" id="authSubmit">ចូលគណនី</button>
+
+        <div class="rounded-2xl border border-[#2A475E] bg-[#101822] px-4 py-3 text-center" id="telegramLoginWidgetWrap">
+          <p class="mb-2 text-[10px] font-bold text-[#8F98A0]">ឬ ចូលគណនីតាម Telegram</p>
+          <div class="flex justify-center" id="telegramLoginWidget"></div>
+        </div>
+        <p class="text-center text-[10px] text-slate-400" id="authHint">ប្រើលេខទូរស័ព្ទ ឬអ៊ីមែលដែលភ្ជាប់ជាមួយគណនី 7inOne របស់អ្នក។</p>
+      </form>
+
+      <div class="mt-4 text-center"><button class="text-[10px] font-bold text-emerald-700" id="forgotPasswordBtn" type="button">ភ្លេច Password? សង្គ្រោះតាម Telegram</button></div>
+
+      <!-- Telegram Password Recovery -->
+      <form class="hidden mt-4 space-y-3" id="telegramRecoveryForm">
+        <label class="block"><span class="label">Email គណនី 7inOne</span><input class="field" id="recoveryEmail" type="email" required placeholder="name@email.com" /></label>
+        <div class="rounded-xl border border-amber-200 bg-amber-50 p-3">
+          <b class="block text-[10px] text-amber-800">Admin មិនទាន់ភ្ជាប់ Telegram?</b>
+          <input class="field mt-2 bg-white" id="adminBootstrapKey" type="password" placeholder="Admin Recovery Key" />
+          <button class="mt-2 w-full rounded-full border border-amber-300 bg-white py-2 text-[10px] font-bold text-amber-800" id="bootstrapAdminTelegramBtn" type="button">ភ្ជាប់ Telegram ទៅ Admin</button>
+          <a class="mt-2 hidden block rounded-lg bg-white px-3 py-2 text-center text-[10px] font-bold text-sky-700" id="adminTelegramStartLink" href="#" target="_blank" rel="noopener noreferrer">បើក Telegram Bot ហើយចុច Start</a>
+        </div>
+        <button class="w-full rounded-full border border-sky-200 bg-sky-50 py-2.5 text-[10px] font-bold text-sky-700" id="requestRecoveryOtpBtn" type="button">ផ្ញើ OTP ទៅ Telegram</button>
+        <label class="block"><span class="label">OTP ៦ ខ្ទង់</span><input class="field" id="recoveryOtp" inputmode="numeric" maxlength="6" required placeholder="បញ្ចូលលេខកូដ Telegram" /></label>
+        <label class="block"><span class="label">Password ថ្មី</span><input class="field" id="recoveryNewPassword" type="password" minlength="8" maxlength="72" required placeholder="យ៉ាងតិច ៨ តួអក្សរ" /></label>
+        <button class="brand-gradient w-full rounded-full py-3 text-[11px] font-bold text-white" id="confirmRecoveryBtn" type="submit">ផ្ទៀងផ្ទាត់ និងសង្គ្រោះគណនី</button>
+        <button class="w-full py-1.5 text-[10px] font-bold text-slate-500" id="backToLoginBtn" type="button">ត្រឡប់ទៅចូលគណនី</button>
+      </form>
+    </section>
+  </div>
+
+  <!-- 2. Seller Registration Modal -->
+  <div aria-hidden="true" class="modal" id="sellerModal">
+    <section class="modal-box max-w-[560px] p-6 sm:p-7">
+      <div class="mb-5 flex items-start justify-between">
+        <div>
+          <p class="text-[10px] font-bold text-emerald-700">SELLER REGISTRATION</p>
+          <h2 class="mt-1 text-xl font-bold" id="sellerModalTitle">ចុះឈ្មោះក្លាយជាអ្នកលក់</h2>
+        </div>
+        <button class="close-btn" data-close="sellerModal"></button>
+      </div>
+      <form class="space-y-3" id="sellerApplyForm">
+        <div class="grid gap-3 sm:grid-cols-2">
+          <label><span class="label">ឈ្មោះហាង *</span><input class="field" id="shopName" maxlength="70" placeholder="ឧ. ហាងទូរស័ព្ទ សុភា" required /></label>
+          <label><span class="label">លេខទូរស័ព្ទ / Telegram *</span><input class="field" id="shopContact" placeholder="012 345 678 / @username" required /></label>
+          <label class="sm:col-span-2"><span class="label">អាសយដ្ឋានហាង *</span><input class="field" id="shopAddress" placeholder="ផ្ទះលេខ... ផ្លូវ... ខណ្ឌ... រាជធានី/ខេត្ត" required /></label>
+        </div>
+        <div>
+          <span class="label" id="sellerDocumentLabel">ឯកសារផ្ទៀងផ្ទាត់ (ជាជម្រើសសម្រាប់អ្នកចុះឈ្មោះថ្មី)</span>
+          <label class="flex cursor-pointer items-center gap-3 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-3" for="sellerDocument">
+            <span class="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-white text-emerald-700" id="sellerDocThumb"></span>
+            <span class="min-w-0 flex-1"><b class="block truncate text-[11px]" id="sellerDocName">ចុចដើម្បី Upload ឯកសារ</b><small class="text-[9px] text-slate-400">JPG, PNG ឬ WEBP · ទំហំអតិបរមា 8MB</small></span>
+          </label>
+          <input accept="image/jpeg,image/png,image/webp" class="hidden" id="sellerDocument" type="file" />
+          <div class="mt-2 hidden overflow-hidden rounded-xl border border-slate-100" id="sellerDocPreview"></div>
+        </div>
+        <button class="brand-gradient w-full rounded-full py-3 text-[12px] font-bold text-white">បង្កើតហាង / ដាក់ស្នើផ្ទៀងផ្ទាត់</button>
+      </form>
+    </section>
+  </div>
+
+  <!-- 3. Add/Edit Product Modal -->
+  <div aria-hidden="true" class="modal" id="productFormModal">
+    <section class="modal-box max-w-[600px] p-6 sm:p-7">
+      <div class="mb-5 flex items-start justify-between">
+        <div>
+          <p class="text-[10px] font-bold text-emerald-700">SELLER STUDIO</p>
+          <h2 class="mt-1 text-xl font-bold" id="productFormTitle">បន្ថែមទំនិញថ្មី</h2>
+        </div>
+        <button class="close-btn" data-close="productFormModal"></button>
+      </div>
+      <form class="space-y-3" id="productForm">
+        <input id="editProductId" type="hidden" />
+        <div class="grid gap-3 sm:grid-cols-2">
+          <label class="sm:col-span-2"><span class="label">ឈ្មោះទំនិញ *</span><input class="field" id="productTitle" maxlength="90" placeholder="ឧ. iPhone 14 Pro Max 256GB" required /></label>
+          <label><span class="label">តម្លៃ (USD) *</span><input class="field" id="productPrice" min="0.01" placeholder="0.00" required step="0.01" type="number" /></label>
+          <label><span class="label">ប្រភេទ *</span>
+            <select class="field" id="productCategory" required>
+              <option value="">ជ្រើសរើសប្រភេទ</option>
+              <option value="phones">ទូរស័ព្ទ &amp; អេឡិចត្រូនិក</option>
+              <option value="vehicles">រថយន្ត &amp; ម៉ូតូ</option>
+              <option value="property">អចលនទ្រព្យ</option>
+              <option value="fashion">សម្លៀកបំពាក់</option>
+              <option value="furniture">គ្រឿងសង្ហារិម</option>
+            </select>
+          </label>
+
+          <label><span class="label">ផ្នែករង / Subcategory</span><select class="field" id="productSubcategory"><option value="">ជ្រើសរើសផ្នែករង</option></select></label>
+          <label><span class="label">ប្រភេទលម្អិត / Detailed Type</span><select class="field" id="productDetailType"><option value="">ជ្រើសរើសប្រភេទលម្អិត</option></select></label>
+          <div class="sm:col-span-2 listing-spec-fields" id="productSpecificationFields"></div>
+          <div class="sm:col-span-2 cambodia-location-picker" data-location-picker="product">
+            <span class="label">ទីតាំងផលិតផល * (ជ្រើសរើសដល់កម្រិតភូមិ)</span>
+            <div class="grid gap-2 sm:grid-cols-2">
+              <select class="field" data-location-level="province"><option value="">ជ្រើសរើសរាជធានី/ខេត្ត</option></select>
+              <select class="field" data-location-level="district" disabled><option value="">ជ្រើសរើសស្រុក/ខណ្ឌ</option></select>
+              <select class="field" data-location-level="commune" disabled><option value="">ជ្រើសរើសឃុំ/សង្កាត់</option></select>
+              <select class="field" data-location-level="village" disabled><option value="">ជ្រើសរើសភូមិ</option></select>
+            </div>
+            <input type="hidden" id="productLocation" value="">
+            <input type="hidden" id="productProvinceCode">
+            <input type="hidden" id="productDistrictCode">
+            <input type="hidden" id="productCommuneCode">
+            <input type="hidden" id="productVillageCode">
+            <label class="location-default-option"><input type="checkbox" data-location-default><span>កំណត់ទីតាំងនេះជាលំនាំដើម</span></label>
+            <small class="block text-[10px] text-slate-400" data-location-summary>ប្រភព៖ DataEF / MLMUPC · Cambodia Geographical List 2025 · មិនត្រូវការលេខផ្ទះ/ផ្លូវ</small>
+          
+            <label class="block mt-2"><span class="label">Google Maps Link (មិនបាច់បំពេញក៏បាន)</span><input class="field" type="url" name="google_map_url" maxlength="1000" placeholder="https://maps.app.goo.gl/... ឬ https://www.google.com/maps/..."></label>
+          </div>
+          <label class="sm:col-span-2"><span class="label">YouTube Video Link (មិនបាច់បំពេញក៏បាន)</span><input class="field" id="productYoutubeVideoUrl" type="url" maxlength="1000" placeholder="https://www.youtube.com/watch?v=VIDEO_ID"><small class="text-[10px] text-slate-500">ភ្ជាប់វីដេអូ ១ ក្នុង Gallery · គាំទ្រ YouTube Video និង Shorts</small></label>
+          <div id="productYoutubePreview" class="product-youtube-preview hidden sm:col-span-2" aria-live="polite"></div>
+          <label><span class="label">ស្ថានភាព</span>
+            <select class="field" id="productCondition">
+              <option>ប្រើរួចស្អាត</option><option>ថ្មី ១០០%</option><option>ល្អដូចថ្មី</option>
+            </select>
+          </label>
+          <label class="sm:col-span-2">
+            <span class="label">ការពិពណ៌នាសង្ខេប (បង្ហាញលើកាតទំនិញ) *</span>
+            <textarea class="field min-h-[72px] product-short-desc-field" id="productShortDesc" rows="3" wrap="off" placeholder="សរសេរមួយបន្ទាត់ម្តងៗ (អតិបរមា ៣ បន្ទាត់)..." required></textarea>
+            <small class="mt-1 block text-right text-[10px] text-slate-400" id="productShortDescCount">0/140 · 1/3 ជួរ</small>
+          </label>
+          <label class="sm:col-span-2">
+            <span class="label">ការពិពណ៌នាលម្អិត</span>
+            <textarea class="field min-h-[110px]" id="productDescription" rows="5" maxlength="2000" placeholder="សរសេរព័ត៌មានលម្អិតពេញលេញអំពីទំនិញ..."></textarea>
+          </label>
+        </div>
+        <div>
+          <span class="label">រូបភាពទំនិញ (អតិបរមា ១០ រូប)</span>
+          <label class="product-album-picker" for="productImage">
+            <span class="product-album-picker-icon" id="productImageThumb"></span>
+            <span class="min-w-0 flex-1"><b id="productImageName">ជ្រើសរើសរូបភាពផលិតផល</b><small>JPG / PNG / WEBP · រូបនីមួយៗមិនលើស ២០MB</small></span>
+            <span class="product-album-add"><span data-icon="plus" data-icon-size="13"></span> បន្ថែមរូប</span>
+          </label>
+          <input accept="image/jpeg,image/png,image/webp" class="hidden" id="productImage" multiple type="file" />
+          <div id="productImageAlbum" class="product-image-album" aria-live="polite"></div>
+          <div id="productUploadStatus" class="product-upload-status" role="status" aria-live="polite" hidden>
+            <span id="productUploadLabel">កំពុង Upload រូបភាព...</span>
+            <div class="product-upload-progress"><span id="productUploadProgressBar"></span></div>
+          </div>
+          <p class="product-album-hint">ចុច «កំណត់ជារូបមេ» លើរូបដែលអ្នកចង់ឲ្យបង្ហាញមុនគេ។ អាចដាក់បានអតិបរមា ១០ រូប។</p>
+        </div>
+        <div class="flex justify-end gap-2 pt-3">
+          <button class="rounded-full border border-slate-200 px-5 py-2.5 text-[11px] font-bold text-slate-600" data-close="productFormModal" type="button">បោះបង់</button>
+          <button id="productSaveButton" class="product-save-button brand-gradient rounded-full px-6 py-2.5 text-[11px] font-bold text-white" type="submit"><span>រក្សាទុកទំនិញ</span></button>
+        </div>
+      </form>
+    </section>
+  </div>
+
+
+  <!-- 3A. Unified listing type chooser -->
+  <div aria-hidden="true" class="modal" id="listingTypeModal">
+    <section class="modal-box listing-type-box p-6 sm:p-7">
+      <div class="mb-5 flex items-start justify-between">
+        <div><p class="text-[10px] font-bold text-sky-400">7INONE MARKETPLACE</p><h2 class="mt-1 text-xl font-bold">តើអ្នកចង់បង្ហោះអ្វី?</h2><p class="mt-1 text-xs text-slate-400">ជ្រើសរើសប្រភេទប្រកាស ដើម្បីបន្ត</p></div>
+        <button class="close-btn" data-close="listingTypeModal" type="button" aria-label="បិទ"></button>
+      </div>
+      <div class="listing-type-grid">
+        <button type="button" class="listing-type-option" data-create-kind="product"><span data-icon="package"></span><b>ផលិតផល</b><small>ទំនិញថ្មី និងមួយទឹក</small></button>
+        <button type="button" class="listing-type-option" data-create-kind="job"><span data-icon="briefcase"></span><b>ការងារ</b><small>ជ្រើសរើសបុគ្គលិក និងប្រកាសការងារ</small></button>
+        <button type="button" class="listing-type-option" data-create-kind="real_estate"><span data-icon="home"></span><b>អចលនទ្រព្យ</b><small>ផ្ទះ ដី ខុនដូ និងអចលនទ្រព្យផ្សេងៗ</small></button>
+      </div>
+    </section>
+  </div>
+
+  <!-- 3B. Job listing form -->
+  <div aria-hidden="true" class="modal" id="jobFormModal">
+    <section class="modal-box max-w-[720px] p-6 sm:p-7">
+      <div class="mb-5 flex items-start justify-between"><div><p class="text-[10px] font-bold text-sky-400">JOB LISTING</p><h2 class="mt-1 text-xl font-bold">បង្ហោះប្រកាសការងារ</h2><p class="mt-1 text-xs text-slate-400">បំពេញព័ត៌មានការងារ និងលក្ខខណ្ឌជ្រើសរើស</p></div><button class="close-btn" data-close="jobFormModal" type="button"></button></div>
+      <form id="jobListingForm" class="space-y-3">
+        <div class="grid gap-3 sm:grid-cols-2">
+          <label><span class="label">ប្រភេទការងារ *</span><select class="field" id="jobCategory" name="category" required><option value="">ជ្រើសរើសប្រភេទ</option><option value="it">IT & Technology</option><option value="office">ការិយាល័យ និងរដ្ឋបាល</option><option value="sales">លក់ និងទីផ្សារ</option><option value="transport">ដឹកជញ្ជូន</option><option value="hospitality">ភោជនីយដ្ឋាន និងសណ្ឋាគារ</option><option value="construction">សំណង់ និងវិស្វកម្ម</option><option value="education">អប់រំ</option><option value="healthcare">សុខាភិបាល</option><option value="factory">រោងចក្រ និងផលិតកម្ម</option><option value="agriculture">កសិកម្ម</option><option value="services">សម្រស់ និងសេវាកម្ម</option><option value="other">ការងារផ្សេងៗ</option></select></label>
+          <label><span class="label">មុខតំណែង / Job Title *</span><input class="field" name="title" maxlength="160" placeholder="ឧ. IT Support" required></label>
+          <label><span class="label">ក្រុមហ៊ុន / អ្នកជ្រើសរើស</span><input class="field" name="company_name" maxlength="160" placeholder="ឈ្មោះក្រុមហ៊ុន"></label>
+          <div class="sm:col-span-2 cambodia-location-picker" data-location-picker="job">
+            <span class="label">ទីតាំងការងារ * (ជ្រើសរើសដល់កម្រិតភូមិ)</span>
+            <div class="grid gap-2 sm:grid-cols-2">
+              <select class="field" data-location-level="province"><option value="">ជ្រើសរើសរាជធានី/ខេត្ត</option></select>
+              <select class="field" data-location-level="district" disabled><option value="">ជ្រើសរើសស្រុក/ខណ្ឌ</option></select>
+              <select class="field" data-location-level="commune" disabled><option value="">ជ្រើសរើសឃុំ/សង្កាត់</option></select>
+              <select class="field" data-location-level="village" disabled><option value="">ជ្រើសរើសភូមិ</option></select>
+            </div>
+            <input type="hidden" name="location" data-location-value required>
+            <input type="hidden" name="province_code" data-location-code="province">
+            <input type="hidden" name="district_code" data-location-code="district">
+            <input type="hidden" name="commune_code" data-location-code="commune">
+            <input type="hidden" name="village_code" data-location-code="village">
+            <label class="location-default-option"><input type="checkbox" data-location-default><span>កំណត់ទីតាំងនេះជាលំនាំដើម</span></label>
+            <small class="block text-[10px] text-slate-400" data-location-summary>ប្រភព៖ DataEF / MLMUPC · Cambodia Geographical List 2025 · មិនត្រូវការលេខផ្ទះ/ផ្លូវ</small>
+          
+            <label class="block mt-2"><span class="label">Google Maps Link (មិនបាច់បំពេញក៏បាន)</span><input class="field" type="url" name="google_map_url" maxlength="1000" placeholder="https://maps.app.goo.gl/... ឬ https://www.google.com/maps/..."></label>
+          </div>
+          <label><span class="label">ផ្នែករង</span><select class="field" id="jobSubcategory" name="subcategory"><option value="">ជ្រើសរើសផ្នែករង</option></select></label>
+          <label><span class="label">មុខតំណែងលម្អិត</span><select class="field" id="jobDetailType" name="detail_type"><option value="">ជ្រើសរើសមុខតំណែង</option></select></label>
+          <label><span class="label">ប្រភេទការងារ</span><select class="field" name="employment_type"><option value="full_time">ពេញម៉ោង</option><option value="part_time">ក្រៅម៉ោង</option><option value="contract">កិច្ចសន្យា</option><option value="internship">ហាត់ការ</option><option value="freelance">Freelance</option></select></label>
+          <label><span class="label">ម៉ោងធ្វើការ</span><input class="field" name="work_schedule" placeholder="ឧ. 8:00 ព្រឹក - 5:00 ល្ងាច"></label>
+          <label><span class="label">ប្រាក់ខែអប្បបរមា (USD)</span><input class="field" name="salary_min" type="number" min="0" step="0.01" placeholder="0"></label>
+          <label><span class="label">ប្រាក់ខែអតិបរមា (USD)</span><input class="field" name="salary_max" type="number" min="0" step="0.01" placeholder="0"></label>
+          <label><span class="label">របៀបបង្ហាញប្រាក់ខែ</span><select class="field" name="salary_period"><option value="monthly">ប្រចាំខែ</option><option value="daily">ប្រចាំថ្ងៃ</option><option value="hourly">ប្រចាំម៉ោង</option><option value="negotiable">ចរចា</option></select></label>
+          <label><span class="label">ចំនួនត្រូវជ្រើសរើស</span><input class="field" name="vacancies" type="number" min="1" max="999" value="1"></label>
+          <label><span class="label">បទពិសោធន៍</span><input class="field" name="experience" placeholder="ឧ. 1-2 ឆ្នាំ / មិនទាមទារ"></label>
+          <label><span class="label">កម្រិតសិក្សា</span><input class="field" name="education" placeholder="ឧ. បរិញ្ញាបត្រ / មិនកំណត់"></label>
+          <label class="sm:col-span-2"><span class="label">YouTube Video Link (មិនបាច់បំពេញក៏បាន)</span><input class="field" name="youtube_video_url" type="url" maxlength="1000" placeholder="https://www.youtube.com/watch?v=VIDEO_ID"><small class="text-[10px] text-slate-500">ភ្ជាប់វីដេអូណែនាំការងារ (16:9)</small></label>
+          <label class="sm:col-span-2"><span class="label">ព័ត៌មានលម្អិត និងតួនាទីការងារ *</span><textarea class="field min-h-[110px]" name="description" maxlength="5000" rows="5" placeholder="ពិពណ៌នាអំពីតួនាទី ភារកិច្ច និងលក្ខខណ្ឌ..." required></textarea></label>
+          <label class="sm:col-span-2"><span class="label">ជំនាញដែលត្រូវការ (បំបែកដោយសញ្ញាក្បៀស)</span><input class="field" name="skills_text" placeholder="ឧ. Computer, Excel, Communication"></label>
+          <label class="sm:col-span-2"><span class="label">អត្ថប្រយោជន៍ (បំបែកដោយសញ្ញាក្បៀស)</span><input class="field" name="benefits_text" placeholder="ឧ. ប្រាក់ខែបន្ថែម, ធានារ៉ាប់រង"></label>
+          <div class="sm:col-span-2 listing-image-album" data-listing-image-album="job">
+            <span class="label">រូបភាពការងារ / Logo (JPG/PNG/WEBP · អតិបរមា ១០ រូប · 8MB/រូប)</span>
+            <label class="product-album-picker" data-listing-image-picker>
+              <span class="product-album-picker-icon" data-icon="image"></span>
+              <span class="min-w-0 flex-1"><b>ជ្រើសរើសរូបភាពច្រើន</b><small data-listing-image-count>0 / ១០ រូបបានជ្រើសរើស</small></span>
+              <span class="product-album-add">+ បន្ថែមរូប</span>
+              <input class="sr-only" type="file" accept="image/jpeg,image/png,image/webp" multiple data-listing-image-input>
+            </label>
+            <div class="product-image-album" data-listing-image-grid><div class="product-album-empty"><span data-icon="image"></span><b>មិនទាន់មានរូបភាពទេ</b><small>ជ្រើសរើសរូបភាពរហូតដល់ ១០ រូប</small></div></div>
+            <p class="product-album-hint">រូបទី១ ជារូបមេ · អាចប្តូររូបមេ លុបរូប និងរៀបលំដាប់បាន</p>
+          </div>
+        </div>
+        <div id="jobSpecificationFields" class="listing-spec-fields"></div>
+        <div class="flex justify-end gap-2 pt-3"><button class="rounded-full border border-slate-600 px-5 py-2.5 text-[11px] font-bold" data-close="jobFormModal" type="button">បោះបង់</button><button class="brand-gradient rounded-full px-6 py-2.5 text-[11px] font-bold text-white" type="submit">បង្ហោះការងារ</button></div>
+      </form>
+    </section>
+  </div>
+
+  <!-- 3C. Real estate listing form -->
+  <div aria-hidden="true" class="modal" id="propertyFormModal">
+    <section class="modal-box max-w-[720px] p-6 sm:p-7">
+      <div class="mb-5 flex items-start justify-between"><div><p class="text-[10px] font-bold text-sky-400">REAL ESTATE LISTING</p><h2 class="mt-1 text-xl font-bold">បង្ហោះអចលនទ្រព្យ</h2><p class="mt-1 text-xs text-slate-400">ព័ត៌មានលក់ ជួល និងលក្ខណៈសម្បត្តិអចលនទ្រព្យ</p></div><button class="close-btn" data-close="propertyFormModal" type="button"></button></div>
+      <form id="propertyListingForm" class="space-y-3">
+        <div class="grid gap-3 sm:grid-cols-2">
+          <label><span class="label">ប្រភេទអចលនទ្រព្យ *</span><select class="field" id="propertyCategory" name="category" required><option value="">ជ្រើសរើសប្រភេទ</option><option value="house_sale">ផ្ទះលក់</option><option value="house_rent">ផ្ទះជួល</option><option value="condo_sale">ខុនដូសម្រាប់លក់</option><option value="apartment_rent">អាផាតមិនសម្រាប់ជួល</option><option value="land">ដីលក់</option><option value="land_rent">ដីសម្រាប់ជួល</option><option value="commercial_sale">អចលនទ្រព្យពាណិជ្ជកម្មសម្រាប់លក់</option><option value="commercial_rent">អចលនទ្រព្យពាណិជ្ជកម្មសម្រាប់ជួល</option><option value="room_rent">បន្ទប់ជួល</option><option value="properties_wanted">ត្រូវការអចលនទ្រព្យ</option><option value="agent_services">សេវាកម្មភ្នាក់ងារ</option><option value="others_properties">ផ្សេងៗ</option></select></label>
+          <label><span class="label">ចំណងជើងប្រកាស *</span><input class="field" name="title" maxlength="160" placeholder="ឧ. ផ្ទះវីឡាលក់នៅបុរី..." required></label>
+          <label><span class="label">ផ្នែករង</span><select class="field" id="propertySubcategory" name="subcategory"><option value="">ជ្រើសរើសផ្នែករង</option></select></label>
+          <label><span class="label">ប្រភេទលម្អិត</span><select class="field" id="propertyDetailType" name="detail_type"><option value="">ជ្រើសរើសប្រភេទលម្អិត</option></select></label>
+          <label><span class="label">តម្លៃ (USD)</span><input class="field" name="price" type="number" min="0" step="0.01" placeholder="តម្លៃ"></label>
+          <label><span class="label">រយៈពេល / ប្រភេទតម្លៃ</span><select class="field" name="price_period"><option value="total">តម្លៃសរុប</option><option value="monthly">ប្រចាំខែ</option><option value="yearly">ប្រចាំឆ្នាំ</option><option value="daily">ប្រចាំថ្ងៃ</option><option value="negotiable">ចរចា</option></select></label>
+          <label><span class="label">ទំហំ (m²)</span><input class="field" name="area_sqm" type="number" min="0" step="0.01" placeholder="ទំហំផ្ទៃក្រឡា"></label>
+          <label><span class="label">បន្ទប់គេង</span><input class="field" name="bedrooms" type="number" min="0" step="1" placeholder="ចំនួន"></label>
+          <label><span class="label">បន្ទប់ទឹក</span><input class="field" name="bathrooms" type="number" min="0" step="1" placeholder="ចំនួន"></label>
+          <div class="sm:col-span-2 cambodia-location-picker" data-location-picker="property">
+            <span class="label">ទីតាំងអចលនទ្រព្យ * (ជ្រើសរើសដល់កម្រិតភូមិ)</span>
+            <div class="grid gap-2 sm:grid-cols-2">
+              <select class="field" data-location-level="province"><option value="">ជ្រើសរើសរាជធានី/ខេត្ត</option></select>
+              <select class="field" data-location-level="district" disabled><option value="">ជ្រើសរើសស្រុក/ខណ្ឌ</option></select>
+              <select class="field" data-location-level="commune" disabled><option value="">ជ្រើសរើសឃុំ/សង្កាត់</option></select>
+              <select class="field" data-location-level="village" disabled><option value="">ជ្រើសរើសភូមិ</option></select>
+            </div>
+            <input type="hidden" name="location" data-location-value required>
+            <input type="hidden" name="province_code" data-location-code="province">
+            <input type="hidden" name="district_code" data-location-code="district">
+            <input type="hidden" name="commune_code" data-location-code="commune">
+            <input type="hidden" name="village_code" data-location-code="village">
+            <label class="location-default-option"><input type="checkbox" data-location-default><span>កំណត់ទីតាំងនេះជាលំនាំដើម</span></label>
+            <small class="block text-[10px] text-slate-400" data-location-summary>ប្រភព៖ DataEF / MLMUPC · Cambodia Geographical List 2025 · បង្ហាញត្រឹមភូមិ</small>
+          
+            <label class="block mt-2"><span class="label">Google Maps Link (មិនបាច់បំពេញក៏បាន)</span><input class="field" type="url" name="google_map_url" maxlength="1000" placeholder="https://maps.app.goo.gl/... ឬ https://www.google.com/maps/..."></label>
+          </div>
+          <label class="sm:col-span-2"><span class="label">YouTube Video Link (មិនបាច់បំពេញក៏បាន)</span><input class="field" name="youtube_video_url" type="url" maxlength="1000" placeholder="https://www.youtube.com/watch?v=VIDEO_ID"><small class="text-[10px] text-slate-500">ភ្ជាប់វីដេអូណែនាំអចលនទ្រព្យ (16:9)</small></label>
+          <label class="sm:col-span-2"><span class="label">ការពិពណ៌នាលម្អិត *</span><textarea class="field min-h-[110px]" name="description" maxlength="5000" rows="5" placeholder="ពិពណ៌នាព័ត៌មានលម្អិត..." required></textarea></label>
+          <div class="sm:col-span-2 listing-image-album" data-listing-image-album="property">
+            <span class="label">រូបភាពអចលនទ្រព្យ (JPG/PNG/WEBP · អតិបរមា ១០ រូប · 8MB/រូប)</span>
+            <label class="product-album-picker" data-listing-image-picker>
+              <span class="product-album-picker-icon" data-icon="image"></span>
+              <span class="min-w-0 flex-1"><b>ជ្រើសរើសរូបភាពច្រើន</b><small data-listing-image-count>0 / ១០ រូបបានជ្រើសរើស</small></span>
+              <span class="product-album-add">+ បន្ថែមរូប</span>
+              <input class="sr-only" type="file" accept="image/jpeg,image/png,image/webp" multiple data-listing-image-input>
+            </label>
+            <div class="product-image-album" data-listing-image-grid><div class="product-album-empty"><span data-icon="image"></span><b>មិនទាន់មានរូបភាពទេ</b><small>ជ្រើសរើសរូបភាពរហូតដល់ ១០ រូប</small></div></div>
+            <p class="product-album-hint">រូបទី១ ជារូបមេ · អាចប្តូររូបមេ លុបរូប និងរៀបលំដាប់បាន</p>
+          </div>
+        </div>
+        <div id="propertySpecificationFields" class="listing-spec-fields"></div>
+        <div class="flex justify-end gap-2 pt-3"><button class="rounded-full border border-slate-600 px-5 py-2.5 text-[11px] font-bold" data-close="propertyFormModal" type="button">បោះបង់</button><button class="brand-gradient rounded-full px-6 py-2.5 text-[11px] font-bold text-white" type="submit">បង្ហោះអចលនទ្រព្យ</button></div>
+      </form>
+    </section>
+  </div>
+
+  <!-- 4. Offer Modal -->
+  <div aria-hidden="true" class="modal" id="offerModal">
+    <section class="modal-box max-w-[420px] p-6">
+      <div class="mb-5 flex items-start justify-between">
+        <div>
+          <p class="text-[10px] font-bold text-emerald-700">PRICE OFFER</p>
+          <h2 class="mt-1 text-xl font-bold">ស្នើសុំតម្លៃរបស់អ្នក</h2>
+          <p class="mt-1 text-[10px] text-slate-400" id="offerProductName"></p>
+        </div>
+        <button class="close-btn" data-close="offerModal"></button>
+      </div>
+      <form class="space-y-3" id="offerForm">
+        <label class="block"><span class="label">តម្លៃដែលអ្នកចង់ទិញ (USD)</span><input class="field" id="offerAmount" min="0.01" required step="0.01" type="number" /></label>
+        <label class="block"><span class="label">សារជូនអ្នកលក់</span><textarea class="field min-h-[80px]" id="offerMessage" placeholder="សួស្តី ខ្ញុំចាប់អារម្មណ៍លើទំនិញនេះ..."></textarea></label>
+        <button class="brand-gradient w-full rounded-full py-3 text-[12px] font-bold text-white">ផ្ញើសំណើតម្លៃ</button>
+      </form>
+    </section>
+  </div>
+
+  <!-- 5. Unified Buyer / Seller Chat Modal -->
+  <div aria-hidden="true" class="modal" id="sellerChatModal">
+    <section class="modal-box seller-chat-shell relative flex flex-col overflow-hidden bg-white">
+      <header class="flex items-center justify-between border-b border-slate-100 bg-white px-4 py-3">
+        <div id="sellerChatHeaderDefault" class="min-w-0">
+          <b class="block text-sm">ឆាតអ្នកទិញ និងអ្នកលក់</b>
+          <span id="sellerChatHeaderSubtitle" class="block text-[9.5px] text-slate-400">សន្ទនាផ្ទាល់ជាមួយអ្នកលក់ និងអ្នកទិញ</span>
+        </div>
+        <div class="seller-chat-header-leading">
+          <button id="sellerChatHeaderBack" type="button" class="seller-chat-header-icon seller-chat-header-back hidden" aria-label="ត្រឡប់ទៅឆាតទាំងអស់" title="ត្រឡប់ទៅឆាតទាំងអស់"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/><path d="M20 12H9"/></svg></button>
+          <div id="sellerChatHeaderIdentity" class="hidden min-w-0 flex items-center gap-2">
+          <div id="sellerChatHeaderAvatar" class="h-10 w-10 shrink-0 overflow-hidden rounded-full border border-[#2A475E] bg-[#203244]"></div>
+          <b id="sellerChatHeaderTitle" class="block truncate text-sm text-[#C7D5E0]"></b>
+          </div>
+        </div>
+        <div class="seller-chat-header-actions">
+          <button id="sellerChatMute" type="button" class="seller-chat-header-icon seller-chat-mute" aria-label="បិទសំឡេង" aria-pressed="false" title="បិទសំឡេង"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/></svg></button>
+          <button id="sellerChatClose" type="button" class="seller-chat-header-icon" title="បង្រួមឆាត">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14" /></svg>
+          </button>
+        </div>
+      </header>
+
+      <div class="seller-chat-layout flex min-h-0 flex-1">
+        <!-- Conversation Inbox List -->
+        <aside id="sellerChatInboxPane" class="seller-chat-inbox-pane overflow-y-auto bg-white p-3">
+          <div class="mb-2 flex items-center justify-between px-1">
+            <b class="text-[11px]">ប្រអប់សារ</b>
+            <button id="sellerChatInboxRefresh" class="text-[10px] font-bold text-emerald-700" type="button">ធ្វើបច្ចុប្បន្នភាព</button>
+          </div>
+          <div id="sellerChatInboxList"><div class="global-loading" role="status" aria-label="កំពុងផ្ទុកសារ"><div class="loader" aria-hidden="true"></div><span>កំពុងផ្ទុកសារ...</span></div></div>
+        </aside>
+
+        <!-- Active Thread -->
+        <main id="sellerChatThread" class="seller-chat-thread flex min-w-0 flex-1 flex-col">
+          <div id="sellerChatProductContext" class="flex items-center gap-3 border-b border-slate-100 bg-white px-3 py-2">
+            <button id="sellerChatBack" class="hidden rounded-lg border border-slate-200 p-1.5" type="button" aria-label="ត្រឡប់ទៅប្រអប់សារ">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6" /></svg>
+            </button>
+            <div id="sellerChatProductImage" class="hidden"></div>
+            <div class="min-w-0 flex-1">
+              <b id="sellerChatTitle" class="hidden">ជ្រើសរើសសន្ទនា</b>
+              <span id="sellerChatSubtitle" class="hidden">ព័ត៌មានផលិតផលនឹងបង្ហាញនៅទីនេះ</span>
+            </div>
+          </div>
+
+          <div id="sellerChatMessages" class="flex-1 space-y-3 overflow-y-auto" aria-live="polite">
+            <p class="py-8 text-center text-xs text-slate-400">ជ្រើសរើសសន្ទនាមួយ ដើម្បីចាប់ផ្ដើម។</p>
+          </div>
+
+          <!-- Dismissible Product Inquiry Draft Banner -->
+          <div id="sellerChatProductBanner" class="seller-chat-draft-product hidden" aria-live="polite"></div>
+
+          <form id="sellerChatForm" class="flex items-center gap-2 border-t border-slate-100 bg-white p-3">
+            <input id="sellerChatImageInput" type="file" accept="image/jpeg,image/png,image/webp" class="hidden" />
+            <button id="sellerChatChooseImage" type="button" class="seller-chat-attach" title="ផ្ញើរូបភាព" aria-label="ផ្ញើរូបភាព">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="m21 15-5-5L5 21" /></svg>
+            </button>
+            <textarea id="sellerChatInput" class="field min-h-[40px] max-h-24 min-w-0 flex-1 resize-none rounded-full py-2.5 text-xs" rows="1" maxlength="4000" placeholder="សរសេរសារ…"></textarea>
+            <button id="sellerChatSend" class="seller-chat-send" type="submit" aria-label="ផ្ញើសារ" title="ផ្ញើសារ">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m22 2-7 20-4-9-9-4Z" /><path d="M22 2 11 13" /></svg>
+            </button>
+          </form>
+        </main>
+      </div>
+    </section>
+  </div>
+
+  <!-- Floating Chat Launcher -->
+  <button id="supportChatLauncher" type="button" class="hidden" aria-label="ឆាតអ្នកទិញ និងអ្នកលក់">
+    <span data-nav-icon="chat"></span>
+    <span id="sellerChatUnreadBadge" class="absolute -right-1 -top-1 hidden min-w-5 rounded-full bg-rose-600 px-1.5 py-0.5 text-[9px] font-bold text-white"></span>
+  </button>
+
+  <!-- Global YouTube Video Popup: outside hidden marketplace views -->
+  <dialog id="homeShortsPopup" class="home-shorts-popup" aria-label="មើលវីដេអូ YouTube">
+    <strong id="homeShortsPopupTitle" hidden>វីដេអូប្រកាស</strong>
+    <button id="homeShortsPopupClose" class="home-shorts-popup-overlay-close" type="button" aria-label="បិទវីដេអូ"><span data-icon="x" data-icon-size="18"></span></button>
+    <div class="home-shorts-popup-layout">
+      <div id="homeShortsPopupStage" class="home-shorts-popup-stage" aria-label="YouTube video player"></div>
+    </div>
+  </dialog>
+
+  <!-- Image Lightbox -->
+  <div class="product-lightbox" id="productLightbox" aria-hidden="true" role="dialog" aria-modal="true">
+    <button type="button" class="product-lightbox-close" id="productLightboxClose" aria-label="បិទរូបភាព"><span data-icon="x" data-icon-size="18"></span></button>
+    <button type="button" class="product-lightbox-nav prev" id="productLightboxPrev" aria-label="រូបមុន"><span data-icon="chevronLeft"></span></button>
+    <img id="productLightboxImage" alt="រូបភាពទំនិញពង្រីក" />
+    <button type="button" class="product-lightbox-nav next" id="productLightboxNext" aria-label="រូបបន្ទាប់"><span data-icon="chevronRight"></span></button>
+    <span class="product-lightbox-count" id="productLightboxCount"></span>
+  </div>
+
+  <!-- Maintenance Mode Overlay -->
+  <div aria-hidden="true" class="maintenance-overlay hidden" id="maintenanceOverlay">
+    <div class="maintenance-glass-card">
+      <div class="maintenance-gear-wrap" data-icon="settings" data-icon-size="34"></div>
+      <p class="text-[10px] font-bold tracking-widest text-emerald-300">7INONE · SYSTEM UPDATE</p>
+      <h1 class="mt-2 text-2xl font-bold">ប្រព័ន្ធកំពុងអភិវឌ្ឍន៍</h1>
+      <p class="mt-3 text-xs leading-6 text-white/80" id="maintenanceOverlayMessage"></p>
+      <a class="mt-6 inline-block text-[10px] text-white/60 underline" href="#" id="maintenanceAdminLogin">Admin Login</a>
+    </div>
+  </div>
+  <div class="maintenance-admin-pill hidden" id="maintenanceAdminPill"><span data-icon="wrench" data-icon-size="14"></span> កំពុងស្ថិតក្នុងទម្រង់អភិវឌ្ឍន៍ (Admin Preview)</div>
+
+  <!-- Toast Area -->
+  <div class="fixed bottom-5 right-5 z-[150] flex w-[min(92vw,360px)] flex-col gap-2 pointer-events-none" id="toastArea"></div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./app.js" defer></script>
+  </body>
+</html>

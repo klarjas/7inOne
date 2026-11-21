@@ -1,0 +1,1000 @@
+/* Steam Blue Gradient Blurred Ring Loader */
+#skeletonGrid.hidden {
+  display: none;
+}
+
+#view-home #skeletonGrid:not(.hidden),
+#skeletonGrid:not(.hidden) {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  min-height: 320px;
+  width: 100%;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  color: #9FB2C3;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.loader {
+  height: 80px;
+  width: 80px;
+  aspect-ratio: 1;
+  padding: 10px;
+  border-radius: 50%;
+  box-sizing: border-box;
+  position: relative;
+  background: transparent;
+  -webkit-mask: conic-gradient(#000 0 0) content-box exclude, conic-gradient(#000 0 0);
+  mask: conic-gradient(#000 0 0) content-box exclude, conic-gradient(#000 0 0);
+  filter: blur(8px);
+}
+
+.loader::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-conic-gradient(
+    #0000 0 5%,
+    #1A9FFF 10%,
+    #66C0F4 16%,
+    #0000 22% 50%
+  );
+  animation: l2 1.5s linear infinite;
+}
+
+@keyframes l2 {
+  to {
+    rotate: 1turn;
+  }
+}
+.global-loading {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  color: #9FB2C3;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.global-loading:not(.steam-loader-wrap) {
+  min-height: 180px;
+}
+
+/* 8. Page footer and short-content layout */
+html.route-restoring footer {
+  display: none;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+body > main {
+  flex: 1 0 auto;
+  width: 100%;
+}
+
+body > footer {
+  flex: 0 0 auto;
+  margin-top: auto;
+  width: 100%;
+}
+
+/* Typography: titles use Kantumruy Pro Regular; subtitles use Hanuman Light. */
+:is(h1,h2,h3,h4,h5,h6,.site-title,.hero-title,.product-title,
+.product-detail-title,.storefront-name,.storefront-title-line h1,
+.profile-name,.seller-name,.account-title,.panel-title,#listingTitle,
+.cd .cb h3) {
+  font-family: "Kantumruy Pro", sans-serif;
+  font-weight: 400;
+}
+
+:is(.site-subtitle,.hero-subtitle,.hero-copy .sub,#listingSub,
+.subtitle,.section-subtitle,.storefront-description,.profile-meta,
+.seller-meta) {
+  font-family: "Hanuman", serif;
+  font-weight: 300;
+}
+
+
+/* Steam Dark surfaces for dynamic product, storefront and account panels. */
+:is(#view-home,#view-product,#view-store,#view-profile,#view-seller,#view-admin) :is(
+.product-facts-list,.product-facts-list li,.account-hero,.account-panel,.account-shortcut,
+.account-settings,.account-section,.profile-panel,.profile-card,.storefront-public,
+.storefront-profile,.storefront-toolbar,.storefront-review-list,.storefront-review,
+.storefront-skeleton-card,.seller-shop-form,.seller-panel,.seller-card,.admin-panel,
+.admin-card,.support-chat-panel,.admin-chat-item
+){background-color:#16202D;color:#C7D5E0;border-color:#2A475E}
+:is(#view-home,#view-product,#view-store,#view-profile,#view-seller,#view-admin) :is(
+.product-facts-list li+li,.storefront-review,.account-shortcut
+){border-color:#2A475E}
+:is(#view-home,#view-product,#view-store,#view-profile,#view-seller,#view-admin) :is(
+.product-facts-list li>span,.account-shortcut small,.account-shortcut-arrow,
+.storefront-meta,.storefront-result-count,.profile-meta,.seller-meta
+){color:#8F98A0}
+:is(#view-home,#view-product,#view-store,#view-profile,#view-seller,#view-admin) :is(
+.account-shortcut b,.product-detail-title,.product-fact-description p,
+.storefront-section-heading h2,.storefront-review-top strong
+){color:#C7D5E0}
+:is(#view-home,#view-product,#view-store,#view-profile,#view-seller,#view-admin) :is(
+.bg-white,.bg-slate-50,.bg-gray-50,.bg-emerald-50,.bg-indigo-50,.bg-blue-50,.bg-stone-50
+){background-color:#16202D}
+:is(#view-home,#view-product,#view-store,#view-profile,#view-seller,#view-admin) :is(
+.border-slate-100,.border-slate-200,.border-gray-100,.border-gray-200,.border-emerald-100
+){border-color:#2A475E}
+:is(#view-home,#view-product,#view-store,#view-profile,#view-seller,#view-admin) :is(
+.text-slate-900,.text-slate-800,.text-gray-900,.text-gray-800
+){color:#FFFFFF}
+:is(#view-home,#view-product,#view-store,#view-profile,#view-seller,#view-admin) :is(
+.text-slate-600,.text-slate-500,.text-gray-600,.text-gray-500
+){color:#8F98A0}
+
+
+/* Seller chat dark theme: align every chat surface with Steam slate palette. */
+#sellerChatProductContext{background:#171A21;border-bottom-color:#2A475E;color:#C7D5E0}
+#sellerChatProductContext button{border-color:#2A475E;background:#203244;color:#C7D5E0}
+#sellerChatProductContext button:hover{background:#2A475E}
+#sellerChatProductImage{background:#203244}
+#sellerChatForm{background:#171A21;border-top-color:#2A475E}
+#sellerChatInput::placeholder{color:#8F98A0;opacity:1}
+#sellerChatForm button[type=submit]::after{color:#FFFFFF}
+#sellerChatRecordingStatus{background:#203244;color:#C7D5E0;border-top-color:#2A475E}
+.seller-chat-product-card{box-shadow:none}
+.seller-chat-product-info b{color:#FFFFFF}
+.seller-chat-product-info strong{color:#66C0F4}
+.seller-chat-location b{color:#FFFFFF}
+
+/* Profile dropdown: Steam Dark Slate & Steel Blue */
+#profileMenu{
+  background:#16202D;
+  background-color:#16202D;
+  color:#C7D5E0;
+  border:1px solid #2A475E;
+  border-radius:14px;
+  box-shadow:0 16px 42px rgba(0,0,0,.38);
+}
+#profileMenu > div:first-child{
+  background:transparent;
+  border-color:#2A475E;
+}
+#profileMenu #menuUserName{color:#FFFFFF}
+#profileMenu #menuUserStatus{color:#8F98A0}
+#profileMenu .menu-action{
+  display:flex;
+  align-items:center;
+  gap:11px;
+  width:100%;
+  border:0;
+  border-radius:9px;
+  padding:10px 12px;
+  background:transparent;
+  color:#C7D5E0;
+  text-align:left;
+}
+#profileMenu .menu-action span{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  color:#8F98A0;
+}
+#profileMenu .menu-action svg{stroke:currentColor}
+#profileMenu .menu-action:hover,
+#profileMenu .menu-action:focus-visible{
+  background:#203244;
+  color:#66C0F4;
+}
+#profileMenu .menu-action:hover span,
+#profileMenu .menu-action:focus-visible span{color:#66C0F4}
+#profileMenu .menu-action[data-action="logout"]{color:#C7D5E0}
+#profileMenu .menu-action[data-action="logout"]:hover{background:#3A2630;color:#F08A9A}
+
+/* Profile edit form: Steam Dark Slate & Steel Blue */
+#profileForm{
+  color:#C7D5E0;
+}
+#profileForm .label{
+  color:#C7D5E0;
+}
+#profileForm .field,
+#profileForm input,
+#profileForm select,
+#profileForm textarea{
+  width:100%;
+  background:#101822;
+  background-color:#101822;
+  color:#FFFFFF;
+  border:1px solid #2A475E;
+  border-radius:12px;
+  caret-color:#66C0F4;
+  box-shadow:none;
+}
+#profileForm .field::placeholder,
+#profileForm input::placeholder,
+#profileForm textarea::placeholder{
+  color:#8F98A0;
+  opacity:1;
+}
+#profileForm .field:focus,
+#profileForm input:focus,
+#profileForm select:focus,
+#profileForm textarea:focus{
+  background:#101822;
+  border-color:#66C0F4;
+  color:#FFFFFF;
+  outline:none;
+  box-shadow:none;
+}
+#profileForm select option{
+  background:#16202D;
+  color:#FFFFFF;
+}
+#profileForm button[type="submit"],
+#profileForm button.brand-gradient{
+  width:100%;
+  border:1px solid #3D6687;
+  border-radius:999px;
+  background:linear-gradient(135deg,#2B74B8,#316282);
+  color:#FFFFFF;
+  box-shadow:0 6px 18px rgba(43,116,184,.2);
+  transition:background .2s ease,border-color .2s ease,transform .2s ease;
+}
+#profileForm button[type="submit"]:hover,
+#profileForm button.brand-gradient:hover{
+  background:linear-gradient(135deg,#316282,#3D83B5);
+  border-color:#66C0F4;
+  color:#FFFFFF;
+}
+#profileForm button[type="submit"]:active,
+#profileForm button.brand-gradient:active{
+  transform:scale(.985);
+}
+
+/* Profile avatar camera control: offset it outside the photo corner to prevent overlap. */
+#view-profile #profileAvatar{
+  position:relative;
+  z-index:1;
+}
+#view-profile #avatarCam{
+  position:absolute;
+  right:-5px;
+  bottom:-5px;
+  z-index:3;
+  display:grid;
+  width:30px;
+  height:30px;
+  place-items:center;
+  border:2px solid #16202D;
+  border-radius:50%;
+  background:#2B74B8;
+  color:#FFFFFF;
+  box-shadow:0 3px 10px rgba(0,0,0,.35);
+  line-height:1;
+}
+#view-profile #avatarCam svg{
+  display:block;
+  width:13px;
+  height:13px;
+  flex:0 0 13px;
+}
+#view-profile #avatarCam:hover{
+  background:#316282;
+  border-color:#66C0F4;
+  color:#FFFFFF;
+}
+
+
+
+/* Profile personal-information panel: enforce Steam Dark styling around the form. */
+#view-profile .account-panel:has(#profileForm){
+  background:#16202D;
+  background-color:#16202D;
+  border:1px solid #2A475E;
+  color:#C7D5E0;
+  box-shadow:0 8px 24px rgba(0,0,0,.22);
+}
+#view-profile .account-panel:has(#profileForm) h3{
+  color:#FFFFFF;
+}
+#view-profile .account-panel:has(#profileForm) p,
+#view-profile .account-panel:has(#profileForm) .label{
+  color:#C7D5E0;
+}
+#view-profile .account-panel:has(#profileForm) .text-emerald-700,
+#view-profile .account-panel:has(#profileForm) .text-slate-500{
+  color:#8F98A0;
+}
+#profileForm label{
+  display:block;
+}
+#profileForm .label{
+  display:block;
+  margin-bottom:6px;
+  font-size:12px;
+  font-weight:600;
+}
+#profileForm input,
+#profileForm select,
+#profileForm textarea{
+  display:block;
+  min-height:42px;
+  padding:10px 12px;
+  font:inherit;
+  font-size:13px;
+}
+#profileForm textarea{
+  min-height:90px;
+  resize:vertical;
+}
+#profileForm select{
+  color-scheme:dark;
+}
+#profileForm button.brand-gradient{
+  min-height:44px;
+  font-size:12px;
+  cursor:pointer;
+}
+
+/* Seller chat product draft banner: Steam Dark Slate & Steel Blue */
+#sellerChatProductBanner.seller-chat-draft-product{
+  background:linear-gradient(110deg,#171A21 0%,#16202D 62%,#203244 100%);
+  border:1px solid #2A475E;
+  color:#C7D5E0;
+  box-shadow:0 6px 18px rgba(0,0,0,.22);
+}
+#sellerChatProductBanner .seller-chat-draft-thumb{
+  background:#101822;
+  border:1px solid #2A475E;
+  color:#66C0F4;
+}
+#sellerChatProductBanner .seller-chat-draft-thumb img{
+  display:block;
+  background:#101822;
+}
+#sellerChatProductBanner .seller-chat-draft-meta small{
+  color:#8F98A0;
+}
+#sellerChatProductBanner .seller-chat-draft-meta b{
+  color:#FFFFFF;
+}
+#sellerChatProductBanner .seller-chat-draft-meta strong{
+  color:#66C0F4;
+}
+#sellerChatProductBanner .seller-chat-draft-close{
+  border:1px solid #2A475E;
+  background:#203244;
+  color:#8F98A0;
+}
+#sellerChatProductBanner .seller-chat-draft-close:hover,
+#sellerChatProductBanner .seller-chat-draft-close:focus-visible{
+  border-color:#B65A6B;
+  background:#3A2630;
+  color:#F08A9A;
+  outline:none;
+}
+
+/* Seller chat inbox items — transparent Steam Dark style */
+#sellerChatInboxList .seller-chat-inbox-item {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  color: rgb(199, 213, 224);
+  transition: border-color .18s ease;
+}
+#sellerChatInboxList .seller-chat-inbox-item:hover {
+  background: transparent;
+  border-color: #66C0F4;
+}
+#sellerChatInboxList .seller-chat-inbox-item.active {
+  background: transparent;
+  border-color: #66C0F4;
+  box-shadow: inset 3px 0 0 #66C0F4;
+}
+#sellerChatInboxList .seller-chat-inbox-item.unread {
+  background: transparent;
+  border-color: #326082;
+}
+#sellerChatInboxList .seller-chat-inbox-item b {
+  color: #FFFFFF;
+}
+#sellerChatInboxList .seller-chat-inbox-item small {
+  color: #8F98A0;
+}
+#sellerChatInboxList .seller-chat-inbox-item img {
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* Full-name field in the profile editor */
+#profileForm #profileName {
+  width: 100%;
+  min-height: 42px;
+  padding: 11px 13px;
+  border: 1px solid #2A475E;
+  border-radius: 12px;
+  background: #101822;
+  color: #FFFFFF;
+  caret-color: #66C0F4;
+  outline: none;
+  transition: border-color .2s ease, box-shadow .2s ease, background-color .2s ease;
+}
+#profileForm #profileName:focus {
+  background: #101822;
+  border-color: #66C0F4;
+  color: #FFFFFF;
+  box-shadow: 0 0 0 3px rgba(102,192,244,.13);
+}
+
+/* Blend homepage layout wrappers into the Steam Dark page background */
+#view-home,
+#view-home .home-layout-shell,
+#view-home .amazon-store-body,
+#view-home .shell,
+#view-home .home-layout-shell.shell,
+#view-home .amazon-store-body.shell {
+  background: transparent;
+  background-color: transparent;
+  background-image: none;
+  color: #C7D5E0;
+  box-shadow: none;
+}
+
+/* Empty-home panel: match the requested light dashed surface */
+#emptyHome {
+  border-width: 1px;
+  border-style: dashed;
+  border-color: rgb(210, 210, 215);
+  border-image: none;
+  border-radius: 20px;
+  background: rgb(255, 255, 255);
+}
+
+/* Product rating summary: Steam Dark Slate & Steel Blue */
+#view-product .product-rating-summary {
+  background: #16202D;
+  border-color: #2A475E;
+  color: #C7D5E0;
+  box-shadow: none;
+}
+#view-product .product-rating-summary > strong {
+  color: #FFFFFF;
+}
+#view-product .product-rating-summary > p {
+  color: #8F98A0;
+}
+
+/* Product seller metrics — Steam Dark Theme */
+.product-seller-metrics {
+  color: #C7D5E0;
+}
+.product-seller-metrics > div {
+  background: #16202D;
+  border: 1px solid #2A475E;
+  border-radius: 12px;
+}
+.product-seller-metrics b {
+  color: #FFFFFF;
+}
+.product-seller-metrics small {
+  color: #8F98A0;
+}
+
+/* Product reviews + compact buyer safety side-by-side layout */
+#view-product .product-trust-reviews-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(230px, 290px);
+  align-items: start;
+  gap: 16px;
+  margin-top: 18px;
+}
+#view-product .product-trust-reviews-grid > .product-reviews {
+  min-width: 0;
+  margin: 0;
+  padding: 20px;
+  border: 1px solid #2A475E;
+  border-radius: 16px;
+  background: #16202D;
+  color: #C7D5E0;
+  box-shadow: none;
+}
+#view-product .product-trust-reviews-grid .product-reviews h2,
+#view-product .product-trust-reviews-grid .product-reviews .product-review-heading b {
+  color: #FFFFFF;
+}
+#view-product .product-trust-reviews-grid .product-reviews > div > span,
+#view-product .product-trust-reviews-grid .product-reviews .product-rating-summary p,
+#view-product .product-trust-reviews-grid .product-reviews .product-empty-note {
+  color: #8F98A0;
+}
+#view-product .product-trust-reviews-grid .product-safety-note {
+  min-width: 0;
+  margin: 0;
+  padding: 15px;
+  border: 1px solid #2A475E;
+  border-radius: 16px;
+  background: #16202D;
+  color: #C7D5E0;
+  box-shadow: none;
+}
+#view-product .product-trust-reviews-grid .product-safety-note h2 {
+  color: #FFFFFF;
+  font-size: 13px;
+  line-height: 1.5;
+}
+#view-product .product-trust-reviews-grid .product-safety-note ul {
+  display: grid;
+  gap: 9px;
+  margin-top: 11px;
+}
+#view-product .product-trust-reviews-grid .product-safety-note li {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  color: #C7D5E0;
+  font-size: 10px;
+  line-height: 1.65;
+}
+#view-product .product-trust-reviews-grid .product-safety-note li svg {
+  flex: 0 0 15px;
+  margin-top: 1px;
+  color: #66C0F4;
+}
+@media (max-width: 900px) {
+  #view-product .product-trust-reviews-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+  #view-product .product-trust-reviews-grid .product-safety-note {
+    padding: 15px;
+  }
+}
+
+
+/* Seller Center — Steam Dark Slate & Steel Blue */
+#view-seller .overflow-hidden.rounded-3xl.bg-white.soft-shadow{
+  overflow:hidden;
+  border:1px solid #2A475E;
+  border-radius:20px;
+  background:#16202D;
+  box-shadow:0 12px 32px rgba(0,0,0,.22);
+}
+#view-seller .seller-tabs{
+  border-bottom:1px solid #2A475E;
+  background:#171A21;
+  scrollbar-color:#2A475E #171A21;
+}
+#view-seller .seller-tab{color:#8F98A0}
+#view-seller .seller-tab:hover{background:#203244;color:#C7D5E0}
+#view-seller .seller-tab.is-active{border-bottom-color:#66C0F4;color:#fff}
+#view-seller .seller-tab-count{background:#203244;color:#66C0F4}
+#view-seller .seller-tab-panel{background:#16202D;color:#C7D5E0}
+#view-seller .seller-search{
+  border-color:#2A475E;
+  background:#101822;
+  color:#8F98A0;
+}
+#view-seller .seller-search:focus-within{border-color:#66C0F4;box-shadow:0 0 0 2px rgba(102,192,244,.12)}
+#view-seller .seller-search input{color:#C7D5E0}
+#view-seller .seller-search input::placeholder{color:#8F98A0}
+#view-seller .seller-filter{
+  border-color:#2A475E;
+  background:#203244;
+  color:#8F98A0;
+}
+#view-seller .seller-filter:hover{border-color:#66C0F4;color:#C7D5E0}
+#view-seller .seller-filter.is-active{
+  border-color:#66C0F4;
+  background:rgba(102,192,244,.13);
+  color:#66C0F4;
+}
+#view-seller .seller-add-button{
+  border:1px solid #66C0F4;
+  background:#2B74B8;
+  color:#fff;
+  box-shadow:0 5px 16px rgba(43,116,184,.2);
+}
+#view-seller .seller-add-button:hover{background:#3688cf}
+#view-seller .seller-table-wrap,
+#view-seller .seller-list-rows{border-color:#2A475E;background:#16202D}
+#view-seller .seller-table-head{background:#203244;color:#8F98A0}
+#view-seller .seller-product-row,
+#view-seller .seller-transaction-row{border-color:#2A475E}
+#view-seller .seller-product-row:hover,
+#view-seller .seller-transaction-row:hover{background:#203244}
+#view-seller .seller-product-thumb{border-color:#2A475E;background:#101822;color:#8F98A0}
+#view-seller .seller-product-copy b,
+#view-seller .seller-transaction-main b,
+#view-seller .seller-list-heading h3{color:#fff}
+#view-seller .seller-product-copy small,
+#view-seller .seller-transaction-main small,
+#view-seller .seller-transaction-contact small{color:#8F98A0}
+#view-seller .seller-product-price,
+#view-seller .seller-transaction-price{color:#66C0F4}
+#view-seller .seller-product-metrics,
+#view-seller .seller-transaction-contact{color:#C7D5E0}
+#view-seller .seller-status-badge.is-active{background:rgba(190,238,17,.13);color:#BEEE11}
+#view-seller .seller-status-badge.is-expired{background:rgba(235,87,87,.13);color:#F28B82}
+#view-seller .seller-status-badge.is-sold,
+#view-seller .seller-status-badge.is-muted{background:#203244;color:#8F98A0}
+#view-seller .seller-status-badge.is-pending{background:rgba(255,190,70,.13);color:#F5C46B}
+#view-seller .seller-validity{color:#8F98A0}
+#view-seller .seller-expiry-warning{color:#F5C46B}
+#view-seller .seller-action-button{
+  border-color:#2A475E;
+  background:#203244;
+  color:#C7D5E0;
+}
+#view-seller .seller-action-button:hover{
+  transform:translateY(-1px);
+  border-color:#66C0F4;
+  background:#29445D;
+  color:#fff;
+}
+#view-seller .seller-action-button.is-renew,
+#view-seller .seller-action-button.is-complete{
+  border-color:rgba(190,238,17,.35);
+  background:rgba(190,238,17,.1);
+  color:#BEEE11;
+}
+#view-seller .seller-action-button.is-delete{
+  border-color:rgba(242,139,130,.3);
+  background:rgba(242,139,130,.09);
+  color:#F28B82;
+}
+#view-seller .seller-list-heading p,
+#view-seller .seller-empty-state,
+#view-seller .seller-empty-state svg{color:#8F98A0}
+#view-seller .seller-empty-state b{color:#C7D5E0}
+#view-seller .seller-shop-form,
+#view-seller .seller-media-form{
+  border-color:#2A475E;
+  border-radius:16px;
+  background:#16202D;
+  color:#C7D5E0;
+}
+#view-seller .seller-shop-cover-preview{
+  border-color:#2A475E;
+  background:#101822;
+  color:#8F98A0;
+}
+#view-seller .seller-shop-logo-preview{
+  border-color:#2A475E;
+  background:#101822;
+  color:#8F98A0;
+}
+#view-seller .seller-tab-panel .label{color:#C7D5E0}
+#view-seller .seller-tab-panel .field{
+  border-color:#2A475E;
+  background:#101822;
+  color:#C7D5E0;
+}
+#view-seller .seller-tab-panel .field::placeholder{color:#8F98A0}
+#view-seller .seller-tab-panel .field:focus{
+  border-color:#66C0F4;
+  box-shadow:0 0 0 2px rgba(102,192,244,.12);
+}
+#view-seller .seller-tab-panel option{background:#16202D;color:#C7D5E0}
+#view-seller #sellerMediaClose{
+  border-color:rgba(242,139,130,.3);
+  background:rgba(242,139,130,.09);
+  color:#F28B82;
+}
+#view-seller #sellerMediaStatus,
+#view-seller .seller-tab-panel small{color:#8F98A0}
+@media(max-width:639px){
+  #view-seller .seller-product-actions{border-color:#2A475E}
+  #view-seller .seller-transaction-actions{border-color:#2A475E}
+}
+
+/* Seller shop profile form — Steam Dark refinements */
+#view-seller #sellerShopProfileForm{
+  background:#16202D;
+  border:1px solid #2A475E;
+  border-radius:16px;
+  color:#C7D5E0;
+}
+#view-seller #sellerShopProfileForm .label{
+  color:#C7D5E0;
+}
+#view-seller #sellerShopProfileForm .field{
+  border:1px solid #2A475E;
+  border-radius:10px;
+  background:#101822;
+  color:#C7D5E0;
+}
+#view-seller #sellerShopProfileForm .field::placeholder{
+  color:#8F98A0;
+}
+#view-seller #sellerShopProfileForm .field:focus{
+  border-color:#66C0F4;
+  outline:none;
+  box-shadow:0 0 0 2px rgba(102,192,244,.14);
+}
+#view-seller #sellerShopProfileForm input[type="file"]::file-selector-button{
+  margin-right:10px;
+  padding:7px 12px;
+  border:1px solid #3D6687;
+  border-radius:8px;
+  background:#203244;
+  color:#C7D5E0;
+  cursor:pointer;
+}
+#view-seller #sellerShopProfileForm input[type="file"]::file-selector-button:hover{
+  background:#2A475E;
+  color:#FFFFFF;
+}
+#view-seller #sellerShopCoverPreview,
+#view-seller #sellerShopLogoPreview{
+  border-color:#2A475E;
+  background:#101822;
+  color:#8F98A0;
+}
+#view-seller #sellerShopSave{
+  border:1px solid #3D8BC5;
+  background:#2B74B8;
+  color:#FFFFFF;
+  box-shadow:none;
+}
+#view-seller #sellerShopSave:hover{
+  background:#3689CE;
+  border-color:#66C0F4;
+}
+/* Mobile chat navigation icon — Steam Blue */
+.mobile-market-item[data-action="open-chat"] [data-nav-icon="chat"] {
+  color: #66C0F4;
+}
+
+/* Support chat launcher: center its icon and add a subtle Steam-blue glow. */
+#supportChatLauncher {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  line-height: 1;
+  isolation: isolate;
+}
+
+#supportChatLauncher::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  z-index: -1;
+  border: 1px solid rgba(102, 192, 244, .38);
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+  animation: supportChatLauncherGlow 3s ease-out infinite;
+}
+
+@keyframes supportChatLauncherGlow {
+  0% {
+    transform: scale(.92);
+    opacity: .55;
+  }
+  70%, 100% {
+    transform: scale(1.24);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #supportChatLauncher::after {
+    animation: none;
+  }
+}
+
+/* Sky utility cleanup — keep these elements transparent and aligned with the dark theme. */
+.bg-sky-50{
+  background-color:transparent!important;
+  color:#66C0F4!important;
+  border-color:rgba(102,192,244,.35)!important;
+}
+
+/* Profile cover upload control — transparent Steam Dark style */
+#view-profile .cover label:has(#coverUpload){
+  background:transparent!important;
+  color:#C7D5E0!important;
+  border:1px solid rgba(102,192,244,.35);
+  box-shadow:none!important;
+  transition:color .2s ease,border-color .2s ease,background-color .2s ease;
+}
+#view-profile .cover label:has(#coverUpload) svg{
+  color:#66C0F4;
+}
+#view-profile .cover label:has(#coverUpload):hover{
+  background:rgba(102,192,244,.10)!important;
+  border-color:#66C0F4;
+  color:#FFFFFF!important;
+}
+
+/* Editable profile badge — transparent Steam Dark theme */
+.account-panel > div.mb-5 > span.rounded-full.bg-slate-100 {
+  background: transparent !important;
+  color: #66C0F4 !important;
+  border: 1px solid rgba(102, 192, 244, .35);
+}
+
+/* Profile activity tabs — transparent Steam Dark style with blue active state */
+#view-profile .account-panel .tab {
+  background: transparent !important;
+  color: #8F98A0 !important;
+  border: 1px solid transparent !important;
+  transition: background .2s ease, color .2s ease, border-color .2s ease;
+}
+#view-profile .account-panel .tab:hover {
+  background: rgba(102, 192, 244, .10) !important;
+  color: #66C0F4 !important;
+  border-color: rgba(102, 192, 244, .25) !important;
+}
+#view-profile .account-panel .tab.active,
+#view-profile .account-panel .tab.is-active {
+  background: #203244 !important;
+  color: #66C0F4 !important;
+  border-color: rgba(102, 192, 244, .35) !important;
+}
+
+/* Top profile action button — reset legacy utility styles, then apply Steam Dark styling */
+#view-profile #profileApplyTop {
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: .25rem;
+  padding: .625rem 1.25rem;
+  border: 1px solid #66C0F4;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #316282, #3D83B5);
+  color: #FFFFFF;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.5;
+  text-align: center;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(43, 116, 184, .18);
+  transition: background .2s ease, border-color .2s ease, transform .2s ease;
+}
+#view-profile #profileApplyTop:hover {
+  background: linear-gradient(135deg, #3D83B5, #66C0F4);
+  border-color: #8AD2FF;
+}
+#view-profile #profileApplyTop:active {
+  transform: scale(.985);
+}
+#view-profile #profileApplyTop:focus-visible {
+  outline: 2px solid #66C0F4;
+  outline-offset: 3px;
+}
+
+/* Seller Center — Amazon-style vertical navigation sidebar in Steam Dark theme */
+#view-seller .overflow-hidden.rounded-3xl.bg-white.soft-shadow:has(> .seller-tabs) {
+  display: grid;
+  grid-template-columns: 244px minmax(0, 1fr);
+  grid-template-rows: minmax(520px, auto);
+  align-items: stretch;
+}
+#view-seller .seller-tabs {
+  grid-column: 1;
+  grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 5px;
+  width: 100%;
+  min-width: 0;
+  padding: 16px 12px;
+  overflow: visible;
+  background: #101822 !important;
+  border-right: 1px solid #2A475E !important;
+  border-bottom: 0 !important;
+}
+#view-seller .seller-tabs .seller-tab {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 11px;
+  width: 100%;
+  min-height: 48px;
+  padding: 11px 13px;
+  border: 1px solid transparent !important;
+  border-radius: 10px;
+  background: transparent !important;
+  color: #8F98A0 !important;
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.5;
+  text-align: left;
+  white-space: normal;
+  transition: color .2s ease, background .2s ease, border-color .2s ease, transform .2s ease;
+}
+#view-seller .seller-tabs .seller-tab > span {
+  display: inline-flex;
+  flex: 0 0 20px;
+  align-items: center;
+  justify-content: center;
+  color: currentColor;
+}
+#view-seller .seller-tabs .seller-tab > span svg {
+  display: block;
+  width: 18px;
+  height: 18px;
+}
+#view-seller .seller-tabs .seller-tab:hover {
+  background: rgba(102, 192, 244, .09) !important;
+  border-color: rgba(102, 192, 244, .18) !important;
+  color: #66C0F4 !important;
+}
+#view-seller .seller-tabs .seller-tab.is-active {
+  background: rgba(102, 192, 244, .13) !important;
+  border-color: rgba(102, 192, 244, .30) !important;
+  box-shadow: inset 3px 0 0 #66C0F4;
+  color: #66C0F4 !important;
+}
+#view-seller .seller-tabs .seller-tab-count {
+  display: inline-flex;
+  min-width: 22px;
+  height: 22px;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+  padding: 0 6px;
+  border: 1px solid rgba(102, 192, 244, .22);
+  border-radius: 999px;
+  background: #203244 !important;
+  color: #C7D5E0 !important;
+  font-size: 10px;
+  font-weight: 800;
+}
+#view-seller .seller-tabs ~ .seller-tab-panel {
+  grid-column: 2;
+  grid-row: 1;
+  min-width: 0;
+  width: 100%;
+  background: #16202D;
+  color: #C7D5E0;
+}
+@media (max-width: 760px) {
+  #view-seller .overflow-hidden.rounded-3xl.bg-white.soft-shadow:has(> .seller-tabs) {
+    display: flex;
+    flex-direction: column;
+  }
+  #view-seller .seller-tabs {
+    flex-direction: row;
+    gap: 5px;
+    padding: 10px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    border-right: 0 !important;
+    border-bottom: 1px solid #2A475E !important;
+    scrollbar-width: thin;
+    scrollbar-color: #3D6687 transparent;
+  }
+  #view-seller .seller-tabs .seller-tab {
+    flex: 0 0 auto;
+    width: auto;
+    min-height: 43px;
+    padding: 9px 12px;
+    white-space: nowrap;
+  }
+  #view-seller .seller-tabs .seller-tab.is-active {
+    box-shadow: inset 0 -2px 0 #66C0F4;
+  }
+  #view-seller .seller-tabs ~ .seller-tab-panel {
+    width: 100%;
+  }
+}
+
+
