@@ -1261,7 +1261,7 @@ function renderProducts() {
     return true;
   });
   const getSortPrice = (item) => {
-    const rawPrice = item.price_label ?? item.price ?? '';
+    const rawPrice = item.price_label ?? item.display_price ?? item.price ?? '';
     const match = String(rawPrice).replace(/,/g, '').match(/-?\d+(?:\.\d+)?/);
     return match ? Number(match[0]) : Number.POSITIVE_INFINITY;
   };
@@ -1363,6 +1363,9 @@ function updateMarketplaceCategoryHeading() {
 }
 
 function setCategory(category) {
+  state.activeSpecFilters = {};
+  state.specPriceMin = '';
+  state.specPriceMax = '';
   state.activeCategory = category;
   if (category !== 'all') state.activeListingType = 'product';
   updateMarketplaceCategoryHeading();
@@ -1373,6 +1376,9 @@ function setCategory(category) {
 }
 
 function setListingType(type) {
+  state.activeSpecFilters = {};
+  state.specPriceMin = '';
+  state.specPriceMax = '';
   state.activeListingType = ['all','product','job','real_estate'].includes(type) ? type : 'all';
   state.activeCategory = 'all';
   state.activePropertyType = 'all';
@@ -1755,7 +1761,7 @@ function renderProductDetail() {
           <span class="product-category-badge">${esc(CATEGORIES[p.category] || p.category || 'ទំនិញ')}</span>
           <span class="product-meta-item">${ic('clock', 14)} ${fmtDate(p.created_at)}</span>
           <span class="product-meta-item">${ic('eye', 14)} ${Number(p.view_count || 0).toLocaleString()} Views</span>
-          <span class="product-meta-item product-detail-id"><span>Product ID</span><code>${esc(displayProductCode(p))}</code><button type="button" data-copy-product-code="${esc(displayProductCode(p))}" aria-label="ចម្លង Product ID" title="ចម្លង Product ID">${ic('clipboard', 12)}</button></span>
+          <span class="product-meta-item product-detail-id"><span>Product ID</span><code>${esc(selectedVariant?.sku || displayProductCode(p))}</code><button type="button" data-copy-product-code="${esc(selectedVariant?.sku || displayProductCode(p))}" aria-label="ចម្លង Product ID" title="ចម្លង Product ID">${ic('clipboard', 12)}</button></span>
         </div>
 
         <div class="product-heading-block">
@@ -1959,9 +1965,9 @@ function renderProductDetail() {
       if (kind === 'save') saveAction(p.id, btn);
       if (kind === 'offer') {
         if (!requireLogin()) return;
-        state.currentOfferProduct = p;
-        $('offerProductName').textContent = `${p.title} · ${money(p.price)}`;
-        $('offerAmount').value = p.price;
+        state.currentOfferProduct = {...p, price: effectivePrice, variant_id: selectedVariant?.id || null};
+        $('offerProductName').textContent = `${p.title} · ${money(effectivePrice)}`;
+        $('offerAmount').value = effectivePrice;
         openModal('offerModal');
       }
       if (kind === 'chat') void startBuyerSellerChat(p.id);
