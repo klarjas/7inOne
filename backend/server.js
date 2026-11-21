@@ -3200,6 +3200,126 @@ app.patch('/api/admin/vendors/:id', authenticate, requireAdmin, async (req, res)
   }
   res.json({ data });
 });
+// Admin-only supplier product workspace. Supplier metadata never enters publicProduct responses.
+app.get('/api/admin/supplier-products', authenticate, requireAdmin, async (_req, res) => {
+  const { data: products, error } = await supabase.from('products')
+    .select('*,vendors(store_name,status),product_images(id,file_id,image_url,sort_order),product_variants(*)')
+    .order('created_at', { ascending: false });
+  if (error) return fail(res, 500, 'Could not load supplier products');
+  const ids = (products || []).map(product => product.id);
+  let sources = [];
+  let details = [];
+  if (ids.length) {
+    const [sourceResult, detailResult] = await Promise.all([
+      supabase.from('product_supplier_sources').select('*').in('product_id', ids),
+      supabase.from('product_listing_details').select('*').in('product_id', ids)
+    ]);
+    if (sourceResult.error) return fail(res, 500, 'Could not load supplier metadata');
+    if (detailResult.error) return fail(res, 500, 'Could not load product specifications');
+    sources = sourceResult.data || [];
+    details = detailResult.data || [];
+  }
+  const sourceById = new Map(sources.map(row => [row.product_id, row]));
+  const detailById = new Map(details.map(row => [row.product_id, row]));
+  res.json({ data: (products || []).map(product => ({
+    ...publicProduct(product),
+    supplier_source: sourceById.get(product.id) || null,
+    listing_details: detailById.get(product.id) || null,
+    product_variants: product.product_variants || []
+  })) });
+});
+
+app.put('/api/admin/supplier-products/:id/source', authenticate, requireAdmin, async (req, res) => {
+  const productId = clean(req.params.id, 64);
+  const supplierName = clean(req.body.supplier_name, 120);
+  const supplierUrl = clean(req.body.supplier_url, 1000);
+  const supplierCode = clean(req.body.supplier_product_code, 120);
+  const supplierPrice = Number(req.body.supplier_price);
+  if (!Number.isFinite(supplierPrice) || supplierPrice < 0) return fail(res, 400, 'Invalid supplier price');
+  if (supplierUrl && !/^https?:\/\//i.test(supplierUrl)) return fail(res, 400, 'Supplier URL must be http or https');
+  const { data: product, error: productError } = await supabase.from('products').select('id').eq('id', productId).maybeSingle();
+  if (productError) return fail(res, 500, 'Could not verify product');
+  if (!product) return fail(res, 404, 'Product not found');
+  const payload = {
+    product_id: productId, supplier_name: supplierName, supplier_url: supplierUrl,
+    supplier_price: supplierPrice, supplier_product_code: supplierCode,
+    notes: clean(req.body.notes, 2000), updated_at: new Date().toISOString()
+  };
+  const { data, error } = await supabase.from('product_supplier_sources')
+    .upsert(payload, { onConflict: 'product_id' }).select().single();
+  if (error) return fail(res, 400, 'Could not save supplier metadata');
+  res.json({ data });
+});
+
+app.put('/api/admin/supplier-products/:id/details', authenticate, requireAdmin, async (req, res) => {
+  const productId = clean(req.params.id, 64);
+  const { data: product, error: productError } = await supabase.from('products').select('id').eq('id', productId).maybeSingle();
+  if (productError) return fail(res, 500, 'Could not verify product');
+  if (!product) return fail(res, 404, 'Product not found');
+  const payload = {
+    product_id: productId,
+    category: clean(req.body.category, 80),
+    subcategory: clean(req.body.subcategory, 80),
+    detail_type: clean(req.body.detail_type, 80),
+    specifications: req.body.specifications && typeof req.body.specifications === 'object' && !Array.isArray(req.body.specifications) ? req.body.specifications : {},
+    updated_at: new Date().toISOString()
+  };
+  const { data, error } = await supabase.from('product_listing_details')
+    .upsert(payload, { onConflict: 'product_id' }).select().single();
+  if (error) return fail(res, 400, 'Could not save product specifications');
+  res.json({ data });
+});
+
+app.post('/api/admin/supplier-products/:id/variants', authenticate, requireAdmin, async (req, res) => {
+  const productId = clean(req.params.id, 64);
+  const optionValue = clean(req.body.option_value, 160);
+  const sku = clean(req.body.sku, 120);
+  const price = Number(req.body.price);
+  const stock = Number(req.body.stock ?? 0);
+  if (!optionValue || !Number.isFinite(price) || price < 0 || !Number.isInteger(stock) || stock < 0) return fail(res, 400, 'Invalid variant details');
+  const { data: product, error: productError } = await supabase.from('products').select('id').eq('id', productId).maybeSingle();
+  if (productError) return fail(res, 500, 'Could not verify product');
+  if (!product) return fail(res, 404, 'Product not found');
+  const payload = {
+    product_id: productId, sku, option_name: clean(req.body.option_name || 'Storage', 80),
+    option_value: optionValue, price, stock,
+    attributes: req.body.attributes && typeof req.body.attributes === 'object' && !Array.isArray(req.body.attributes) ? req.body.attributes : {},
+    is_active: req.body.is_active !== false, sort_order: Number.isInteger(Number(req.body.sort_order)) ? Number(req.body.sort_order) : 0,
+    updated_at: new Date().toISOString()
+  };
+  const { data, error } = await supabase.from('product_variants').insert(payload).select().single();
+  if (error) return fail(res, 400, 'Could not create product variant');
+  res.status(201).json({ data });
+});
+
+app.patch('/api/admin/supplier-products/:id/variants/:variantId', authenticate, requireAdmin, async (req, res) => {
+  const patch = {};
+  for (const key of ['sku','option_name','option_value']) if (req.body[key] !== undefined) patch[key] = clean(req.body[key], key === 'option_value' ? 160 : 120);
+  if (req.body.price !== undefined) patch.price = Number(req.body.price);
+  if (req.body.stock !== undefined) patch.stock = Number(req.body.stock);
+  if (req.body.is_active !== undefined) patch.is_active = Boolean(req.body.is_active);
+  if (req.body.sort_order !== undefined) patch.sort_order = Number(req.body.sort_order);
+  if (req.body.attributes !== undefined && req.body.attributes && typeof req.body.attributes === 'object' && !Array.isArray(req.body.attributes)) patch.attributes = req.body.attributes;
+  if (patch.price !== undefined && (!Number.isFinite(patch.price) || patch.price < 0)) return fail(res, 400, 'Invalid variant price');
+  if (patch.stock !== undefined && (!Number.isInteger(patch.stock) || patch.stock < 0)) return fail(res, 400, 'Invalid variant stock');
+  if (patch.option_value !== undefined && !patch.option_value.trim()) return fail(res, 400, 'Variant option is required');
+  if (!Object.keys(patch).length) return fail(res, 400, 'No valid variant fields supplied');
+  patch.updated_at = new Date().toISOString();
+  const { data, error } = await supabase.from('product_variants').update(patch)
+    .eq('id', clean(req.params.variantId, 64)).eq('product_id', clean(req.params.id, 64)).select().maybeSingle();
+  if (error) return fail(res, 400, 'Could not update product variant');
+  if (!data) return fail(res, 404, 'Variant not found');
+  res.json({ data });
+});
+
+app.delete('/api/admin/supplier-products/:id/variants/:variantId', authenticate, requireAdmin, async (req, res) => {
+  const { data, error } = await supabase.from('product_variants').delete()
+    .eq('id', clean(req.params.variantId, 64)).eq('product_id', clean(req.params.id, 64)).select('id').maybeSingle();
+  if (error) return fail(res, 400, 'Could not delete product variant');
+  if (!data) return fail(res, 404, 'Variant not found');
+  res.json({ success: true });
+});
+
 app.get('/api/admin/products', authenticate, requireAdmin, async (_req, res) => {
   const { data, error } = await supabase.from('products').select('*,vendors(store_name,status),product_images(id,file_id,image_url,sort_order)').order('created_at', { ascending: false });
   if (error) return fail(res, 500, 'Could not load products');
