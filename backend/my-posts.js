@@ -202,7 +202,6 @@ export function registerMyPostsRoutes(app, {
         const { error:updateError } = await supabase.from(source.table).update({ status:'archived', expires_at:nowIso(), updated_at:nowIso() }).eq('id',id).eq('user_id',req.user.id);
         if (updateError) throw updateError;
       } else if (action === 'edit') {
-      } else if (action === 'edit') {
         const patch = {};
         let uploadedListingImages = [];
         let removedListingImages = [];
