@@ -3288,25 +3288,30 @@ function renderSupplierImportResults(result, catalogUrl) {
   if (!target) return;
   const items = result.data || [];
   const summary = result.summary || {};
-  target.innerHTML = '<div class="mb-3 rounded-xl bg-slate-100 p-3 text-[11px]">រកឃើញ '+Number(summary.total||0)+' ផលិតផល · អាចនាំចូល '+Number(summary.ready||0)+' · ស្ទួន '+Number(summary.duplicate||0)+' · ត្រូវពិនិត្យបន្ថែម '+Number(summary.needs_review||0)+'</div>' +
+  const page = result.pagination || {};
+  target.innerHTML = '<div class="mb-3 rounded-xl bg-slate-100 p-3 text-[11px]">រកឃើញសរុប '+Number(summary.total||0)+' ផលិតផល · បង្ហាញ '+Number(summary.batch||items.length)+' មុខ · អាចនាំចូល '+Number(summary.ready||0)+' · ស្ទួន '+Number(summary.duplicate||0)+' · ត្រូវពិនិត្យ '+Number(summary.needs_review||0)+'</div>' +
     (items.length ? '<div class="space-y-2">'+items.map(item => {
       const statusLabel = item.status === 'duplicate' ? 'មានរួចហើយ' : item.status === 'ready' ? 'អាចនាំចូល' : 'មិនទាន់ផ្ទៀងផ្ទាត់';
       const statusClass = item.status === 'ready' ? 'text-emerald-700' : item.status === 'duplicate' ? 'text-amber-700' : 'text-rose-700';
+      const specs = item.specifications || {};
+      const attrs = [item.category || 'computers', item.detail_type || item.subcategory || '', specs.color ? 'ពណ៌: '+specs.color : '', specs.weight ? 'ទម្ងន់: '+specs.weight : '', specs.battery ? 'ថ្ម: '+specs.battery : ''].filter(Boolean).join(' · ');
       return '<article class="rounded-xl border border-slate-200 p-3 text-[11px]"><div class="flex gap-3">'+
         (item.image_urls?.[0] ? '<img src="'+esc(item.image_urls[0])+'" alt="" class="h-16 w-16 rounded-lg object-cover">' : '<div class="grid h-16 w-16 place-items-center rounded-lg bg-slate-100">រូបភាព</div>')+
         '<div class="min-w-0 flex-1"><b class="block">'+esc(item.title||'មិនស្គាល់ឈ្មោះផលិតផល')+'</b><span class="text-slate-500">Code: '+esc(item.supplier_product_code)+'</span>'+
+        '<div class="mt-1 text-slate-600">'+esc(attrs)+'</div>'+
         '<div class="mt-1">Supplier: <b>'+ (Number.isFinite(Number(item.supplier_price)) ? money(item.supplier_price) : 'មិនមានតម្លៃ')+'</b> → AURORA: <b>'+(Number.isFinite(Number(item.selling_price))?money(item.selling_price):'—')+'</b></div>'+
         '<div class="mt-1 '+statusClass+'">'+statusLabel+'</div></div></div>'+
         (item.status === 'ready' ? '<button type="button" class="mt-3 rounded-full bg-slate-900 px-4 py-2 font-bold text-white" data-supplier-import-code="'+esc(item.supplier_product_code)+'" data-supplier-import-price="'+Number(item.supplier_price)+'">នាំចូលផលិតផលនេះ</button>' : '')+
       '</article>';
-    }).join('')+'</div>' : '<p class="py-4 text-center text-slate-500">មិនបានរកឃើញផលិតផលដែលមាន Product Code ទេ។</p>');
+    }).join('')+'</div>' : '<p class="py-4 text-center text-slate-500">មិនបានរកឃើញផលិតផលក្នុងបាច់នេះទេ។</p>')+
+    (page.has_more ? '<div class="pt-3 text-center"><button type="button" class="rounded-full border border-slate-300 px-5 py-2.5 text-[11px] font-bold" data-supplier-import-next="'+Number(page.next_offset||0)+'">បង្ហាញផលិតផល ១០ មុខបន្ទាប់</button></div>' : '');
   target.dataset.catalogUrl = catalogUrl;
 }
-async function scanAuroraSupplierCatalog(url) {
+async function scanAuroraSupplierCatalog(url, offset = 0) {
   const target = $('adminSupplierImportResults');
   if (target) target.innerHTML = '<p class="py-5 text-center text-xs text-slate-500">កំពុងស្កេន និងផ្ទៀងផ្ទាត់ទិន្នន័យពី Supplier...</p>';
   try {
-    const result = await api('/api/admin/supplier-import/scan', { method: 'POST', body: JSON.stringify({ url }) });
+    const result = await api('/api/admin/supplier-import/scan', { method: 'POST', body: JSON.stringify({ url, offset }) });
     renderSupplierImportResults(result, url);
   } catch (error) {
     if (target) target.innerHTML = '<p class="py-4 text-center text-xs text-rose-600">'+esc(error.message||'មិនអាចស្កេនវេបសាយបានទេ។')+'</p>';
@@ -5626,9 +5631,15 @@ function bindEvents() {
     if (url) void scanAuroraSupplierCatalog(url);
   });
   $('adminSupplierImportResults')?.addEventListener('click', async event => {
+    const target = $('adminSupplierImportResults');
+    const nextButton = event.target.closest('[data-supplier-import-next]');
+    if (nextButton) {
+      const catalogUrl = target?.dataset.catalogUrl || '';
+      if (catalogUrl) await scanAuroraSupplierCatalog(catalogUrl, Number(nextButton.dataset.supplierImportNext || 0));
+      return;
+    }
     const button = event.target.closest('[data-supplier-import-code]');
     if (!button) return;
-    const target = $('adminSupplierImportResults');
     const catalogUrl = target?.dataset.catalogUrl || '';
     const code = button.dataset.supplierImportCode;
     const supplierPrice = Number(button.dataset.supplierImportPrice);
