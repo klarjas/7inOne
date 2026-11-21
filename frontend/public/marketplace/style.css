@@ -7505,3 +7505,268 @@ body > footer {
   display: block;
   flex: 0 0 auto;
 }
+
+
+/* Equal-height product cards keep seller and location rows aligned */
+.cd {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.cd .cb {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+.cd .sh {
+  margin-top: auto;
+}
+.cd .mt {
+  flex: 0 0 auto;
+}
+
+/* Dark shared confirmation and report dialog */
+.app-dialog-modal {
+  z-index: 260;
+  padding: 18px;
+  background: rgba(3, 10, 18, .78);
+  backdrop-filter: blur(8px);
+}
+.app-dialog-box {
+  width: min(100%, 440px);
+  padding: 22px;
+  border: 1px solid #2A475E;
+  border-radius: 18px;
+  background: #16202D;
+  color: #C7D5E0;
+  box-shadow: 0 24px 70px rgba(0,0,0,.5);
+}
+.app-dialog-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.app-dialog-icon {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  place-items: center;
+  border: 1px solid #2A475E;
+  border-radius: 12px;
+  background: #203244;
+  color: #66C0F4;
+}
+.app-dialog-heading h2 {
+  color: #F1F5F9;
+  font-size: 15px;
+  font-weight: 750;
+}
+.app-dialog-heading p {
+  margin-top: 5px;
+  color: #AAB8C7;
+  font-size: 11px;
+  line-height: 1.8;
+}
+.app-dialog-form {
+  display: grid;
+  gap: 16px;
+  margin-top: 18px;
+}
+.app-dialog-field {
+  display: grid;
+  gap: 7px;
+  color: #AAB8C7;
+  font-size: 11px;
+  font-weight: 650;
+}
+.app-dialog-field .field {
+  min-height: 100px;
+  resize: vertical;
+  border: 1px solid #2A475E;
+  border-radius: 11px;
+  background: #101822;
+  color: #E2E8F0;
+}
+.app-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+}
+.app-dialog-actions button {
+  min-height: 38px;
+  padding: 8px 15px;
+  border: 1px solid #2A475E;
+  border-radius: 10px;
+  color: #C7D5E0;
+  font-size: 11px;
+  font-weight: 700;
+}
+.app-dialog-cancel {
+  background: #101822;
+}
+.app-dialog-submit {
+  border-color: #2563A6 !important;
+  background: #2563A6;
+  color: #FFFFFF !important;
+}
+.app-dialog-submit.is-danger {
+  border-color: #9F3434 !important;
+  background: #9F3434;
+}
+
+/* Checkout payment selection */
+.app-checkout-box {
+  border: 1px solid #2A475E;
+  border-radius: 18px;
+  background: #16202D;
+  color: #C7D5E0;
+}
+.app-checkout-box h2 {
+  color: #F1F5F9;
+}
+.app-checkout-box .field {
+  border-color: #2A475E;
+  background: #101822;
+  color: #E2E8F0;
+}
+.checkout-payment-options {
+  display: grid;
+  gap: 8px;
+  border: 0;
+  padding: 0;
+}
+.checkout-payment-options legend {
+  margin-bottom: 8px;
+  color: #AAB8C7;
+  font-size: 11px;
+  font-weight: 750;
+}
+.checkout-payment-options label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 12px;
+  border: 1px solid #2A475E;
+  border-radius: 12px;
+  background: #101822;
+  cursor: pointer;
+}
+.checkout-payment-options input {
+  accent-color: #38BDF8;
+}
+.checkout-payment-options label span {
+  display: grid;
+  gap: 3px;
+}
+.checkout-payment-options b {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #E2E8F0;
+  font-size: 11px;
+}
+.checkout-payment-options small {
+  color: #8F98A0;
+  font-size: 9px;
+}
+.checkout-payment-note {
+  padding: 10px 12px;
+  border: 1px solid #66522B;
+  border-radius: 10px;
+  background: #2B261B;
+  color: #E8D4A2;
+  font-size: 10px;
+  line-height: 1.8;
+}
+#checkoutTotal {
+  color: #7DD3FC;
+}
+
+/* Buyer review form and star picker in the dark product detail theme */
+#productDetail .product-review-form {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+  padding: 15px;
+  border: 1px solid #2A475E;
+  border-radius: 14px;
+  background: #101822;
+}
+#productDetail .product-review-form h3 {
+  color: #E2E8F0;
+  font-size: 12px;
+  font-weight: 750;
+}
+#productDetail .product-review-form p,
+#productDetail .product-review-form label {
+  color: #AAB8C7;
+  font-size: 10px;
+  line-height: 1.7;
+}
+#productDetail .product-review-form label {
+  display: grid;
+  gap: 6px;
+}
+#productDetail .product-review-form .field {
+  border: 1px solid #2A475E;
+  border-radius: 10px;
+  background: #16202D;
+  color: #E2E8F0;
+}
+#productDetail .product-review-star-picker {
+  display: flex;
+  gap: 6px;
+}
+#productDetail .product-review-star-picker button {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 1px solid #2A475E;
+  border-radius: 9px;
+  background: #16202D;
+  color: #64748B;
+  font-size: 22px;
+}
+#productDetail .product-review-star-picker button.active {
+  border-color: #8A6B2C;
+  background: #332A19;
+  color: #FBBF24;
+}
+#productDetail .product-review-submit,
+#productDetail .product-review-gate button {
+  min-height: 38px;
+  padding: 9px 14px;
+  border: 1px solid #2563A6;
+  border-radius: 10px;
+  background: #203A50;
+  color: #D9F0FF;
+  font-size: 10px;
+  font-weight: 750;
+}
+#productDetail .product-review-submit:disabled {
+  opacity: .55;
+  cursor: wait;
+}
+#productDetail .product-review-gate {
+  margin-top: 14px;
+  padding: 12px;
+  border: 1px solid #2A475E;
+  border-radius: 12px;
+  background: #101822;
+}
+#productDetail .product-review-gate p {
+  color: #AAB8C7;
+  font-size: 10px;
+  line-height: 1.8;
+}
+#productDetail .product-review-gate button {
+  margin-top: 9px;
+}
+
+/* Keep the map iframe's loading surface dark until Google Maps paints */
+.detail-map-frame iframe {
+  background: #16202D;
+}
