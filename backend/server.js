@@ -3420,7 +3420,8 @@ function extractCcSupplierProducts(html, baseUrl) {
     const searchable = (title + ' ' + text).toLowerCase();
     const identitySearch = (title + ' ' + specs.slice(0, 5).join(' ')).toLowerCase();
     const titleSearch = title.toLowerCase();
-    const hasLaptopSpecs = /\b(?:cpu|processor)\s*:/i.test(text) && /\bram\s*:/i.test(text) && /\b(?:display|\d{1,2}(?:\.\d)?[- ]?inch|screen)\b/i.test(text);
+    const hasLaptopSpecs = /\\b(?:cpu|processor)\\s*:/i.test(text) && /\\bram\\s*:/i.test(text) && /\\b(?:display|\\d{1,2}(?:\\.\\d)?[- ]?inch|screen)\\b/i.test(text)
+      || /\\b(?:intel(?:®)?\\s+core|amd\\s+ryzen)\\b/i.test(text) && /\\bram\\s*:/i.test(text) && /\\b\\d{1,2}(?:\\.\\d)?[- ]?inch\\b/i.test(text);
     const pickSpec = pattern => specs.find(line => pattern.test(line)) || '';
     const colorLine = pickSpec(/(?:color|colour|ពណ៌)\s*:/i) || specs.find(line => /\b(gentle grey|cool silver|quiet blue|black|white|silver|grey|gray|blue|red|green)\b/i.test(line)) || '';
     const weightLine = pickSpec(/(?:weight|ទម្ងន់)\s*:/i) || specs.find(line => /\b\d+(?:\.\d+)?\s?kg\b/i.test(line)) || '';
@@ -3437,7 +3438,7 @@ function extractCcSupplierProducts(html, baseUrl) {
     else if (/\b(mouse|mice)\b/i.test(titleSearch)) { category = 'computer_accessories'; subcategory = 'mouse'; detailType = 'Mouse'; }
     else if (/\b(charger|power adapter|ac adapter)\b/i.test(titleSearch)) { category = 'computer_accessories'; subcategory = 'charger'; detailType = 'Charger'; }
     else if (/\b(cable|usb hub|adapter|dongle)\b/i.test(titleSearch)) { category = 'computer_accessories'; subcategory = 'cable_adapter'; detailType = 'Cable / Adapter'; }
-    else if (/\b(laptop|notebook|vivobook|expertbook|zenbook|macbook|thinkpad)\b/i.test(identitySearch) || hasLaptopSpecs) { subcategory = 'laptop'; detailType = 'Laptop'; }
+    else if (/\\b(laptop|notebook|vivobook|expertbook|zenbook|macbook|thinkpad|rog|strix)\\b/i.test(identitySearch) || hasLaptopSpecs) { subcategory = 'laptop'; detailType = 'Laptop'; }
     else if (/\b(all[- ]in[- ]one|aio)\b/i.test(identitySearch)) { subcategory = 'all_in_one'; detailType = 'All-in-One'; }
     else if (/\b(desktop|tower|mini pc|mini computer)\b/i.test(identitySearch)) { subcategory = 'desktop'; detailType = 'Desktop'; }
     else if (/\b(monitor|display screen)\b/i.test(identitySearch)) { subcategory = 'monitor'; detailType = 'Monitor'; }
@@ -3459,11 +3460,13 @@ function extractCcSupplierProducts(html, baseUrl) {
       subcategory,
       detail_type: detailType,
       specifications: {
-        cpu_model: specs.find(line => /^-?\s*CPU\s*:/i.test(line))?.replace(/^-?\s*CPU\s*:/i, '').trim() || '',
-        ram_type_capacity: specs.find(line => /^-?\s*RAM\s*:/i.test(line))?.replace(/^-?\s*RAM\s*:/i, '').trim() || '',
-        storage_type_capacity: specs.find(line => /^-?\s*SSD\s*:/i.test(line))?.replace(/^-?\s*SSD\s*:/i, '').trim() || '',
+        cpu_model: specs.find(line => /^-?\\s*(?:CPU|Processor)\\s*:/i.test(line))?.replace(/^-?\\s*(?:CPU|Processor)\\s*:/i, '').trim()
+          || specs.find(line => /\\b(?:Intel(?:®)?\\s+Core|AMD\\s+Ryzen)\\b/i.test(line)) || '',
+        ram_type_capacity: (specs.find(line => /^-?\\s*RAM\\s*:/i.test(line))?.replace(/^-?\\s*RAM\\s*:/i, '').split(/\\s*=\\s*/)[0] || '').trim(),
+        storage_type_capacity: specs.find(line => /^-?\\s*(?:Storage|SSD|HDD)\\s*:/i.test(line))?.replace(/^-?\\s*(?:Storage|SSD|HDD)\\s*:/i, '').trim() || '',
         screen_size: specs.find(line => /display|inch|screen/i.test(line)) || '',
-        gpu_model_vram: specs.find(line => /^-?\s*GPU\s*:/i.test(line))?.replace(/^-?\s*GPU\s*:/i, '').trim() || '',
+        gpu_model_vram: specs.find(line => /^-?\\s*(?:GPU|VGA(?:\\s*\\d+)?)\\s*:/i.test(line))?.replace(/^-?\\s*(?:GPU|VGA(?:\\s*\\d+)?)\\s*:/i, '').trim() || '',
+        operating_system: specs.find(line => /^-?\\s*(?:OS|Operating System)\\s*:/i.test(line))?.replace(/^-?\\s*(?:OS|Operating System)\\s*:/i, '').trim() || '',
         color,
         weight,
         battery,
@@ -3476,6 +3479,110 @@ function extractCcSupplierProducts(html, baseUrl) {
   }
   return results;
 }
+function normalizeSupplierIdentity(value) {
+  return String(value || '').toLowerCase().normalize('NFKD').replace(/[\\u0300-\\u036f]/g, '').replace(/[^a-z0-9]+/g, '');
+}
+function supplierModelKey(product) {
+  return normalizeSupplierIdentity(product?.title || '');
+}
+function supplierCoreValue(product, key) {
+  return String(product?.specifications?.[key] || product?.listing_details?.specifications?.[key] || '').trim();
+}
+function supplierProductsCompatible(left, right) {
+  for (const key of ['cpu_model','gpu_model_vram','screen_size']) {
+    const a = normalizeSupplierIdentity(supplierCoreValue(left, key));
+    const b = normalizeSupplierIdentity(supplierCoreValue(right, key));
+    if (a && b && a !== b) return false;
+  }
+  return true;
+}
+function supplierVariantConfigKey(product) {
+  const specs = product?.specifications || product?.attributes || product?.listing_details?.specifications || {};
+  const ram = normalizeSupplierIdentity(specs.ram_type_capacity || '');
+  const storage = normalizeSupplierIdentity(specs.storage_type_capacity || '');
+  if (ram || storage) return ram + '|' + storage;
+  return normalizeSupplierIdentity(product?.option_value || product?.configuration_label || product?.sku || product?.supplier_product_code || '');
+}
+function supplierVariantLabel(product) {
+  const specs = product?.specifications || {};
+  const parts = [specs.ram_type_capacity, specs.storage_type_capacity].filter(Boolean);
+  return parts.length ? parts.join(' · ') : (product?.supplier_product_code || 'ជម្រើស');
+}
+function groupCcSupplierProducts(products) {
+  const groups = [];
+  for (const product of products || []) {
+    const key = supplierModelKey(product) || normalizeSupplierIdentity(product.supplier_product_code);
+    let group = groups.find(item => item.model_key === key && supplierProductsCompatible(item.variants[0], product));
+    if (!group) {
+      group = { ...product, model_key: key, variants: [] };
+      groups.push(group);
+    }
+    group.variants.push(product);
+  }
+  return groups.map(group => {
+    const variants = group.variants.slice().sort((a, b) => String(a.supplier_product_code).localeCompare(String(b.supplier_product_code), undefined, { numeric: true }));
+    const prices = variants.map(item => Number(item.selling_price)).filter(Number.isFinite);
+    return {
+      ...group, variants, variant_count: variants.length,
+      supplier_product_code: variants[0]?.supplier_product_code || group.supplier_product_code,
+      supplier_price: variants[0]?.supplier_price ?? group.supplier_price,
+      selling_price: prices.length ? Math.min(...prices) : group.selling_price,
+      image_urls: [...new Set(variants.flatMap(item => item.image_urls || []))].slice(0, 5),
+      verified: variants.length > 0 && variants.every(item => item.verified)
+    };
+  });
+}
+async function getAuroraSupplierImportIndex(vendorId) {
+  const { data: products, error: productError } = await supabase.from('products')
+    .select('id,title,price,stock').eq('vendor_id', vendorId);
+  if (productError) throw productError;
+  const ids = (products || []).map(item => item.id);
+  if (!ids.length) return { products: [], knownCodes: new Set(), variantsByProduct: new Map(), sourcesByProduct: new Map(), detailsByProduct: new Map() };
+  const [sourceResult, detailResult, variantResult] = await Promise.all([
+    supabase.from('product_supplier_sources').select('product_id,supplier_product_code,supplier_url,supplier_price').eq('supplier_name', 'CC COMPUTER').in('product_id', ids),
+    supabase.from('product_listing_details').select('product_id,specifications,category,subcategory,detail_type').in('product_id', ids),
+    supabase.from('product_variants').select('id,product_id,sku,option_value,attributes,price,stock,is_active').in('product_id', ids)
+  ]);
+  if (sourceResult.error || detailResult.error || variantResult.error) throw sourceResult.error || detailResult.error || variantResult.error;
+  const variants = variantResult.data || [];
+  const variantIds = variants.map(item => item.id);
+  let variantSources = [];
+  if (variantIds.length) {
+    const result = await supabase.from('product_supplier_variant_sources')
+      .select('variant_id,supplier_product_code,supplier_url,supplier_price').in('variant_id', variantIds);
+    if (result.error) throw result.error;
+    variantSources = result.data || [];
+  }
+  const sourcesByProduct = new Map((sourceResult.data || []).map(item => [String(item.product_id), item]));
+  const detailsByProduct = new Map((detailResult.data || []).map(item => [String(item.product_id), item]));
+  const variantsByProduct = new Map();
+  for (const variant of variants) {
+    const key = String(variant.product_id);
+    if (!variantsByProduct.has(key)) variantsByProduct.set(key, []);
+    variantsByProduct.get(key).push(variant);
+  }
+  const knownCodes = new Set();
+  for (const source of sourceResult.data || []) {
+    const code = String(source.supplier_product_code || '').trim().toUpperCase();
+    if (code) knownCodes.add(code);
+  }
+  for (const source of variantSources) {
+    const code = String(source.supplier_product_code || '').trim().toUpperCase();
+    if (code) knownCodes.add(code);
+  }
+  const variantSourceById = new Map(variantSources.map(item => [String(item.variant_id), item]));
+  return {
+    products: (products || []).map(product => ({
+      ...product, listing_details: detailsByProduct.get(String(product.id)) || null,
+      supplier_source: sourcesByProduct.get(String(product.id)) || null,
+      variants: (variantsByProduct.get(String(product.id)) || []).map(variant => ({
+        ...variant, supplier_source: variantSourceById.get(String(variant.id)) || null
+      }))
+    })),
+    knownCodes, variantsByProduct, sourcesByProduct, detailsByProduct
+  };
+}
+
 async function loadCcSupplierCatalog(url) {
   let parsed;
   try { parsed = new URL(url); } catch { throw new Error('Invalid supplier URL.'); }
@@ -3488,29 +3595,57 @@ app.post('/api/admin/supplier-import/scan', authenticate, requireAdmin, async (r
   if (!supabase) return fail(res, 503, 'Supabase is not configured.');
   try {
     const { url, products: scannedProducts } = await loadCcSupplierCatalog(clean(req.body.url, 1000));
+    const groupedProducts = groupCcSupplierProducts(scannedProducts);
     const requestedOffset = Math.max(0, Number.parseInt(req.body.offset, 10) || 0);
-    const isSingleProductUrl = scannedProducts.length <= 1;
-    const products = isSingleProductUrl ? scannedProducts.slice(0, 1) : scannedProducts;
+    const isSingleProductUrl = groupedProducts.length <= 1;
     const batchSize = isSingleProductUrl ? 1 : 10;
-    const batch = products.slice(requestedOffset, requestedOffset + batchSize);
+    const batch = groupedProducts.slice(requestedOffset, requestedOffset + batchSize);
     const { data: vendor, error: vendorError } = await supabase.from('vendors').select('id').ilike('store_name', 'AURORA Computer').maybeSingle();
     if (vendorError || !vendor) return fail(res, 404, 'AURORA Computer shop was not found.');
-    const [{ data: sources, error: sourceError }, { data: existing, error: productError }] = await Promise.all([
-      supabase.from('product_supplier_sources').select('supplier_product_code').eq('supplier_name', 'CC COMPUTER'),
-      supabase.from('products').select('title').eq('vendor_id', vendor.id)
-    ]);
-    if (sourceError || productError) throw sourceError || productError;
-    const knownCodes = new Set((sources || []).map(row => String(row.supplier_product_code || '').trim().toUpperCase()).filter(Boolean));
-    const knownTitles = new Set((existing || []).map(row => String(row.title || '').trim().toLowerCase()).filter(Boolean));
-    const data = batch.map(product => {
-      const duplicate = knownCodes.has(product.supplier_product_code) || knownTitles.has(product.title.toLowerCase());
-      const status = duplicate ? 'duplicate' : product.verified ? 'ready' : 'needs_review';
-      return { ...product, duplicate, status };
+    const index = await getAuroraSupplierImportIndex(vendor.id);
+    const data = batch.map(group => {
+      const titleKey = supplierModelKey(group);
+      const titleMatches = index.products.filter(item => supplierModelKey(item) === titleKey);
+      const existingProduct = titleMatches.find(item => supplierProductsCompatible(group, item)) || null;
+      const conflictingTitle = titleMatches.length > 0 && !existingProduct;
+      const existingConfigKeys = new Set();
+      if (existingProduct) {
+        const details = existingProduct.listing_details?.specifications || {};
+        const parentCode = String(existingProduct.supplier_source?.supplier_product_code || '').trim().toUpperCase();
+        if (parentCode) existingConfigKeys.add(supplierVariantConfigKey({ specifications: details, supplier_product_code: parentCode }));
+        for (const variant of existingProduct.variants || []) existingConfigKeys.add(supplierVariantConfigKey(variant));
+      }
+      const newVariants = group.variants.filter(variant => {
+        const variantCode = String(variant.supplier_product_code || '').trim().toUpperCase();
+        if (!variantCode || index.knownCodes.has(variantCode)) return false;
+        return !existingConfigKeys.has(supplierVariantConfigKey(variant));
+      });
+      const codeConflicts = group.variants.some(variant => {
+        const variantCode = String(variant.supplier_product_code || '').trim().toUpperCase();
+        return variantCode && index.knownCodes.has(variantCode) && !existingProduct;
+      });
+      const status = conflictingTitle || codeConflicts ? 'needs_review' : !newVariants.length ? 'duplicate' : existingProduct ? 'update_existing' : group.verified ? 'ready' : 'needs_review';
+      return {
+        ...group, duplicate: status === 'duplicate', status,
+        existing_product_id: existingProduct?.id || null,
+        new_variant_count: newVariants.length,
+        variants: group.variants.map(variant => ({
+          ...variant,
+          already_imported: index.knownCodes.has(String(variant.supplier_product_code || '').trim().toUpperCase())
+            || existingConfigKeys.has(supplierVariantConfigKey(variant))
+        }))
+      };
     });
     res.json({
       data,
-      pagination: { offset: requestedOffset, limit: batchSize, total: products.length, next_offset: requestedOffset + data.length, has_more: !isSingleProductUrl && requestedOffset + data.length < products.length, single_product: isSingleProductUrl },
-      summary: { total: products.length, batch: data.length, ready: data.filter(item => item.status === 'ready').length, duplicate: data.filter(item => item.duplicate).length, needs_review: data.filter(item => item.status === 'needs_review').length }
+      pagination: { offset: requestedOffset, limit: batchSize, total: groupedProducts.length, next_offset: requestedOffset + data.length, has_more: !isSingleProductUrl && requestedOffset + data.length < groupedProducts.length, single_product: isSingleProductUrl },
+      summary: {
+        total: groupedProducts.length, batch: data.length,
+        ready: data.filter(item => item.status === 'ready').length,
+        update_existing: data.filter(item => item.status === 'update_existing').length,
+        duplicate: data.filter(item => item.status === 'duplicate').length,
+        needs_review: data.filter(item => item.status === 'needs_review').length
+      }
     });
   } catch (error) {
     console.error('CC COMPUTER supplier scan failed:', error.message);
@@ -3523,63 +3658,155 @@ app.post('/api/admin/supplier-import/import', authenticate, requireAdmin, async 
   const catalogUrl = clean(req.body.catalog_url, 1000);
   const expectedPrice = Number(req.body.expected_supplier_price);
   const uploaded = [];
+  const createdVariantIds = [];
   let createdProductId = null;
+  let createdParentSource = false;
+  let createdParentSourceProductId = null;
+  let createdImageRows = false;
+  let createdImageProductId = null;
   try {
     if (!code || !Number.isFinite(expectedPrice) || expectedPrice <= 0) return fail(res, 400, 'Missing verified product code or supplier price.');
     const { url, products } = await loadCcSupplierCatalog(catalogUrl);
-    const product = products.find(item => item.supplier_product_code === code);
-    if (!product || !product.verified || product.supplier_price !== expectedPrice) return fail(res, 409, 'Supplier details changed or could not be verified. Scan the catalog again.');
+    const group = groupCcSupplierProducts(products).find(item => item.variants.some(variant => variant.supplier_product_code === code));
+    const selectedVariant = group?.variants.find(variant => variant.supplier_product_code === code);
+    if (!group || !selectedVariant || !group.verified || selectedVariant.supplier_price !== expectedPrice) {
+      return fail(res, 409, 'Supplier details changed or could not be verified. Scan the catalog again.');
+    }
     const { data: vendor, error: vendorError } = await supabase.from('vendors').select('id').ilike('store_name', 'AURORA Computer').maybeSingle();
     if (vendorError || !vendor) return fail(res, 404, 'AURORA Computer shop was not found.');
-    const { data: duplicate, error: duplicateError } = await supabase.from('product_supplier_sources')
-      .select('product_id').eq('supplier_name', 'CC COMPUTER').ilike('supplier_product_code', code).maybeSingle();
-    if (duplicateError) throw duplicateError;
-    if (duplicate) return fail(res, 409, 'This supplier product code is already imported.');
-    const { data: sameTitle, error: titleError } = await supabase.from('products').select('id').eq('vendor_id', vendor.id).ilike('title', product.title).limit(1);
-    if (titleError) throw titleError;
-    if ((sameTitle || []).length) return fail(res, 409, 'A product with the same title already exists in AURORA.');
-    const { data: created, error: createError } = await supabase.from('products').insert({
-      vendor_id: vendor.id, title: product.title, description: product.description,
-      category: product.category || 'computers', price: product.selling_price, stock: 0,
-      location: 'Cambodia', condition: 'ថ្មី', status: 'active', renewed_at: new Date().toISOString()
-    }).select().single();
-    if (createError) throw createError;
-    createdProductId = created.id;
-    const { error: sourceError } = await supabase.from('product_supplier_sources').insert({
-      product_id: created.id, supplier_name: 'CC COMPUTER', supplier_url: product.supplier_url || url,
-      supplier_price: product.supplier_price, supplier_product_code: code,
-      notes: 'Imported from CC COMPUTER catalog. Selling price = supplier price + $5.'
-    });
-    if (sourceError) throw sourceError;
-    const { error: detailsError } = await supabase.from('product_listing_details').upsert({
-      product_id: created.id, category: product.category || 'computers', subcategory: product.subcategory || 'other', detail_type: product.detail_type || 'Computer',
-      specifications: product.specifications, updated_at: new Date().toISOString()
-    }, { onConflict: 'product_id' });
-    if (detailsError) throw detailsError;
-    for (const [index, imageUrl] of product.image_urls.entries()) {
-      const { buffer, contentType } = await fetchSupplierBytes(imageUrl);
-      const extByMime = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
-      if (!extByMime[contentType]) continue;
-      const file = { buffer, mimetype: contentType, originalname: code.replace(/[^a-z0-9_-]/gi, '_') + '-' + (index + 1) + '.' + extByMime[contentType], size: buffer.length };
-      const invalid = imageUploadError(file, 8 * 1024 * 1024);
-      if (invalid) continue;
-      uploaded.push(await uploadToTelegram(file, 8 * 1024 * 1024));
+    const index = await getAuroraSupplierImportIndex(vendor.id);
+    const titleKey = supplierModelKey(group);
+    const titleMatches = index.products.filter(item => supplierModelKey(item) === titleKey);
+    const existingProduct = titleMatches.find(item => supplierProductsCompatible(group, item)) || null;
+    if (titleMatches.length && !existingProduct) return fail(res, 409, 'A similar product title exists with different core specifications. Admin review is required.');
+    const existingConfigKeys = new Set();
+    if (existingProduct) {
+      const details = existingProduct.listing_details?.specifications || {};
+      const parentCode = String(existingProduct.supplier_source?.supplier_product_code || '').trim().toUpperCase();
+      if (parentCode) existingConfigKeys.add(supplierVariantConfigKey({ specifications: details, supplier_product_code: parentCode }));
+      for (const variant of existingProduct.variants || []) existingConfigKeys.add(supplierVariantConfigKey(variant));
     }
-    if (!uploaded.length) throw new Error('No valid product images could be uploaded to Telegram.');
-    const imageRows = uploaded.map((media, index) => ({
-      product_id: created.id, telegram_message_id: media.messageId, file_id: media.fileId,
-      image_url: mediaProxyUrl(media.fileId), sort_order: index
-    }));
-    const { error: imageError } = await supabase.from('product_images').insert(imageRows);
-    if (imageError) throw imageError;
-    res.status(201).json({ success: true, data: { id: created.id, title: product.title, supplier_price: product.supplier_price, selling_price: product.selling_price, images: uploaded.length } });
+    const variantsToAdd = group.variants.filter(variant => {
+      const variantCode = String(variant.supplier_product_code || '').trim().toUpperCase();
+      if (!variantCode || index.knownCodes.has(variantCode)) return false;
+      return !existingConfigKeys.has(supplierVariantConfigKey(variant));
+    });
+    const codeConflict = group.variants.some(variant => {
+      const variantCode = String(variant.supplier_product_code || '').trim().toUpperCase();
+      return variantCode && index.knownCodes.has(variantCode) && !existingProduct;
+    });
+    if (codeConflict) return fail(res, 409, 'One or more supplier product codes are already linked to another product.');
+    if (!variantsToAdd.length) return fail(res, 409, 'All configurations for this product have already been imported.');
+    const productId = existingProduct?.id || null;
+    let targetProductId = productId;
+    if (!targetProductId) {
+      const allPrices = group.variants.map(item => Number(item.selling_price)).filter(Number.isFinite);
+      if (!allPrices.length) return fail(res, 409, 'No valid variant price was found.');
+      const { data: created, error: createError } = await supabase.from('products').insert({
+        vendor_id: vendor.id, title: group.title, description: group.description,
+        category: group.category || 'computers', price: Math.min(...allPrices), stock: 0,
+        location: 'Cambodia', condition: 'ថ្មី', status: 'active', renewed_at: new Date().toISOString()
+      }).select().single();
+      if (createError) throw createError;
+      targetProductId = created.id;
+      createdProductId = targetProductId;
+      const ramValues = new Set(group.variants.map(item => normalizeSupplierIdentity(item.specifications?.ram_type_capacity)).filter(Boolean));
+      const storageValues = new Set(group.variants.map(item => normalizeSupplierIdentity(item.specifications?.storage_type_capacity)).filter(Boolean));
+      const commonSpecs = { ...(group.specifications || {}) };
+      if (ramValues.size > 1) delete commonSpecs.ram_type_capacity;
+      if (storageValues.size > 1) delete commonSpecs.storage_type_capacity;
+      const { error: detailsError } = await supabase.from('product_listing_details').upsert({
+        product_id: targetProductId, category: group.category || 'computers', subcategory: group.subcategory || 'other',
+        detail_type: group.detail_type || 'Computer', specifications: commonSpecs, updated_at: new Date().toISOString()
+      }, { onConflict: 'product_id' });
+      if (detailsError) throw detailsError;
+    }
+    if (!existingProduct?.supplier_source) {
+      const primary = group.variants[0];
+      const { error: sourceError } = await supabase.from('product_supplier_sources').insert({
+        product_id: targetProductId, supplier_name: 'CC COMPUTER', supplier_url: primary.supplier_url || url,
+        supplier_price: primary.supplier_price, supplier_product_code: primary.supplier_product_code,
+        notes: 'One supplier model with configuration variants. Variant-level codes and prices are stored separately. Retail price = supplier price + $5.'
+      });
+      if (sourceError) throw sourceError;
+      createdParentSource = true;
+      createdParentSourceProductId = targetProductId;
+    }
+    for (const variant of variantsToAdd) {
+      const optionValue = supplierVariantLabel(variant);
+      const attributes = {
+        ram_type_capacity: variant.specifications?.ram_type_capacity || '',
+        storage_type_capacity: variant.specifications?.storage_type_capacity || '',
+        configuration_label: optionValue
+      };
+      const { data: createdVariant, error: variantError } = await supabase.from('product_variants').insert({
+        product_id: targetProductId, sku: variant.supplier_product_code,
+        option_name: 'RAM / Storage', option_value: optionValue,
+        price: variant.selling_price, stock: 0, attributes, is_active: true,
+        sort_order: group.variants.indexOf(variant), updated_at: new Date().toISOString()
+      }).select().single();
+      if (variantError) throw variantError;
+      createdVariantIds.push(createdVariant.id);
+      const { error: variantSourceError } = await supabase.from('product_supplier_variant_sources').insert({
+        variant_id: createdVariant.id, supplier_price: variant.supplier_price,
+        supplier_product_code: variant.supplier_product_code,
+        supplier_url: variant.supplier_url || url, updated_at: new Date().toISOString()
+      });
+      if (variantSourceError) throw variantSourceError;
+    }
+    const currentPrices = (existingProduct?.variants || []).map(item => Number(item.price)).filter(Number.isFinite);
+    const allPrices = currentPrices.concat(group.variants.map(item => Number(item.selling_price)).filter(Number.isFinite));
+    if (allPrices.length) {
+      const { error: priceError } = await supabase.from('products').update({ price: Math.min(...allPrices), updated_at: new Date().toISOString() }).eq('id', targetProductId);
+      if (priceError) throw priceError;
+    }
+    const { data: existingImages, error: existingImagesError } = await supabase.from('product_images').select('id').eq('product_id', targetProductId).limit(1);
+    if (existingImagesError) throw existingImagesError;
+    if (!(existingImages || []).length) {
+      const imageUrls = group.image_urls?.length ? group.image_urls : selectedVariant.image_urls || [];
+      for (const [imageIndex, imageUrl] of imageUrls.slice(0, 5).entries()) {
+        const { buffer, contentType } = await fetchSupplierBytes(imageUrl);
+        const extByMime = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
+        if (!extByMime[contentType]) continue;
+        const file = { buffer, mimetype: contentType, originalname: code.replace(/[^a-z0-9_-]/gi, '_') + '-' + (imageIndex + 1) + '.' + extByMime[contentType], size: buffer.length };
+        const invalid = imageUploadError(file, 8 * 1024 * 1024);
+        if (invalid) continue;
+        uploaded.push(await uploadToTelegram(file, 8 * 1024 * 1024));
+      }
+      if (!uploaded.length) throw new Error('No valid product images could be uploaded to Telegram.');
+      const imageRows = uploaded.map((media, imageIndex) => ({
+        product_id: targetProductId, telegram_message_id: media.messageId, file_id: media.fileId,
+        image_url: mediaProxyUrl(media.fileId), sort_order: imageIndex
+      }));
+      const { error: imageError } = await supabase.from('product_images').insert(imageRows);
+      if (imageError) throw imageError;
+      createdImageRows = true;
+      createdImageProductId = targetProductId;
+    }
+    res.status(201).json({
+      success: true,
+      data: {
+        id: targetProductId, title: group.title, existing_product: Boolean(existingProduct),
+        created_variants: createdVariantIds.length,
+        total_variants: (existingProduct?.variants?.length || 0) + createdVariantIds.length,
+        supplier_codes: variantsToAdd.map(item => item.supplier_product_code),
+        selling_price_from: Math.min(...group.variants.map(item => Number(item.selling_price)).filter(Number.isFinite)),
+        images_uploaded: uploaded.length
+      }
+    });
   } catch (error) {
     for (const media of uploaded) await deleteTelegramMessage(media.messageId);
+    if (createdImageRows && createdImageProductId) await supabase.from('product_images').delete().eq('product_id', createdImageProductId);
+    if (createdVariantIds.length) {
+      await supabase.from('product_supplier_variant_sources').delete().in('variant_id', createdVariantIds);
+      await supabase.from('product_variants').delete().in('id', createdVariantIds);
+    }
     if (createdProductId) {
-      await supabase.from('product_images').delete().eq('product_id', createdProductId);
       await supabase.from('product_listing_details').delete().eq('product_id', createdProductId);
       await supabase.from('product_supplier_sources').delete().eq('product_id', createdProductId);
       await supabase.from('products').delete().eq('id', createdProductId);
+    } else if (createdParentSource && createdParentSourceProductId) {
+      await supabase.from('product_supplier_sources').delete().eq('product_id', createdParentSourceProductId);
     }
     console.error('CC COMPUTER supplier import failed:', error.message);
     return fail(res, 502, 'Supplier import failed: ' + clean(error.message, 180));
