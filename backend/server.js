@@ -3641,20 +3641,22 @@ app.post('/api/admin/supplier-import/scan', authenticate, requireAdmin, async (r
         return variantCode && index.knownCodes.has(variantCode) && !existingProduct;
       });
       const status = conflictingTitle || codeConflicts ? 'needs_review' : !newVariants.length ? 'duplicate' : existingProduct ? 'update_existing' : group.verified ? 'ready' : 'needs_review';
+      const seenGroupConfigurations = new Set();
       return {
         ...group, duplicate: status === 'duplicate', status,
         existing_product_id: existingProduct?.id || null,
         new_variant_count: newVariants.length,
-        variants: group.variants.map((variant, variantIndex) => {
-          const uniqueBefore = uniqueSupplierConfigurations(group.variants.slice(0, variantIndex + 1));
-          const duplicateConfiguration = uniqueBefore.length <= variantIndex;
+        variants: group.variants.map(variant => {
+          const configKey = supplierVariantConfigKey(variant);
+          const duplicateConfiguration = seenGroupConfigurations.has(configKey);
+          seenGroupConfigurations.add(configKey);
           return {
             ...variant,
             duplicate_configuration: duplicateConfiguration,
             already_imported: duplicateConfiguration
               || (index.knownCodes.has(String(variant.supplier_product_code || '').trim().toUpperCase())
                 && !(parentVariantMissing && String(variant.supplier_product_code || '').trim().toUpperCase() === parentCode))
-              || existingConfigKeys.has(supplierVariantConfigKey(variant))
+              || existingConfigKeys.has(configKey)
           };
         })
       };
