@@ -1265,6 +1265,24 @@ function renderDetailMapSection(item) {
   const embedUrl = extractGoogleMapEmbedUrl(rawUrl, location || 'Cambodia');
   return `<section class="detail-map-section"><div class="detail-location-heading">${ic('pin',17)} <b>ទីតាំង</b></div><p>${esc(item.location || 'កម្ពុជា')}</p>${item.address ? `<small>${esc(item.address)}</small>` : ''}<div class="detail-map-frame">${embedUrl ? `<iframe src="${esc(embedUrl)}" title="Google Maps location" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>` : ''}<button type="button" class="detail-map-open" data-detail-action="map" data-map-url="${esc(rawUrl)}">បង្ហាញទីតាំងនៅលើផែនទី</button></div></section>`;
 }
+function renderProductDetailLocation(item) {
+  const specs = item.specifications && typeof item.specifications === 'object' ? item.specifications : {};
+  const rawUrl = specs.google_map_url || item.google_map_url || '';
+  const location = [item.location, item.address].filter(Boolean).join(' · ');
+  if (!location && !rawUrl) return '';
+  const embedUrl = extractGoogleMapEmbedUrl(rawUrl, location || 'Cambodia');
+  return `<section class="detail-location-layout">
+    <div class="detail-location-copy">
+      <div class="detail-location-heading">${ic('pin',17)} <b>ទីតាំង</b></div>
+      <p>${esc(item.location || 'កម្ពុជា')}</p>
+      ${item.address ? `<small>${esc(item.address)}</small>` : ''}
+    </div>
+    <div class="detail-map-frame">
+      ${embedUrl ? `<iframe src="${esc(embedUrl)}" title="ផែនទីទីតាំងផលិតផល" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>` : ''}
+      ${embedUrl ? `<button type="button" class="detail-map-open" data-detail-action="map" data-map-url="${esc(embedUrl)}">មើលផែនទី</button>` : ''}
+    </div>
+  </section>`;
+}
 function bindListingDetailActions(root, item) {
   root.querySelectorAll('[data-detail-action]').forEach(button => button.addEventListener('click', async () => {
     const action = button.dataset.detailAction;
@@ -1398,11 +1416,11 @@ function renderProductDetail() {
   const activeImage = images[state.productGalleryIndex] || images[0];
   const saved = state.savedIds.has(p.id);
   const stockKnown = p.stock !== undefined && p.stock !== null;
-  const stockLabel = stockKnown ? (Number(p.stock) > 0 ? 'មានទំនិញ' : 'អស់ពីស្តុក') : 'អាចសាកសួរបាន';
+  const stockLabel = stockKnown ? (Number(p.stock) > 0 ? 'មានទំនិញក្នុងស្តុក' : 'អស់ពីស្តុក') : 'អាចសាកសួរបាន';
   const related = state.products.filter((item) => String(item.id) !== String(p.id) && (item.category === p.category || String(item.vendor_id) === String(p.vendor_id))).slice(0, 6);
 
   const galleryHtml = galleryCount
-    ? `<div class="product-gallery-stage ${state.productGalleryVideoActive && hasVideo ? 'is-video' : ''}">${activeImage ? `<img id="productMainImage" src="${esc(activeImage.image_url)}" alt="${esc(p.title)}" data-gallery-zoom>` : ic('image', 48)}<span class="product-gallery-condition">${esc(p.condition || 'មិនបានបញ្ជាក់')}</span><button type="button" class="product-gallery-save" data-product-action="save" aria-pressed="${saved}">${ic('bookmark', 18)}</button>${galleryCount > 1 ? `<button type="button" class="product-gallery-arrow prev" data-gallery-step="-1">${ic('arrow', 17)}</button><button type="button" class="product-gallery-arrow next" data-gallery-step="1">${ic('arrow', 17)}</button>` : ''}<span class="product-gallery-counter">${state.productGalleryVideoActive && hasVideo ? galleryCount : state.productGalleryIndex + 1} / ${galleryCount}</span></div><div class="product-gallery-thumbs" id="productGalleryThumbs">${images.map((im, i) => `<button type="button" class="product-gallery-thumb ${!state.productGalleryVideoActive && i === state.productGalleryIndex ? 'active' : ''}" data-image="${i}"><img src="${esc(im.image_url)}" alt=""></button>`).join('')}${hasVideo ? `<button type="button" class="product-gallery-thumb product-gallery-video-thumb ${state.productGalleryVideoActive ? 'active' : ''}" data-gallery-video aria-label="មើលវីដេអូ YouTube"><img src="https://img.youtube.com/vi/${videoId}/hqdefault.jpg" alt="YouTube video"><span>${ic('play',18)}</span></button>` : ''}</div>`
+    ? `<div class="product-gallery-stage ${state.productGalleryVideoActive && hasVideo ? 'is-video' : ''}">${activeImage ? `<img id="productMainImage" src="${esc(activeImage.image_url)}" alt="${esc(p.title)}" data-gallery-zoom>` : ic('image', 48)}<span class="product-gallery-condition">${esc(p.condition || 'មិនបានបញ្ជាក់')}</span><button type="button" class="product-gallery-save" data-product-action="save" aria-label="រក្សាទុករូបភាព" title="រក្សាទុក" aria-pressed="${saved}">${ic('bookmark', 18)}</button><button type="button" class="product-gallery-zoom" data-gallery-zoom-button aria-label="ពង្រីករូបភាព" title="ពង្រីករូបភាព">${ic('maximize', 17)}</button>${galleryCount > 1 ? `<button type="button" class="product-gallery-arrow prev" data-gallery-step="-1">${ic('arrow', 17)}</button><button type="button" class="product-gallery-arrow next" data-gallery-step="1">${ic('arrow', 17)}</button>` : ''}<span class="product-gallery-counter">${state.productGalleryVideoActive && hasVideo ? galleryCount : state.productGalleryIndex + 1} / ${galleryCount}</span></div><div class="product-gallery-thumbs" id="productGalleryThumbs">${images.map((im, i) => `<button type="button" class="product-gallery-thumb ${!state.productGalleryVideoActive && i === state.productGalleryIndex ? 'active' : ''}" data-image="${i}"><img src="${esc(im.image_url)}" alt=""></button>`).join('')}${hasVideo ? `<button type="button" class="product-gallery-thumb product-gallery-video-thumb ${state.productGalleryVideoActive ? 'active' : ''}" data-gallery-video aria-label="មើលវីដេអូ YouTube"><img src="https://img.youtube.com/vi/${videoId}/hqdefault.jpg" alt="YouTube video"><span>${ic('play',18)}</span></button>` : ''}</div>`
     : `<div class="product-gallery-stage">${ic('image', 48)}</div>`;
 
   const reviewItems = (v.reviews || []).slice(0, 5);
@@ -1420,12 +1438,14 @@ function renderProductDetail() {
           <span class="product-meta-item">${ic('eye', 14)} ${Number(p.view_count || 0).toLocaleString()} Views</span>
         </div>
 
-        <ul class="product-facts-list">
-          <li><span>ឈ្មោះផលិតផល</span><h1 class="product-detail-title">${esc(p.title)}</h1></li>
-          <li><span>តម្លៃ</span><strong class="product-facts-price">${money(p.price)}</strong></li>
-          <li><span>ស្តុក</span><strong class="product-facts-stock ${stockKnown && Number(p.stock) <= 0 ? 'is-out' : ''}">${ic(stockKnown && Number(p.stock) <= 0 ? 'x' : 'checkcircle', 14)} ${stockLabel}</strong></li>
-          ${descriptions.short ? `<li><span>ព័ត៌មានខ្លី</span><p class="text-xs leading-6 text-slate-600">${esc(descriptions.short)}</p></li>` : ''}
-        </ul>
+        <div class="product-heading-block">
+          <h1 class="product-detail-title">${esc(p.title)}</h1>
+          <div class="product-price-stock-row">
+            <strong class="product-facts-price">${money(p.price)}</strong>
+            <span class="product-stock-badge ${stockKnown && Number(p.stock) <= 0 ? 'is-out' : ''}">${ic(stockKnown && Number(p.stock) <= 0 ? 'x' : 'checkcircle', 14)} ${stockLabel}</span>
+          </div>
+          ${descriptions.short ? `<p class="product-short-summary-text">${esc(descriptions.short)}</p>` : ''}
+        </div>
 
         <div>
           <div class="product-primary-actions">
@@ -1455,12 +1475,17 @@ function renderProductDetail() {
         </section>
 
         <article class="product-detail-description">
-          <h2>${ic('file', 18)} ការពិពណ៌នា</h2>
-          <div class="product-spec-grid detail-spec-grid">
-            ${[['ប្រភេទ',CATEGORIES[p.category] || p.category],['ស្ថានភាព',p.condition],['កាលបរិច្ឆេទបង្ហោះ',p.created_at ? fmtDate(p.created_at) : ''],...Object.entries(p.specifications || {}).filter(([key,value])=>key!=='google_map_url'&&value!=null&&String(value).trim()!=='').map(([key,value])=>[key.replace(/_/g,' '),value])].filter(([,value])=>value!=null&&String(value).trim()!=='').map(([key,value])=>`<div><small>${esc(key)}</small><b>${esc(value)}</b></div>`).join('')}
-          </div>
-          <p class="product-full-description">${esc(descriptions.full || descriptions.short || 'មិនទាន់មានការពិពណ៌នាលម្អិតទេ។')}</p>
-          ${renderDetailMapSection(p)}
+          <section class="product-spec-section">
+            <h2>${ic('sliders', 18)} លក្ខណៈបច្ចេកទេស</h2>
+            <div class="product-spec-grid detail-spec-grid">
+              ${[['ប្រភេទ',CATEGORIES[p.category] || p.category],['ស្ថានភាព',p.condition],['កាលបរិច្ឆេទបង្ហោះ',p.created_at ? fmtDate(p.created_at) : ''],['ម៉ាក / ព័ត៌មានបន្ថែម',p.brand || p.specifications?.brand || p.specifications?.model || 'មិនបានបញ្ជាក់'],...Object.entries(p.specifications || {}).filter(([key,value])=>key!=='google_map_url'&&key!=='brand'&&key!=='model'&&value!=null&&String(value).trim()!=='').map(([key,value])=>[key.replace(/_/g,' '),value])].filter(([,value])=>value!=null&&String(value).trim()!=='').map(([key,value])=>`<div><small>${esc(key)}</small><b>${esc(value)}</b></div>`).join('')}
+            </div>
+          </section>
+          <section class="product-description-copy">
+            <h2>${ic('file', 18)} ការពិពណ៌នា</h2>
+            <p class="product-full-description">${esc(descriptions.full || descriptions.short || 'មិនទាន់មានការពិពណ៌នាលម្អិតទេ។')}</p>
+          </section>
+          ${renderProductDetailLocation(p)}
           ${detailBottomActions({...p,listing_type:'product'})}
         </article>
       </div>
@@ -1560,6 +1585,7 @@ function renderProductDetail() {
   }));
   const initialZoomImage = $('productDetail').querySelector('[data-gallery-zoom]');
   if (initialZoomImage) initialZoomImage.onclick = openProductLightbox;
+  $('productDetail').querySelector('[data-gallery-zoom-button]')?.addEventListener('click', openProductLightbox);
 
   $('productDetail').querySelectorAll('[data-product-action]').forEach((btn) => {
     btn.addEventListener('click', () => {
