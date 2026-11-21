@@ -3219,13 +3219,24 @@ app.get('/api/admin/supplier-products', authenticate, requireAdmin, async (_req,
     sources = sourceResult.data || [];
     details = detailResult.data || [];
   }
+  const variantIds = (products || []).flatMap(product => (product.product_variants || []).map(variant => variant.id));
+  let variantSources = [];
+  if (variantIds.length) {
+    const { data, error: variantSourceError } = await supabase.from('product_supplier_variant_sources')
+      .select('*').in('variant_id', variantIds);
+    if (variantSourceError) return fail(res, 500, 'Could not load supplier variant metadata');
+    variantSources = data || [];
+  }
   const sourceById = new Map(sources.map(row => [row.product_id, row]));
   const detailById = new Map(details.map(row => [row.product_id, row]));
+  const variantSourceById = new Map(variantSources.map(row => [row.variant_id, row]));
   res.json({ data: (products || []).map(product => ({
     ...publicProduct(product),
     supplier_source: sourceById.get(product.id) || null,
     listing_details: detailById.get(product.id) || null,
-    product_variants: product.product_variants || []
+    product_variants: (product.product_variants || []).map(variant => ({
+      ...variant, supplier_source: variantSourceById.get(variant.id) || null
+    }))
   })) });
 });
 
@@ -3309,6 +3320,27 @@ app.patch('/api/admin/supplier-products/:id/variants/:variantId', authenticate, 
     .eq('id', clean(req.params.variantId, 64)).eq('product_id', clean(req.params.id, 64)).select().maybeSingle();
   if (error) return fail(res, 400, 'Could not update product variant');
   if (!data) return fail(res, 404, 'Variant not found');
+  res.json({ data });
+});
+
+app.put('/api/admin/supplier-products/:id/variants/:variantId/source', authenticate, requireAdmin, async (req, res) => {
+  const productId = clean(req.params.id, 64);
+  const variantId = clean(req.params.variantId, 64);
+  const supplierPrice = Number(req.body.supplier_price);
+  const supplierCode = clean(req.body.supplier_product_code, 120);
+  const supplierUrl = clean(req.body.supplier_url, 1000);
+  if (!Number.isFinite(supplierPrice) || supplierPrice < 0) return fail(res, 400, 'Invalid supplier price');
+  if (supplierUrl && !/^https?:\\/\\//i.test(supplierUrl)) return fail(res, 400, 'Supplier URL must be http or https');
+  const { data: variant, error: variantError } = await supabase.from('product_variants')
+    .select('id').eq('id', variantId).eq('product_id', productId).maybeSingle();
+  if (variantError) return fail(res, 500, 'Could not verify product variant');
+  if (!variant) return fail(res, 404, 'Variant not found');
+  const { data, error } = await supabase.from('product_supplier_variant_sources').upsert({
+    variant_id: variantId, supplier_price: supplierPrice,
+    supplier_product_code: supplierCode, supplier_url: supplierUrl,
+    updated_at: new Date().toISOString()
+  }, { onConflict: 'variant_id' }).select().single();
+  if (error) return fail(res, 400, 'Could not save supplier variant metadata');
   res.json({ data });
 });
 
