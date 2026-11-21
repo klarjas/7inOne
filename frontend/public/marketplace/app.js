@@ -60,6 +60,7 @@ const ICON_PATHS = {
   arrowUpRight: '<path d="M7 17 17 7M7 7h10v10"/>',
   chevronLeft: '<path d="m15 18-6-6 6-6"/>',
   chevronRight: '<path d="m9 18 6-6-6-6"/>',
+  wrench: '<path d="m14.7 6.3 3 3M4 20l6.5-6.5m-1.2-1.2 4.8-4.8a4 4 0 0 0 5.3-5.3l-2.2 2.2-2.8-.7-.7-2.8L16 0.7a4 4 0 0 0-5.3 5.3L5.9 10.8a2.8 2.8 0 0 0 0 4L9.2 18a2.8 2.8 0 0 0 4 0l1.1-1.1"/>',
   alert: '<circle cx="12" cy="12" r="9"/><path d="M12 8v4m0 4h.01"/>'
 };
 
