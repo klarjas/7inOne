@@ -4092,6 +4092,25 @@ function renderJobs() {
   }).join('');
 }
 
+function renderJobsSkeleton() {
+  const root = $('jobsList');
+  if (!root) return;
+  const bar = (className = '') => `<span class="skeleton jobs-skeleton-block ${className}" aria-hidden="true"></span>`;
+  root.innerHTML = Array.from({ length: 5 }, (_, index) => `
+    <div class="jobs-result-card jobs-skeleton-card" aria-hidden="true">
+      <span class="jobs-result-image jobs-skeleton-image">${bar('jobs-sk-image')}</span>
+      <span class="jobs-result-content jobs-skeleton-content">
+        <span class="jobs-result-poster jobs-skeleton-poster">
+          ${bar('jobs-sk-avatar')}${bar('jobs-sk-poster-name')}${bar('jobs-sk-time')}
+        </span>
+        ${bar('jobs-sk-title ' + (index % 2 ? 'is-short' : ''))}
+        ${bar('jobs-sk-company')}
+        ${bar('jobs-sk-salary')}
+      </span>
+      <span class="jobs-result-arrow" aria-hidden="true">${bar('jobs-sk-arrow')}</span>
+    </div>`).join('');
+}
+
 async function loadJobs() {
   const requestId = ++state.jobsRequestId;
   const params = new URLSearchParams({ limit: '50', type: 'job' });
@@ -4099,7 +4118,10 @@ async function loadJobs() {
   if (query) params.set('q', query);
   if (state.activeJobCategory && state.activeJobCategory !== 'all') params.set('category', state.activeJobCategory);
   const root = $('jobsList');
-  if (root) root.setAttribute('aria-busy','true');
+  if (root) {
+    root.setAttribute('aria-busy','true');
+    renderJobsSkeleton();
+  }
   try {
     const result = await api('/api/marketplace/listings?' + params.toString());
     if (requestId !== state.jobsRequestId) return;
