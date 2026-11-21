@@ -3420,8 +3420,8 @@ function extractCcSupplierProducts(html, baseUrl) {
     const searchable = (title + ' ' + text).toLowerCase();
     const identitySearch = (title + ' ' + specs.slice(0, 5).join(' ')).toLowerCase();
     const titleSearch = title.toLowerCase();
-    const hasLaptopSpecs = /\\b(?:cpu|processor)\\s*:/i.test(text) && /\\bram\\s*:/i.test(text) && /\\b(?:display|\\d{1,2}(?:\\.\\d)?[- ]?inch|screen)\\b/i.test(text)
-      || /\\b(?:intel(?:®)?\\s+core|amd\\s+ryzen)\\b/i.test(text) && /\\bram\\s*:/i.test(text) && /\\b\\d{1,2}(?:\\.\\d)?[- ]?inch\\b/i.test(text);
+    const hasLaptopSpecs = /\b(?:cpu|processor)\s*:/i.test(text) && /\bram\s*:/i.test(text) && /\b(?:display|\d{1,2}(?:\.\d)?[- ]?inch|screen)\b/i.test(text)
+      || /\b(?:intel(?:®)?\s+core|amd\s+ryzen)\b/i.test(text) && /\bram\s*:/i.test(text) && /\b\d{1,2}(?:\.\d)?[- ]?inch\b/i.test(text);
     const pickSpec = pattern => specs.find(line => pattern.test(line)) || '';
     const colorLine = pickSpec(/(?:color|colour|ពណ៌)\s*:/i) || specs.find(line => /\b(gentle grey|cool silver|quiet blue|black|white|silver|grey|gray|blue|red|green)\b/i.test(line)) || '';
     const weightLine = pickSpec(/(?:weight|ទម្ងន់)\s*:/i) || specs.find(line => /\b\d+(?:\.\d+)?\s?kg\b/i.test(line)) || '';
@@ -3438,7 +3438,7 @@ function extractCcSupplierProducts(html, baseUrl) {
     else if (/\b(mouse|mice)\b/i.test(titleSearch)) { category = 'computer_accessories'; subcategory = 'mouse'; detailType = 'Mouse'; }
     else if (/\b(charger|power adapter|ac adapter)\b/i.test(titleSearch)) { category = 'computer_accessories'; subcategory = 'charger'; detailType = 'Charger'; }
     else if (/\b(cable|usb hub|adapter|dongle)\b/i.test(titleSearch)) { category = 'computer_accessories'; subcategory = 'cable_adapter'; detailType = 'Cable / Adapter'; }
-    else if (/\\b(laptop|notebook|vivobook|expertbook|zenbook|macbook|thinkpad|rog|strix)\\b/i.test(identitySearch) || hasLaptopSpecs) { subcategory = 'laptop'; detailType = 'Laptop'; }
+    else if (/\b(laptop|notebook|vivobook|expertbook|zenbook|macbook|thinkpad|rog|strix)\b/i.test(identitySearch) || hasLaptopSpecs) { subcategory = 'laptop'; detailType = 'Laptop'; }
     else if (/\b(all[- ]in[- ]one|aio)\b/i.test(identitySearch)) { subcategory = 'all_in_one'; detailType = 'All-in-One'; }
     else if (/\b(desktop|tower|mini pc|mini computer)\b/i.test(identitySearch)) { subcategory = 'desktop'; detailType = 'Desktop'; }
     else if (/\b(monitor|display screen)\b/i.test(identitySearch)) { subcategory = 'monitor'; detailType = 'Monitor'; }
@@ -3460,13 +3460,13 @@ function extractCcSupplierProducts(html, baseUrl) {
       subcategory,
       detail_type: detailType,
       specifications: {
-        cpu_model: specs.find(line => /^-?\\s*(?:CPU|Processor)\\s*:/i.test(line))?.replace(/^-?\\s*(?:CPU|Processor)\\s*:/i, '').trim()
-          || specs.find(line => /\\b(?:Intel(?:®)?\\s+Core|AMD\\s+Ryzen)\\b/i.test(line)) || '',
-        ram_type_capacity: (specs.find(line => /^-?\\s*RAM\\s*:/i.test(line))?.replace(/^-?\\s*RAM\\s*:/i, '').split(/\\s*=\\s*/)[0] || '').trim(),
-        storage_type_capacity: specs.find(line => /^-?\\s*(?:Storage|SSD|HDD)\\s*:/i.test(line))?.replace(/^-?\\s*(?:Storage|SSD|HDD)\\s*:/i, '').trim() || '',
+        cpu_model: specs.find(line => /^-?\s*(?:CPU|Processor)\s*:/i.test(line))?.replace(/^-?\s*(?:CPU|Processor)\s*:/i, '').trim()
+          || specs.find(line => /\b(?:Intel(?:®)?\s+Core|AMD\s+Ryzen)\b/i.test(line)) || '',
+        ram_type_capacity: (specs.find(line => /^-?\s*RAM\s*:/i.test(line))?.replace(/^-?\s*RAM\s*:/i, '').split(/\s*=\s*/)[0] || '').trim(),
+        storage_type_capacity: specs.find(line => /^-?\s*(?:Storage|SSD|HDD)\s*:/i.test(line))?.replace(/^-?\s*(?:Storage|SSD|HDD)\s*:/i, '').trim() || '',
         screen_size: specs.find(line => /display|inch|screen/i.test(line)) || '',
-        gpu_model_vram: specs.find(line => /^-?\\s*(?:GPU|VGA(?:\\s*\\d+)?)\\s*:/i.test(line))?.replace(/^-?\\s*(?:GPU|VGA(?:\\s*\\d+)?)\\s*:/i, '').trim() || '',
-        operating_system: specs.find(line => /^-?\\s*(?:OS|Operating System)\\s*:/i.test(line))?.replace(/^-?\\s*(?:OS|Operating System)\\s*:/i, '').trim() || '',
+        gpu_model_vram: specs.find(line => /^-?\s*(?:GPU|VGA(?:\s*\d+)?)\s*:/i.test(line))?.replace(/^-?\s*(?:GPU|VGA(?:\s*\d+)?)\s*:/i, '').trim() || '',
+        operating_system: specs.find(line => /^-?\s*(?:OS|Operating System)\s*:/i.test(line))?.replace(/^-?\s*(?:OS|Operating System)\s*:/i, '').trim() || '',
         color,
         weight,
         battery,
@@ -3480,7 +3480,7 @@ function extractCcSupplierProducts(html, baseUrl) {
   return results;
 }
 function normalizeSupplierIdentity(value) {
-  return String(value || '').toLowerCase().normalize('NFKD').replace(/[\\u0300-\\u036f]/g, '').replace(/[^a-z0-9]+/g, '');
+  return String(value || '').toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '');
 }
 function supplierModelKey(product) {
   return normalizeSupplierIdentity(product?.title || '');
@@ -3609,15 +3609,21 @@ app.post('/api/admin/supplier-import/scan', authenticate, requireAdmin, async (r
       const existingProduct = titleMatches.find(item => supplierProductsCompatible(group, item)) || null;
       const conflictingTitle = titleMatches.length > 0 && !existingProduct;
       const existingConfigKeys = new Set();
+      const parentCode = String(existingProduct?.supplier_source?.supplier_product_code || '').trim().toUpperCase();
+      const parentVariantRepresented = Boolean(existingProduct && parentCode && (existingProduct.variants || []).some(variant =>
+        String(variant.sku || '').trim().toUpperCase() === parentCode
+        || String(variant.supplier_source?.supplier_product_code || '').trim().toUpperCase() === parentCode
+      ));
+      const parentVariantMissing = Boolean(existingProduct && parentCode && !parentVariantRepresented);
       if (existingProduct) {
         const details = existingProduct.listing_details?.specifications || {};
-        const parentCode = String(existingProduct.supplier_source?.supplier_product_code || '').trim().toUpperCase();
-        if (parentCode) existingConfigKeys.add(supplierVariantConfigKey({ specifications: details, supplier_product_code: parentCode }));
+        if (parentCode && !parentVariantMissing) existingConfigKeys.add(supplierVariantConfigKey({ specifications: details, supplier_product_code: parentCode }));
         for (const variant of existingProduct.variants || []) existingConfigKeys.add(supplierVariantConfigKey(variant));
       }
       const newVariants = group.variants.filter(variant => {
         const variantCode = String(variant.supplier_product_code || '').trim().toUpperCase();
-        if (!variantCode || index.knownCodes.has(variantCode)) return false;
+        const migratingParentVariant = parentVariantMissing && variantCode === parentCode;
+        if (!variantCode || (index.knownCodes.has(variantCode) && !migratingParentVariant)) return false;
         return !existingConfigKeys.has(supplierVariantConfigKey(variant));
       });
       const codeConflicts = group.variants.some(variant => {
@@ -3631,7 +3637,8 @@ app.post('/api/admin/supplier-import/scan', authenticate, requireAdmin, async (r
         new_variant_count: newVariants.length,
         variants: group.variants.map(variant => ({
           ...variant,
-          already_imported: index.knownCodes.has(String(variant.supplier_product_code || '').trim().toUpperCase())
+          already_imported: (index.knownCodes.has(String(variant.supplier_product_code || '').trim().toUpperCase())
+            && !(parentVariantMissing && String(variant.supplier_product_code || '').trim().toUpperCase() === parentCode))
             || existingConfigKeys.has(supplierVariantConfigKey(variant))
         }))
       };
@@ -3680,15 +3687,21 @@ app.post('/api/admin/supplier-import/import', authenticate, requireAdmin, async 
     const existingProduct = titleMatches.find(item => supplierProductsCompatible(group, item)) || null;
     if (titleMatches.length && !existingProduct) return fail(res, 409, 'A similar product title exists with different core specifications. Admin review is required.');
     const existingConfigKeys = new Set();
+    const existingParentCode = String(existingProduct?.supplier_source?.supplier_product_code || '').trim().toUpperCase();
+    const parentVariantRepresented = Boolean(existingProduct && existingParentCode && (existingProduct.variants || []).some(variant =>
+      String(variant.sku || '').trim().toUpperCase() === existingParentCode
+      || String(variant.supplier_source?.supplier_product_code || '').trim().toUpperCase() === existingParentCode
+    ));
+    const parentVariantMissing = Boolean(existingProduct && existingParentCode && !parentVariantRepresented);
     if (existingProduct) {
       const details = existingProduct.listing_details?.specifications || {};
-      const parentCode = String(existingProduct.supplier_source?.supplier_product_code || '').trim().toUpperCase();
-      if (parentCode) existingConfigKeys.add(supplierVariantConfigKey({ specifications: details, supplier_product_code: parentCode }));
+      if (existingParentCode && !parentVariantMissing) existingConfigKeys.add(supplierVariantConfigKey({ specifications: details, supplier_product_code: existingParentCode }));
       for (const variant of existingProduct.variants || []) existingConfigKeys.add(supplierVariantConfigKey(variant));
     }
     const variantsToAdd = group.variants.filter(variant => {
       const variantCode = String(variant.supplier_product_code || '').trim().toUpperCase();
-      if (!variantCode || index.knownCodes.has(variantCode)) return false;
+      const migratingParentVariant = parentVariantMissing && variantCode === existingParentCode;
+      if (!variantCode || (index.knownCodes.has(variantCode) && !migratingParentVariant)) return false;
       return !existingConfigKeys.has(supplierVariantConfigKey(variant));
     });
     const codeConflict = group.variants.some(variant => {
@@ -3721,6 +3734,18 @@ app.post('/api/admin/supplier-import/import', authenticate, requireAdmin, async 
       }, { onConflict: 'product_id' });
       if (detailsError) throw detailsError;
     }
+    if (existingProduct) {
+      const ramValues = new Set(group.variants.map(item => normalizeSupplierIdentity(item.specifications?.ram_type_capacity)).filter(Boolean));
+      const storageValues = new Set(group.variants.map(item => normalizeSupplierIdentity(item.specifications?.storage_type_capacity)).filter(Boolean));
+      const commonSpecs = { ...(existingProduct.listing_details?.specifications || {}), ...(group.specifications || {}) };
+      if (ramValues.size > 1) delete commonSpecs.ram_type_capacity;
+      if (storageValues.size > 1) delete commonSpecs.storage_type_capacity;
+      const { error: detailsError } = await supabase.from('product_listing_details').upsert({
+        product_id: targetProductId, category: group.category || 'computers', subcategory: group.subcategory || 'other',
+        detail_type: group.detail_type || 'Computer', specifications: commonSpecs, updated_at: new Date().toISOString()
+      }, { onConflict: 'product_id' });
+      if (detailsError) throw detailsError;
+    }
     if (!existingProduct?.supplier_source) {
       const primary = group.variants[0];
       const { error: sourceError } = await supabase.from('product_supplier_sources').insert({
@@ -3742,7 +3767,10 @@ app.post('/api/admin/supplier-import/import', authenticate, requireAdmin, async 
       const { data: createdVariant, error: variantError } = await supabase.from('product_variants').insert({
         product_id: targetProductId, sku: variant.supplier_product_code,
         option_name: 'RAM / Storage', option_value: optionValue,
-        price: variant.selling_price, stock: 0, attributes, is_active: true,
+        price: variant.selling_price,
+        stock: parentVariantMissing && existingParentCode === String(variant.supplier_product_code || '').trim().toUpperCase()
+          ? Math.max(0, Math.trunc(Number(existingProduct?.stock || 0))) : 0,
+        attributes, is_active: true,
         sort_order: group.variants.indexOf(variant), updated_at: new Date().toISOString()
       }).select().single();
       if (variantError) throw variantError;
