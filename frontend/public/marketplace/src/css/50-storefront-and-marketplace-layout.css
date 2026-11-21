@@ -1,0 +1,524 @@
+/* Amazon-inspired secondary navigation */
+.amazon-nav-row{display:flex;align-items:center;gap:.25rem;min-height:42px;width:100%;padding:.35rem max(1rem,calc((100vw - 1440px)/2));overflow-x:auto;overflow-y:hidden;white-space:nowrap;background:#172b43;color:#fff;scrollbar-width:thin;-webkit-overflow-scrolling:touch}.amazon-nav-row>button{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;min-height:32px;padding:.4rem .7rem;border:1px solid transparent;border-radius:.35rem;background:transparent;color:inherit;font-size:12px;font-weight:600;white-space:nowrap}.amazon-nav-row>button:hover,.amazon-nav-row>button:focus-visible{border-color:rgba(255,255,255,.8);outline:none}.amazon-nav-row .amazon-nav-spacer{flex:1 1 auto;min-width:1rem}.amazon-nav-row .amazon-nav-promo{font-weight:800}@media(max-width:640px){.amazon-nav-row{gap:.15rem;padding:.3rem .5rem}.amazon-nav-row>button{padding:.35rem .55rem;font-size:11px}}
+
+
+/* Keep the hidden utility authoritative over homepage grid display rules. */
+#skeletonGrid.hidden,
+#productGrid.hidden {
+  display: none !important;
+}
+
+#view-profile .cover {
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+}
+
+
+/* 7inOne Amazon-style storefront refresh (keeps existing DOM and actions intact) */
+:root{--az-emerald:#171A21;--az-emerald-deep:#16202D;--az-yellow:#66C0F4;--az-border:#2A475E;--az-text:#C7D5E0}
+.hd{background:#171A21;color:#FFFFFF;border:0;border-bottom:1px solid #2A475E;box-shadow:0 4px 18px rgba(0,0,0,.22)}
+.hd>.shell{width:100%;max-width:100%;min-height:68px;flex-wrap:nowrap;gap:14px;padding-inline:24px}
+.site-brand-lockup{color:#fff!important;min-width:max-content}
+.site-title{color:#fff!important;font-size:21px}
+.site-subtitle{color:#d5e9e4!important}
+.delivery-location{display:flex;align-items:center;gap:7px;flex:none;color:#fff;min-width:105px}
+.delivery-location>span:last-child{display:flex;flex-direction:column;line-height:1.2}
+.delivery-location small{font-size:9px;color:#c7ddd7}.delivery-location b{font-size:12px;color:#fff}
+.delivery-pin{font-size:23px;color:#f8d477}
+#searchForm{height:40px;min-width:220px;overflow:hidden;border-radius:6px;background:#101822;border:1px solid #2A475E;gap:0}
+#searchCategory{display:block;align-self:stretch;height:100%;max-width:150px;border:0;border-radius:0;background:#1E3144;color:#FFFFFF;font-size:11px}
+#searchIcon{display:none!important}
+#searchInput{height:100%;background:#101822;color:#FFFFFF;font-size:13px}
+#searchBtn{width:46px;height:100%;border:0;border-radius:0;background:#2B74B8;color:#FFFFFF}
+#postAdBtn{background:#3e4f64!important;color:#FFFFFF;border-radius:5px;white-space:nowrap}
+#notificationBtn,#profileMenuBtn{color:#FFFFFF}
+#navName,#navRole{color:#FFFFFF}
+#profileMenuBtn .nav-avatar{border-color:rgba(255,255,255,.45)!important}
+#notificationBtn i{border-color:#66C0F4}
+.delivery-location~#searchForm{margin-left:0!important}
+.amazon-nav-row{height:39px;min-height:39px;padding:0 24px;background:#16202D;border:0;display:flex;align-items:center;gap:18px;overflow-x:auto;white-space:nowrap}
+.amazon-nav-row>button{height:39px;padding:0 7px;color:#fff!important;font-size:12px;font-weight:650}
+.amazon-nav-row>button:hover{outline:1px solid rgba(255,255,255,.8)}
+.amazon-nav-spacer{flex:1}
+.amazon-nav-promo{font-weight:800!important;color:#fbd36b!important}
+#view-home{padding-top:0}
+.home-layout-shell{display:grid!important;grid-template-columns:220px minmax(0,1fr)!important;gap:14px 20px!important;align-items:start;padding:16px 0 36px!important}
+.home-main-content{display:contents!important}
+.home-sidebar{grid-column:1;grid-row:3 / span 5;position:sticky;top:118px;display:flex;flex-direction:column;gap:0;min-width:0;padding:12px;border:1px solid #2A475E;border-radius:8px;background:#16202D;color:#C7D5E0;box-shadow:none}
+.store-filter-group{display:flex;flex-direction:column;gap:7px;padding:5px 0 15px;margin-bottom:12px;border-bottom:1px solid #2A475E}
+.store-filter-group:last-child{border-bottom:0;margin-bottom:0}
+.store-filter-group h3{margin:0 0 3px;color:#FFFFFF;font-size:13px;font-weight:800}
+.store-filter-link{padding:3px 0;background:transparent;border:0;color:#C7D5E0;text-align:left;font-size:11px;line-height:1.55}
+.store-filter-link:hover,.store-filter-link.active{color:#66C0F4;text-decoration:underline}
+.store-filter-radio{display:flex;align-items:center;gap:8px;color:#333;font-size:11px;cursor:pointer}
+.store-filter-radio input{accent-color:#064e3b}
+.market-hero{grid-column:1/-1;grid-row:1;display:grid!important;grid-template-columns:minmax(0,1.15fr) minmax(280px,.85fr)!important;gap:18px!important;min-height:220px;padding:24px 30px!important;border-radius:10px!important;background:linear-gradient(110deg,#171A21 0%,#203244 55%,#316282 100%);overflow:hidden}
+.market-hero .hero-copy{background:transparent!important;border-radius:0!important;padding:0!important;box-shadow:none!important}
+.market-hero .hc h1{font-size:clamp(25px,2.5vw,38px)!important;color:#fff}
+.market-hero .hc .sub{max-width:640px;color:#e2f2ec}
+.market-hero .live{color:#66C0F4}
+.market-hero .tags{color:#e2f2ec}
+.market-hero .tags button{border-color:rgba(255,255,255,.42);background:rgba(255,255,255,.1)}
+.market-hero .hero-trust-points{color:#e2f2ec}
+.market-hero .go{background:#2B74B8;color:#FFFFFF;border-radius:6px;min-height:40px;font-size:13px}
+.market-hero .hero-bento{display:grid!important;grid-template-columns:1fr!important;grid-template-rows:1fr!important;min-height:180px;gap:0!important}
+.market-hero .hero-tile{display:none!important}
+.market-hero #heroImageTile1{display:grid!important;grid-row:auto!important;min-height:180px;border-radius:8px;background:rgba(16,24,34,.72);overflow:hidden}
+.market-hero #heroImage1{display:block!important;object-fit:contain!important;padding:6px}
+.market-hero #heroImage1.hidden{display:none!important}
+#categoryStrip{grid-column:1/-1;grid-row:2;display:flex;gap:9px;overflow-x:auto;padding:0 0 4px;margin:0;scrollbar-width:thin}
+#categoryStrip .dk{flex:0 0 auto;min-width:unset;min-height:38px;padding:0 14px;border:1px solid #2A475E;border-radius:8px;background:#16202D;color:#C7D5E0}
+#categoryStrip .dk .ico{display:none}
+#categoryStrip .dk .lb{min-height:0;font-size:11px;white-space:nowrap}
+#categoryStrip .dk.active{border:2px solid #66C0F4;padding-inline:13px;font-weight:800;color:#66C0F4;background:#203244}
+#homeVendorMediaSection{grid-column:2;grid-row:3;min-width:0}
+.market-listing-header{grid-column:2;grid-row:4;align-items:center;padding:8px 0 12px;color:#C7D5E0}
+.market-listing-header h2{font-size:19px;color:#FFFFFF}
+#skeletonGrid,#productGrid{grid-column:2;grid-row:5;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:14px;align-content:start;min-width:0}
+#skeletonGrid.hidden,#productGrid.hidden{display:none!important}
+#emptyHome{grid-column:2;grid-row:5}
+#homePromoRail{display:none!important}
+.cd{border-radius:8px}
+.cd .im{margin:0;padding:0;aspect-ratio:1/1;background:#101822;border-radius:0;color:#8F98A0;overflow:hidden}
+.cd .im .cd-image-wrap img{width:100%;height:100%;padding:0;box-sizing:border-box;object-fit:cover}
+.cd .im .cd-image-wrap{background:#101822}
+.cd .hv{top:8px;right:8px;width:34px;height:34px;background:rgba(16, 24, 34, 0.65);backdrop-filter:blur(8px);color:#C7D5E0;border:1px solid rgba(102,192,244,.22)}
+.cd .cd-quick-add{position:absolute;right:8px;bottom:8px;z-index:4;width:34px;height:34px;border:1px solid #3D6687;border-radius:50%;background:#2B74B8;color:#FFFFFF;display:grid;place-items:center;font-size:23px;font-weight:500;line-height:1;box-shadow:0 2px 5px rgba(0,0,0,.28)}
+.cd .cb{padding:10px 11px 12px}
+.cd .cb h3{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;min-height:36px;margin:5px 0 3px;font-size:13px;line-height:1.4;font-weight:500;color:#FFFFFF}
+.cd .cb h3:hover{color:#66C0F4}
+.cd .pr{display:flex;align-items:center;gap:7px;margin:0;color:#BEEE11;font-size:18px;font-weight:800;line-height:1.35}
+.cd .cd-condition-meta{display:inline-flex;padding:2px 5px;border-radius:3px;background:#cc0c39;color:#fff;font-size:11px;font-weight:700;line-height:1.4}
+.cd .cd-location-meta{color:#8F98A0;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cd .cd-condition-row{display:flex;align-items:center;gap:7px;min-width:0;margin-top:6px}
+.cd .cd-description{display:-webkit-box!important;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden;min-height:0;height:auto;}
+.cd .sh{gap:5px;margin-top:8px}
+.cd .sh .sp{width:22px;height:22px;flex:0 0 22px}
+.cd .sn{max-width:calc(100% - 55px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#565959;font-size:10px}
+.cd .verified-icon{width:13px;height:13px}
+.cd .mt{display:flex;align-items:center;justify-content:space-between;gap:5px;margin-top:6px;color:#565959;font-size:9px}
+.cd .mt .vw{margin-left:auto;white-space:nowrap}
+@media(max-width:1359px){#skeletonGrid,#productGrid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:1023px){#skeletonGrid,#productGrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:899px){
+ .home-layout-shell{display:block!important}
+ .home-sidebar{display:none!important}
+ .home-main-content{display:block!important}
+ .market-hero{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(180px,.7fr)!important}
+ #homeVendorMediaSection,.market-listing-header,#skeletonGrid,#productGrid,#emptyHome{display:block;grid-column:auto;grid-row:auto}
+ #skeletonGrid,#productGrid{display:grid}
+ #skeletonGrid.hidden,#productGrid.hidden{display:none!important}
+}
+@media(max-width:699px){
+ .hd>.shell{flex-wrap:wrap;display:flex!important;gap:7px!important;padding:7px 24px}
+ .delivery-location{display:none}
+ #searchForm{order:3;width:100%;flex:1 0 100%;height:40px}
+ .amazon-nav-row{gap:10px}
+ .home-layout-shell{padding-top:10px!important}
+ .market-hero{display:block!important;padding:18px!important;min-height:0}
+ .market-hero .hero-bento{display:none!important}
+ #categoryStrip{margin:9px 0}
+ .market-listing-header{padding:10px 2px}
+ #skeletonGrid,#productGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+ .cd .cb{padding:8px}
+ .cd .pr{font-size:16px}
+ .cd .mt{font-size:8px}
+}
+@media(min-width:700px) and (max-width:1023px){#skeletonGrid,#productGrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(min-width:1024px) and (max-width:1359px){#skeletonGrid,#productGrid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+
+
+/* Profile cover image layer: keep the existing emerald gradient as the fallback. */
+#view-profile .cover{position:relative;isolation:isolate;overflow:hidden}
+#view-profile .cover>.profile-cover-image{position:absolute;inset:0;z-index:0;display:block;width:100%;height:100%;object-fit:cover;object-position:center}
+#view-profile .cover.has-profile-cover{background-image:none!important}
+
+
+.header-shortcuts{display:flex;align-items:center;gap:9px;flex:none}
+.header-shortcuts button{display:flex;align-items:center;gap:4px;padding:7px 5px;border:0;background:transparent;color:#fff;font-size:18px;white-space:nowrap}
+.header-shortcuts button span{font-size:10px;font-weight:650}
+@media(max-width:1100px){.header-shortcuts{gap:3px}.header-shortcuts button{padding:5px 3px}.header-shortcuts button span{display:none}}
+@media(max-width:699px){.header-shortcuts{display:none}}
+
+
+/* Temporarily hide the home hero banner while retaining its DOM hooks/configuration. */
+#view-home .market-hero{display:none!important}
+#view-home .home-sidebar{grid-row:2 / span 5!important}
+#view-home #categoryStrip{grid-row:1!important}
+#view-home #homeVendorMediaSection{grid-row:2!important}
+#view-home .market-listing-header{grid-row:3!important}
+#view-home #skeletonGrid,#view-home #productGrid{grid-row:4!important}
+#view-home #emptyHome{grid-row:4!important}
+@media(max-width:899px){
+ #view-home .home-sidebar{display:none!important}
+ #view-home #categoryStrip{display:flex!important}
+ #view-home #homeVendorMediaSection,#view-home .market-listing-header{display:block}
+ #view-home #skeletonGrid,#view-home #productGrid{display:grid}
+ #view-home #skeletonGrid.hidden,#view-home #productGrid.hidden{display:none!important}
+}
+
+
+/* 7inOne storefront layout correction — keeps the hero hidden and all existing IDs/actions intact. */
+#view-home{
+  width:100%!important;
+  max-width:none!important;
+  margin:0!important;
+}
+#view-home .home-layout-shell,
+#view-home .amazon-store-body{
+  display:grid!important;
+  width:100%!important;
+  max-width:none!important;
+  grid-template-columns:230px minmax(0,1fr)!important;
+  gap:20px!important;
+  align-items:start!important;
+}
+#view-home .home-main-content{display:contents!important}
+#view-home .amazon-filter-sidebar{
+  display:block!important;
+  grid-column:1!important;
+  grid-row:2 / span 5!important;
+  min-width:0!important;
+  position:sticky;
+  top:118px;
+  background:#16202D!important;
+  border:1px solid #2A475E!important;
+  border-radius:8px!important;
+  padding:14px!important;
+  box-shadow:none!important;
+}
+#view-home .amazon-filter-sidebar [data-category]{
+  display:block;
+  width:100%;
+  text-align:left;
+}
+#view-home #categoryStrip{
+  grid-column:1/-1!important;
+  grid-row:1!important;
+  display:flex!important;
+  flex-wrap:nowrap!important;
+  align-items:center!important;
+  gap:9px!important;
+  overflow-x:auto!important;
+  background:transparent!important;
+  border:none!important;
+  box-shadow:none!important;
+  padding:12px 0!important;
+}
+#view-home #categoryStrip .dk{
+  display:flex!important;
+  flex-direction:row!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:8px!important;
+  flex:0 0 auto!important;
+  min-width:auto!important;
+  min-height:38px!important;
+  padding:8px 14px!important;
+  border:1px solid #D5D9D9!important;
+  border-radius:8px!important;
+  background:#FFFFFF!important;
+  color:#0F1111!important;
+}
+#view-home #categoryStrip .dk .ico{
+  display:grid!important;
+  place-items:center!important;
+  width:18px!important;
+  height:18px!important;
+  flex:0 0 18px!important;
+  padding:0!important;
+  margin:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+#view-home #categoryStrip .dk .ico svg,
+#view-home #categoryStrip .dk .ico img{
+  display:block!important;
+  width:18px!important;
+  height:18px!important;
+  filter:none!important;
+  box-shadow:none!important;
+}
+#view-home #categoryStrip .dk .lb{white-space:nowrap!important}
+#view-home #categoryStrip .dk.active{
+  border:1px solid #66C0F4!important;
+  background:#203244!important;
+  color:#66C0F4!important;
+  padding:8px 14px!important;
+}
+#view-home #homeVendorMediaSection{grid-column:2!important;grid-row:2!important;min-width:0}
+#view-home .market-listing-header{grid-column:2!important;grid-row:3!important}
+#view-home #productGrid:not(.hidden){
+  display:grid!important;
+  grid-column:2!important;
+  grid-row:4!important;
+  grid-template-columns:repeat(6,minmax(0,1fr))!important;
+  gap:12px!important;
+  min-width:0!important;
+}
+#view-home #skeletonGrid:not(.hidden){
+  grid-column:2!important;
+  grid-row:4!important;
+  min-width:0!important;
+}
+#view-home #emptyHome{grid-column:2!important;grid-row:4!important}
+
+/* Steam Store header surface — preserve sticky top navigation */
+body > header.hd.glass{
+  position:sticky;
+  top:0;
+  z-index:50;
+  background:#171A21;
+  color:#FFFFFF;
+  border-bottom:1px solid #2A475E;
+  box-shadow:0 4px 18px rgba(0,0,0,.22);
+  backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
+}
+.hd #siteTitle,
+.hd #navName,
+.hd #bellIcon,
+.hd #notificationBtn{color:#FFFFFF}
+.hd #siteSubtitle,
+.hd #navRole{color:#8F98A0}
+
+/* Product-card shop avatar: clean circular crop, never a square thumbnail. */
+#view-home .cd .sh .sp{
+  width:30px!important;
+  height:30px!important;
+  min-width:30px!important;
+  flex:0 0 30px!important;
+  overflow:hidden!important;
+  display:grid!important;
+  place-items:center!important;
+  border:1px solid #E3E6E6!important;
+  border-radius:50%!important;
+  background:#F0FDF8!important;
+  box-shadow:none!important;
+}
+#view-home .cd .sh .sp img,
+#view-home .cd .sh .sp picture,
+#view-home .cd .sh .sp picture img{
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+  max-width:none!important;
+  border-radius:50%!important;
+  object-fit:cover!important;
+  object-position:center!important;
+}
+@media(max-width:1360px){
+  #view-home #skeletonGrid:not(.hidden),
+  #view-home #productGrid:not(.hidden){
+    grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  }
+}
+@media(max-width:900px){
+  #view-home .home-layout-shell,
+  #view-home .amazon-store-body{grid-template-columns:1fr!important;gap:10px!important}
+  #view-home .amazon-filter-sidebar{display:none!important}
+  #view-home #categoryStrip{grid-column:1!important;grid-row:1!important}
+  #view-home #homeVendorMediaSection,
+  #view-home .market-listing-header,
+  #view-home #skeletonGrid,
+  #view-home #productGrid,
+  #view-home #emptyHome{grid-column:1!important;grid-row:auto!important}
+  #view-home #skeletonGrid:not(.hidden),
+  #view-home #productGrid:not(.hidden){grid-template-columns:repeat(3,minmax(0,1fr))!important}
+}
+@media(max-width:639px){
+  #view-home #skeletonGrid:not(.hidden),
+  #view-home #productGrid:not(.hidden){
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:10px!important;
+  }
+}
+
+
+/* Public seller bio and circular shop avatars in related-product cards. */
+#view-store .storefront-bio{margin-top:8px}
+#view-store .storefront-bio-label{display:block;margin-bottom:2px;color:#315541;font-size:10px;font-weight:800;letter-spacing:.02em}
+#view-store .storefront-description{margin-top:0}
+.product-related-grid .cd .sh .sp{
+  position:relative!important;
+  display:grid!important;
+  width:30px!important;
+  height:30px!important;
+  min-width:30px!important;
+  min-height:30px!important;
+  flex:0 0 30px!important;
+  overflow:hidden!important;
+  border:1px solid #DCE8E0!important;
+  border-radius:50%!important;
+  aspect-ratio:1/1!important;
+  background:#F0FDF8!important;
+  clip-path:circle(50% at 50% 50%)!important;
+}
+.product-related-grid .cd .sh .sp img{
+  position:absolute!important;
+  inset:0!important;
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+  max-width:none!important;
+  border-radius:50%!important;
+  object-fit:cover!important;
+  object-position:center!important;
+}
+.product-related-grid .cd .sh .sp .sp-fallback{
+  position:absolute!important;
+  inset:0!important;
+  display:grid!important;
+  width:100%!important;
+  height:100%!important;
+  place-items:center!important;
+  border-radius:50%!important;
+  overflow:hidden!important;
+}
+
+
+/* Remove the home category dock visually while preserving its existing JS hooks. */
+#view-home #categoryStrip{display:none!important}
+#view-home .amazon-filter-sidebar{grid-row:1 / span 5!important}
+#view-home #homeVendorMediaSection{grid-row:1!important}
+#view-home .market-listing-header{grid-row:2!important}
+#view-home #skeletonGrid:not(.hidden),
+#view-home #productGrid:not(.hidden),
+#view-home #emptyHome{grid-row:3!important}
+@media(max-width:900px){
+  #view-home #categoryStrip{display:none!important}
+  #view-home #homeVendorMediaSection,
+  #view-home .market-listing-header,
+  #view-home #skeletonGrid,
+  #view-home #productGrid,
+  #view-home #emptyHome{grid-row:auto!important}
+}
+
+
+/* Convert the listing heading into a banner while keeping its existing controls and IDs. */
+#view-home .market-listing-header{
+  position:relative!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:18px!important;
+  min-height:118px!important;
+  margin:4px 0 18px!important;
+  padding:22px 24px!important;
+  overflow:hidden!important;
+  color:#fff!important;
+  background:linear-gradient(112deg,#171A21 0%,#16202D 58%,#203244 100%)!important;
+  border:1px solid #2A475E!important;
+  border-radius:18px!important;
+  box-shadow:0 10px 26px rgba(0,0,0,.28)!important;
+}
+#view-home .market-listing-header:after{
+  content:"";
+  position:absolute;
+  width:230px;
+  height:230px;
+  right:12%;
+  top:-145px;
+  border:34px solid rgba(102,192,244,.08);
+  border-radius:50%;
+  pointer-events:none;
+}
+#view-home .market-listing-header>div{position:relative;z-index:1;min-width:0}
+#view-home .market-listing-header .new{
+  display:flex!important;
+  align-items:center!important;
+  gap:7px!important;
+  margin:0 0 7px!important;
+  color:#66C0F4!important;
+  font-size:11px!important;
+  font-weight:800!important;
+}
+#view-home .market-listing-header .new i{
+  width:7px!important;height:7px!important;flex:0 0 7px!important;
+  border-radius:50%!important;background:#66C0F4!important;
+  box-shadow:0 0 0 4px rgba(102,192,244,.14)!important;
+}
+#view-home #listingTitle{
+  margin:0!important;
+  color:#fff!important;
+  font-size:clamp(19px,2vw,25px)!important;
+  line-height:1.3!important;
+  font-weight:850!important;
+}
+#view-home #listingSub{
+  margin:6px 0 0!important;
+  color:#8F98A0!important;
+  font-size:12px!important;
+}
+#view-home #resultCount{color:#C7D5E0!important}
+#view-home #sortSelect{
+  position:relative;z-index:2;
+  color:#C7D5E0!important;
+  background:#101822!important;
+  border:1px solid #2A475E!important;
+  border-radius:10px!important;
+  min-height:42px!important;
+}
+@media(max-width:639px){
+  #view-home .market-listing-header{
+    align-items:flex-start!important;
+    flex-direction:column!important;
+    min-height:0!important;
+    gap:13px!important;
+    padding:18px!important;
+    margin-bottom:14px!important;
+    border-radius:15px!important;
+  }
+  #view-home .market-listing-header>div:last-child{
+    display:flex!important;
+    align-items:center!important;
+    justify-content:space-between!important;
+    width:100%!important;
+  }
+  #view-home #sortSelect{min-height:38px!important}
+}
+
+
+/* Align the listing banner with the top edge of the sidebar category section. */
+@media(min-width:901px){
+  #view-home .market-listing-header{
+    margin-top:0!important;
+    align-self:start!important;
+    width:100%!important;
+    box-sizing:border-box!important;
+  }
+}
+
+
+/* Keep the banner aligned to the storefront shell in normal page flow; do not float it while scrolling. */
+#view-home .market-listing-header{
+  position:relative!important;
+  top:auto!important;
+  inset-block-start:auto!important;
+  align-self:start!important;
+  transform:none!important;
+  z-index:auto!important;
+}
+
+
+/* Match the reference screenshot: banner starts level with the sidebar's category heading. */
+@media(min-width:901px){
+  #view-home .amazon-filter-sidebar{
+    grid-row:1 / span 5!important;
+  }
+  #view-home .market-listing-header{
+    grid-row:1!important;
+    margin-top:0!important;
+    align-self:start!important;
+  }
+  #view-home #skeletonGrid:not(.hidden),
+  #view-home #productGrid:not(.hidden),
+  #view-home #emptyHome{
+    grid-row:2!important;
+  }
+}
+
+
