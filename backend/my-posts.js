@@ -121,7 +121,7 @@ export function registerMyPostsRoutes(app, {
     const multipartBody = req.body || {};
     let body = multipartBody;
     if (typeof multipartBody.payload === 'string') {
-      try { body = { ...JSON.parse(multipartBody.payload), ...multipartBody }; delete body.payload; }
+      try { body = { ...multipartBody, ...JSON.parse(multipartBody.payload) }; delete body.payload; }
       catch { return fail(res,400,'ព័ត៌មានដែលបានបញ្ជូនមិនត្រឹមត្រូវទេ។'); }
     }
     const action = text(body.action, 20);
