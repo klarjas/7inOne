@@ -2837,10 +2837,9 @@ app.post('/api/products/:id/images', authenticate, upload.array('images', 10), a
   const { data: vendor } = await vendorFor(req.user.id);
   if (!admin && (!vendor || vendor.status === 'blocked')) return fail(res, 403, 'Active vendor account required');
   let productQuery = supabase.from('products').select('id').eq('id', req.params.id);
-  if (admin) {
-    if (vendor) productQuery = productQuery.eq('vendor_id', vendor.id);
-    else return fail(res, 404, 'Admin store not found');
-  } else productQuery = productQuery.eq('vendor_id', vendor.id);
+  // Admins may manage official-store products without owning a separate vendor account.
+  // Non-admin sellers remain strictly scoped to their own vendor ID.
+  if (!admin) productQuery = productQuery.eq('vendor_id', vendor.id);
   const { data: product } = await productQuery.maybeSingle();
   if (!product) return fail(res, 404, 'Product not found');
   const files = req.files || [];
