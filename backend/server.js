@@ -3185,7 +3185,7 @@ app.get('/api/admin/vendors', authenticate, requireAdmin, async (_req, res) => {
   if (error) return fail(res, 500, 'Could not load vendors');
   const enriched = (data || []).map(vendor => {
     const { document_path, document_file_id, document_message_id, ...safeVendor } = vendor;
-    return { ...safeVendor, document_url: vendor.document_file_id ? `/api/admin/vendors/${encodeURIComponent(vendor.id)}/document` : vendor.document_url || null };
+    return { ...publicVendor(safeVendor), document_url: vendor.document_file_id ? `/api/admin/vendors/${encodeURIComponent(vendor.id)}/document` : vendor.document_url || null };
   });
   res.json({ data: enriched });
 });
