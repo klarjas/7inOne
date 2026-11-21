@@ -3348,22 +3348,32 @@ function renderSupplierImportResults(result, catalogUrl) {
   const items = result.data || [];
   const summary = result.summary || {};
   const page = result.pagination || {};
-  target.innerHTML = '<div class="mb-3 rounded-xl bg-slate-100 p-3 text-[11px]">រកឃើញសរុប '+Number(summary.total||0)+' ផលិតផល · បង្ហាញ '+Number(summary.batch||items.length)+' មុខ · អាចនាំចូល '+Number(summary.ready||0)+' · ស្ទួន '+Number(summary.duplicate||0)+' · ត្រូវពិនិត្យ '+Number(summary.needs_review||0)+'</div>' +
+  const importable = Number(summary.ready || 0) + Number(summary.update_existing || 0);
+  target.innerHTML = '<div class="mb-3 rounded-xl bg-slate-100 p-3 text-[11px]">រកឃើញសរុប '+Number(summary.total||0)+' ម៉ូដែល · បង្ហាញ '+Number(summary.batch||items.length)+' ម៉ូដែល · អាចនាំចូល/បន្ថែម '+importable+' · ស្ទួន '+Number(summary.duplicate||0)+' · ត្រូវពិនិត្យ '+Number(summary.needs_review||0)+'</div>' +
     (items.length ? '<div class="space-y-2">'+items.map(item => {
-      const statusLabel = item.status === 'duplicate' ? 'មានរួចហើយ' : item.status === 'ready' ? 'អាចនាំចូល' : 'មិនទាន់ផ្ទៀងផ្ទាត់';
-      const statusClass = item.status === 'ready' ? 'text-emerald-700' : item.status === 'duplicate' ? 'text-amber-700' : 'text-rose-700';
+      const statusLabels = {ready:'ផលិតផលថ្មី · អាចនាំចូល',update_existing:'មានផលិតផលមេរួច · អាចបន្ថែម Variant',duplicate:'ផលិតផល និង Variants មានរួចហើយ',needs_review:'ត្រូវឱ្យ Admin ពិនិត្យ'};
+      const statusClasses = {ready:'text-emerald-700',update_existing:'text-blue-700',duplicate:'text-amber-700',needs_review:'text-rose-700'};
+      const variants = item.variants || [item];
       const specs = item.specifications || {};
-      const attrs = [item.category || 'computers', item.detail_type || item.subcategory || '', specs.color ? 'ពណ៌: '+specs.color : '', specs.weight ? 'ទម្ងន់: '+specs.weight : '', specs.battery ? 'ថ្ម: '+specs.battery : ''].filter(Boolean).join(' · ');
+      const attrs = [item.category || 'computers', item.detail_type || item.subcategory || '', specs.cpu_model ? 'CPU: '+specs.cpu_model : '', specs.gpu_model_vram ? 'GPU: '+specs.gpu_model_vram : '', specs.color ? 'ពណ៌: '+specs.color : '', specs.weight ? 'ទម្ងន់: '+specs.weight : '', specs.battery ? 'ថ្ម: '+specs.battery : ''].filter(Boolean).join(' · ');
+      const importVariant = variants.find(variant => !variant.already_imported) || variants[0];
+      const variantRows = variants.map(variant => {
+        const variantSpecs = variant.specifications || {};
+        const label = [variantSpecs.ram_type_capacity,variantSpecs.storage_type_capacity].filter(Boolean).join(' · ') || 'Configuration មិនទាន់ច្បាស់';
+        return '<li class="flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 py-2"><span><b>'+esc(label)+'</b><small class="block text-slate-500">Code: '+esc(variant.supplier_product_code||'—')+(variant.already_imported?' · មានរួចហើយ':'')+'</small></span><span class="text-right"><b>'+money(variant.selling_price)+'</b><small class="block text-slate-500">Supplier '+money(variant.supplier_price)+'</small></span></li>';
+      }).join('');
+      const status = item.status || 'needs_review';
       return '<article class="rounded-xl border border-slate-200 p-3 text-[11px]"><div class="flex gap-3">'+
         (item.image_urls?.[0] ? '<img src="'+esc(item.image_urls[0])+'" alt="" class="h-16 w-16 rounded-lg object-cover">' : '<div class="grid h-16 w-16 place-items-center rounded-lg bg-slate-100">រូបភាព</div>')+
-        '<div class="min-w-0 flex-1"><b class="block">'+esc(item.title||'មិនស្គាល់ឈ្មោះផលិតផល')+'</b><span class="text-slate-500">Code: '+esc(item.supplier_product_code)+'</span>'+
+        '<div class="min-w-0 flex-1"><b class="block">'+esc(item.title||'មិនស្គាល់ឈ្មោះផលិតផល')+'</b>'+
         '<div class="mt-1 text-slate-600">'+esc(attrs)+'</div>'+
-        '<div class="mt-1">Supplier: <b>'+ (Number.isFinite(Number(item.supplier_price)) ? money(item.supplier_price) : 'មិនមានតម្លៃ')+'</b> → AURORA: <b>'+(Number.isFinite(Number(item.selling_price))?money(item.selling_price):'—')+'</b></div>'+
-        '<div class="mt-1 '+statusClass+'">'+statusLabel+'</div></div></div>'+
-        (item.status === 'ready' ? '<button type="button" class="mt-3 rounded-full bg-slate-900 px-4 py-2 font-bold text-white" data-supplier-import-code="'+esc(item.supplier_product_code)+'" data-supplier-import-price="'+Number(item.supplier_price)+'">នាំចូលផលិតផលនេះ</button>' : '')+
+        '<div class="mt-1 font-semibold">ផលិតផលមេ ១ · '+variants.length+' Variants</div>'+
+        '<div class="mt-1 '+(statusClasses[status]||'text-slate-600')+'">'+(statusLabels[status]||status)+'</div></div></div>'+
+        '<ul class="mt-2">'+variantRows+'</ul>'+
+        ((status==='ready'||status==='update_existing')&&importVariant ? '<button type="button" class="mt-3 rounded-full bg-slate-900 px-4 py-2 font-bold text-white" data-supplier-import-code="'+esc(importVariant.supplier_product_code)+'" data-supplier-import-price="'+Number(importVariant.supplier_price)+'">'+(status==='update_existing'?'បន្ថែម '+Number(item.new_variant_count||0)+' Variants ទៅផលិតផលមេ':'នាំចូលជាផលិតផលមេ ១ មាន '+variants.length+' Variants')+'</button>' : '')+
       '</article>';
     }).join('')+'</div>' : '<p class="py-4 text-center text-slate-500">មិនបានរកឃើញផលិតផលក្នុងបាច់នេះទេ។</p>')+
-    (page.has_more ? '<div class="pt-3 text-center"><button type="button" class="rounded-full border border-slate-300 px-5 py-2.5 text-[11px] font-bold" data-supplier-import-next="'+Number(page.next_offset||0)+'">បង្ហាញផលិតផល ១០ មុខបន្ទាប់</button></div>' : '');
+    (page.has_more ? '<div class="pt-3 text-center"><button type="button" class="rounded-full border border-slate-300 px-5 py-2.5 text-[11px] font-bold" data-supplier-import-next="'+Number(page.next_offset||0)+'">បង្ហាញផលិតផល ១០ ម៉ូដែលបន្ទាប់</button></div>' : '');
   target.dataset.catalogUrl = catalogUrl;
 }
 async function scanAuroraSupplierCatalog(url, offset = 0) {
@@ -5707,7 +5717,9 @@ function bindEvents() {
     button.disabled = true; button.textContent = 'កំពុងនាំចូល...';
     try {
       const result = await api('/api/admin/supplier-import/import', { method: 'POST', body: JSON.stringify({ catalog_url: catalogUrl, supplier_product_code: code, expected_supplier_price: supplierPrice }) });
-      toast('បាននាំចូល '+(result.data?.title||code)+' ជោគជ័យ។ តម្លៃលក់បានបូក $5 រួច។');
+      toast(result.data?.existing_product
+        ? 'បានបន្ថែម '+Number(result.data?.created_variants||0)+' Variants ទៅផលិតផល '+(result.data?.title||code)+' ជោគជ័យ។'
+        : 'បាននាំចូល '+(result.data?.title||code)+' ជាផលិតផលមេ និង '+Number(result.data?.created_variants||0)+' Variants ជោគជ័យ។');
       await scanAuroraSupplierCatalog(catalogUrl);
       await renderAdminSupplierProducts();
     } catch (error) {
