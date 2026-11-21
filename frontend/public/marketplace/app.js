@@ -5366,6 +5366,16 @@ function bindEvents() {
       form.reset();toast('បានបង្កើតផលិតផល Supplier ជោគជ័យ។');await renderAdminSupplierProducts();
     }catch(error){toast(error.message||'មិនអាចបង្កើតផលិតផលបានទេ។','error');}
   });
+  $('adminSupplierProductsList')?.addEventListener('input',event=>{
+    const form=event.target.closest('.admin-supplier-add-variant-form,.admin-supplier-variant-form');
+    if(!form)return;
+    const priceInput=form.querySelector('[name="price"]');
+    if(event.target.matches('[name="price"]')){priceInput.dataset.manualPrice='true';return;}
+    if(event.target.matches('[name="supplier_price"]') && priceInput?.dataset.manualPrice!=='true'){
+      const cost=Number(event.target.value);
+      if(Number.isFinite(cost)&&cost>=0)priceInput.value=(cost+5).toFixed(2);
+    }
+  });
   $('adminSupplierProductsList')?.addEventListener('submit',async event=>{
     const form=event.target.closest('form');if(!form)return;const data=Object.fromEntries(new FormData(form).entries());
     try{
