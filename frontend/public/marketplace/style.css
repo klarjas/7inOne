@@ -7472,3 +7472,36 @@ body > footer {
   display: inline-grid;
   place-items: center;
 }
+
+
+/* Direct contact action on the public store header */
+.storefront-title-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 9px;
+}
+.storefront-chat-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 34px;
+  padding: 7px 12px;
+  border: 1px solid rgba(102, 192, 244, .3);
+  border-radius: 999px;
+  background: #203A50;
+  color: #BFE7FF;
+  font-size: 11px;
+  font-weight: 700;
+  transition: background .16s ease, border-color .16s ease, color .16s ease;
+}
+.storefront-chat-button:hover {
+  border-color: #66C0F4;
+  background: #294B65;
+  color: #FFFFFF;
+}
+.storefront-chat-button svg {
+  display: block;
+  flex: 0 0 auto;
+}
