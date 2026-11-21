@@ -218,6 +218,50 @@ const esc = (v) =>
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
   }[c]));
 
+const renderTelegramDiagnostics = (payload) => {
+  const data = payload && typeof payload === 'object' ? payload : {};
+  const readPath = (source, path) => path.split('.').reduce((value, key) => value && typeof value === 'object' ? value[key] : undefined, source);
+  const findValue = (paths) => {
+    for (const path of paths) {
+      const value = readPath(data, path);
+      if (value !== undefined && value !== null) return value;
+    }
+    return undefined;
+  };
+  const statusInfo = (value) => {
+    if (typeof value === 'boolean') return { ok: value, text: value ? 'ភ្ជាប់រួចរាល់' : 'មិនទាន់ភ្ជាប់' };
+    if (typeof value === 'string') {
+      const normalized = value.toLowerCase();
+      const ok = /^(ok|success|connected|active|ready|available|running|healthy|true)$/i.test(value) || /connected|ready|active|success|running|ដំណើរការ|រួចរាល់/.test(normalized);
+      const failed = /^(error|failed|disconnected|inactive|false|unavailable)$/i.test(value) || /error|fail|disconnect|inactive|unavailable|មិនដំណើរការ|បរាជ័យ/.test(normalized);
+      return { ok: failed ? false : ok ? true : null, text: value };
+    }
+    if (value && typeof value === 'object') {
+      const flag = value.ok ?? value.success ?? value.connected ?? value.available ?? value.active ?? value.running;
+      const detail = value.status ?? value.message ?? value.name ?? value.title;
+      if (typeof flag === 'boolean') return { ok: flag, text: detail ? String(detail) : flag ? 'ភ្ជាប់រួចរាល់' : 'មិនទាន់ភ្ជាប់' };
+      if (typeof detail === 'string') return statusInfo(detail);
+    }
+    return { ok: null, text: 'មិនមានព័ត៌មាន' };
+  };
+  const rows = [
+    { label: 'Bot Status', value: findValue(['bot.status','botStatus','bot_status','bot_connected','botConnected','bot']) },
+    { label: 'Channel', value: findValue(['channel.status','channelStatus','channel_status','channel_accessible','channelAccessible','channel']) },
+    { label: 'សិទ្ធិផ្ញើរូបភាព', value: findValue(['photoUpload','photo_upload','canSendPhotos','can_send_photos','permissions.can_send_photos','permissions.photos']) }
+  ];
+  const availableRows = rows.map((row) => ({ ...row, status: statusInfo(row.value) }));
+  const details = findValue(['message','detail','description']);
+  return '<div class="admin-telegram-diagnostics-list">' +
+    availableRows.map((row) => {
+      const status = row.status;
+      const icon = status.ok === true ? '✓' : status.ok === false ? '✕' : '•';
+      const stateClass = status.ok === true ? 'is-success' : status.ok === false ? 'is-error' : 'is-neutral';
+      return '<div class="admin-telegram-diagnostics-row ' + stateClass + '"><span class="admin-telegram-diagnostics-label">' + esc(row.label) + '</span><strong><span class="admin-telegram-diagnostics-icon" aria-hidden="true">' + icon + '</span>' + esc(status.text) + '</strong></div>';
+    }).join('') +
+    (details ? '<p class="admin-telegram-diagnostics-note">' + esc(details) + '</p>' : '') +
+    '</div>';
+};
+
 const money = (v) => '$' + Number(v || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 
 const fmtDate = (v) => v ? new Date(v).toLocaleDateString('km-KH', { year: 'numeric', month: 'short', day: 'numeric' }) : '—';
@@ -4560,7 +4604,20 @@ function bindEvents() {
   $('maintenanceAdminLogin')?.addEventListener('click', () => openAuth());
   $('saveMaintenanceSettings')?.addEventListener('click', async () => { try { const payload = { maintenanceMode: Boolean($('maintenanceToggle')?.checked), maintenanceMessage: $('maintenanceMessageInput')?.value || '' }; const res = await api('/api/admin/maintenance', { method: 'POST', body: JSON.stringify(payload) }); state.maintenanceMode = payload.maintenanceMode; state.maintenanceMessage = payload.maintenanceMessage; applyMaintenanceUI(); if ($('maintenanceStatusHint')) $('maintenanceStatusHint').textContent = state.maintenanceMode ? 'ស្ថានភាពបច្ចុប្បន្ន៖ Maintenance' : 'ស្ថានភាពបច្ចុប្បន្ន៖ កំពុងដំណើរការ'; toast(res.message || 'បានរក្សាទុក Maintenance Settings។'); } catch (err) { toast(err.message || 'មិនអាចរក្សាទុក Maintenance Settings បានទេ។', 'error'); } });
   $('saveBrandingBtn')?.addEventListener('click', async () => { const form = new FormData(); form.append('siteTitle', $('brandTitleInput')?.value || ''); form.append('siteSubtitle', $('brandSubtitleInput')?.value || ''); form.append('heroBadge', $('heroBadgeInput')?.value || ''); form.append('heroTitle', $('heroTitleInput')?.value || ''); form.append('heroSubtitle', $('heroSubtitleInput')?.value || ''); form.append('clearHeroImages', String(Boolean($('clearHeroImages')?.checked))); const logo = $('brandingLogoUpload')?.files?.[0], favicon = $('brandingFaviconUpload')?.files?.[0]; if (logo) form.append('logo', logo); if (favicon) form.append('favicon', favicon); Array.from($('brandingHeroUpload')?.files || []).slice(0, 3).forEach((f) => form.append('heroImages', f)); try { const res = await api('/api/admin/branding', { method: 'PATCH', body: form }); applySiteBranding(res.data || {}); if ($('brandingStatus')) $('brandingStatus').textContent = 'បានរក្សាទុក Brand និង Banner ជោគជ័យ'; toast('បានរក្សាទុក Brand ជោគជ័យ!'); } catch (err) { toast(err.message || 'មិនអាចរក្សាទុក Brand បានទេ។', 'error'); } });
-  $('telegramDiagnosticsBtn')?.addEventListener('click', async () => { const target = $('telegramDiagnosticsResult'); try { const res = await api('/api/admin/telegram/diagnostics'); if (target) target.textContent = JSON.stringify(res.data ?? res, null, 2); } catch (err) { if (target) target.textContent = JSON.stringify({ error: err.message }, null, 2); } });
+  $('telegramDiagnosticsBtn')?.addEventListener('click', async () => {
+    const target = $('telegramDiagnosticsResult');
+    const button = $('telegramDiagnosticsBtn');
+    if (button) { button.disabled = true; button.textContent = 'កំពុងពិនិត្យ…'; }
+    if (target) target.innerHTML = '<div class="admin-telegram-diagnostics-loading">កំពុងពិនិត្យការភ្ជាប់ Telegram…</div>';
+    try {
+      const res = await api('/api/admin/telegram/diagnostics');
+      if (target) target.innerHTML = renderTelegramDiagnostics(res.data ?? res);
+    } catch (err) {
+      if (target) target.innerHTML = '<div class="admin-telegram-diagnostics-row is-error"><span class="admin-telegram-diagnostics-label">ស្ថានភាពពិនិត្យ</span><strong>' + esc(err.message || 'មិនអាចពិនិត្យស្ថានភាព Telegram បានទេ។') + '</strong></div>';
+    } finally {
+      if (button) { button.disabled = false; button.textContent = 'ពិនិត្យស្ថានភាព'; }
+    }
+  });
   $('adminApplications')?.addEventListener('click', async (e) => { const b = e.target.closest('[data-admin-review]'); if (!b) return; try { await api('/api/admin/vendors/' + encodeURIComponent(b.dataset.id), { method: 'PATCH', body: JSON.stringify({ status: b.dataset.adminReview }) }); await renderAdmin(); toast('បានធ្វើបច្ចុប្បន្នភាពពាក្យស្នើសុំ។'); } catch (err) { toast(err.message || 'មិនអាចពិនិត្យពាក្យស្នើសុំបានទេ។', 'error'); } });
 
   // Open chat images in an in-page lightbox; never navigate to a new tab.
