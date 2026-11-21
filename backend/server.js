@@ -3382,21 +3382,21 @@ function extractCcSupplierProducts(html, baseUrl) {
     const imageUrls = supplierImageCandidates(card, baseUrl).slice(0, 5);
     const searchable = (title + ' ' + text).toLowerCase();
     const pickSpec = pattern => specs.find(line => pattern.test(line)) || '';
-    const color = pickSpec(/(?:color|colour|ពណ៌)\\s*:/i).replace(/^(?:color|colour|ពណ៌)\\s*:/i, '').trim();
-    const weight = pickSpec(/(?:weight|ទម្ងន់)\\s*:/i).replace(/^(?:weight|ទម្ងន់)\\s*:/i, '').trim();
-    const battery = pickSpec(/(?:battery|ថ្ម)\\s*:/i).replace(/^(?:battery|ថ្ម)\\s*:/i, '').trim();
+    const color = pickSpec(/(?:color|colour|ពណ៌)\s*:/i).replace(/^(?:color|colour|ពណ៌)\s*:/i, '').trim();
+    const weight = pickSpec(/(?:weight|ទម្ងន់)\s*:/i).replace(/^(?:weight|ទម្ងន់)\s*:/i, '').trim();
+    const battery = pickSpec(/(?:battery|ថ្ម)\s*:/i).replace(/^(?:battery|ថ្ម)\s*:/i, '').trim();
     let category = 'computers';
     let subcategory = 'other';
     let detailType = 'Computer';
-    if (/\\b(laptop|notebook|vivobook|expertbook|zenbook|macbook|thinkpad)\\b/i.test(searchable)) { subcategory = 'laptop'; detailType = 'Laptop'; }
-    else if (/\\b(all[- ]in[- ]one|aio)\\b/i.test(searchable)) { subcategory = 'all_in_one'; detailType = 'All-in-One'; }
-    else if (/\\b(desktop|tower|mini pc|mini computer)\\b/i.test(searchable)) { subcategory = 'desktop'; detailType = 'Desktop'; }
-    else if (/\\b(monitor|display screen)\\b/i.test(searchable)) { subcategory = 'monitor'; detailType = 'Monitor'; }
-    else if (/\\b(keyboard)\\b/i.test(searchable)) { category = 'computer_accessories'; subcategory = 'keyboard'; detailType = 'Keyboard'; }
-    else if (/\\b(mouse|mice)\\b/i.test(searchable)) { category = 'computer_accessories'; subcategory = 'mouse'; detailType = 'Mouse'; }
-    else if (/\\b(charger|power adapter|ac adapter)\\b/i.test(searchable)) { category = 'computer_accessories'; subcategory = 'charger'; detailType = 'Charger'; }
-    else if (/\\b(cable|usb hub|adapter|dongle)\\b/i.test(searchable)) { category = 'computer_accessories'; subcategory = 'cable_adapter'; detailType = 'Cable / Adapter'; }
-    else if (/\\b(laptop bag|notebook bag|computer bag)\\b/i.test(searchable)) { category = 'computer_accessories'; subcategory = 'bag'; detailType = 'Computer Bag'; }
+    if (/\b(laptop|notebook|vivobook|expertbook|zenbook|macbook|thinkpad)\b/i.test(searchable)) { subcategory = 'laptop'; detailType = 'Laptop'; }
+    else if (/\b(all[- ]in[- ]one|aio)\b/i.test(searchable)) { subcategory = 'all_in_one'; detailType = 'All-in-One'; }
+    else if (/\b(desktop|tower|mini pc|mini computer)\b/i.test(searchable)) { subcategory = 'desktop'; detailType = 'Desktop'; }
+    else if (/\b(monitor|display screen)\b/i.test(searchable)) { subcategory = 'monitor'; detailType = 'Monitor'; }
+    else if (/\b(keyboard)\b/i.test(searchable)) { category = 'computer_accessories'; subcategory = 'keyboard'; detailType = 'Keyboard'; }
+    else if (/\b(mouse|mice)\b/i.test(searchable)) { category = 'computer_accessories'; subcategory = 'mouse'; detailType = 'Mouse'; }
+    else if (/\b(charger|power adapter|ac adapter)\b/i.test(searchable)) { category = 'computer_accessories'; subcategory = 'charger'; detailType = 'Charger'; }
+    else if (/\b(cable|usb hub|adapter|dongle)\b/i.test(searchable)) { category = 'computer_accessories'; subcategory = 'cable_adapter'; detailType = 'Cable / Adapter'; }
+    else if (/\b(laptop bag|notebook bag|computer bag)\b/i.test(searchable)) { category = 'computer_accessories'; subcategory = 'bag'; detailType = 'Computer Bag'; }
     let productUrl = baseUrl;
     const links = [...card.matchAll(/<a\b[^>]*href\s*=\s*(?:"([^"]+)"|'([^']+)'|([^\s>]+))/gi)];
     for (const link of links) {
@@ -3415,11 +3415,11 @@ function extractCcSupplierProducts(html, baseUrl) {
       subcategory,
       detail_type: detailType,
       specifications: {
-        cpu_model: specs.find(line => /^-?\\s*CPU\\s*:/i.test(line))?.replace(/^-?\\s*CPU\\s*:/i, '').trim() || '',
-        ram_type_capacity: specs.find(line => /^-?\\s*RAM\\s*:/i.test(line))?.replace(/^-?\\s*RAM\\s*:/i, '').trim() || '',
-        storage_type_capacity: specs.find(line => /^-?\\s*SSD\\s*:/i.test(line))?.replace(/^-?\\s*SSD\\s*:/i, '').trim() || '',
+        cpu_model: specs.find(line => /^-?\s*CPU\s*:/i.test(line))?.replace(/^-?\s*CPU\s*:/i, '').trim() || '',
+        ram_type_capacity: specs.find(line => /^-?\s*RAM\s*:/i.test(line))?.replace(/^-?\s*RAM\s*:/i, '').trim() || '',
+        storage_type_capacity: specs.find(line => /^-?\s*SSD\s*:/i.test(line))?.replace(/^-?\s*SSD\s*:/i, '').trim() || '',
         screen_size: specs.find(line => /display|inch|screen/i.test(line)) || '',
-        gpu_model_vram: specs.find(line => /^-?\\s*GPU\\s*:/i.test(line))?.replace(/^-?\\s*GPU\\s*:/i, '').trim() || '',
+        gpu_model_vram: specs.find(line => /^-?\s*GPU\s*:/i.test(line))?.replace(/^-?\s*GPU\s*:/i, '').trim() || '',
         color,
         weight,
         battery,
