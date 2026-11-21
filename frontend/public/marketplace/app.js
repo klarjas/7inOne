@@ -1022,12 +1022,19 @@ function renderProducts() {
   });
   const getSortPrice = (item) => {
     const rawPrice = item.price_label ?? item.price ?? '';
-    const match = String(rawPrice).replace(/,/g, '').match(/-?\\d+(?:\\.\\d+)?/);
+    const match = String(rawPrice).replace(/,/g, '').match(/-?\d+(?:\.\d+)?/);
     return match ? Number(match[0]) : Number.POSITIVE_INFINITY;
   };
   list.sort((a, b) => {
-    if (state.marketplaceSort === 'low') return getSortPrice(a) - getSortPrice(b);
-    if (state.marketplaceSort === 'high') return getSortPrice(b) - getSortPrice(a);
+    if (state.marketplaceSort === 'low' || state.marketplaceSort === 'high') {
+      const priceA = getSortPrice(a);
+      const priceB = getSortPrice(b);
+      const hasPriceA = Number.isFinite(priceA);
+      const hasPriceB = Number.isFinite(priceB);
+      if (hasPriceA !== hasPriceB) return hasPriceA ? -1 : 1;
+      if (!hasPriceA) return 0;
+      return state.marketplaceSort === 'low' ? priceA - priceB : priceB - priceA;
+    }
     return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
   });
   $('productGrid').innerHTML = list.map(marketplaceCard).join('');
