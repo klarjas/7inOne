@@ -1705,7 +1705,7 @@ app.get('/api/products/:id', async (req, res) => {
   const cutoff = new Date(Date.now() - PRODUCT_PUBLIC_MAX_AGE_MS).toISOString();
   const productFields = '*,product_images(id,file_id,image_url,sort_order),vendors!inner(id,user_id,store_name,status,store_logo_file_id)';
   let { data, error } = await supabase.from('products').select(productFields)
-    .eq('id', req.params.id).eq('status', 'active').in('vendors.status', ['approved','pending','rejected']).gt('stock', 0)
+    .eq('id', req.params.id).eq('status', 'active').in('vendors.status', ['approved','pending','rejected'])
     .or(`renewed_at.gte.${cutoff},and(renewed_at.is.null,created_at.gte.${cutoff})`)
     .maybeSingle();
 
@@ -1716,7 +1716,7 @@ app.get('/api/products/:id', async (req, res) => {
   if (missingRenewalColumn) {
     ({ data, error } = await supabase.from('products').select(productFields)
       .eq('id', req.params.id).eq('status', 'active')
-      .in('vendors.status', ['approved','pending','rejected']).gt('stock', 0)
+      .in('vendors.status', ['approved','pending','rejected'])
       .gte('created_at', cutoff).maybeSingle());
   }
   if (error || !data) return fail(res, 404, 'Product not found');
