@@ -66,6 +66,8 @@ const ICON_PATHS = {
 };
 
 const CATEGORIES = {
+  computers: 'កុំព្យូទ័រ (Computers)',
+  computer_accessories: 'គ្រឿងបន្លាស់កុំព្យូទ័រ (Accessories)',
   phones: 'ទូរស័ព្ទ & អេឡិចត្រូនិក',
   vehicles: 'រថយន្ត & ម៉ូតូ',
   property: 'អចលនទ្រព្យ',
@@ -2780,6 +2782,14 @@ function bindListingImageAlbums() {
    -------------------------------------------------------------------------- */
 
 const PRODUCT_TAXONOMY = {
+  computers: {
+    subs: ['Laptop / កុំព្យូទ័រយួរដៃ','Desktop PC','All-in-One PC','Monitor','Computer Hardware'],
+    details: ['Laptop','Desktop PC','All-in-One','Monitor','CPU','RAM','GPU / VGA','Motherboard','HDD','SATA SSD','NVMe / M.2 SSD','External SSD','USB Flash Drive','Power Supply']
+  },
+  computer_accessories: {
+    subs: ['Laptop Bags','Keyboards','Computer Mouse','Chargers','Cables & Adapters','Webcams','Headphones & Speakers','Other Computer Accessories'],
+    details: ['Computer Bag','Keyboard','Mouse','Charger','Cable / Adapter','Webcam','Headphones','Speaker','Computer Accessories']
+  },
   phones: {
     subs: ['ស្មាតហ្វូន','Tablet & iPad','កុំព្យូទ័រ និង Laptop','Computer Hardware','គ្រឿងបន្លាស់ទូរស័ព្ទ','កាមេរ៉ា','សំឡេង និង Audio','Gaming','Network & Internet','Printer & Scanner','Software & License','ឧបករណ៍អេឡិចត្រូនិកផ្សេងៗ'],
     details: ['iPhone','Samsung Galaxy','Xiaomi / Redmi','OPPO','Vivo','Huawei','iPad','Android Tablet','Laptop','Desktop PC','CPU','RAM','GPU / VGA','Motherboard','HDD','SATA SSD','NVMe / M.2 SSD','External SSD','USB Flash Drive','Power Supply','Monitor','Keyboard','Mouse','Webcam','Router','Switch','Printer','Scanner','Headphones','Speaker','Camera Lens','Gaming Console','Software License']
@@ -2802,6 +2812,8 @@ const PRODUCT_TAXONOMY = {
   }
 };
 const PRODUCT_SPEC_FIELDS = {
+  computers: ['ម៉ាក / Brand','ម៉ូដែល / Model','CPU','RAM','Storage','GPU','ទំហំអេក្រង់','Operating System','ពណ៌','ទម្ងន់','Battery'],
+  computer_accessories: ['ម៉ាក / Brand','ម៉ូដែល / Model','ប្រភេទ Connection','ពណ៌','Compatibility','Warranty'],
   phones: ['ម៉ាក / Brand','ម៉ូដែល / Model','ទំហំ / Capacity','RAM','Storage','ពណ៌','ស្ថានភាពធានា'],
   vehicles: ['ម៉ាក / Brand','ម៉ូដែល / Model','ឆ្នាំផលិត','ចំណុះម៉ាស៊ីន (cc)','ប្រអប់លេខ','ប្រភេទប្រេង','ចម្ងាយបើកបរ (km)','ពណ៌','ឯកសារពន្ធ'],
   property: ['ទីតាំងលម្អិត','ទំហំដី (m²)','ទំហំសំណង់ (m²)','បន្ទប់គេង','បន្ទប់ទឹក','ប្រភេទប្លង់'],
