@@ -7266,3 +7266,97 @@ body > footer {
     min-width: 0;
   }
 }
+
+
+/* Admin Branding & Telegram diagnostics — Steam Dark surfaces. */
+#view-admin #siteBrandingPanel {
+  border: 1px solid #2A475E;
+  background: #16202D;
+  color: #C7D5E0;
+}
+#view-admin #siteBrandingPanel .bg-white {
+  border-color: #2A475E;
+  background: #101822;
+  color: #C7D5E0;
+}
+#view-admin #siteBrandingPanel .bg-slate-50 {
+  border: 1px solid #2A475E;
+  background: #101822;
+  color: #C7D5E0;
+}
+#view-admin #siteBrandingPanel .brand-logo-preview {
+  border-color: #2A475E;
+  background: #101822;
+}
+#view-admin #siteBrandingPanel .brand-logo-preview img {
+  background: #101822;
+}
+#view-admin #siteBrandingPanel .hero-admin-preview-empty {
+  border-color: #2A475E;
+  background: #101822;
+  color: #8F98A0;
+}
+.admin-telegram-diagnostics-result {
+  min-height: 48px;
+  padding: 14px;
+  border: 1px solid #2A475E;
+  border-radius: 16px;
+  background: #101822;
+  color: #C7D5E0;
+  font-size: 11px;
+}
+.admin-telegram-diagnostics-list {
+  display: grid;
+  gap: 9px;
+}
+.admin-telegram-diagnostics-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 38px;
+  padding: 8px 10px;
+  border: 1px solid #2A475E;
+  border-radius: 10px;
+  background: #16202D;
+}
+.admin-telegram-diagnostics-label {
+  color: #9FB2C3;
+}
+.admin-telegram-diagnostics-row strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #C7D5E0;
+  text-align: right;
+}
+.admin-telegram-diagnostics-icon {
+  display: inline-grid;
+  width: 19px;
+  height: 19px;
+  place-items: center;
+  border-radius: 50%;
+  font-size: 12px;
+}
+.admin-telegram-diagnostics-row.is-success .admin-telegram-diagnostics-icon {
+  background: rgba(53, 208, 127, .14);
+  color: #35D07F;
+}
+.admin-telegram-diagnostics-row.is-error .admin-telegram-diagnostics-icon {
+  background: rgba(240, 90, 110, .14);
+  color: #F08A9A;
+}
+.admin-telegram-diagnostics-row.is-neutral .admin-telegram-diagnostics-icon {
+  background: rgba(159, 178, 195, .12);
+  color: #9FB2C3;
+}
+.admin-telegram-diagnostics-note,
+.admin-telegram-diagnostics-loading {
+  margin-top: 9px;
+  color: #9FB2C3;
+  line-height: 1.6;
+}
+#telegramDiagnosticsBtn:disabled {
+  cursor: wait;
+  opacity: .65;
+}
