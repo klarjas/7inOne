@@ -3382,9 +3382,12 @@ function extractCcSupplierProducts(html, baseUrl) {
     const imageUrls = supplierImageCandidates(card, baseUrl).slice(0, 5);
     const searchable = (title + ' ' + text).toLowerCase();
     const pickSpec = pattern => specs.find(line => pattern.test(line)) || '';
-    const color = pickSpec(/(?:color|colour|ពណ៌)\s*:/i).replace(/^(?:color|colour|ពណ៌)\s*:/i, '').trim();
-    const weight = pickSpec(/(?:weight|ទម្ងន់)\s*:/i).replace(/^(?:weight|ទម្ងន់)\s*:/i, '').trim();
-    const battery = pickSpec(/(?:battery|ថ្ម)\s*:/i).replace(/^(?:battery|ថ្ម)\s*:/i, '').trim();
+    const colorLine = pickSpec(/(?:color|colour|ពណ៌)\s*:/i) || specs.find(line => /\b(gentle grey|cool silver|quiet blue|black|white|silver|grey|gray|blue|red|green)\b/i.test(line)) || '';
+    const weightLine = pickSpec(/(?:weight|ទម្ងន់)\s*:/i) || specs.find(line => /\b\d+(?:\.\d+)?\s?kg\b/i.test(line)) || '';
+    const batteryLine = pickSpec(/(?:battery|ថ្ម)\s*:/i) || specs.find(line => /battery|\b\d+\s?(?:wh|whr|mah|mwh)\b|\d[- ]cell/i.test(line)) || '';
+    const color = colorLine.replace(/^(?:color|colour|ពណ៌)\s*:/i, '').trim();
+    const weight = weightLine.replace(/^(?:weight|ទម្ងន់)\s*:/i, '').trim();
+    const battery = batteryLine.replace(/^(?:battery|ថ្ម)\s*:/i, '').trim();
     let category = 'computers';
     let subcategory = 'other';
     let detailType = 'Computer';
