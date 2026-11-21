@@ -3503,6 +3503,15 @@ function supplierVariantConfigKey(product) {
   if (ram || storage) return ram + '|' + storage;
   return normalizeSupplierIdentity(product?.option_value || product?.configuration_label || product?.sku || product?.supplier_product_code || '');
 }
+function uniqueSupplierConfigurations(variants) {
+  const seen = new Set();
+  return (variants || []).filter(variant => {
+    const key = supplierVariantConfigKey(variant);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
 function supplierVariantLabel(product) {
   const specs = product?.specifications || {};
   const parts = [specs.ram_type_capacity, specs.storage_type_capacity].filter(Boolean);
@@ -3620,7 +3629,8 @@ app.post('/api/admin/supplier-import/scan', authenticate, requireAdmin, async (r
         if (parentCode && !parentVariantMissing) existingConfigKeys.add(supplierVariantConfigKey({ specifications: details, supplier_product_code: parentCode }));
         for (const variant of existingProduct.variants || []) existingConfigKeys.add(supplierVariantConfigKey(variant));
       }
-      const newVariants = group.variants.filter(variant => {
+      const uniqueGroupVariants = uniqueSupplierConfigurations(group.variants);
+      const newVariants = uniqueGroupVariants.filter(variant => {
         const variantCode = String(variant.supplier_product_code || '').trim().toUpperCase();
         const migratingParentVariant = parentVariantMissing && variantCode === parentCode;
         if (!variantCode || (index.knownCodes.has(variantCode) && !migratingParentVariant)) return false;
@@ -3635,12 +3645,18 @@ app.post('/api/admin/supplier-import/scan', authenticate, requireAdmin, async (r
         ...group, duplicate: status === 'duplicate', status,
         existing_product_id: existingProduct?.id || null,
         new_variant_count: newVariants.length,
-        variants: group.variants.map(variant => ({
-          ...variant,
-          already_imported: (index.knownCodes.has(String(variant.supplier_product_code || '').trim().toUpperCase())
-            && !(parentVariantMissing && String(variant.supplier_product_code || '').trim().toUpperCase() === parentCode))
-            || existingConfigKeys.has(supplierVariantConfigKey(variant))
-        }))
+        variants: group.variants.map((variant, variantIndex) => {
+          const uniqueBefore = uniqueSupplierConfigurations(group.variants.slice(0, variantIndex + 1));
+          const duplicateConfiguration = uniqueBefore.length <= variantIndex;
+          return {
+            ...variant,
+            duplicate_configuration: duplicateConfiguration,
+            already_imported: duplicateConfiguration
+              || (index.knownCodes.has(String(variant.supplier_product_code || '').trim().toUpperCase())
+                && !(parentVariantMissing && String(variant.supplier_product_code || '').trim().toUpperCase() === parentCode))
+              || existingConfigKeys.has(supplierVariantConfigKey(variant))
+          };
+        })
       };
     });
     res.json({
@@ -3698,7 +3714,7 @@ app.post('/api/admin/supplier-import/import', authenticate, requireAdmin, async 
       if (existingParentCode && !parentVariantMissing) existingConfigKeys.add(supplierVariantConfigKey({ specifications: details, supplier_product_code: existingParentCode }));
       for (const variant of existingProduct.variants || []) existingConfigKeys.add(supplierVariantConfigKey(variant));
     }
-    const variantsToAdd = group.variants.filter(variant => {
+    const variantsToAdd = uniqueSupplierConfigurations(group.variants).filter(variant => {
       const variantCode = String(variant.supplier_product_code || '').trim().toUpperCase();
       const migratingParentVariant = parentVariantMissing && variantCode === existingParentCode;
       if (!variantCode || (index.knownCodes.has(variantCode) && !migratingParentVariant)) return false;
