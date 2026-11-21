@@ -3783,6 +3783,17 @@ app.post('/api/admin/supplier-import/import', authenticate, requireAdmin, async 
       createdParentSource = true;
       createdParentSourceProductId = targetProductId;
     }
+    if (existingProduct?.supplier_source && existingParentCode) {
+      const parentVariant = group.variants.find(item => String(item.supplier_product_code || '').trim().toUpperCase() === existingParentCode);
+      if (parentVariant) {
+        const { error: parentSourceUpdateError } = await supabase.from('product_supplier_sources').update({
+          supplier_url: parentVariant.supplier_url || url,
+          supplier_price: parentVariant.supplier_price,
+          updated_at: new Date().toISOString()
+        }).eq('product_id', targetProductId);
+        if (parentSourceUpdateError) throw parentSourceUpdateError;
+      }
+    }
     for (const variant of variantsToAdd) {
       const optionValue = supplierVariantLabel(variant);
       const attributes = {
