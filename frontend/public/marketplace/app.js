@@ -327,7 +327,6 @@ function closeModal(id) {
   if (!document.querySelector('.modal.open')) document.body.classList.remove('overflow-hidden');
 }
 
-let appDialogSequence = 0;
 function appDialog({ mode = 'confirm', title = 'បញ្ជាក់សកម្មភាព', message = '', placeholder = 'សរសេរមូលហេតុនៅទីនេះ...', confirmLabel, danger = false } = {}) {
   return new Promise(resolve => {
     const id = 'appDialogModal';
@@ -342,7 +341,7 @@ function appDialog({ mode = 'confirm', title = 'បញ្ជាក់សកម�
       ? `<label class="app-dialog-field"><span>មូលហេតុ</span><textarea id="appDialogInput" class="field" rows="4" minlength="3" maxlength="1200" required placeholder="${esc(placeholder)}"></textarea></label>`
       : '';
     wrap.innerHTML = `<section class="modal-box app-dialog-box" role="dialog" aria-modal="true" aria-labelledby="appDialogTitle" aria-describedby="appDialogMessage">
-      <div class="app-dialog-heading"><span class="app-dialog-icon">${ic(isPrompt ? 'flag' : 'alertcircle', 19)}</span><div><h2 id="appDialogTitle">${esc(title)}</h2><p id="appDialogMessage">${esc(message)}</p></div></div>
+      <div class="app-dialog-heading"><span class="app-dialog-icon">${ic(isPrompt ? 'flag' : 'alert', 19)}</span><div><h2 id="appDialogTitle">${esc(title)}</h2><p id="appDialogMessage">${esc(message)}</p></div></div>
       <form id="appDialogForm" class="app-dialog-form">${field}
         <div class="app-dialog-actions">
           <button type="button" class="app-dialog-cancel" id="appDialogCancel">បោះបង់</button>
@@ -3309,7 +3308,7 @@ function openCheckout(p) {
         <fieldset class="checkout-payment-options">
           <legend>ជ្រើសរើសវិធីទូទាត់</legend>
           <label><input type="radio" name="payment_method" value="cash_on_delivery" checked><span><b>${ic('truck',15)} ទូទាត់ពេលទទួលទំនិញ</b><small>Cash on Delivery</small></span></label>
-          <label><input type="radio" name="payment_method" value="bank_transfer"><span><b>${ic('landmark',15)} KHQR / ផ្ទេរប្រាក់តាមធនាគារ</b><small>Bank Transfer · រង់ចាំការផ្ទៀងផ្ទាត់</small></span></label>
+          <label><input type="radio" name="payment_method" value="bank_transfer"><span><b>${ic('wallet',15)} KHQR / ផ្ទេរប្រាក់តាមធនាគារ</b><small>Bank Transfer · រង់ចាំការផ្ទៀងផ្ទាត់</small></span></label>
         </fieldset>
         <p id="checkoutPaymentNote" class="checkout-payment-note" hidden>ការបញ្ជាទិញនឹងរង់ចាំការផ្ទៀងផ្ទាត់។ ប្រព័ន្ធមិនទាន់មាន QR Code របស់អ្នកលក់ក្នុងព័ត៌មានហាងទេ។ សូមទាក់ទងអ្នកលក់ដើម្បីទទួល KHQR ឬព័ត៌មានគណនីផ្ទេរប្រាក់។</p>
         <div class="flex justify-between pt-2 font-bold"><span>សរុប</span><span id="checkoutTotal"></span></div>
@@ -3353,6 +3352,7 @@ function openCheckout(p) {
   $('checkoutTotal').textContent = money(p.price);
   $('checkoutName').value = profileName();
   $('checkoutPhone').value = state.me?.profile?.phone || '';
+  $('checkoutForm').querySelector('[name="payment_method"][value="cash_on_delivery"]').checked = true;
   $('checkoutPaymentNote').hidden = true;
   openModal('checkoutModal');
 }
