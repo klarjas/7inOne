@@ -20,3 +20,6 @@ alter table public.product_supplier_sources enable row level security;
 -- Intentionally no anon/authenticated policies. Access is through backend routes
 -- protected by authenticate + requireAdmin and the server-side service-role client.
 revoke all on table public.product_supplier_sources from anon, authenticated;
+
+-- Backend accesses this table with the Supabase service-role client.
+grant all privileges on table public.product_supplier_sources to service_role;
