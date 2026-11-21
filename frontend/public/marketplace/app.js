@@ -1407,7 +1407,6 @@ async function openMarketplaceListing(type, id, options = {}) {
     toast(error.message || 'មិនអាចបើកព័ត៌មានប្រកាសបានទេ។', 'error');
     void showView('home');
     return false;
-  } finally {
   }
 }
 
@@ -1451,7 +1450,6 @@ async function openProduct(id, options = {}) {
     toast(error.message, 'error');
     void showView('home');
     return false;
-  } finally {
   }
 }
 
