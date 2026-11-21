@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { getSupabaseBrowserClient } from '../../lib/supabase';
-import { ArrowLeft, Store, Package, ClipboardList, ShieldCheck, Plus, RefreshCw, LogOut, Check, X, Upload, Ban, Search, Database, Layers } from 'lucide-react';
+import { ArrowLeft, Store, Package, ClipboardList, ShieldCheck, Plus, RefreshCw, LogOut, Check, X, Upload, Ban, Search, Database } from 'lucide-react';
 
 type AnyRow = Record<string, any>;
 type Tab = 'overview' | 'products' | 'supplier-products' | 'orders' | 'vendors' | 'moderation' | 'shop';
@@ -138,7 +138,7 @@ export default function DashboardPage() {
   ];
   const selectedSupplierProduct = data.find(row => row.id === supplierSelectedId) || null;
   const filteredSupplierProducts = data.filter(row => [row.title,row.supplier_source?.supplier_name,row.supplier_source?.supplier_product_code].some(value=>String(value||'').toLowerCase().includes(supplierQuery.trim().toLowerCase())));
-  useEffect(()=>{if(tab==='supplier-products'&&data.length&&!supplierSelectedId)setSupplierSelectedId(data[0].id);},[tab,data,supplierSelectedId]);
+  useEffect(()=>{if(tab==='supplier-products'&&data.length&&!data.some(row=>row.id===supplierSelectedId))setSupplierSelectedId(data[0].id);},[tab,data,supplierSelectedId]);
   async function editSupplierProduct(row:AnyRow){
     const source=row.supplier_source||{};
     const supplier_name=prompt('Supplier name',source.supplier_name||'');if(supplier_name===null)return;
