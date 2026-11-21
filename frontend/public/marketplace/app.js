@@ -3285,54 +3285,134 @@ async function renderSeller() {
 async function renderAdminSupplierProducts() {
   const target = $('adminSupplierProductsList');
   if (!target || !isAdmin()) return;
-  target.innerHTML = '<p class="py-6 text-center text-xs text-slate-400">កំពុងផ្ទុក...</p>';
+  target.innerHTML = '<p class="py-6 text-center text-xs text-slate-400">កំពុងផ្ទុកផលិតផល AURORA...</p>';
   try {
     const result = await api('/api/admin/supplier-products');
     state.adminSupplierProducts = result.data || [];
     const term = String($('adminSupplierSearch')?.value || '').trim().toLowerCase();
-    const products = state.adminSupplierProducts.filter(p => !term || [p.title,p.category,p.supplier_source?.supplier_name].some(v => String(v || '').toLowerCase().includes(term)));
-    target.innerHTML = products.map(p => {
-      const source=p.supplier_source||{}, variants=p.product_variants||[], image=productImage(p);
-      return `<article class="rounded-2xl border border-slate-200 p-4" data-admin-supplier-product="${esc(p.id)}">
-        <div class="flex flex-wrap items-start gap-3"><div class="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-slate-100">${image ? `<img class="h-full w-full object-cover" src="${esc(image)}" alt="">` : ''}</div>
-        <div class="min-w-0 flex-1"><b class="block text-sm">${esc(p.title)}</b><p class="mt-1 text-[10px] text-slate-500">${esc(p.category||'General')} · ${esc(p.status||'')}</p><p class="mt-1 text-[11px] font-bold">តម្លៃចម្បង៖ ${money(p.price)} · ស្តុក៖ ${Number(p.stock||0)}</p></div></div>
-        <form class="admin-supplier-product-edit-form mt-3 grid gap-2 rounded-xl border border-slate-100 p-3 sm:grid-cols-2" data-product-id="${esc(p.id)}">
-          <b class="text-[11px] sm:col-span-2">ព័ត៌មានផលិតផល</b>
-          <label><span class="label">ឈ្មោះផលិតផល</span><input class="field" name="title" value="${esc(p.title||'')}" required></label>
-          <label><span class="label">Category</span><input class="field" name="category" value="${esc(p.category||'')}" required></label>
-          <label><span class="label">តម្លៃមេ ($)</span><input class="field" name="price" type="number" min="0" step="0.01" value="${Number(p.price||0)}" required></label>
-          <label><span class="label">ស្តុកមេ</span><input class="field" name="stock" type="number" min="0" step="1" value="${Number(p.stock||0)}"></label>
-          <label class="sm:col-span-2"><span class="label">ពិពណ៌នា</span><textarea class="field" name="description" rows="2">${esc(p.description||'')}</textarea></label>
-          <label><span class="label">ស្ថានភាពបង្ហាញ</span><select class="field" name="status"><option value="active" ${p.status==='active'?'selected':''}>Active / បង្ហាញ</option><option value="pending" ${p.status==='pending'?'selected':''}>Pending</option><option value="rejected" ${p.status==='rejected'?'selected':''}>Rejected</option><option value="archived" ${p.status==='archived'?'selected':''}>Archived / លាក់</option><option value="sold" ${p.status==='sold'?'selected':''}>Sold</option></select></label>
-          <div class="flex flex-wrap items-center justify-between gap-2 sm:col-span-2"><button class="rounded-full bg-slate-900 px-4 py-2 text-[10px] font-bold text-white" type="submit">រក្សាទុកការកែប្រែ</button><button class="rounded-full bg-rose-50 px-4 py-2 text-[10px] font-bold text-rose-600" type="button" data-admin-supplier-delete="${esc(p.id)}">លុប / Archive</button></div>
-        </form>
-        <form class="admin-supplier-source-form mt-4 grid gap-2 rounded-xl bg-slate-50 p-3 sm:grid-cols-2" data-product-id="${esc(p.id)}"><b class="text-[11px] sm:col-span-2">ព័ត៌មាន Supplier (Admin only)</b>
-          <label><span class="label">Supplier</span><input class="field bg-white" name="supplier_name" value="${esc(source.supplier_name||'')}"></label>
-          <label><span class="label">Supplier URL</span><input class="field bg-white" name="supplier_url" type="url" value="${esc(source.supplier_url||'')}"></label>
-          <label><span class="label">Supplier Price ($)</span><input class="field bg-white" name="supplier_price" type="number" min="0" step="0.01" value="${Number(source.supplier_price||0)}"></label>
-          <label><span class="label">Supplier Product Code</span><input class="field bg-white" name="supplier_product_code" value="${esc(source.supplier_product_code||'')}"></label>
-          <div class="sm:col-span-2"><button class="rounded-full border border-slate-300 bg-white px-4 py-2 text-[10px] font-bold" type="submit">រក្សាទុក Supplier Info</button></div>
-        </form>
-        <div class="mt-4"><b class="mb-2 block text-[11px]">Storage Variants (${variants.length})</b>
-          ${variants.map(v=>{const vs=v.supplier_source||{};return `<form class="admin-supplier-variant-form mb-2 grid gap-2 rounded-xl border border-slate-100 p-3 sm:grid-cols-6" data-product-id="${esc(p.id)}" data-variant-id="${esc(v.id)}">
-            <label><span class="label">Storage</span><input class="field" name="option_value" value="${esc(v.option_value||'')}" required></label>
-            <label><span class="label">Retail Price ($)</span><input class="field" name="price" type="number" min="0" step="0.01" value="${Number(v.price||0)}" required></label>
-            <label><span class="label">Stock</span><input class="field" name="stock" type="number" min="0" step="1" value="${Number(v.stock||0)}"></label>
-            <label><span class="label">Supplier Cost ($)</span><input class="field" name="supplier_price" type="number" min="0" step="0.01" value="${Number(vs.supplier_price||0)}"></label>
-            <label><span class="label">Supplier Code</span><input class="field" name="supplier_product_code" value="${esc(vs.supplier_product_code||v.sku||'')}"></label>
-            <div class="flex items-end gap-1"><button class="rounded-full bg-slate-900 px-3 py-2 text-[10px] font-bold text-white" type="submit">រក្សាទុក</button><button class="rounded-full bg-rose-50 px-3 py-2 text-[10px] font-bold text-rose-600" type="button" data-admin-variant-delete="${esc(v.id)}">លុប</button></div>
-            <label class="sm:col-span-6"><span class="label">Supplier URL</span><input class="field" name="supplier_url" type="url" value="${esc(vs.supplier_url||source.supplier_url||'')}"></label></form>`;}).join('')||'<p class="rounded-xl bg-slate-50 p-3 text-[10px] text-slate-400">មិនទាន់មាន Variant ទេ។</p>'}
-          <form class="admin-supplier-add-variant-form mt-3 grid gap-2 rounded-xl border border-dashed border-slate-300 p-3 sm:grid-cols-3" data-product-id="${esc(p.id)}"><b class="text-[11px] sm:col-span-3">បន្ថែម Storage Variant</b>
-            <label><span class="label">Storage / Option</span><input class="field" name="option_value" placeholder="512GB SSD" required></label>
-            <label><span class="label">Retail Price ($)</span><input class="field" name="price" type="number" min="0" step="0.01" required></label>
-            <label><span class="label">Stock</span><input class="field" name="stock" type="number" min="0" step="1" value="0"></label>
-            <label><span class="label">Supplier Cost ($)</span><input class="field" name="supplier_price" type="number" min="0" step="0.01" value="0"></label>
-            <label><span class="label">Supplier Code</span><input class="field" name="supplier_product_code"></label>
-            <label><span class="label">Supplier URL</span><input class="field" name="supplier_url" type="url"></label>
-            <div class="sm:col-span-3"><button class="brand-gradient rounded-full px-4 py-2 text-[10px] font-bold text-white" type="submit">បន្ថែម Variant</button><small class="ml-2 text-[9px] text-slate-400">អាចកំណត់តម្លៃលក់ដោយដៃ ឬគណនា Supplier Cost + $5។</small></div></form>
-        </div></article>`;
-    }).join('')||'<p class="py-8 text-center text-xs text-slate-400">មិនទាន់មានផលិតផល Supplier ទេ។</p>';
-  } catch(error){target.innerHTML='<p class="py-6 text-center text-xs text-rose-500">មិនអាចផ្ទុក Supplier Products បានទេ។</p>';toast(error.message||'មិនអាចផ្ទុកផលិតផល Supplier បានទេ។','error');}
+    const products = state.adminSupplierProducts.filter(p => {
+      const aurora = String(p.vendors?.store_name || '').trim().toLowerCase() === 'aurora computer';
+      return aurora && (!term || [p.title,p.category,p.supplier_source?.supplier_name].join(' ').toLowerCase().includes(term));
+    });
+    const groups = new Map();
+    products.forEach(p => { const name=auroraProductGroup(p); if(!groups.has(name))groups.set(name,[]); groups.get(name).push(p); });
+    const labels={active:'បង្ហាញ',pending:'រង់ចាំ',rejected:'បដិសេធ',archived:'បានលាក់',sold:'លក់រួច'};
+    target.innerHTML = products.length ? Array.from(groups.entries()).map(([name,items]) =>
+      '<section class="admin-aurora-group"><header><strong>'+esc(name)+'</strong><span>'+items.length+' ផលិតផល</span></header><div class="admin-aurora-list">'+
+      items.map(p => {
+        const image=productImage(p);
+        return '<article class="admin-aurora-row" data-admin-aurora-edit="'+esc(p.id)+'" tabindex="0" role="button">'+
+          '<div class="admin-aurora-thumb">'+(image?'<img src="'+esc(image)+'" alt="">':ic('image',24))+'</div>'+
+          '<div class="admin-aurora-info"><strong>'+esc(p.title||'')+'</strong><span>'+esc(p.category||'Laptop')+' · '+esc(p.supplier_source?.supplier_product_code||'គ្មាន Product Code')+'</span></div>'+
+          '<div class="admin-aurora-meta"><strong>'+money(p.price)+'</strong><span>ស្តុក '+Number(p.stock||0)+'</span><small class="admin-aurora-status is-'+esc(p.status||'pending')+'">'+esc(labels[p.status]||p.status||'—')+'</small></div>'+
+          '<button type="button" class="admin-aurora-edit" data-admin-aurora-edit="'+esc(p.id)+'">'+ic('pencil',14)+' កែប្រែ</button></article>';
+      }).join('')+'</div></section>').join('') : '<div class="admin-aurora-empty">មិនមានផលិតផល AURORA ត្រូវនឹងការស្វែងរកទេ។</div>';
+  } catch(error) {
+    target.innerHTML='<p class="py-6 text-center text-xs text-rose-500">មិនអាចផ្ទុកផលិតផល AURORA បានទេ។</p>';
+    toast(error.message||'មិនអាចផ្ទុកផលិតផលបានទេ។','error');
+  }
+}
+
+function closeAdminAuroraProductEditor() {
+  const modal=$('adminAuroraProductEditModal');
+  if(modal)modal.remove();
+  document.body.classList.remove('overflow-hidden');
+}
+
+function openAdminAuroraProductEditor(productId) {
+  if(!isAdmin())return;
+  const p=(state.adminSupplierProducts||[]).find(item=>String(item.id)===String(productId));
+  if(!p)return toast('រកមិនឃើញផលិតផលនេះទេ។','error');
+  closeAdminAuroraProductEditor();
+  const source=p.supplier_source||{},details=p.listing_details||{},specs=details.specifications||{};
+  const images=(p.product_images||[]).filter(item=>item.image_url),variants=p.product_variants||[];
+  const modal=document.createElement('div');
+  modal.id='adminAuroraProductEditModal';modal.className='admin-aurora-modal';
+  modal.setAttribute('role','dialog');modal.setAttribute('aria-modal','true');
+  const statusOptions=['active','pending','rejected','archived','sold'].map(v=>'<option value="'+v+'" '+(p.status===v?'selected':'')+'>'+({active:'បង្ហាញលើហាង',pending:'រង់ចាំ',rejected:'បដិសេធ',archived:'លាក់ផលិតផល',sold:'លក់រួច'}[v])+'</option>').join('');
+  const variantRows=variants.map(v=>{
+    const vs=v.supplier_source||{};
+    return '<div class="admin-aurora-variant" data-variant-id="'+esc(v.id)+'">'+
+      '<label>ជម្រើស<input class="field" data-variant-field="option_value" value="'+esc(v.option_value||'')+'"></label>'+
+      '<label>តម្លៃលក់ ($)<input class="field" data-variant-field="price" type="number" min="0" step="0.01" value="'+Number(v.price||0)+'"></label>'+
+      '<label>ស្តុក<input class="field" data-variant-field="stock" type="number" min="0" step="1" value="'+Number(v.stock||0)+'"></label>'+
+      '<label>ថ្លៃ Supplier ($)<input class="field" data-variant-field="supplier_price" type="number" min="0" step="0.01" value="'+Number(vs.supplier_price||0)+'"></label>'+
+      '<label>Supplier Code<input class="field" data-variant-field="supplier_product_code" value="'+esc(vs.supplier_product_code||v.sku||'')+'"></label>'+
+      '<label>Supplier URL<input class="field" data-variant-field="supplier_url" type="url" value="'+esc(vs.supplier_url||source.supplier_url||'')+'"></label>'+
+      '<div class="admin-aurora-variant-actions"><button type="button" data-admin-variant-save="'+esc(v.id)+'">រក្សាទុក Variant</button><button type="button" class="is-danger" data-admin-variant-delete="'+esc(v.id)+'">លុប</button></div></div>';
+  }).join('');
+  modal.innerHTML='<div class="admin-aurora-dialog"><header class="admin-aurora-dialog-head"><div><small>AURORA COMPUTER · PRODUCT MANAGEMENT</small><h2>កែប្រែផលិតផល</h2><p>'+esc(p.title||'')+'</p></div><button type="button" data-admin-aurora-close aria-label="បិទ">×</button></header>'+
+    '<form id="adminAuroraProductEditForm" data-product-id="'+esc(p.id)+'">'+
+    '<section class="admin-aurora-form-section"><h3>ព័ត៌មានផលិតផល</h3><label>ឈ្មោះផលិតផល<input class="field" name="title" required maxlength="160" value="'+esc(p.title||'')+'"></label>'+
+    '<div class="admin-aurora-form-grid"><label>តម្លៃលក់ ($)<input class="field" name="price" type="number" min="0" step="0.01" required value="'+Number(p.price||0)+'"></label><label>ស្តុក<input class="field" name="stock" type="number" min="0" step="1" required value="'+Number(p.stock||0)+'"></label>'+
+    '<label>Category<input class="field" name="category" value="'+esc(p.category||'computers')+'"></label><label>ប្រភេទលម្អិត<input class="field" name="detail_type" value="'+esc(details.detail_type||'Laptop')+'"></label></div>'+
+    '<label>ការពិពណ៌នា<textarea class="field" name="description" rows="3">'+esc(p.description||'')+'</textarea></label><label>ស្ថានភាពលក់<select class="field" name="status">'+statusOptions+'</select></label></section>'+
+    '<section class="admin-aurora-form-section"><h3>លក្ខណៈបច្ចេកទេស</h3><div class="admin-aurora-form-grid">'+
+    '<label>CPU<input class="field" name="cpu_model" value="'+esc(specs.cpu_model||specs.processor||'')+'"></label><label>RAM<input class="field" name="ram_type_capacity" value="'+esc(specs.ram_type_capacity||specs.ram||'')+'"></label>'+
+    '<label>Storage<input class="field" name="storage_type_capacity" value="'+esc(specs.storage_type_capacity||specs.storage||specs.ssd||'')+'"></label><label>Display<input class="field" name="screen_size" value="'+esc(specs.screen_size||specs.display||'')+'"></label><label>GPU<input class="field" name="gpu_model_vram" value="'+esc(specs.gpu_model_vram||specs.gpu||'')+'"></label></div></section>'+
+    '<section class="admin-aurora-form-section"><h3>ព័ត៌មាន Supplier (Admin only)</h3><div class="admin-aurora-form-grid">'+
+    '<label>Supplier<input class="field" name="supplier_name" value="'+esc(source.supplier_name||'CC COMPUTER')+'"></label><label>Supplier Price ($)<input class="field" name="supplier_price" type="number" min="0" step="0.01" value="'+Number(source.supplier_price||0)+'"></label>'+
+    '<label>Supplier Product Code<input class="field" name="supplier_product_code" value="'+esc(source.supplier_product_code||'')+'"></label><label>Supplier URL<input class="field" name="supplier_url" type="url" value="'+esc(source.supplier_url||'')+'"></label></div></section>'+
+    '<section class="admin-aurora-form-section"><h3>រូបភាពផលិតផល</h3><div class="admin-aurora-image-strip">'+(images.map(img=>'<img src="'+esc(img.image_url)+'" alt="">').join('')||'<span>មិនទាន់មានរូបភាព</span>')+'</div>'+
+    '<input class="field" type="file" name="images" accept="image/jpeg,image/png,image/webp" multiple><small>រូបថ្មី Upload តាម Telegram channel ដើម។ អាចមានរូបសរុបមិនលើស ១០។</small></section>'+
+    '<section class="admin-aurora-form-section"><div class="admin-aurora-section-title"><h3>Variants / ជម្រើសផលិតផល</h3><span>'+variants.length+' ជម្រើស</span></div>'+
+    '<div class="admin-aurora-variants">'+(variantRows||'<p class="admin-aurora-no-variants">មិនទាន់មាន Variant ទេ។</p>')+'</div>'+
+    '<div class="admin-aurora-add-variant"><strong>បន្ថែម Variant ថ្មី</strong><div class="admin-aurora-form-grid">'+
+    '<label>ជម្រើស<input class="field" name="new_variant_value" placeholder="512GB SSD"></label><label>តម្លៃលក់ ($)<input class="field" name="new_variant_price" type="number" min="0" step="0.01"></label>'+
+    '<label>ស្តុក<input class="field" name="new_variant_stock" type="number" min="0" step="1" value="0"></label><label>ថ្លៃ Supplier ($)<input class="field" name="new_variant_supplier_price" type="number" min="0" step="0.01" value="0"></label>'+
+    '<label>Supplier Code<input class="field" name="new_variant_supplier_code"></label><label>Supplier URL<input class="field" name="new_variant_supplier_url" type="url"></label></div><button type="button" data-admin-variant-add>បន្ថែម Variant</button></div></section>'+
+    '<footer class="admin-aurora-form-footer"><button type="button" data-admin-aurora-close>បោះបង់</button><button type="submit" class="is-primary">រក្សាទុកផលិតផល</button></footer></form></div>';
+
+  modal.addEventListener('click',async event=>{
+    if(event.target===modal||event.target.closest('[data-admin-aurora-close]')){closeAdminAuroraProductEditor();return;}
+    const remove=event.target.closest('[data-admin-variant-delete]');
+    if(remove){
+      if(!window.confirm('តើអ្នកចង់លុប Variant នេះមែនទេ?'))return;
+      try{await api('/api/admin/supplier-products/'+encodeURIComponent(p.id)+'/variants/'+encodeURIComponent(remove.dataset.adminVariantDelete),{method:'DELETE'});toast('បានលុប Variant។');closeAdminAuroraProductEditor();await renderAdminSupplierProducts();openAdminAuroraProductEditor(p.id);}
+      catch(error){toast(error.message||'មិនអាចលុប Variant បានទេ។','error');}return;
+    }
+    const save=event.target.closest('[data-admin-variant-save]');
+    if(save){
+      const row=save.closest('[data-variant-id]'),get=name=>row.querySelector('[data-variant-field="'+name+'"]')?.value||'';
+      const base='/api/admin/supplier-products/'+encodeURIComponent(p.id)+'/variants/'+encodeURIComponent(save.dataset.adminVariantSave);
+      save.disabled=true;
+      try{await api(base,{method:'PATCH',body:JSON.stringify({option_value:get('option_value'),price:Number(get('price')),stock:Number(get('stock'))})});
+        await api(base+'/source',{method:'PUT',body:JSON.stringify({supplier_price:Number(get('supplier_price')),supplier_product_code:get('supplier_product_code'),supplier_url:get('supplier_url')})});
+        toast('បានរក្សាទុក Variant។');closeAdminAuroraProductEditor();await renderAdminSupplierProducts();openAdminAuroraProductEditor(p.id);
+      }catch(error){toast(error.message||'មិនអាចរក្សាទុក Variant បានទេ។','error');}finally{save.disabled=false;}return;
+    }
+    if(event.target.closest('[data-admin-variant-add]')){
+      const form=$('adminAuroraProductEditForm'),get=name=>form.elements[name]?.value||'',price=Number(get('new_variant_price'));
+      if(!get('new_variant_value').trim()||!Number.isFinite(price)||price<0)return toast('សូមបញ្ចូលឈ្មោះ Variant និងតម្លៃលក់។','error');
+      const button=event.target.closest('[data-admin-variant-add]');button.disabled=true;
+      try{const base='/api/admin/supplier-products/'+encodeURIComponent(p.id)+'/variants';
+        const created=await api(base,{method:'POST',body:JSON.stringify({option_name:'Storage',option_value:get('new_variant_value'),price,stock:Number(get('new_variant_stock')||0),sku:get('new_variant_supplier_code')})});
+        const id=created.data?.id;if(!id)throw new Error('មិនទទួលបាន Variant ID');
+        await api(base+'/'+encodeURIComponent(id)+'/source',{method:'PUT',body:JSON.stringify({supplier_price:Number(get('new_variant_supplier_price')||0),supplier_product_code:get('new_variant_supplier_code'),supplier_url:get('new_variant_supplier_url')})});
+        toast('បានបន្ថែម Variant។');closeAdminAuroraProductEditor();await renderAdminSupplierProducts();openAdminAuroraProductEditor(p.id);
+      }catch(error){toast(error.message||'មិនអាចបន្ថែម Variant បានទេ។','error');}finally{button.disabled=false;}
+    }
+  });
+  modal.addEventListener('submit',async event=>{
+    if(event.target.id!=='adminAuroraProductEditForm')return;
+    event.preventDefault();
+    const form=event.target,data=new FormData(form),button=form.querySelector('[type="submit"]'),files=Array.from(form.elements.images.files||[]);
+    if(images.length+files.length>10)return toast('រូបភាពសរុបមិនអាចលើស ១០ រូបទេ។','error');
+    if(files.some(file=>!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>20*1024*1024))return toast('សូមប្រើ JPG / PNG / WEBP មិនលើស ២០MB ក្នុងមួយរូប។','error');
+    const get=name=>String(data.get(name)||'').trim();
+    button.disabled=true;button.textContent='កំពុងរក្សាទុក...';
+    try{
+      const payload={title:get('title'),price:Number(get('price')),stock:Number(get('stock')),category:get('category'),description:get('description')};
+      await api('/api/products/'+encodeURIComponent(p.id),{method:'PATCH',body:JSON.stringify(payload)});
+      const next={...specs};['cpu_model','ram_type_capacity','storage_type_capacity','screen_size','gpu_model_vram'].forEach(key=>{const value=get(key);if(value)next[key]=value;else delete next[key];});
+      await api('/api/admin/supplier-products/'+encodeURIComponent(p.id)+'/details',{method:'PUT',body:JSON.stringify({category:payload.category,subcategory:details.subcategory||'',detail_type:get('detail_type')||'Laptop',specifications:next})});
+      await api('/api/admin/supplier-products/'+encodeURIComponent(p.id)+'/source',{method:'PUT',body:JSON.stringify({supplier_name:get('supplier_name'),supplier_url:get('supplier_url'),supplier_price:Number(get('supplier_price')||0),supplier_product_code:get('supplier_product_code')})});
+      if(get('status')!==p.status)await api('/api/admin/products/'+encodeURIComponent(p.id),{method:'PATCH',body:JSON.stringify({status:get('status')})});
+      if(files.length){const upload=new FormData();files.forEach(file=>upload.append('images',file));await apiUploadWithProgress('/api/products/'+encodeURIComponent(p.id)+'/images',upload,progress=>{button.textContent='Upload '+progress+'%';});}
+      toast('បានរក្សាទុកព័ត៌មានផលិតផល AURORA។');closeAdminAuroraProductEditor();await renderAdminSupplierProducts();
+    }catch(error){toast(error.message||'មិនអាចរក្សាទុកផលិតផលបានទេ។','error');button.disabled=false;button.textContent='រក្សាទុកផលិតផល';}
+  });
+  document.body.appendChild(modal);document.body.classList.add('overflow-hidden');
 }
 
 function renderSellerProductList() {
@@ -5506,41 +5586,14 @@ function bindEvents() {
       form.reset();toast('បានបង្កើតផលិតផល Supplier ជោគជ័យ។');await renderAdminSupplierProducts();
     }catch(error){toast(error.message||'មិនអាចបង្កើតផលិតផលបានទេ។','error');}
   });
-  $('adminSupplierProductsList')?.addEventListener('input',event=>{
-    const form=event.target.closest('.admin-supplier-add-variant-form,.admin-supplier-variant-form');
-    if(!form)return;
-    const priceInput=form.querySelector('[name="price"]');
-    if(event.target.matches('[name="price"]')){priceInput.dataset.manualPrice='true';return;}
-    if(event.target.matches('[name="supplier_price"]') && priceInput?.dataset.manualPrice!=='true'){
-      const cost=Number(event.target.value);
-      if(Number.isFinite(cost)&&cost>=0)priceInput.value=(cost+5).toFixed(2);
-    }
+  $('adminSupplierProductsList')?.addEventListener('click',event=>{
+    const row=event.target.closest('[data-admin-aurora-edit]');
+    if(row)openAdminAuroraProductEditor(row.dataset.adminAuroraEdit);
   });
-  $('adminSupplierProductsList')?.addEventListener('submit',async event=>{
-    const form=event.target.closest('form');if(!form)return;const data=Object.fromEntries(new FormData(form).entries());
-    try{
-      if(form.matches('.admin-supplier-product-edit-form')){event.preventDefault();await api('/api/products/'+encodeURIComponent(form.dataset.productId),{method:'PATCH',body:JSON.stringify({title:data.title,category:data.category,description:data.description||'',price:Number(data.price),stock:Number(data.stock||0)})});await api('/api/admin/products/'+encodeURIComponent(form.dataset.productId),{method:'PATCH',body:JSON.stringify({status:data.status})});toast('បានកែប្រែព័ត៌មានផលិតផល។');}
-      else if(form.matches('.admin-supplier-source-form')){event.preventDefault();await api('/api/admin/supplier-products/'+encodeURIComponent(form.dataset.productId)+'/source',{method:'PUT',body:JSON.stringify({...data,supplier_price:Number(data.supplier_price||0)})});toast('បានរក្សាទុក Supplier Info។');}
-      else if(form.matches('.admin-supplier-variant-form')){event.preventDefault();const base='/api/admin/supplier-products/'+encodeURIComponent(form.dataset.productId)+'/variants/'+encodeURIComponent(form.dataset.variantId);
-        await api(base,{method:'PATCH',body:JSON.stringify({option_value:data.option_value,price:Number(data.price),stock:Number(data.stock||0)})});
-        await api(base+'/source',{method:'PUT',body:JSON.stringify({supplier_price:Number(data.supplier_price||0),supplier_product_code:data.supplier_product_code||'',supplier_url:data.supplier_url||''})});toast('បានរក្សាទុក Variant។');}
-      else if(form.matches('.admin-supplier-add-variant-form')){event.preventDefault();const base='/api/admin/supplier-products/'+encodeURIComponent(form.dataset.productId)+'/variants';
-        const result=await api(base,{method:'POST',body:JSON.stringify({option_name:'Storage',option_value:data.option_value,price:Number(data.price),stock:Number(data.stock||0),sku:data.supplier_product_code||''})});const id=result.data?.id;if(!id)throw new Error('មិនទទួលបាន Variant ID');
-        await api(base+'/'+encodeURIComponent(id)+'/source',{method:'PUT',body:JSON.stringify({supplier_price:Number(data.supplier_price||0),supplier_product_code:data.supplier_product_code||'',supplier_url:data.supplier_url||''})});toast('បានបន្ថែម Storage Variant។');}
-      else return;await renderAdminSupplierProducts();
-    }catch(error){toast(error.message||'មិនអាចរក្សាទុកទិន្នន័យបានទេ។','error');}
-  });
-  $('adminSupplierProductsList')?.addEventListener('click',async event=>{
-    const deleteProduct=event.target.closest('[data-admin-supplier-delete]');
-    if(deleteProduct){
-      if(!window.confirm('លុបផលិតផលនេះ? ប្រសិនបើមានប្រវត្តិបញ្ជាទិញ វានឹងត្រូវ Archive ជំនួសការលុប។'))return;
-      try{await api('/api/products/'+encodeURIComponent(deleteProduct.dataset.adminSupplierDelete),{method:'DELETE'});toast('បានលុប ឬ Archive ផលិតផល។');await renderAdminSupplierProducts();}
-      catch(error){toast(error.message||'មិនអាចលុបផលិតផលបានទេ។','error');}return;
-    }
-    const button=event.target.closest('[data-admin-variant-delete]');if(!button)return;if(!window.confirm('តើអ្នកចង់លុប Variant នេះមែនទេ?'))return;
-    const article=button.closest('[data-admin-supplier-product]');
-    try{await api('/api/admin/supplier-products/'+encodeURIComponent(article.dataset.adminSupplierProduct)+'/variants/'+encodeURIComponent(button.dataset.adminVariantDelete),{method:'DELETE'});toast('បានលុប Variant។');await renderAdminSupplierProducts();}
-    catch(error){toast(error.message||'មិនអាចលុប Variant បានទេ។','error');}
+  $('adminSupplierProductsList')?.addEventListener('keydown',event=>{
+    if(event.key!=='Enter'&&event.key!==' ')return;
+    const row=event.target.closest('.admin-aurora-row');if(!row)return;
+    event.preventDefault();openAdminAuroraProductEditor(row.dataset.adminAuroraEdit);
   });
   $('adminApplications')?.addEventListener('click', async (e) => { const b = e.target.closest('[data-admin-review]'); if (!b) return; try { await api('/api/admin/vendors/' + encodeURIComponent(b.dataset.id), { method: 'PATCH', body: JSON.stringify({ status: b.dataset.adminReview }) }); await renderAdmin(); toast('បានធ្វើបច្ចុប្បន្នភាពពាក្យស្នើសុំ។'); } catch (err) { toast(err.message || 'មិនអាចពិនិត្យពាក្យស្នើសុំបានទេ។', 'error'); } });
 
