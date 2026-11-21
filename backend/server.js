@@ -3380,7 +3380,7 @@ function supplierPlainText(html) {
 function detectCcSupplierAvailability(cardHtml, plainText) {
   const evidence = (String(plainText || '') + ' ' + String(cardHtml || '')).toLowerCase();
   // Explicit supplier out-of-stock labels always take precedence.
-  if (/\\b(?:out of stock|sold out|unavailable|not available|no stock|stock unavailable)\\b|អស់ស្តុក|គ្មានស្តុក/i.test(evidence)) {
+  if (/\b(?:out[\s_-]*of[\s_-]*stock|sold[\s_-]*out|unavailable|not[\s_-]*available|no[\s_-]*stock|stock[\s_-]*unavailable|outofstock|soldout)\b|អស់ស្តុក|គ្មានស្តុក/i.test(evidence)) {
     return 'out_of_stock';
   }
   // A product present in the live supplier catalog with a verified code, price and image
