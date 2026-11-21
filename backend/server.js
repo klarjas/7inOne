@@ -1347,6 +1347,43 @@ app.get('/api/categories', async (_req, res) => {
   if (error) return fail(res, 500, 'Could not load categories');
   res.json({ data: [...new Set((data || []).map(row => row.category).filter(Boolean))].sort() });
 });
+app.get('/api/vendors/:id/categories', async (req, res) => {
+  if (!db(res)) return;
+  const vendorId = clean(req.params.id, 36);
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(vendorId)) return fail(res, 400, 'Invalid vendor ID.');
+  const cutoff = new Date(Date.now() - PRODUCT_PUBLIC_MAX_AGE_MS).toISOString();
+  const loadProducts = legacy => {
+    let query = supabase.from('products').select('id,category')
+      .eq('vendor_id', vendorId).eq('status', 'active').gt('stock', 0);
+    query = legacy ? query.gte('created_at', cutoff) : query.or(`renewed_at.gte.${cutoff},and(renewed_at.is.null,created_at.gte.${cutoff})`);
+    return query;
+  };
+  let { data: products, error } = await loadProducts(false);
+  const missingRenewalColumn = error && (error.code === '42703' || /renewed_at.*(does not exist|schema cache)|column .*renewed_at/i.test(error.message || ''));
+  if (missingRenewalColumn) ({ data: products, error } = await loadProducts(true));
+  if (error) return fail(res, 500, 'Could not load shop categories.');
+  const ids = (products || []).map(row => row.id).filter(Boolean);
+  let details = [];
+  if (ids.length) {
+    const result = await supabase.from('product_listing_details').select('product_id,subcategory').in('product_id', ids);
+    if (result.error) return fail(res, 500, 'Could not load shop subcategories.');
+    details = result.data || [];
+  }
+  const subcategoryByProduct = new Map(details.map(row => [String(row.product_id), String(row.subcategory || '').trim()]));
+  const groups = new Map();
+  for (const product of products || []) {
+    const category = String(product.category || '').trim();
+    if (!category) continue;
+    if (!groups.has(category)) groups.set(category, new Set());
+    const subcategory = subcategoryByProduct.get(String(product.id));
+    if (subcategory) groups.get(category).add(subcategory);
+  }
+  const data = [...groups.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([category, subcategories]) => ({
+    category, subcategories: [...subcategories].sort((a, b) => a.localeCompare(b))
+  }));
+  res.set('Cache-Control', 'no-store');
+  return res.json({ data });
+});
 // Unified home feed: merge independent listing tables without changing product APIs.
 app.get('/api/marketplace/listings', async (req, res) => {
   if (!db(res)) return;
