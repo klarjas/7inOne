@@ -1619,10 +1619,11 @@ app.get('/api/products', async (req, res) => {
     const fields = legacyRenewal
       ? 'id,title,description,price,stock,category,location,condition,view_count,created_at,updated_at,vendor_id,product_images(id,file_id,image_url,sort_order),vendors!inner(id,store_name,status,store_logo_file_id)'
       : 'id,title,description,price,stock,category,location,condition,view_count,created_at,updated_at,renewed_at,vendor_id,product_images(id,file_id,image_url,sort_order),vendors!inner(id,store_name,status,store_logo_file_id)';
+    const includeOutOfStock = Boolean(vendorId) && req.query.include_out_of_stock === 'true';
     let query = supabase.from('products').select(fields, { count: 'exact' })
       .eq('status', 'active')
-      .in('vendors.status', ['approved','pending','rejected'])
-      .gt('stock', 0);
+      .in('vendors.status', ['approved','pending','rejected']);
+    if (!includeOutOfStock) query = query.gt('stock', 0);
     if (vendorId) query = query.eq('vendor_id', vendorId);
 
     // Combine age and text filters into one PostgREST logic expression.
@@ -3021,6 +3022,7 @@ app.get('/api/vendors/:id/ratings', async (req, res) => {
     total_views: (products || []).reduce((sum,row) => sum + Number(row.view_count || 0), 0),
     reviews: (reviews || []).map(row => ({ ...row, buyer_name: buyerNames[row.buyer_id] || 'អ្នកទិញ' }))
   } });
+  res.set('Cache-Control', 'no-store');
 });
 app.post('/api/vendors/:id/reviews', authenticate, async (req, res) => {
   const rating = Number(req.body.rating);
