@@ -2687,7 +2687,7 @@ const PRODUCT_DETAIL_SPEC_FIELDS = {
   'Motherboard': ['Brand & Model','CPU Socket','Chipset','Form Factor (ATX / mATX / ITX)','RAM Type & Slots','M.2 / SATA Slots'],
   'Power Supply': ['Wattage (W)','80 PLUS Rating','Modular Type (Full / Semi / Non)','Connector Support'],
   'Monitor': ['Screen Size (inch)','Resolution (FHD / QHD / 4K)','Refresh Rate (Hz)','Panel (IPS / VA / OLED)','Ports (HDMI / DP / USB-C)'],
-  'Laptop': ['Brand','CPU Model','RAM Type & Capacity','GPU Model & VRAM','Storage Type & Capacity','Screen Size','Battery Health'],
+  'Laptop': ['Brand','CPU Model','RAM Type & Capacity','GPU Model & VRAM','Storage Type & Capacity','Screen Size','Resolution','Operating System','Color','Weight','Battery Health'],
   'Desktop PC': ['CPU Model','RAM Type & Capacity','GPU Model & VRAM','Storage Type & Capacity','Motherboard','Power Supply Wattage']
 };
 function renderProductTaxonomy(category) {
@@ -2705,7 +2705,7 @@ function renderProductSpecFields(category) {
   const stableKeys = {
     'Brand':'brand','CPU Model':'cpu_model','RAM Type & Capacity':'ram_type_capacity',
     'GPU Model & VRAM':'gpu_model_vram','Storage Type & Capacity':'storage_type_capacity',
-    'Screen Size':'screen_size','Battery Health':'battery_health'
+    'Screen Size':'screen_size','Resolution':'resolution','Operating System':'operating_system','Color':'color','Weight':'weight','Battery Health':'battery_health'
   };
   $('productSpecificationFields').innerHTML = fields.length
     ? '<h3 class="sm:col-span-2 text-xs font-bold text-slate-300">លក្ខណៈសម្បត្តិផលិតផល</h3>' + fields.map((label,index) =>
