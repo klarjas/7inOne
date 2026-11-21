@@ -2061,7 +2061,7 @@ async function openStorefront(vendorId, options = {}) {
     const [result, catalogue, taxonomy] = await Promise.all([
       api('/api/vendors/' + encodeURIComponent(storeId) + '/ratings'),
       api('/api/products?page=1&limit=' + state.currentStoreLimit + '&vendor_id=' + encodeURIComponent(storeId) + '&include_out_of_stock=true'),
-      api('/api/vendors/' + encodeURIComponent(storeId) + '/categories')
+      api('/api/vendors/' + encodeURIComponent(storeId) + '/categories').catch(() => ({ data: [] }))
     ]);
     if (!isCurrent()) { cancelSkeleton(); return false; }
     cancelSkeleton();
