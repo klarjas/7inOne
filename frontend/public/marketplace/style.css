@@ -8292,3 +8292,7 @@ body > footer {
 .admin-aurora-form-footer{position:sticky;bottom:0;display:flex;justify-content:flex-end;gap:8px;padding:12px 0 0;background:var(--surface,#fff)}
 .admin-aurora-form-footer button{padding:9px 14px;border:1px solid var(--border,rgba(128,128,128,.2));border-radius:8px;font-size:11px;font-weight:700}.admin-aurora-form-footer button.is-primary{background:var(--accent,#222);color:#fff;border-color:transparent}
 @media(max-width:640px){.admin-aurora-row{grid-template-columns:60px minmax(0,1fr);gap:9px;padding:9px}.admin-aurora-thumb{width:60px;height:58px}.admin-aurora-meta{grid-column:2;flex-direction:row;align-items:center;justify-content:flex-start;gap:10px}.admin-aurora-edit{grid-column:2;justify-self:start}.admin-aurora-form-grid,.admin-aurora-variant{grid-template-columns:1fr}.admin-aurora-modal{padding:0;align-items:flex-end}.admin-aurora-dialog{max-height:95vh;border-radius:16px 16px 0 0}#adminAuroraProductEditForm{padding:13px}.admin-aurora-dialog-head{padding:13px}}
+
+
+/* AURORA supplier image sync action */
+.admin-aurora-sync-images{align-self:flex-start;display:inline-flex;align-items:center;gap:7px;padding:9px 12px;border:1px solid var(--border,rgba(128,128,128,.2));border-radius:8px;background:var(--surface-secondary,rgba(128,128,128,.08));font-size:11px;font-weight:750;transition:background .15s,border-color .15s}.admin-aurora-sync-images:hover{background:var(--surface-tertiary,rgba(128,128,128,.14));border-color:var(--accent,#777)}.admin-aurora-sync-images:disabled{opacity:.55;cursor:wait}
