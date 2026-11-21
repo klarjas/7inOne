@@ -2156,6 +2156,7 @@ function storeCategoryOptions(products = state.currentStoreProducts) {
   return keys.map(key => [key, storeCategoryLabel(key)]);
 }
 function storeSubcategoryOptions(category = state.currentStoreCategory, products = state.currentStoreProducts) {
+  if (category === 'all') return [];
   const taxonomy = Array.isArray(state.currentStoreCategoryData) ? state.currentStoreCategoryData : [];
   const entry = taxonomy.find(item => String(item.category || '') === category);
   if (entry) return (entry.subcategories || []).map(value => [String(value), String(value)]);
