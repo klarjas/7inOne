@@ -94,6 +94,7 @@ const state = {
   // Marketplace
   products: [],
   productsRequestId: 0,
+  productsLoaded: false,
   jobs: [],
   jobsRequestId: 0,
   activeJobCategory: 'all',
@@ -1222,13 +1223,22 @@ function renderProducts() {
 async function loadProducts() {
   const requestId = ++state.productsRequestId;
   const grid = $('productGrid');
-  grid.setAttribute('aria-busy', 'true');
-  grid.classList.add('hidden');
-  $('emptyHome').classList.add('hidden');
-  $('skeletonGrid').classList.remove('hidden');
+  const skeleton = $('skeletonGrid');
+  const hasRenderedProducts = state.productsLoaded;
 
-  // Load verified-seller Shorts independently of marketplace listing/banner loading.
-  
+  grid.setAttribute('aria-busy', 'true');
+  $('emptyHome').classList.add('hidden');
+
+  // Keep the current results visible during refresh. On the first load,
+  // show the skeleton only if the real request takes longer than the delay.
+  const cancelSkeleton = !hasRenderedProducts
+    ? scheduleSkeleton(() => {
+        if (requestId === state.productsRequestId && !state.productsLoaded) {
+          grid.classList.add('hidden');
+          skeleton.classList.remove('hidden');
+        }
+      }, 140)
+    : () => {};
 
   const params = new URLSearchParams({ limit: '50', type: state.activeListingType || 'all' });
   if (state.searchTerm) params.set('q', state.searchTerm);
@@ -1239,16 +1249,23 @@ async function loadProducts() {
     const res = await api('/api/marketplace/listings?' + params.toString());
     if (requestId !== state.productsRequestId) return;
     state.products = Array.isArray(res.data) ? res.data : [];
+    state.productsLoaded = true;
+    cancelSkeleton();
     renderProducts();
     syncHomeHeroImagesFromProducts();
   } catch (error) {
     if (requestId !== state.productsRequestId) return;
-    renderProducts();
+    cancelSkeleton();
+    // Preserve already-rendered results if a background refresh fails.
+    if (!state.productsLoaded) {
+      state.products = [];
+      renderProducts();
+    }
     toast('មិនអាចទាញយកប្រកាសបានទេ៖ ' + error.message, 'error');
   } finally {
+    cancelSkeleton();
     if (requestId === state.productsRequestId) {
-      $('skeletonGrid').classList.add('hidden');
-      grid.classList.toggle('hidden', state.products.length === 0);
+      skeleton.classList.add('hidden');
       grid.setAttribute('aria-busy', 'false');
     }
   }
