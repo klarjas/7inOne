@@ -851,8 +851,19 @@ function productDescriptionParts(product = {}) {
   return { short: Array.from(legacyShort).slice(0, 140).join(''), full: raw };
 }
 
+function normalizedProductSpecs(product = {}) {
+  const specs = { ...(product.specifications && typeof product.specifications === 'object' ? product.specifications : {}) };
+  const detailType = String(product.detail_type || product.listing_details?.detail_type || '');
+  const legacyKeys = detailType === 'Laptop'
+    ? { cpu_model:'spec_0', ram_type_capacity:'spec_1', gpu_model_vram:'spec_2', storage_type_capacity:'spec_3', screen_size:'spec_4', battery_health:'spec_5' }
+    : detailType === 'Desktop PC'
+      ? { cpu_model:'spec_0', ram_type_capacity:'spec_1', gpu_model_vram:'spec_2', storage_type_capacity:'spec_3' }
+      : {};
+  for (const [key, legacy] of Object.entries(legacyKeys)) if (specs[key] == null && specs[legacy] != null) specs[key] = specs[legacy];
+  return specs;
+}
 function productCardSpecs(product = {}) {
-  const specs = product.specifications && typeof product.specifications === 'object' ? product.specifications : {};
+  const specs = normalizedProductSpecs(product);
   const normalized = Object.fromEntries(Object.entries(specs).map(([key, value]) => [String(key).toLowerCase().replace(/[^a-z0-9]/g, ''), value]));
   const find = keys => {
     for (const key of keys) {
