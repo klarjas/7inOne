@@ -327,6 +327,58 @@ function closeModal(id) {
   if (!document.querySelector('.modal.open')) document.body.classList.remove('overflow-hidden');
 }
 
+let appDialogSequence = 0;
+function appDialog({ mode = 'confirm', title = 'បញ្ជាក់សកម្មភាព', message = '', placeholder = 'សរសេរមូលហេតុនៅទីនេះ...', confirmLabel, danger = false } = {}) {
+  return new Promise(resolve => {
+    const id = 'appDialogModal';
+    const previous = $(id);
+    if (previous) previous.remove();
+    const wrap = document.createElement('div');
+    wrap.id = id;
+    wrap.className = 'modal app-dialog-modal';
+    wrap.setAttribute('aria-hidden', 'true');
+    const isPrompt = mode === 'prompt';
+    const field = isPrompt
+      ? `<label class="app-dialog-field"><span>មូលហេតុ</span><textarea id="appDialogInput" class="field" rows="4" minlength="3" maxlength="1200" required placeholder="${esc(placeholder)}"></textarea></label>`
+      : '';
+    wrap.innerHTML = `<section class="modal-box app-dialog-box" role="dialog" aria-modal="true" aria-labelledby="appDialogTitle" aria-describedby="appDialogMessage">
+      <div class="app-dialog-heading"><span class="app-dialog-icon">${ic(isPrompt ? 'flag' : 'alertcircle', 19)}</span><div><h2 id="appDialogTitle">${esc(title)}</h2><p id="appDialogMessage">${esc(message)}</p></div></div>
+      <form id="appDialogForm" class="app-dialog-form">${field}
+        <div class="app-dialog-actions">
+          <button type="button" class="app-dialog-cancel" id="appDialogCancel">បោះបង់</button>
+          <button type="submit" class="app-dialog-submit ${danger ? 'is-danger' : ''}">${esc(confirmLabel || (isPrompt ? 'ផ្ញើរបាយការណ៍' : 'យល់ព្រម'))}</button>
+        </div>
+      </form>
+    </section>`;
+    document.body.appendChild(wrap);
+    let settled = false;
+    const finish = value => {
+      if (settled) return;
+      settled = true;
+      closeModal(id);
+      wrap.remove();
+      document.removeEventListener('keydown', onKeyDown);
+      resolve(value);
+    };
+    const onKeyDown = event => {
+      if (event.key === 'Escape') finish(isPrompt ? null : false);
+    };
+    $('appDialogCancel').addEventListener('click', () => finish(isPrompt ? null : false));
+    $('appDialogForm').addEventListener('submit', event => {
+      event.preventDefault();
+      const value = isPrompt ? $('appDialogInput').value.trim() : true;
+      if (isPrompt && value.length < 3) return;
+      finish(value);
+    });
+    wrap.addEventListener('click', event => {
+      if (event.target === wrap) finish(isPrompt ? null : false);
+    });
+    document.addEventListener('keydown', onKeyDown);
+    openModal(id);
+    if (isPrompt) $('appDialogInput')?.focus();
+  });
+}
+
 function closeDropdowns() {
   document.querySelectorAll('.dropdown').forEach((x) => x.classList.remove('open'));
 }
@@ -851,7 +903,6 @@ function productCard(p, index) {
     <div class="cb">
       <h3 class="cursor-pointer hover:text-emerald-800" data-action="view" data-id="${esc(p.id)}">${esc(p.title)}</h3>
       <p class="pr"><span>${money(p.price)}</span></p>
-      <div class="product-card-id-row"><span>Product ID</span><code>${esc(displayProductCode(p))}</code><button type="button" class="product-card-copy-id" data-copy-product-code="${esc(displayProductCode(p))}" aria-label="ចម្លង Product ID" title="ចម្លង Product ID">${ic('copy',12)}</button></div>
       ${description ? `<p class="cd-description">${esc(description)}</p>` : ''}
       <div class="sh">
         <span class="sp" role="img" aria-label="រូប Logo ហាង">
@@ -1353,7 +1404,7 @@ function renderDetailMapSection(item) {
   const location = [item.location, item.address].filter(Boolean).join(' · ');
   if (!rawUrl) return location ? `<div class="detail-location"><div class="detail-location-heading">${ic('pin',17)} <b>ទីតាំង</b></div><p>${esc(item.location || 'កម្ពុជា')}</p>${item.address ? `<small>${esc(item.address)}</small>` : ''}</div>` : '';
   const embedUrl = extractGoogleMapEmbedUrl(rawUrl, location || 'Cambodia');
-  return `<section class="detail-map-section"><div class="detail-location-heading">${ic('pin',17)} <b>ទីតាំង</b></div><p>${esc(item.location || 'កម្ពុជា')}</p>${item.address ? `<small>${esc(item.address)}</small>` : ''}<div class="detail-map-frame">${embedUrl ? `<iframe src="${esc(embedUrl)}" title="Google Maps location" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>` : ''}<button type="button" class="detail-map-open" data-detail-action="map" data-map-url="${esc(rawUrl)}">បង្ហាញទីតាំងនៅលើផែនទី</button></div></section>`;
+  return `<section class="detail-map-section"><div class="detail-location-heading">${ic('pin',17)} <b>ទីតាំង</b></div><p>${esc(item.location || 'កម្ពុជា')}</p>${item.address ? `<small>${esc(item.address)}</small>` : ''}<div class="detail-map-frame">${embedUrl ? `<iframe src="${esc(embedUrl)}" title="Google Maps location" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen style="background:#16202D"></iframe>` : ''}<button type="button" class="detail-map-open" data-detail-action="map" data-map-url="${esc(rawUrl)}">បង្ហាញទីតាំងនៅលើផែនទី</button></div></section>`;
 }
 function renderProductDetailLocation(item) {
   const specs = item.specifications && typeof item.specifications === 'object' ? item.specifications : {};
@@ -1368,7 +1419,7 @@ function renderProductDetailLocation(item) {
       ${item.address ? `<small>${esc(item.address)}</small>` : ''}
     </div>
     <div class="detail-map-frame">
-      ${embedUrl ? `<iframe src="${esc(embedUrl)}" title="ផែនទីទីតាំងផលិតផល" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>` : ''}
+      ${embedUrl ? `<iframe src="${esc(embedUrl)}" title="ផែនទីទីតាំងផលិតផល" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen style="background:#16202D"></iframe>` : ''}
       ${embedUrl ? `<button type="button" class="detail-map-open" data-detail-action="map" data-map-url="${esc(embedUrl)}">មើលផែនទី</button>` : ''}
     </div>
   </section>`;
@@ -1398,7 +1449,7 @@ function bindListingDetailActions(root, item) {
       return;
     }
     if (action === 'report') {
-      const reason = window.prompt('សូមបញ្ជាក់មូលហេតុរាយការណ៍ (ឧ. ព័ត៌មានមិនត្រឹមត្រូវ ឬបោកប្រាស់)៖');
+      const reason = await appDialog({ mode:'prompt', title:'រាយការណ៍ប្រកាស', message:'សូមបញ្ជាក់មូលហេតុដែលអ្នកចង់រាយការណ៍ ដើម្បីឱ្យ Admin អាចពិនិត្យបានត្រឹមត្រូវ។', placeholder:'ឧ. ព័ត៌មានមិនត្រឹមត្រូវ ឬសង្ស័យថាបោកប្រាស់...' });
       if (!reason || !reason.trim()) return;
       button.disabled = true;
       try { await api('/api/listing-reports',{method:'POST',body:JSON.stringify({listing_type:item.listing_type,id:item.id,reason:reason.trim()})}); toast('បានផ្ញើរបាយការណ៍ទៅ Admin រួចរាល់។'); }
@@ -1516,6 +1567,28 @@ function renderProductDetail() {
   const reviewItems = (v.reviews || []).slice(0, 5);
   const reviewTotal = Number(v.review_count || reviewItems.length || 0);
   const average = Number(v.rating || 0);
+  const reviewedOrderIds = new Set((v.reviews || []).map(review => String(review.order_id || '')));
+  const eligibleReviewOrders = state.session
+    ? (state.myOrders || []).filter(order =>
+        order.status === 'completed' &&
+        !reviewedOrderIds.has(String(order.id)) &&
+        (order.order_items || []).some(item => String(item.vendor_id) === String(v.id) && item.fulfillment_status === 'completed')
+      )
+    : [];
+  const reviewFormHtml = !state.session
+    ? `<div class="product-review-gate"><p>ចូលគណនី និងទិញទំនិញពីហាងនេះ ដើម្បីអាចវាយតម្លៃអ្នកលក់បាន។</p><button type="button" data-review-login>ចូលគណនី</button></div>`
+    : eligibleReviewOrders.length
+      ? `<form id="productReviewForm" class="product-review-form" data-rating="5">
+          <h3>ចែករំលែកបទពិសោធន៍ទិញទំនិញ</h3>
+          <p>ជ្រើសរើសផ្កាយ ១ ដល់ ៥ និងសរសេរមតិយោបល់របស់អ្នក។</p>
+          <div class="product-review-star-picker" role="group" aria-label="ការវាយតម្លៃផ្កាយ">
+            ${[1,2,3,4,5].map(value => `<button type="button" class="${value <= 5 ? 'active' : ''}" data-review-rating="${value}" aria-label="${value} ផ្កាយ" aria-pressed="${value === 5}">★</button>`).join('')}
+          </div>
+          <label><span>ការបញ្ជាទិញដែលបានបញ្ចប់</span><select name="order_id" class="field" required>${eligibleReviewOrders.map(order => `<option value="${esc(order.id)}">#${esc(String(order.id).slice(0,8))} · ${fmtDate(order.created_at)}</option>`).join('')}</select></label>
+          <label><span>មតិយោបល់ (មិនចាំបាច់)</span><textarea name="comment" class="field" rows="3" maxlength="1200" placeholder="សរសេរអំពីគុណភាពទំនិញ និងសេវាកម្មរបស់ហាង..."></textarea></label>
+          <button type="submit" class="product-review-submit">ផ្ញើការវាយតម្លៃ</button>
+        </form>`
+      : `<div class="product-review-gate"><p>${reviewedOrderIds.size ? 'អ្នកបានវាយតម្លៃការបញ្ជាទិញដែលមានរួចហើយ។' : 'អាចវាយតម្លៃបានក្រោយពេលការបញ្ជាទិញពីហាងនេះត្រូវបានបញ្ចប់។'}</p></div>`;
 
   $('productDetail').innerHTML = `
   <div class="product-detail-page">
@@ -1596,6 +1669,7 @@ function renderProductDetail() {
           ${reviewItems.map((r) => `<article class="product-review"><div class="product-review-heading"><b>${esc(r.buyer_name || 'អ្នកទិញ')}</b><span class="text-amber-500">${'★'.repeat(Number(r.rating || 5))}</span></div><p class="mt-1 text-xs text-slate-600">${esc(r.comment || '')}</p><small class="text-[10px] text-slate-400">${fmtDate(r.created_at)}</small></article>`).join('') || '<p class="text-xs text-slate-400">មិនទាន់មានការវាយតម្លៃទេ។</p>'}
         </div>
       </div>
+      ${reviewFormHtml}
       </section>
 
       <aside class="product-safety-note">
@@ -1618,6 +1692,42 @@ function renderProductDetail() {
   </div>`;
 
   bindListingDetailActions($('productDetail'), {...p,listing_type:'product'});
+  $('productDetail').querySelector('[data-review-login]')?.addEventListener('click', () => openAuth('login'));
+  const reviewForm = $('productReviewForm');
+  if (reviewForm) {
+    reviewForm.querySelectorAll('[data-review-rating]').forEach(star => star.addEventListener('click', () => {
+      const rating = Number(star.dataset.reviewRating);
+      reviewForm.dataset.rating = String(rating);
+      reviewForm.querySelectorAll('[data-review-rating]').forEach(option => {
+        const active = Number(option.dataset.reviewRating) <= rating;
+        option.classList.toggle('active', active);
+        option.setAttribute('aria-pressed', String(Number(option.dataset.reviewRating) === rating));
+      });
+    }));
+    reviewForm.addEventListener('submit', async event => {
+      event.preventDefault();
+      if (!requireLogin()) return;
+      const submit = reviewForm.querySelector('[type="submit"]');
+      submit.disabled = true;
+      try {
+        await api('/api/vendors/' + encodeURIComponent(v.id) + '/reviews', {
+          method:'POST',
+          body:JSON.stringify({
+            order_id:new FormData(reviewForm).get('order_id'),
+            rating:Number(reviewForm.dataset.rating || 5),
+            comment:new FormData(reviewForm).get('comment') || ''
+          })
+        });
+        const refreshed = await api('/api/vendors/' + encodeURIComponent(v.id) + '/ratings');
+        state.currentVendor = refreshed.data;
+        renderProductDetail();
+        toast('បានផ្ញើការវាយតម្លៃរួចរាល់។');
+      } catch (error) {
+        toast(error.message || 'មិនអាចផ្ញើការវាយតម្លៃបានទេ។','error');
+        submit.disabled = false;
+      }
+    });
+  }
   const updateGallery = (idx) => {
     if (!galleryCount) return;
     const nextIndex = (idx + galleryCount) % galleryCount;
@@ -3190,31 +3300,60 @@ function openCheckout(p) {
     const wrap = document.createElement('div');
     wrap.id = 'checkoutModal';
     wrap.className = 'modal';
-    wrap.innerHTML = `<section class="modal-box max-w-[520px] p-6"><div class="mb-4 flex items-center justify-between"><h2 class="text-lg font-bold">ព័ត៌មានដឹកជញ្ជូន និងទូទាត់</h2><button type="button" class="close-btn" data-close="checkoutModal">${ic('x', 16)}</button></div><form id="checkoutForm" class="space-y-3"><input id="checkoutName" required class="field" placeholder="ឈ្មោះអ្នកទទួល"><input id="checkoutPhone" required class="field" placeholder="លេខទូរស័ព្ទ"><textarea id="checkoutAddress" required class="field min-h-20" placeholder="អាសយដ្ឋានដឹកជញ្ជូន"></textarea><div class="flex justify-between pt-2 font-bold"><span>សរុប</span><span id="checkoutTotal" class="text-emerald-700"></span></div><button id="checkoutSubmit" class="brand-gradient w-full rounded-full py-3 text-xs font-bold text-white">បញ្ជាក់ការបញ្ជាទិញ</button></form></section>`;
+    wrap.innerHTML = `<section class="modal-box app-checkout-box max-w-[520px] p-6">
+      <div class="mb-4 flex items-center justify-between"><h2 class="text-lg font-bold">ព័ត៌មានដឹកជញ្ជូន និងទូទាត់</h2><button type="button" class="close-btn" data-close="checkoutModal">${ic('x', 16)}</button></div>
+      <form id="checkoutForm" class="space-y-3">
+        <input id="checkoutName" required class="field" placeholder="ឈ្មោះអ្នកទទួល">
+        <input id="checkoutPhone" required class="field" placeholder="លេខទូរស័ព្ទ">
+        <textarea id="checkoutAddress" required class="field min-h-20" placeholder="អាសយដ្ឋានដឹកជញ្ជូន"></textarea>
+        <fieldset class="checkout-payment-options">
+          <legend>ជ្រើសរើសវិធីទូទាត់</legend>
+          <label><input type="radio" name="payment_method" value="cash_on_delivery" checked><span><b>${ic('truck',15)} ទូទាត់ពេលទទួលទំនិញ</b><small>Cash on Delivery</small></span></label>
+          <label><input type="radio" name="payment_method" value="bank_transfer"><span><b>${ic('landmark',15)} KHQR / ផ្ទេរប្រាក់តាមធនាគារ</b><small>Bank Transfer · រង់ចាំការផ្ទៀងផ្ទាត់</small></span></label>
+        </fieldset>
+        <p id="checkoutPaymentNote" class="checkout-payment-note" hidden>ការបញ្ជាទិញនឹងរង់ចាំការផ្ទៀងផ្ទាត់។ ប្រព័ន្ធមិនទាន់មាន QR Code របស់អ្នកលក់ក្នុងព័ត៌មានហាងទេ។ សូមទាក់ទងអ្នកលក់ដើម្បីទទួល KHQR ឬព័ត៌មានគណនីផ្ទេរប្រាក់។</p>
+        <div class="flex justify-between pt-2 font-bold"><span>សរុប</span><span id="checkoutTotal"></span></div>
+        <button id="checkoutSubmit" class="brand-gradient w-full rounded-full py-3 text-xs font-bold text-white">បញ្ជាក់ការបញ្ជាទិញ</button>
+      </form>
+    </section>`;
     document.body.appendChild(wrap);
     wrap.querySelector('[data-close]').onclick = () => closeModal('checkoutModal');
-    $('checkoutForm').onsubmit = async (e) => {
+    $('checkoutForm').querySelectorAll('[name="payment_method"]').forEach(input => input.addEventListener('change', () => {
+      $('checkoutPaymentNote').hidden = input.value !== 'bank_transfer' || !input.checked;
+    }));
+    $('checkoutForm').onsubmit = async e => {
       e.preventDefault();
+      const submit = $('checkoutSubmit');
+      const original = submit.innerHTML;
+      submit.disabled = true;
+      submit.textContent = 'កំពុងបញ្ជាទិញ...';
       try {
+        const paymentMethod = new FormData($('checkoutForm')).get('payment_method') || 'cash_on_delivery';
         await api('/api/orders', {
           method: 'POST',
           body: JSON.stringify({
             customer_name: $('checkoutName').value.trim(),
             customer_phone: $('checkoutPhone').value.trim(),
             delivery_address: $('checkoutAddress').value.trim(),
-            payment_method: 'cash_on_delivery',
+            payment_method: paymentMethod,
             items: [{ product_id: state.currentProduct.id, quantity: 1 }]
           })
         });
         closeModal('checkoutModal');
-        toast('បានបញ្ជាទិញជោគជ័យ!');
+        toast(paymentMethod === 'bank_transfer' ? 'បានទទួលការបញ្ជាទិញ។ ស្ថានភាពទូទាត់កំពុងរង់ចាំការផ្ទៀងផ្ទាត់។' : 'បានបញ្ជាទិញជោគជ័យ!');
         await Promise.all([loadOrders(), loadProducts()]);
-      } catch (err) { toast(err.message, 'error'); }
+      } catch (err) {
+        toast(err.message, 'error');
+      } finally {
+        submit.disabled = false;
+        submit.innerHTML = original;
+      }
     };
   }
   $('checkoutTotal').textContent = money(p.price);
   $('checkoutName').value = profileName();
   $('checkoutPhone').value = state.me?.profile?.phone || '';
+  $('checkoutPaymentNote').hidden = true;
   openModal('checkoutModal');
 }
 
@@ -4474,7 +4613,8 @@ function bindEvents() {
       if (actionBtn.dataset.sellerAction === 'edit') {
         const prod = state.sellerProductCache.find((x) => String(x.id) === String(id));
         if (prod) renderProductForm(prod);
-      } else if (actionBtn.dataset.sellerAction === 'delete' && confirm('លុបទំនិញនេះមែនទេ?')) {
+      } else if (actionBtn.dataset.sellerAction === 'delete') {
+        if (!(await appDialog({ title:'លុបទំនិញ', message:'តើអ្នកពិតជាចង់លុបទំនិញនេះមែនទេ? សកម្មភាពនេះមិនអាចត្រឡប់ក្រោយបានទេ។', confirmLabel:'លុបទំនិញ', danger:true }))) return;
         await api('/api/products/' + id, { method: 'DELETE' });
         toast('បានលុបទំនិញរួចរាល់។');
         await Promise.all([renderSeller(), loadProducts()]);
@@ -4721,7 +4861,7 @@ function bindEvents() {
       }
       const labels = { renew:'Renew ប្រកាសនេះ?', expire:'បញ្ចប់សុពលភាពប្រកាសនេះ?', delete:'លុបប្រកាសនេះមែនទេ?' };
       const verb = action.dataset.myPostAction;
-      if (!confirm(labels[verb] || 'បន្តសកម្មភាពនេះ?')) return;
+      if (!(await appDialog({ title:verb === 'delete' ? 'លុបប្រកាស' : verb === 'renew' ? 'បន្តសុពលភាពប្រកាស' : 'បញ្ចប់សុពលភាពប្រកាស', message:labels[verb] || 'តើអ្នកចង់បន្តសកម្មភាពនេះមែនទេ?', confirmLabel:verb === 'delete' ? 'លុបប្រកាស' : 'បញ្ជាក់', danger:verb === 'delete' }))) return;
       try {
         let response;
         if (verb === 'delete') response = await api('/api/my-posts/' + encodeURIComponent(type) + '/' + encodeURIComponent(id), { method:'DELETE' });
