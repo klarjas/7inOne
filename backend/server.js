@@ -3377,6 +3377,16 @@ function supplierPlainText(html) {
     .replace(/<[^>]+>/g, ' '))
     .replace(/[ \t]+/g, ' ').replace(/\n\s*/g, '\n').trim();
 }
+function detectCcSupplierAvailability(cardHtml, plainText) {
+  const evidence = (String(plainText || '') + ' ' + String(cardHtml || '')).toLowerCase();
+  // Explicit supplier out-of-stock labels always take precedence.
+  if (/\b(?:out[\s_-]*of[\s_-]*stock|sold[\s_-]*out|unavailable|not[\s_-]*available|no[\s_-]*stock|stock[\s_-]*unavailable|outofstock|soldout)\b|អស់ស្តុក|គ្មានស្តុក/i.test(evidence)) {
+    return 'out_of_stock';
+  }
+  // A product present in the live supplier catalog with a verified code, price and image
+  // is treated as available unless CC COMPUTER explicitly marks it unavailable.
+  return 'available';
+}
 function extractCcSupplierProducts(html, baseUrl) {
   const blocks = [];
   const stack = [];
@@ -3462,6 +3472,7 @@ function extractCcSupplierProducts(html, baseUrl) {
       supplier_product_code: code,
       title: clean(title, 160),
       supplier_price: supplierPrice,
+      availability: detectCcSupplierAvailability(card, text),
       selling_price: Number.isFinite(supplierPrice) ? Math.round((supplierPrice + 5) * 100) / 100 : null,
       description: clean(specs.join('\n'), 5000),
       category,
@@ -3545,7 +3556,8 @@ function groupCcSupplierProducts(products) {
       supplier_price: variants[0]?.supplier_price ?? group.supplier_price,
       selling_price: prices.length ? Math.min(...prices) : group.selling_price,
       image_urls: [...new Set(variants.flatMap(item => item.image_urls || []))].slice(0, 5),
-      verified: variants.length > 0 && variants.every(item => item.verified)
+      verified: variants.length > 0 && variants.every(item => item.verified),
+      availability: variants.some(item => item.availability !== 'out_of_stock') ? 'available' : 'out_of_stock'
     };
   });
 }
@@ -3742,7 +3754,33 @@ app.post('/api/admin/supplier-import/import', authenticate, requireAdmin, async 
       return variantCode && index.knownCodes.has(variantCode) && !existingProduct;
     });
     if (codeConflict) return fail(res, 409, 'One or more supplier product codes are already linked to another product.');
-    if (!variantsToAdd.length) return fail(res, 409, 'All configurations for this product have already been imported.');
+    if (!variantsToAdd.length) {
+      if (existingProduct) {
+        const parentAvailability = group.variants.some(item => item.availability !== 'out_of_stock') ? 1 : 0;
+        const { error: parentStockError } = await supabase.from('products')
+          .update({ stock: parentAvailability, updated_at: new Date().toISOString() }).eq('id', existingProduct.id);
+        if (parentStockError) throw parentStockError;
+        for (const variant of group.variants) {
+          const supplierCode = String(variant.supplier_product_code || '').trim().toUpperCase();
+          const existingVariant = (existingProduct.variants || []).find(item =>
+            String(item.sku || '').trim().toUpperCase() === supplierCode
+            || String(item.supplier_source?.supplier_product_code || '').trim().toUpperCase() === supplierCode
+          );
+          if (existingVariant) {
+            const { error: variantStockError } = await supabase.from('product_variants')
+              .update({ stock: variant.availability === 'out_of_stock' ? 0 : 1, updated_at: new Date().toISOString() })
+              .eq('id', existingVariant.id);
+            if (variantStockError) throw variantStockError;
+          }
+        }
+        return res.json({ success: true, data: {
+          id: existingProduct.id, title: group.title, existing_product: true,
+          created_variants: 0, total_variants: (existingProduct.variants || []).length,
+          availability_updated: true, availability: parentAvailability ? 'available' : 'out_of_stock'
+        } });
+      }
+      return fail(res, 409, 'All configurations for this product have already been imported.');
+    }
     const productId = existingProduct?.id || null;
     let targetProductId = productId;
     if (!targetProductId) {
@@ -3750,7 +3788,8 @@ app.post('/api/admin/supplier-import/import', authenticate, requireAdmin, async 
       if (!allPrices.length) return fail(res, 409, 'No valid variant price was found.');
       const { data: created, error: createError } = await supabase.from('products').insert({
         vendor_id: vendor.id, title: group.title, description: group.description,
-        category: group.category || 'computers', price: Math.min(...allPrices), stock: 0,
+        category: group.category || 'computers', price: Math.min(...allPrices),
+        stock: group.variants.some(item => item.availability !== 'out_of_stock') ? 1 : 0,
         location: 'Cambodia', condition: 'ថ្មី', status: 'active', renewed_at: new Date().toISOString()
       }).select().single();
       if (createError) throw createError;
@@ -3812,8 +3851,7 @@ app.post('/api/admin/supplier-import/import', authenticate, requireAdmin, async 
         product_id: targetProductId, sku: variant.supplier_product_code,
         option_name: 'RAM / Storage', option_value: optionValue,
         price: variant.selling_price,
-        stock: parentVariantMissing && existingParentCode === String(variant.supplier_product_code || '').trim().toUpperCase()
-          ? Math.max(0, Math.trunc(Number(existingProduct?.stock || 0))) : 0,
+        stock: variant.availability === 'out_of_stock' ? 0 : 1,
         attributes, is_active: true,
         sort_order: group.variants.indexOf(variant), updated_at: new Date().toISOString()
       }).select().single();
@@ -3854,6 +3892,26 @@ app.post('/api/admin/supplier-import/import', authenticate, requireAdmin, async 
       if (imageError) throw imageError;
       createdImageRows = true;
       createdImageProductId = targetProductId;
+    }
+    // Parent availability reflects whether at least one supplier configuration is available.
+    const parentAvailability = group.variants.some(item => item.availability !== 'out_of_stock') ? 1 : 0;
+    const { error: availabilityError } = await supabase.from('products')
+      .update({ stock: parentAvailability, updated_at: new Date().toISOString() })
+      .eq('id', targetProductId);
+    if (availabilityError) throw availabilityError;
+    // Refresh stock state for already-imported variants from the current supplier page.
+    for (const variant of group.variants) {
+      const supplierCode = String(variant.supplier_product_code || '').trim().toUpperCase();
+      const existingVariant = (existingProduct?.variants || []).find(item =>
+        String(item.sku || '').trim().toUpperCase() === supplierCode
+        || String(item.supplier_source?.supplier_product_code || '').trim().toUpperCase() === supplierCode
+      );
+      if (existingVariant) {
+        const { error: variantAvailabilityError } = await supabase.from('product_variants')
+          .update({ stock: variant.availability === 'out_of_stock' ? 0 : 1, updated_at: new Date().toISOString() })
+          .eq('id', existingVariant.id);
+        if (variantAvailabilityError) throw variantAvailabilityError;
+      }
     }
     res.status(201).json({
       success: true,

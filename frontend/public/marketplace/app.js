@@ -3361,7 +3361,7 @@ function renderSupplierImportResults(result, catalogUrl) {
       const variantRows = variants.map(variant => {
         const variantSpecs = variant.specifications || {};
         const label = [variantSpecs.ram_type_capacity,variantSpecs.storage_type_capacity].filter(Boolean).join(' · ') || 'Configuration មិនទាន់ច្បាស់';
-        return '<li class="flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 py-2"><span><b>'+esc(label)+'</b><small class="block text-slate-500">Code: '+esc(variant.supplier_product_code||'—')+(variant.duplicate_configuration?' · Configuration ស្ទួន':variant.already_imported?' · មានរួចហើយ':'')+'</small></span><span class="text-right"><b>'+money(variant.selling_price)+'</b><small class="block text-slate-500">Supplier '+money(variant.supplier_price)+'</small></span></li>';
+        return '<li class="flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 py-2"><span><b>'+esc(label)+'</b><small class="block text-slate-500">Code: '+esc(variant.supplier_product_code||'—')+' · '+(variant.availability==='out_of_stock'?'<span class="text-rose-600">Supplier អស់ស្តុក</span>':'<span class="text-emerald-700">Supplier មានលក់</span>')+(variant.duplicate_configuration?' · Configuration ស្ទួន':variant.already_imported?' · មានរួចហើយ':'')+'</small></span><span class="text-right"><b>'+money(variant.selling_price)+'</b><small class="block text-slate-500">Supplier '+money(variant.supplier_price)+'</small></span></li>';
       }).join('');
       const status = item.status || 'needs_review';
       return '<article class="rounded-xl border border-slate-200 p-3 text-[11px]"><div class="flex gap-3">'+
@@ -3371,7 +3371,7 @@ function renderSupplierImportResults(result, catalogUrl) {
         '<div class="mt-1 font-semibold">ផលិតផលមេ ១ · '+variants.length+' Variants</div>'+
         '<div class="mt-1 '+(statusClasses[status]||'text-slate-600')+'">'+(statusLabels[status]||status)+'</div></div></div>'+
         '<ul class="mt-2">'+variantRows+'</ul>'+
-        ((status==='ready'||status==='update_existing')&&importVariant ? '<button type="button" class="mt-3 rounded-full bg-slate-900 px-4 py-2 font-bold text-white" data-supplier-import-code="'+esc(importVariant.supplier_product_code)+'" data-supplier-import-price="'+Number(importVariant.supplier_price)+'">'+(status==='update_existing'?'បន្ថែម '+Number(item.new_variant_count||0)+' Variants ទៅផលិតផលមេ':'នាំចូលជាផលិតផលមេ ១ មាន '+uniqueVariantCount+' Variants')+'</button>' : '')+
+        (((status==='ready'||status==='update_existing')||(status==='duplicate'&&item.existing_product_id))&&importVariant ? '<button type="button" class="mt-3 rounded-full bg-slate-900 px-4 py-2 font-bold text-white" data-supplier-import-code="'+esc(importVariant.supplier_product_code)+'" data-supplier-import-price="'+Number(importVariant.supplier_price)+'">'+(status==='duplicate'?'ធ្វើបច្ចុប្បន្នភាពស្ថានភាពស្តុក':status==='update_existing'?'បន្ថែម '+Number(item.new_variant_count||0)+' Variants ទៅផលិតផលមេ':'នាំចូលជាផលិតផលមេ ១ មាន '+uniqueVariantCount+' Variants')+'</button>' : '')+
       '</article>';
     }).join('')+'</div>' : '<p class="py-4 text-center text-slate-500">មិនបានរកឃើញផលិតផលក្នុងបាច់នេះទេ។</p>')+
     (page.has_more ? '<div class="pt-3 text-center"><button type="button" class="rounded-full border border-slate-300 px-5 py-2.5 text-[11px] font-bold" data-supplier-import-next="'+Number(page.next_offset||0)+'">បង្ហាញផលិតផល ១០ ម៉ូដែលបន្ទាប់</button></div>' : '');
@@ -5718,9 +5718,11 @@ function bindEvents() {
     button.disabled = true; button.textContent = 'កំពុងនាំចូល...';
     try {
       const result = await api('/api/admin/supplier-import/import', { method: 'POST', body: JSON.stringify({ catalog_url: catalogUrl, supplier_product_code: code, expected_supplier_price: supplierPrice }) });
-      toast(result.data?.existing_product
-        ? 'បានបន្ថែម '+Number(result.data?.created_variants||0)+' Variants ទៅផលិតផល '+(result.data?.title||code)+' ជោគជ័យ។'
-        : 'បាននាំចូល '+(result.data?.title||code)+' ជាផលិតផលមេ និង '+Number(result.data?.created_variants||0)+' Variants ជោគជ័យ។');
+      toast(result.data?.availability_updated
+        ? 'បានធ្វើបច្ចុប្បន្នភាពស្ថានភាពស្តុកតាម CC COMPUTER សម្រាប់ '+(result.data?.title||code)+' ជោគជ័យ។'
+        : result.data?.existing_product
+          ? 'បានបន្ថែម '+Number(result.data?.created_variants||0)+' Variants ទៅផលិតផល '+(result.data?.title||code)+' ជោគជ័យ។'
+          : 'បាននាំចូល '+(result.data?.title||code)+' ជាផលិតផលមេ និង '+Number(result.data?.created_variants||0)+' Variants ជោគជ័យ។');
       await scanAuroraSupplierCatalog(catalogUrl);
       await renderAdminSupplierProducts();
     } catch (error) {
