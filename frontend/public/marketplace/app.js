@@ -4364,18 +4364,19 @@ function bindEvents() {
       }
       let uploadedImages = [];
       const uploadStatus = $('productUploadStatus');
+      const uploadLabel = $('productUploadLabel');
       const uploadProgress = $('productUploadProgressBar');
       if (uploadStatus) uploadStatus.hidden = newImages.length === 0;
       if (uploadProgress) uploadProgress.style.width = '0%';
       for (let index = 0; index < newImages.length; index++) {
         const form = new FormData();
         form.append('images', newImages[index].file);
-        if (uploadStatus) uploadStatus.textContent = 'កំពុង Upload រូបភាពទី ' + (index + 1) + '/' + newImages.length + ' · 0%';
+        if (uploadLabel) uploadLabel.textContent = 'កំពុង Upload រូបភាពទី ' + (index + 1) + '/' + newImages.length + ' · 0%';
         const uploaded = await apiUploadWithProgress(
           '/api/products/' + encodeURIComponent(productId) + '/images',
           form,
           percent => {
-            if (uploadStatus) uploadStatus.textContent = 'កំពុង Upload រូបភាពទី ' + (index + 1) + '/' + newImages.length + ' · ' + percent + '%';
+            if (uploadLabel) uploadLabel.textContent = 'កំពុង Upload រូបភាពទី ' + (index + 1) + '/' + newImages.length + ' · ' + percent + '%';
             if (uploadProgress) uploadProgress.style.width = percent + '%';
           }
         );
