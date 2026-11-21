@@ -2060,7 +2060,9 @@ function renderMyPostSimpleEditForm(post) {
 function renderMyPostFullEditForm(post) {
   const isJob = post.type === 'job';
   const categories = Object.entries(isJob ? LISTING_TAXONOMY.jobs : LISTING_TAXONOMY.properties);
-  const categoryOptions = categories.map(([key, item]) => `<option value="${esc(key)}" ${post.category === key ? 'selected' : ''}>${esc(item.label || item.name || key)}</option>`).join('');
+  const hasCurrentCategory = categories.some(([key]) => key === String(post.category || ''));
+  const currentCategoryOption = post.category && !hasCurrentCategory ? `<option value="${esc(post.category)}" selected>${esc(post.category)}</option>` : '';
+  const categoryOptions = currentCategoryOption + categories.map(([key, item]) => `<option value="${esc(key)}" ${post.category === key ? 'selected' : ''}>${esc(item.label || item.name || key)}</option>`).join('');
   const images = Array.isArray(post.image_items) ? post.image_items : [];
   const specs = post.specifications && typeof post.specifications === 'object' ? { ...post.specifications } : {};
   const googleMapUrl = specs.google_map_url || '';
@@ -2118,7 +2120,9 @@ function renderMyPostFullEditForm(post) {
 
 function renderMyPostLegacyRealEstateEditForm(post) {
   const categories = Object.entries(LISTING_TAXONOMY.properties);
-  const categoryOptions = categories.map(([key, item]) => `<option value="${esc(key)}" ${post.category === key ? 'selected' : ''}>${esc(item.label || item.name || key)}</option>`).join('');
+  const hasCurrentCategory = categories.some(([key]) => key === String(post.category || ''));
+  const currentCategoryOption = post.category && !hasCurrentCategory ? `<option value="${esc(post.category)}" selected>${esc(post.category)}</option>` : '';
+  const categoryOptions = currentCategoryOption + categories.map(([key, item]) => `<option value="${esc(key)}" ${post.category === key ? 'selected' : ''}>${esc(item.label || item.name || key)}</option>`).join('');
   const image = (post.image_items || [])[0];
   const isRental = post.type === 'rental';
   const isLand = post.type === 'land';
