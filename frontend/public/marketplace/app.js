@@ -2116,6 +2116,38 @@ function renderMyPostFullEditForm(post) {
     </form>`;
 }
 
+function renderMyPostLegacyRealEstateEditForm(post) {
+  const categories = Object.entries(LISTING_TAXONOMY.properties);
+  const categoryOptions = categories.map(([key, item]) => `<option value="${esc(key)}" ${post.category === key ? 'selected' : ''}>${esc(item.label || item.name || key)}</option>`).join('');
+  const image = (post.image_items || [])[0];
+  const isRental = post.type === 'rental';
+  const isLand = post.type === 'land';
+  return `
+    <form data-my-post-edit-form data-type="${esc(post.type)}" data-id="${esc(post.id)}" class="my-post-full-edit-form mt-3 grid gap-3 rounded-xl p-3">
+      <div class="grid gap-3 sm:grid-cols-2">
+        <label class="sm:col-span-2"><span class="label">ចំណងជើងប្រកាស *</span><input name="title" class="field mt-1" maxlength="160" required value="${esc(post.title || '')}"></label>
+        <label><span class="label">ប្រភេទអចលនទ្រព្យ</span><select name="category" class="field mt-1">${categoryOptions}</select></label>
+        <label><span class="label">ទីតាំង</span><input name="location" class="field mt-1" maxlength="120" value="${esc(post.location || '')}"></label>
+        <label class="sm:col-span-2"><span class="label">អាសយដ្ឋានលម្អិត</span><input name="address" class="field mt-1" maxlength="300" value="${esc(post.address || '')}"></label>
+        <label><span class="label">តម្លៃ (USD)</span><input name="price" class="field mt-1" type="number" min="0" step="any" value="${esc(post.price ?? post.rent_amount ?? '')}"></label>
+        ${isRental ? `<label><span class="label">រយៈពេលជួល</span><select name="rent_period" class="field mt-1"><option value="monthly" ${post.rent_period === 'monthly' ? 'selected' : ''}>ប្រចាំខែ</option><option value="daily" ${post.rent_period === 'daily' ? 'selected' : ''}>ប្រចាំថ្ងៃ</option><option value="yearly" ${post.rent_period === 'yearly' ? 'selected' : ''}>ប្រចាំឆ្នាំ</option></select></label>` : ''}
+        ${!isLand ? `<label><span class="label">ប្រភេទអចលនទ្រព្យលម្អិត</span><input name="property_type" class="field mt-1" value="${esc(post.property_type || '')}"></label>` : `<label><span class="label">ប្រភេទដី</span><input name="land_type" class="field mt-1" value="${esc(post.land_type || '')}"></label>`}
+        <label><span class="label">ទំហំ (m²)</span><input name="area_sqm" class="field mt-1" type="number" min="0" step="any" value="${esc(post.area_sqm ?? '')}"></label>
+        ${!isLand ? `<label><span class="label">បន្ទប់គេង</span><input name="bedrooms" class="field mt-1" type="number" min="0" step="1" value="${esc(post.bedrooms ?? '')}"></label><label><span class="label">បន្ទប់ទឹក</span><input name="bathrooms" class="field mt-1" type="number" min="0" step="1" value="${esc(post.bathrooms ?? '')}"></label><label><span class="label">គ្រឿងសង្ហារិម</span><input name="furnished" class="field mt-1" value="${esc(post.furnished || '')}"></label>` : `<label><span class="label">ប្លង់កម្មសិទ្ធិ</span><input name="title_deed" class="field mt-1" value="${esc(post.title_deed || '')}"></label><label><span class="label">ផ្លូវចូល</span><input name="road_access" class="field mt-1" value="${esc(post.road_access || '')}"></label>`}
+        ${!isLand && !isRental ? `<label><span class="label">ប្លង់កម្មសិទ្ធិ</span><input name="title_deed" class="field mt-1" value="${esc(post.title_deed || '')}"></label>` : ''}
+        <label class="sm:col-span-2"><span class="label">YouTube Video Link</span><input name="youtube_video_url" class="field mt-1" type="url" maxlength="1000" value="${esc(post.youtube_video_url || '')}"></label>
+        <label class="sm:col-span-2"><span class="label">ការពិពណ៌នាលម្អិត *</span><textarea name="description" class="field mt-1" rows="5" maxlength="5000" required>${esc(post.description || '')}</textarea></label>
+        <input type="hidden" name="keep_image_message_ids" value="[]">
+      </div>
+      <div class="grid gap-2">
+        <span class="label">រូបភាពបច្ចុប្បន្ន · ដោះធីកដើម្បីលុប</span>
+        <div class="my-post-image-grid">${image ? `<label class="my-post-image-choice"><img src="${esc(image.image_url)}" alt="រូបភាពបច្ចុប្បន្ន"><span><input type="checkbox" data-keep-listing-image value="${esc(image.key)}" checked> រក្សារូបនេះ</span></label>` : '<span class="text-[10px] text-slate-400">មិនទាន់មានរូបភាព</span>'}</div>
+        <label><span class="label">ជ្រើសរើសរូបថ្មី (JPG / PNG / WEBP · 8MB)</span><input class="field mt-1" type="file" name="image" accept="image/jpeg,image/png,image/webp"></label>
+      </div>
+      <div class="flex justify-end gap-2"><button type="button" data-my-post-action="cancel" data-type="${esc(post.type)}" data-id="${esc(post.id)}" class="rounded-full border border-slate-200 px-4 py-2 text-[10px] font-bold">បោះបង់</button><button type="submit" class="brand-gradient rounded-full px-4 py-2 text-[10px] font-bold text-white">រក្សាទុកព័ត៌មានទាំងអស់</button></div>
+    </form>`;
+}
+
 function renderMyPostsList() {
   const target = $('myPostsList');
   if (!target) return;
@@ -2135,7 +2167,7 @@ function renderMyPostsList() {
       : post.status === 'closed' ? 'បានបិទ' : post.status;
     const amount = post.price ?? post.rent_amount ?? post.salary_min;
     const image = post.image_url ? `<img src="${esc(post.image_url)}" alt="" class="h-16 w-16 shrink-0 rounded-xl object-cover">` : `<div class="grid h-16 w-16 shrink-0 place-items-center rounded-xl bg-slate-100 text-slate-400">${ic('image',20)}</div>`;
-    const editForm = editing ? (['job','property'].includes(post.type) ? renderMyPostFullEditForm(post) : renderMyPostSimpleEditForm(post)) : '';
+    const editForm = editing ? (['job','property'].includes(post.type) ? renderMyPostFullEditForm(post) : ['rental','land','house_sale'].includes(post.type) ? renderMyPostLegacyRealEstateEditForm(post) : renderMyPostSimpleEditForm(post)) : '';
     return `
       <article class="rounded-2xl border border-slate-100 bg-white p-3" data-my-post-card="${esc(key)}">
         <div class="flex items-start gap-3">
@@ -4706,7 +4738,7 @@ function bindEvents() {
     const type = form.dataset.type, id = form.dataset.id, values = new FormData(form);
     const payload = { action:'edit' };
     let requestBody = null;
-    if (['job','property'].includes(type)) {
+    if (['job','property','rental','land','house_sale'].includes(type)) {
       const get = name => String(values.get(name) ?? '');
       payload.title = get('title');
       payload.description = get('description');
@@ -4741,13 +4773,34 @@ function bindEvents() {
         payload.skills = get('skills_text').split(',').map(value => value.trim()).filter(Boolean);
         payload.languages = get('languages_text').split(',').map(value => value.trim()).filter(Boolean);
         payload.benefits = get('benefits_text').split(',').map(value => value.trim()).filter(Boolean);
-      } else {
+      } else if (type === 'property') {
         payload.address = get('address');
         payload.price = get('price');
         payload.price_period = get('price_period');
         payload.area_sqm = get('area_sqm');
         payload.bedrooms = get('bedrooms');
         payload.bathrooms = get('bathrooms');
+      } else {
+        payload.address = get('address');
+        payload.price = get('price');
+        payload.area_sqm = get('area_sqm');
+        if (type === 'rental') {
+          payload.rent_period = get('rent_period');
+          payload.property_type = get('property_type');
+          payload.bedrooms = get('bedrooms');
+          payload.bathrooms = get('bathrooms');
+          payload.furnished = get('furnished');
+        } else if (type === 'land') {
+          payload.land_type = get('land_type');
+          payload.title_deed = get('title_deed');
+          payload.road_access = get('road_access');
+        } else {
+          payload.property_type = get('property_type');
+          payload.bedrooms = get('bedrooms');
+          payload.bathrooms = get('bathrooms');
+          payload.furnished = get('furnished');
+          payload.title_deed = get('title_deed');
+        }
       }
       const keepImageIds = Array.from(form.querySelectorAll('[data-keep-listing-image]:checked')).map(input => input.value);
       values.set('keep_image_message_ids', JSON.stringify(keepImageIds));
