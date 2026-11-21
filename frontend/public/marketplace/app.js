@@ -66,6 +66,8 @@ const ICON_PATHS = {
 };
 
 const CATEGORIES = {
+  computers: 'កុំព្យូទ័រ (Computers)',
+  computer_accessories: 'គ្រឿងបន្លាស់កុំព្យូទ័រ (Accessories)',
   phones: 'ទូរស័ព្ទ & អេឡិចត្រូនិក',
   vehicles: 'រថយន្ត & ម៉ូតូ',
   property: 'អចលនទ្រព្យ',
@@ -132,7 +134,9 @@ const state = {
   currentStoreId: null,
   currentStoreData: null,
   currentStoreProducts: [],
+  currentStoreCategoryData: [],
   currentStoreCategory: 'all',
+  currentStoreSubcategory: 'all',
   currentStoreSearch: '',
   currentStorePage: 1,
   currentStoreLimit: 50,
@@ -2041,8 +2045,8 @@ async function openStorefront(vendorId, options = {}) {
   const storeId = String(vendorId);
   const isCurrent = () => options.routeSyncNavigationId == null || options.routeSyncNavigationId === state.routeSyncNavigationId;
   Object.assign(state, {
-    currentStoreId: storeId, currentStoreCategory: 'all', currentStoreSearch: '',
-    currentStoreProducts: [], currentStorePage: 1, currentStoreLimit: 50,
+    currentStoreId: storeId, currentStoreCategory: 'all', currentStoreSubcategory: 'all', currentStoreSearch: '',
+    currentStoreProducts: [], currentStoreCategoryData: [], currentStorePage: 1, currentStoreLimit: 50,
     currentStoreTotal: 0, currentStoreLoading: true, currentStoreSkeletonVisible: false, currentStoreLoadError: false,
     currentStoreMoreLoading: false, currentStoreMoreError: false
   });
@@ -2056,15 +2060,17 @@ async function openStorefront(vendorId, options = {}) {
       state.currentStoreSkeletonVisible = true;
       renderStorefront();
     });
-    const [result, catalogue] = await Promise.all([
+    const [result, catalogue, taxonomy] = await Promise.all([
       api('/api/vendors/' + encodeURIComponent(storeId) + '/ratings'),
-      api('/api/products?page=1&limit=' + state.currentStoreLimit + '&vendor_id=' + encodeURIComponent(storeId) + '&include_out_of_stock=true')
+      api('/api/products?page=1&limit=' + state.currentStoreLimit + '&vendor_id=' + encodeURIComponent(storeId) + '&include_out_of_stock=true'),
+      api('/api/vendors/' + encodeURIComponent(storeId) + '/categories').catch(() => ({ data: [] }))
     ]);
     if (!isCurrent()) { cancelSkeleton(); return false; }
     cancelSkeleton();
     state.currentStoreSkeletonVisible = false;
     state.currentStoreData = result.data || null;
     state.currentStoreProducts = catalogue.data || [];
+    state.currentStoreCategoryData = taxonomy.data || [];
     state.currentStorePage = Number(catalogue.page || 1);
     state.currentStoreTotal = Number(catalogue.total || 0);
     state.currentStoreLoading = false;
@@ -2130,10 +2136,58 @@ function auroraProductMatchesCategory(product,category) {
   if(category==='accessories') return group.includes('accessor');
   return true;
 }
+const STORE_CATEGORY_LABELS = {
+  computers: 'កុំព្យូទ័រ (Computers)',
+  computer_accessories: 'គ្រឿងបន្លាស់កុំព្យូទ័រ (Accessories)',
+  phones: 'ទូរស័ព្ទ & អេឡិចត្រូនិក',
+  vehicles: 'រថយន្ត & ម៉ូតូ',
+  property: 'អចលនទ្រព្យ',
+  fashion: 'សម្លៀកបំពាក់',
+  furniture: 'គ្រឿងសង្ហារិម'
+};
+function storeCategoryLabel(category) {
+  const key = String(category || '').trim();
+  return STORE_CATEGORY_LABELS[key] || key || 'ផ្សេងៗ';
+}
+function storePublicProducts(products = state.currentStoreProducts) {
+  return (products || []).filter(product => product && Number(product.stock) > 0);
+}
+function storeCategoryOptions(products = state.currentStoreProducts) {
+  const taxonomy = Array.isArray(state.currentStoreCategoryData) ? state.currentStoreCategoryData : [];
+  const keys = taxonomy.length ? taxonomy.map(item => String(item.category || '').trim()).filter(Boolean) : [...new Set(storePublicProducts(products).map(product => String(product.category || '').trim()).filter(Boolean))].sort();
+  return keys.map(key => [key, storeCategoryLabel(key)]);
+}
+function storeSubcategoryOptions(category = state.currentStoreCategory, products = state.currentStoreProducts) {
+  if (category === 'all') return [];
+  const taxonomy = Array.isArray(state.currentStoreCategoryData) ? state.currentStoreCategoryData : [];
+  const entry = taxonomy.find(item => String(item.category || '') === category);
+  if (entry) return (entry.subcategories || []).map(value => [String(value), String(value)]);
+  const scoped = storePublicProducts(products).filter(product => category === 'all' || String(product.category || '') === category);
+  return [...new Set(scoped.map(product => String(product.subcategory || '').trim()).filter(Boolean))].sort().map(value => [value, value]);
+}
+function storeProductMatchesFilters(product) {
+  if (Number(product.stock) <= 0) return false;
+  if (state.currentStoreCategory !== 'all' && String(product.category || '') !== state.currentStoreCategory) return false;
+  if (state.currentStoreSubcategory !== 'all' && String(product.subcategory || '') !== state.currentStoreSubcategory) return false;
+  const query = state.currentStoreSearch.trim().toLowerCase();
+  return !query || (String(product.title || '') + ' ' + String(product.description || '')).toLowerCase().includes(query);
+}
+function renderStoreCategoryFilters() {
+  const categories = storeCategoryOptions();
+  const subcategories = storeSubcategoryOptions();
+  const categoryMarkup = [['all','ទាំងអស់'], ...categories].map(([key,label]) =>
+    '<button type="button" data-store-category="' + esc(key) + '" class="store-filter ' + (state.currentStoreCategory === key ? 'active' : '') + '">' + esc(label) + '</button>'
+  ).join('');
+  const subcategoryMarkup = subcategories.length ? '<div class="storefront-toolbar-chips storefront-subcategory-chips" id="storeSubcategoryFilters">' +
+    [['all','គ្រប់ផ្នែករង'], ...subcategories].map(([key,label]) =>
+      '<button type="button" data-store-subcategory="' + esc(key) + '" class="store-filter ' + (state.currentStoreSubcategory === key ? 'active' : '') + '">' + esc(label) + '</button>'
+    ).join('') + '</div>' : '';
+  return '<div class="storefront-toolbar-chips" id="storeCategoryFilters">' + categoryMarkup + '</div>' + subcategoryMarkup;
+}
 function renderAuroraProductList(products) {
   if(!products.length) return '<div id="auroraProductList"><div class="storefront-empty"><span>'+ic('package',30)+'</span><strong>មិនមានផលិតផលដែលត្រូវនឹងការស្វែងរកទេ</strong></div></div>';
   const groups=new Map();
-  products.forEach(p=>{const key=auroraProductGroup(p);if(!groups.has(key))groups.set(key,[]);groups.get(key).push(p);});
+  products.forEach(p=>{const key=storeCategoryLabel(p.category)+' · '+String(p.subcategory||p.detail_type||'ផ្សេងៗ');if(!groups.has(key))groups.set(key,[]);groups.get(key).push(p);});
   return '<div id="auroraProductList">'+Array.from(groups.entries()).map(entry=>{
     const group=entry[0],items=entry[1];
     return '<section class="aurora-list-group"><h3>'+esc(group)+' <span>'+items.length+' មុខ</span></h3><div class="aurora-list-items">'+items.map(p=>{
@@ -2220,16 +2274,13 @@ function renderStorefront() {
   const data = state.currentStoreData;
   const query = state.currentStoreSearch.trim().toLowerCase();
   const aurora = isAuroraStorefront(data);
-  const visible = state.currentStoreProducts.filter(product =>
-    (aurora ? auroraProductMatchesCategory(product, state.currentStoreCategory) : (state.currentStoreCategory === 'all' || product.category === state.currentStoreCategory)) &&
-    (!query || (String(product.title || '') + ' ' + String(product.description || '')).toLowerCase().includes(query))
-  );
+  const visible = state.currentStoreProducts.filter(storeProductMatchesFilters);
   const rating = Number(data.rating || 0);
   const ratingLabel = rating ? rating.toFixed(1) : '—';
   const reviewCount = Number(data.review_count || 0);
   const memberSince = data.created_at
     ? new Date(data.created_at).toLocaleDateString('km-KH', { year: 'numeric', month: 'short' }) : '—';
-  const categories = aurora ? [['all','ទាំងអស់'],['laptop','Laptop'],['expertbook','ASUS ExpertBook'],['vivobook','ASUS Vivobook'],['desktop','Desktop PC'],['accessories','Accessories']] : [['all', 'ទាំងអស់'], ...Object.entries(CATEGORIES)];
+  const categoryFiltersMarkup = renderStoreCategoryFilters();
   const hasMore = state.currentStorePage * state.currentStoreLimit < state.currentStoreTotal;
   const reviews = Array.isArray(data.reviews) ? data.reviews : [];
 
@@ -2261,9 +2312,7 @@ function renderStorefront() {
     </section>
     <section class="storefront-toolbar" aria-label="ស្វែងរកទំនិញក្នុងហាង">
       <input id="storeSearchInput" type="search" placeholder="ស្វែងរកក្នុងហាងនេះ..." value="${esc(state.currentStoreSearch)}" class="field">
-      <div class="storefront-toolbar-chips" id="storeCategoryFilters">
-        ${categories.map(([key, label]) => `<button type="button" data-store-category="${esc(key)}" class="store-filter ${state.currentStoreCategory === key ? 'active' : ''}">${esc(label)}</button>`).join('')}
-      </div>
+      ${categoryFiltersMarkup}
       <span class="storefront-result-count" id="storeResultCount">${visible.length} / ${state.currentStoreTotal} មុខទំនិញ</span>
     </section>
     <section class="storefront-products-section">
@@ -2297,7 +2346,11 @@ function renderStorefront() {
   });
   $('storeCategoryFilters')?.addEventListener('click', event => {
     const button = event.target.closest('[data-store-category]');
-    if (button) { state.currentStoreCategory = button.dataset.storeCategory; renderStorefront(); }
+    if (button) { state.currentStoreCategory = button.dataset.storeCategory; state.currentStoreSubcategory = 'all'; renderStorefront(); }
+  });
+  $('storeSubcategoryFilters')?.addEventListener('click', event => {
+    const button = event.target.closest('[data-store-subcategory]');
+    if (button) { state.currentStoreSubcategory = button.dataset.storeSubcategory; renderStorefront(); }
   });
 }
 
@@ -2305,12 +2358,8 @@ function updateStorefrontProductResults() {
   const root = $('storefrontContent');
   const section = root?.querySelector('.storefront-products-section');
   if (!section) return;
-  const query = state.currentStoreSearch.trim().toLowerCase();
+  const visible = state.currentStoreProducts.filter(storeProductMatchesFilters);
   const aurora = isAuroraStorefront();
-  const visible = state.currentStoreProducts.filter(product =>
-    (aurora ? auroraProductMatchesCategory(product, state.currentStoreCategory) : (state.currentStoreCategory === 'all' || product.category === state.currentStoreCategory)) &&
-    (!query || (String(product.title || '') + ' ' + String(product.description || '')).toLowerCase().includes(query))
-  );
   if (aurora) {
     const current = section.querySelector('#auroraProductList');
     const markup = renderAuroraProductList(visible);
@@ -2733,6 +2782,14 @@ function bindListingImageAlbums() {
    -------------------------------------------------------------------------- */
 
 const PRODUCT_TAXONOMY = {
+  computers: {
+    subs: ['Laptop / កុំព្យូទ័រយួរដៃ','Desktop PC','All-in-One PC','Monitor','Computer Hardware'],
+    details: ['Laptop','Desktop PC','All-in-One','Monitor','CPU','RAM','GPU / VGA','Motherboard','HDD','SATA SSD','NVMe / M.2 SSD','External SSD','USB Flash Drive','Power Supply']
+  },
+  computer_accessories: {
+    subs: ['Laptop Bags','Keyboards','Computer Mouse','Chargers','Cables & Adapters','Webcams','Headphones & Speakers','Other Computer Accessories'],
+    details: ['Computer Bag','Keyboard','Mouse','Charger','Cable / Adapter','Webcam','Headphones','Speaker','Computer Accessories']
+  },
   phones: {
     subs: ['ស្មាតហ្វូន','Tablet & iPad','កុំព្យូទ័រ និង Laptop','Computer Hardware','គ្រឿងបន្លាស់ទូរស័ព្ទ','កាមេរ៉ា','សំឡេង និង Audio','Gaming','Network & Internet','Printer & Scanner','Software & License','ឧបករណ៍អេឡិចត្រូនិកផ្សេងៗ'],
     details: ['iPhone','Samsung Galaxy','Xiaomi / Redmi','OPPO','Vivo','Huawei','iPad','Android Tablet','Laptop','Desktop PC','CPU','RAM','GPU / VGA','Motherboard','HDD','SATA SSD','NVMe / M.2 SSD','External SSD','USB Flash Drive','Power Supply','Monitor','Keyboard','Mouse','Webcam','Router','Switch','Printer','Scanner','Headphones','Speaker','Camera Lens','Gaming Console','Software License']
@@ -2755,6 +2812,8 @@ const PRODUCT_TAXONOMY = {
   }
 };
 const PRODUCT_SPEC_FIELDS = {
+  computers: ['ម៉ាក / Brand','ម៉ូដែល / Model','CPU','RAM','Storage','GPU','ទំហំអេក្រង់','Operating System','ពណ៌','ទម្ងន់','Battery'],
+  computer_accessories: ['ម៉ាក / Brand','ម៉ូដែល / Model','ប្រភេទ Connection','ពណ៌','Compatibility','Warranty'],
   phones: ['ម៉ាក / Brand','ម៉ូដែល / Model','ទំហំ / Capacity','RAM','Storage','ពណ៌','ស្ថានភាពធានា'],
   vehicles: ['ម៉ាក / Brand','ម៉ូដែល / Model','ឆ្នាំផលិត','ចំណុះម៉ាស៊ីន (cc)','ប្រអប់លេខ','ប្រភេទប្រេង','ចម្ងាយបើកបរ (km)','ពណ៌','ឯកសារពន្ធ'],
   property: ['ទីតាំងលម្អិត','ទំហំដី (m²)','ទំហំសំណង់ (m²)','បន្ទប់គេង','បន្ទប់ទឹក','ប្រភេទប្លង់'],
