@@ -116,6 +116,12 @@ const state = {
   searchTerm: '',
   currentProduct: null,
   currentVendor: null,
+  currentVariantId: null,
+  activeSpecFilters: {},
+  activeSubcategory: 'all',
+  activeDetailType: 'all',
+  specPriceMin: '',
+  specPriceMax: '',
   currentMarketplaceListing: null,
   productGalleryIndex: 0,
   productGalleryVideoActive: false,
@@ -846,6 +852,71 @@ function productDescriptionParts(product = {}) {
   return { short: Array.from(legacyShort).slice(0, 140).join(''), full: raw };
 }
 
+function normalizedProductSpecs(product = {}) {
+  const specs = { ...(product.specifications && typeof product.specifications === 'object' ? product.specifications : {}) };
+  const detailType = String(product.detail_type || product.listing_details?.detail_type || '');
+  const legacyKeys = detailType === 'Laptop'
+    ? { cpu_model:'spec_0', ram_type_capacity:'spec_1', gpu_model_vram:'spec_2', storage_type_capacity:'spec_3', screen_size:'spec_4', battery_health:'spec_5' }
+    : detailType === 'Desktop PC'
+      ? { cpu_model:'spec_0', ram_type_capacity:'spec_1', gpu_model_vram:'spec_2', storage_type_capacity:'spec_3' }
+      : {};
+  for (const [key, legacy] of Object.entries(legacyKeys)) if (specs[key] == null && specs[legacy] != null) specs[key] = specs[legacy];
+  return specs;
+}
+function productCardSpecs(product = {}) {
+  const specs = normalizedProductSpecs(product);
+  const normalized = Object.fromEntries(Object.entries(specs).map(([key, value]) => [String(key).toLowerCase().replace(/[^a-z0-9]/g, ''), value]));
+  const find = keys => {
+    for (const key of keys) {
+      const value = normalized[key.replace(/[^a-z0-9]/gi, '').toLowerCase()];
+      if (value !== undefined && value !== null && String(value).trim()) return String(value).trim();
+    }
+    return '';
+  };
+  const values = [
+    ['CPU', find(['cpu','processor','cpu_model','processor_model'])],
+    ['RAM', find(['ram','memory','memory_ram','ram_type_capacity'])],
+    ['Display', find(['display','display_size','screen','screen_size'])],
+    ['GPU', find(['gpu','graphics','graphics_card','graphics_processor','gpu_model_vram'])]
+  ];
+  return values.every(([, value]) => value) ? values : [];
+}
+function specFilterValue(product, keys) {
+  const specs = normalizedProductSpecs(product);
+  const normalized = Object.fromEntries(Object.entries(specs).map(([key, value]) => [String(key).toLowerCase().replace(/[^a-z0-9]/g, ''), value]));
+  for (const key of keys) {
+    const value = normalized[key.replace(/[^a-z0-9]/gi, '').toLowerCase()];
+    if (value !== undefined && value !== null && String(value).trim()) return String(value).trim();
+  }
+  return '';
+}
+function renderCategorySpecFilters() {
+  const root = $('specificationFilters');
+  const group = $('specificationFilterGroup');
+  if (!root || !group) return;
+  const definitions = [
+    ['brand','ម៉ាក',['brand','manufacturer']],['cpu','CPU',['cpu','processor','cpu_model','processor_model']],
+    ['ram','RAM',['ram','memory','memory_ram','ram_type_capacity']],['storage','Storage',['storage','ssd','hard_drive','capacity','storage_type_capacity']],
+    ['display','Display Size',['display','display_size','screen','screen_size']],['gpu','GPU',['gpu','graphics','graphics_card','graphics_processor','gpu_model_vram']],
+    ['color','Color',['color','colour']],['resolution','Resolution',['resolution','display_resolution']],['os','Operating System',['operating_system','os']]
+  ];
+  const products = state.products.filter(item => item.listing_type === 'product');
+  const subcategories = [...new Set(products.map(item => String(item.subcategory || '').trim()).filter(Boolean))].sort((a,b) => a.localeCompare(b));
+  const subcategoryProducts = state.activeSubcategory === 'all' ? products : products.filter(item => String(item.subcategory || '') === state.activeSubcategory);
+  const detailTypes = [...new Set(subcategoryProducts.map(item => String(item.detail_type || '').trim()).filter(Boolean))].sort((a,b) => a.localeCompare(b));
+  const scopedProducts = state.activeDetailType === 'all' ? subcategoryProducts : subcategoryProducts.filter(item => String(item.detail_type || '') === state.activeDetailType);
+  const sections = definitions.map(([key,label,aliases]) => {
+    const values = [...new Set(scopedProducts.map(item => specFilterValue(item,aliases)).filter(Boolean))].sort((a,b) => a.localeCompare(b));
+    if (!values.length) return '';
+    const selected = new Set(state.activeSpecFilters[key] || []);
+    return `<div class="spec-filter-field"><b>${label}</b><div>${values.map(value => `<label><input type="checkbox" data-spec-filter="${key}" value="${esc(value)}" ${selected.has(value) ? 'checked' : ''}><span>${esc(value)}</span></label>`).join('')}</div></div>`;
+  }).join('');
+  const hasPrice = scopedProducts.some(item => Number.isFinite(Number(item.display_price ?? item.price)) && Number(item.display_price ?? item.price) > 0);
+  const subcategorySelect = subcategories.length ? '<div class="spec-filter-field"><b>ផ្នែករង / Subcategory</b><div><select data-subcategory-filter><option value="all">ទាំងអស់</option>' + subcategories.map(value => '<option value="' + esc(value) + '"' + (state.activeSubcategory === value ? ' selected' : '') + '>' + esc(value) + '</option>').join('') + '</select></div></div>' : '';
+  const detailTypeSelect = detailTypes.length ? '<div class="spec-filter-field"><b>ប្រភេទលម្អិត / Detailed Type</b><div><select data-detail-type-filter><option value="all">ទាំងអស់</option>' + detailTypes.map(value => '<option value="' + esc(value) + '"' + (state.activeDetailType === value ? ' selected' : '') + '>' + esc(value) + '</option>').join('') + '</select></div></div>' : '';
+  group.hidden = !sections && !hasPrice && !subcategorySelect && !detailTypeSelect;
+  root.innerHTML = subcategorySelect + detailTypeSelect + (sections || '') + (hasPrice ? '<div class="spec-filter-field spec-price-filter"><b>Price Range ($)</b><div><input type="number" min="0" step="1" data-price-filter="min" placeholder="Min" value="' + esc(state.specPriceMin) + '"><input type="number" min="0" step="1" data-price-filter="max" placeholder="Max" value="' + esc(state.specPriceMax) + '"></div></div>' : '');
+}
 function verifiedStoreBadge(vendorId, showKhmerLabel = false) {
   const id = String(vendorId || '');
   const onlineClass = id && state.vendorPresenceIds.has(id) ? ' is-online' : '';
@@ -910,6 +981,8 @@ function productCard(p, index) {
   const vendorLogo = p.vendors?.store_logo_url || '';
   const verified = p.vendors?.status === 'approved';
   const description = productDescriptionParts(p).short;
+  const cardSpecs = productCardSpecs(p);
+  const cardPrice = p.display_price ?? p.price;
 
   const location = p.location || 'ភ្នំពេញ';
   return `
@@ -925,8 +998,8 @@ function productCard(p, index) {
     </div>
     <div class="cb">
       <h3 class="cursor-pointer hover:text-emerald-800" data-action="view" data-id="${esc(p.id)}">${esc(p.title)}</h3>
-      <p class="pr"><span>${money(p.price)}</span></p>
-      ${description ? `<p class="cd-description">${esc(description)}</p>` : ''}
+      <p class="pr"><span>${money(cardPrice)}</span></p>
+      ${cardSpecs.length ? `<div class="cd-key-specs">${cardSpecs.map(([label,value]) => `<span><b>${label}:</b> ${esc(value)}</span>`).join('')}</div>` : (description ? `<p class="cd-description">${esc(description)}</p>` : '')}
       <div class="sh">
         <span class="sp" role="img" aria-label="រូប Logo ហាង">
           <span class="sp-fallback">${ic('user', 15)}</span>
@@ -1183,14 +1256,33 @@ function marketplaceCard(item, index) {
 
 function renderProducts() {
   const list = state.products.filter((item) => {
-    if (item.listing_type !== 'product' || state.activeCondition === 'all') return true;
-    const condition = String(item.condition || '').toLowerCase();
-    const isNew = condition.includes('new') || condition.includes('ថ្មី');
-    const isUsed = condition.includes('used') || condition.includes('second') || condition.includes('មួយទឹក') || condition.includes('ប្រើរួច');
-    return state.activeCondition === 'new' ? isNew : isUsed;
+    if (item.listing_type === 'product' && state.activeCondition !== 'all') {
+      const condition = String(item.condition || '').toLowerCase();
+      const isNew = condition.includes('new') || condition.includes('ថ្មី');
+      const isUsed = condition.includes('used') || condition.includes('second') || condition.includes('មួយទឹក') || condition.includes('ប្រើរួច');
+      if (!(state.activeCondition === 'new' ? isNew : isUsed)) return false;
+    }
+    if (item.listing_type === 'product') {
+      if (state.activeSubcategory !== 'all' && String(item.subcategory || '') !== state.activeSubcategory) return false;
+      if (state.activeDetailType !== 'all' && String(item.detail_type || '') !== state.activeDetailType) return false;
+      for (const [key, selected] of Object.entries(state.activeSpecFilters || {})) {
+        if (!selected?.length) continue;
+        const aliases = {
+          brand:['brand','manufacturer'],cpu:['cpu','processor','cpu_model','processor_model'],
+          ram:['ram','memory','memory_ram'],storage:['storage','ssd','hard_drive','capacity'],
+          display:['display','display_size','screen','screen_size'],gpu:['gpu','graphics','graphics_card','graphics_processor'],
+          color:['color','colour'],resolution:['resolution','display_resolution'],os:['operating_system','os']
+        }[key] || [key];
+        if (!selected.includes(specFilterValue(item,aliases))) return false;
+      }
+      const price = Number(item.display_price ?? item.price);
+      if (state.specPriceMin !== '' && price < Number(state.specPriceMin)) return false;
+      if (state.specPriceMax !== '' && price > Number(state.specPriceMax)) return false;
+    }
+    return true;
   });
   const getSortPrice = (item) => {
-    const rawPrice = item.price_label ?? item.price ?? '';
+    const rawPrice = item.price_label ?? item.display_price ?? item.price ?? '';
     const match = String(rawPrice).replace(/,/g, '').match(/-?\d+(?:\.\d+)?/);
     return match ? Number(match[0]) : Number.POSITIVE_INFINITY;
   };
@@ -1207,6 +1299,7 @@ function renderProducts() {
     return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
   });
   $('productGrid').innerHTML = list.map(marketplaceCard).join('');
+  renderCategorySpecFilters();
   const resultCount = $('resultCount');
   if (resultCount) resultCount.textContent = `${list.length} ប្រកាស`;
   const typeTitles = { all: 'ប្រកាសថ្មីៗទាំងអស់', product: 'ផលិតផល', job: 'ការងារ', real_estate: 'អចលនទ្រព្យ' };
@@ -1291,6 +1384,11 @@ function updateMarketplaceCategoryHeading() {
 }
 
 function setCategory(category) {
+  state.activeSpecFilters = {};
+  state.activeSubcategory = 'all';
+  state.activeDetailType = 'all';
+  state.specPriceMin = '';
+  state.specPriceMax = '';
   state.activeCategory = category;
   if (category !== 'all') state.activeListingType = 'product';
   updateMarketplaceCategoryHeading();
@@ -1301,6 +1399,11 @@ function setCategory(category) {
 }
 
 function setListingType(type) {
+  state.activeSpecFilters = {};
+  state.activeSubcategory = 'all';
+  state.activeDetailType = 'all';
+  state.specPriceMin = '';
+  state.specPriceMax = '';
   state.activeListingType = ['all','product','job','real_estate'].includes(type) ? type : 'all';
   state.activeCategory = 'all';
   state.activePropertyType = 'all';
@@ -1441,6 +1544,7 @@ async function openProduct(id, options = {}) {
 
     state.currentProduct = product;
     state.currentVendor = trust.data;
+    state.currentVariantId = product.variants?.[0]?.id || null;
     state.productGalleryIndex = 0;
     state.productGalleryVideoActive = false;
     renderProductDetail();
@@ -1635,8 +1739,12 @@ function renderProductDetail() {
   if (!images.length && hasVideo) state.productGalleryVideoActive = true;
   const activeImage = images[state.productGalleryIndex] || images[0];
   const saved = state.savedIds.has(p.id);
-  const stockKnown = p.stock !== undefined && p.stock !== null;
-  const stockLabel = stockKnown ? (Number(p.stock) > 0 ? 'មានទំនិញក្នុងស្តុក' : 'អស់ពីស្តុក') : 'អាចសាកសួរបាន';
+  const selectedVariant = (p.variants || []).find(item => String(item.id) === String(state.currentVariantId)) || (p.variants || [])[0] || null;
+  if (selectedVariant && !state.currentVariantId) state.currentVariantId = selectedVariant.id;
+  const effectivePrice = selectedVariant ? Number(selectedVariant.price) : Number(p.price);
+  const effectiveStock = selectedVariant ? Number(selectedVariant.stock) : Number(p.stock || 0);
+  const stockKnown = selectedVariant ? selectedVariant.stock !== undefined && selectedVariant.stock !== null : p.stock !== undefined && p.stock !== null;
+  const stockLabel = stockKnown ? (effectiveStock > 0 ? 'មានទំនិញក្នុងស្តុក' : 'អស់ពីស្តុក') : 'អាចសាកសួរបាន';
   const related = state.products.filter((item) => String(item.id) !== String(p.id) && (item.category === p.category || String(item.vendor_id) === String(p.vendor_id))).slice(0, 6);
 
   const galleryHtml = galleryCount
@@ -1678,15 +1786,16 @@ function renderProductDetail() {
           <span class="product-category-badge">${esc(CATEGORIES[p.category] || p.category || 'ទំនិញ')}</span>
           <span class="product-meta-item">${ic('clock', 14)} ${fmtDate(p.created_at)}</span>
           <span class="product-meta-item">${ic('eye', 14)} ${Number(p.view_count || 0).toLocaleString()} Views</span>
-          <span class="product-meta-item product-detail-id"><span>Product ID</span><code>${esc(displayProductCode(p))}</code><button type="button" data-copy-product-code="${esc(displayProductCode(p))}" aria-label="ចម្លង Product ID" title="ចម្លង Product ID">${ic('clipboard', 12)}</button></span>
+          <span class="product-meta-item product-detail-id"><span>Product ID</span><code>${esc(selectedVariant?.sku || displayProductCode(p))}</code><button type="button" data-copy-product-code="${esc(selectedVariant?.sku || displayProductCode(p))}" aria-label="ចម្លង Product ID" title="ចម្លង Product ID">${ic('clipboard', 12)}</button></span>
         </div>
 
         <div class="product-heading-block">
           <h1 class="product-detail-title">${esc(p.title)}</h1>
           <div class="product-price-stock-row">
-            <strong class="product-facts-price">${money(p.price)}</strong>
-            <span class="product-stock-badge ${stockKnown && Number(p.stock) <= 0 ? 'is-out' : ''}">${ic(stockKnown && Number(p.stock) <= 0 ? 'x' : 'checkcircle', 14)} ${stockLabel}</span>
+            <strong class="product-facts-price">${money(effectivePrice)}</strong>
+            <span class="product-stock-badge ${stockKnown && effectiveStock <= 0 ? 'is-out' : ''}">${ic(stockKnown && effectiveStock <= 0 ? 'x' : 'checkcircle', 14)} ${stockLabel}</span>
           </div>
+          ${p.variants?.length ? `<section class="product-variant-picker"><b>ជ្រើសរើសជម្រើស</b><div class="product-variant-options">${p.variants.map(variant => `<button type="button" data-product-variant="${esc(variant.id)}" class="${String(selectedVariant?.id) === String(variant.id) ? 'is-selected' : ''}" aria-pressed="${String(selectedVariant?.id) === String(variant.id)}" ${Number(variant.stock) <= 0 ? 'disabled' : ''}><span>${esc(variant.option_value)}</span><small>${money(variant.price)}${Number(variant.stock) <= 0 ? ' · អស់ស្តុក' : ''}</small></button>`).join('')}</div>${selectedVariant?.sku ? `<small class="product-variant-sku">Product Code: ${esc(selectedVariant.sku)}</small>` : ''}</section>` : ''}
           ${descriptions.short ? `<p class="product-short-summary-text">${esc(descriptions.short)}</p>` : ''}
         </div>
 
@@ -1771,6 +1880,12 @@ function renderProductDetail() {
     </div>
   </div>`;
 
+  $('productDetail').querySelectorAll('[data-product-variant]').forEach(button => button.addEventListener('click', () => {
+    const variant = (p.variants || []).find(item => String(item.id) === String(button.dataset.productVariant));
+    if (!variant) return;
+    state.currentVariantId = variant.id;
+    renderProductDetail();
+  }));
   bindListingDetailActions($('productDetail'), {...p,listing_type:'product'});
   $('productDetail').querySelector('[data-review-login]')?.addEventListener('click', () => openAuth('login'));
   const reviewForm = $('productReviewForm');
@@ -1875,9 +1990,9 @@ function renderProductDetail() {
       if (kind === 'save') saveAction(p.id, btn);
       if (kind === 'offer') {
         if (!requireLogin()) return;
-        state.currentOfferProduct = p;
-        $('offerProductName').textContent = `${p.title} · ${money(p.price)}`;
-        $('offerAmount').value = p.price;
+        state.currentOfferProduct = {...p, price: effectivePrice, variant_id: selectedVariant?.id || null};
+        $('offerProductName').textContent = `${p.title} · ${money(effectivePrice)}`;
+        $('offerAmount').value = effectivePrice;
         openModal('offerModal');
       }
       if (kind === 'chat') void startBuyerSellerChat(p.id);
@@ -2579,7 +2694,7 @@ const PRODUCT_DETAIL_SPEC_FIELDS = {
   'Motherboard': ['Brand & Model','CPU Socket','Chipset','Form Factor (ATX / mATX / ITX)','RAM Type & Slots','M.2 / SATA Slots'],
   'Power Supply': ['Wattage (W)','80 PLUS Rating','Modular Type (Full / Semi / Non)','Connector Support'],
   'Monitor': ['Screen Size (inch)','Resolution (FHD / QHD / 4K)','Refresh Rate (Hz)','Panel (IPS / VA / OLED)','Ports (HDMI / DP / USB-C)'],
-  'Laptop': ['CPU Model','RAM Type & Capacity','GPU Model & VRAM','Storage Type & Capacity','Screen Size','Battery Health'],
+  'Laptop': ['Brand','CPU Model','RAM Type & Capacity','GPU Model & VRAM','Storage Type & Capacity','Screen Size','Resolution','Operating System','Color','Weight','Battery Health'],
   'Desktop PC': ['CPU Model','RAM Type & Capacity','GPU Model & VRAM','Storage Type & Capacity','Motherboard','Power Supply Wattage']
 };
 function renderProductTaxonomy(category) {
@@ -2594,9 +2709,14 @@ function renderProductTaxonomy(category) {
 function renderProductSpecFields(category) {
   const detail = $('productDetailType')?.value || '';
   const fields = PRODUCT_DETAIL_SPEC_FIELDS[detail] || PRODUCT_SPEC_FIELDS[category] || [];
+  const stableKeys = {
+    'Brand':'brand','CPU Model':'cpu_model','RAM Type & Capacity':'ram_type_capacity',
+    'GPU Model & VRAM':'gpu_model_vram','Storage Type & Capacity':'storage_type_capacity',
+    'Screen Size':'screen_size','Resolution':'resolution','Operating System':'operating_system','Color':'color','Weight':'weight','Battery Health':'battery_health'
+  };
   $('productSpecificationFields').innerHTML = fields.length
     ? '<h3 class="sm:col-span-2 text-xs font-bold text-slate-300">លក្ខណៈសម្បត្តិផលិតផល</h3>' + fields.map((label,index) =>
-      '<label><span class="label">' + esc(label) + '</span><input class="field" data-listing-spec="' + esc('spec_' + index) + '" placeholder="' + esc(label) + '"></label>'
+      '<label><span class="label">' + esc(label) + '</span><input class="field" data-listing-spec="' + esc(stableKeys[label] || 'spec_' + index) + '" placeholder="' + esc(label) + '"></label>'
     ).join('')
     : '';
 }
@@ -3406,7 +3526,10 @@ function syncSellerChatComposer() {
    -------------------------------------------------------------------------- */
 function openCheckout(p) {
   if (!requireLogin()) return;
-  if (!p || Number(p.stock) <= 0) { toast('ទំនិញនេះអស់ស្តុកហើយ។', 'warning'); return; }
+  const selectedVariant = (p?.variants || []).find(item => String(item.id) === String(state.currentVariantId)) || (p?.variants || [])[0] || null;
+  const checkoutPrice = selectedVariant ? Number(selectedVariant.price) : Number(p?.price || 0);
+  const checkoutStock = selectedVariant ? Number(selectedVariant.stock) : Number(p?.stock || 0);
+  if (!p || checkoutStock <= 0) { toast('ទំនិញនេះអស់ស្តុកហើយ។', 'warning'); return; }
   if (!$('checkoutModal')) {
     const wrap = document.createElement('div');
     wrap.id = 'checkoutModal';
@@ -3440,6 +3563,8 @@ function openCheckout(p) {
       submit.textContent = 'កំពុងបញ្ជាទិញ...';
       try {
         const paymentMethod = new FormData($('checkoutForm')).get('payment_method') || 'cash_on_delivery';
+        const checkoutProduct = state.currentProduct;
+        const checkoutVariant = (checkoutProduct?.variants || []).find(item => String(item.id) === String(state.currentVariantId)) || (checkoutProduct?.variants || [])[0] || null;
         await api('/api/orders', {
           method: 'POST',
           body: JSON.stringify({
@@ -3447,7 +3572,7 @@ function openCheckout(p) {
             customer_phone: $('checkoutPhone').value.trim(),
             delivery_address: $('checkoutAddress').value.trim(),
             payment_method: paymentMethod,
-            items: [{ product_id: state.currentProduct.id, quantity: 1 }]
+            items: [{ product_id: checkoutProduct.id, variant_id: checkoutVariant?.id || null, quantity: 1 }]
           })
         });
         closeModal('checkoutModal');
@@ -3461,7 +3586,7 @@ function openCheckout(p) {
       }
     };
   }
-  $('checkoutTotal').textContent = money(p.price);
+  $('checkoutTotal').textContent = money(checkoutPrice);
   $('checkoutName').value = profileName();
   $('checkoutPhone').value = state.me?.profile?.phone || '';
   $('checkoutForm').querySelector('[name="payment_method"][value="cash_on_delivery"]').checked = true;
@@ -4386,6 +4511,13 @@ function bindEvents() {
   $('clearFilters').addEventListener('click', () => {
     state.searchTerm = '';
     state.activeCondition = 'all';
+    state.activeSpecFilters = {};
+    state.activeSubcategory = 'all';
+    state.activeDetailType = 'all';
+    state.specPriceMin = '';
+    state.specPriceMax = '';
+    document.querySelectorAll('[data-spec-filter]').forEach(input => { input.checked = false; });
+    document.querySelectorAll('[data-price-filter]').forEach(input => { input.value = ''; });
     document.querySelector('[data-condition-filter][value="all"]')?.click();
     $('searchInput').value = '';
     setCategory('all');
@@ -4401,6 +4533,39 @@ function bindEvents() {
     });
   };
   syncMarketplaceSortState();
+  $('specificationFilters')?.addEventListener('change', event => {
+    const subcategoryInput = event.target.closest('[data-subcategory-filter]');
+    if (subcategoryInput) {
+      state.activeSubcategory = subcategoryInput.value || 'all';
+      state.activeDetailType = 'all';
+      state.activeSpecFilters = {};
+      renderProducts();
+      return;
+    }
+    const detailTypeInput = event.target.closest('[data-detail-type-filter]');
+    if (detailTypeInput) {
+      state.activeDetailType = detailTypeInput.value || 'all';
+      state.activeSpecFilters = {};
+      renderProducts();
+      return;
+    }
+    const input = event.target.closest('[data-spec-filter]');
+    if (input) {
+      const key = input.dataset.specFilter;
+      const selected = new Set(state.activeSpecFilters[key] || []);
+      if (input.checked) selected.add(input.value); else selected.delete(input.value);
+      state.activeSpecFilters[key] = [...selected];
+      renderProducts();
+      return;
+    }
+    const priceInput = event.target.closest('[data-price-filter]');
+    if (priceInput) {
+      state.specPriceMin = $('specificationFilters').querySelector('[data-price-filter="min"]')?.value || '';
+      state.specPriceMax = $('specificationFilters').querySelector('[data-price-filter="max"]')?.value || '';
+      renderProducts();
+    }
+  });
+
   document.querySelector('.amazon-filter-sidebar')?.addEventListener('click', (event) => {
     const button = event.target.closest('[data-sort-value]');
     if (!button) return;

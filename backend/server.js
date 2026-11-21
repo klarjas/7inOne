@@ -1665,6 +1665,31 @@ app.get('/api/products', async (req, res) => {
     return fail(res, 500, 'Could not load products');
   }
 
+  // Attach category specifications and the lowest active variant price to public product cards.
+  const productIds = (data || []).map(row => row.id).filter(Boolean);
+  const [listingDetailsResult, variantsResult] = productIds.length ? await Promise.all([
+    supabase.from('product_listing_details').select('product_id,specifications,subcategory,detail_type').in('product_id', productIds),
+    supabase.from('product_variants').select('product_id,price,stock').eq('is_active', true).in('product_id', productIds).order('sort_order').order('price')
+  ]) : [{ data: [] }, { data: [] }];
+  const specificationsByProduct = new Map((listingDetailsResult.data || []).map(row => [String(row.product_id), row]));
+  const variantsByProduct = new Map();
+  for (const variant of variantsResult.data || []) {
+    const key = String(variant.product_id);
+    if (!variantsByProduct.has(key)) variantsByProduct.set(key, []);
+    variantsByProduct.get(key).push(variant);
+  }
+  data = (data || []).map(row => {
+    const details = specificationsByProduct.get(String(row.id));
+    const variants = variantsByProduct.get(String(row.id)) || [];
+    return {
+      ...row,
+      specifications: details?.specifications || {},
+      subcategory: details?.subcategory || null,
+      detail_type: details?.detail_type || null,
+      display_price: variants.some(item => Number(item.stock) > 0) ? Math.min(...variants.filter(item => Number(item.stock) > 0).map(item => Number(item.price))) : row.price
+    };
+  });
+
   const trust = await ratingsFor((data || []).map(row => row.vendor_id));
   const enriched = (data || []).map(row => ({
     ...row,
@@ -1718,6 +1743,16 @@ app.get('/api/products/:id', async (req, res) => {
     data.specifications = listingDetails.specifications || {};
     data.listing_details = listingDetails;
   }
+  const { data: activeVariants, error: variantsError } = await supabase
+    .from('product_variants')
+    .select('id,sku,option_name,option_value,price,stock,sort_order')
+    .eq('product_id', data.id).eq('is_active', true)
+    .order('sort_order', { ascending: true }).order('price', { ascending: true });
+  if (variantsError) {
+    console.error('Could not load product variants:', variantsError.message);
+    return fail(res, 500, 'Could not load product variants');
+  }
+  data.variants = activeVariants || [];
   const trust = await ratingsFor([data.vendor_id]);
   data.seller_rating = trust[data.vendor_id]?.average ?? null;
   data.seller_review_count = trust[data.vendor_id]?.count ?? 0;
@@ -3053,7 +3088,9 @@ app.get('/api/vendor/overview', authenticate, requireVendor, async (req, res) =>
 // Checkout uses one atomic Postgres function; never trust prices sent by the browser.
 app.post('/api/orders', authenticate, async (req, res) => {
   const items = Array.isArray(req.body.items) ? req.body.items.map(item => ({
-    product_id: clean(item.product_id, 60), quantity: Number(item.quantity)
+    product_id: clean(item.product_id, 60),
+    variant_id: item.variant_id ? clean(item.variant_id, 60) : null,
+    quantity: Number(item.quantity)
   })) : [];
   if (!items.length || items.length > 50 || items.some(item => !item.product_id || !Number.isInteger(item.quantity) || item.quantity < 1 || item.quantity > 99)) return fail(res, 400, 'Invalid cart items');
   const args = {
