@@ -8174,3 +8174,40 @@ body > footer {
   font-weight: 700;
   text-decoration: none;
 }
+
+/* Marketplace subcategory list: isolated styles for the left sidebar only. */
+#view-home .amazon-filter-sidebar .marketplace-category-group:not([hidden]) {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+#view-home .amazon-filter-sidebar .marketplace-category-group .store-filter-link {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 31px;
+  padding: 6px 9px;
+  border: 0;
+  border-radius: 8px;
+  box-sizing: border-box;
+  background: transparent;
+  color: #9FB2C3;
+  text-align: left;
+  font-size: 10px;
+  font-weight: 400;
+  line-height: normal;
+  text-decoration: none;
+  transition: background .16s ease, color .16s ease;
+}
+#view-home .amazon-filter-sidebar .marketplace-category-group .store-filter-link:hover {
+  background: transparent;
+  color: #66C0F4;
+  text-decoration: none;
+}
+#view-home .amazon-filter-sidebar .marketplace-category-group .store-filter-link.active,
+#view-home .amazon-filter-sidebar .marketplace-category-group .store-filter-link.active:hover {
+  background: #203D55;
+  color: #66C0F4;
+  font-weight: 700;
+  text-decoration: none;
+}
