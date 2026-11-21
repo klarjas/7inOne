@@ -1405,9 +1405,11 @@ async function openMarketplaceListing(type, id, options = {}) {
   } catch (error) {
     cancelSkeleton();
     if (!isCurrent()) return false;
-    toast(error.message || 'មិនអាចបើកព័ត៌មានប្រកាសបានទេ., 'error');
+    toast(error.message || 'មិនអាចបើកព័ត៌មានប្រកាសបានទេ។', 'error');
     void showView('home');
     return false;
+  } finally {
+    cancelSkeleton();
   }
 }
 
@@ -1432,7 +1434,6 @@ async function openProduct(id, options = {}) {
     ]);
     if (!isCurrent()) return false;
 
-    cancelSkeleton();
     const product = result.data;
     if (!product) throw new Error('មិនមានព័ត៌មានទំនិញនេះទេ។');
     product.poster = state.products.find(row => row.listing_type === 'product' && String(row.id) === productId)?.poster || product.poster || null;
@@ -1445,6 +1446,7 @@ async function openProduct(id, options = {}) {
     state.productGalleryIndex = 0;
     state.productGalleryVideoActive = false;
 
+    cancelSkeleton();
     renderProductDetail();
     return true;
   } catch (error) {
@@ -1453,6 +1455,8 @@ async function openProduct(id, options = {}) {
     toast(error.message, 'error');
     void showView('home');
     return false;
+  } finally {
+    cancelSkeleton();
   }
 }
 
