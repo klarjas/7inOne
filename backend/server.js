@@ -1617,8 +1617,8 @@ app.get('/api/products', async (req, res) => {
 
   const runProductsQuery = async (legacyRenewal = false) => {
     const fields = legacyRenewal
-      ? 'id,title,description,price,stock,category,location,condition,view_count,created_at,updated_at,vendor_id,product_images(id,file_id,image_url,sort_order),vendors!inner(id,store_name,status,store_logo_file_id)'
-      : 'id,title,description,price,stock,category,location,condition,view_count,created_at,updated_at,renewed_at,vendor_id,product_images(id,file_id,image_url,sort_order),vendors!inner(id,store_name,status,store_logo_file_id)';
+      ? 'id,title,description,price,stock,category,location,condition,youtube_video_url,view_count,created_at,updated_at,vendor_id,product_images(id,file_id,image_url,sort_order),vendors!inner(id,store_name,status,store_logo_file_id)'
+      : 'id,title,description,price,stock,category,location,condition,youtube_video_url,view_count,created_at,updated_at,renewed_at,vendor_id,product_images(id,file_id,image_url,sort_order),vendors!inner(id,store_name,status,store_logo_file_id)';
     const includeOutOfStock = Boolean(vendorId) && req.query.include_out_of_stock === 'true';
     let query = supabase.from('products').select(fields, { count: 'exact' })
       .eq('status', 'active')
