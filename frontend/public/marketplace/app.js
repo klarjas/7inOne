@@ -1296,6 +1296,10 @@ function setPropertyType(type) {
 async function openMarketplaceListing(type, id, options = {}) {
   if (!id || !['job', 'real_estate'].includes(type)) return false;
   const isCurrent = () => options.routeSyncNavigationId == null || options.routeSyncNavigationId === state.routeSyncNavigationId;
+  state.currentProduct = { id: String(id), listing_type: type };
+  await showView('product', { preserveScroll: Boolean(options.preserveScroll), deferLoad: true });
+  renderProductDetailSkeleton();
+
   try {
     let item = state.products.find(row => row.listing_type === type && String(row.id) === String(id))
       || state.jobs.find(row => row.listing_type === type && String(row.id) === String(id));
@@ -1324,59 +1328,32 @@ async function openMarketplaceListing(type, id, options = {}) {
   } catch (error) {
     if (!isCurrent()) return false;
     toast(error.message || 'មិនអាចបើកព័ត៌មានប្រកាសបានទេ។', 'error');
+    void showView('home');
     return false;
   }
 }
 
-function saveAction(productId, button = null) {
-  if (!requireLogin()) return;
-  const id = String(productId);
-  if (state.favoritePending.has(id)) return;
-  const saved = state.savedIds.has(id);
-  state.favoritePending.add(id);
-
-  if (saved) {
-    state.savedIds.delete(id);
-    if (button) button.classList.remove('saved');
-    void api('/api/saved/' + encodeURIComponent(id), { method: 'DELETE' })
-      .then(() => {
-        if (button?.hasAttribute('data-remove-saved')) {
-          button.closest('[data-saved-card]')?.remove();
-          const remaining = $('profileTabContent')?.querySelectorAll('[data-saved-card]').length || 0;
-          $('profileActivityCount').textContent = `${remaining} មុខ`;
-        }
-      })
-      .catch(() => { state.savedIds.add(id); if (button) button.classList.add('saved'); })
-      .finally(() => state.favoritePending.delete(id));
-    return;
-  }
-
-  state.savedIds.add(id);
-  if (button) button.classList.add('saved');
-  void api('/api/saved/' + encodeURIComponent(id), { method: 'POST' })
-    .catch(() => { state.savedIds.delete(id); if (button) button.classList.remove('saved'); })
-    .finally(() => state.favoritePending.delete(id));
-}
-
-/* --------------------------------------------------------------------------
-   8. Product Detail & Lightbox
-   -------------------------------------------------------------------------- */
 async function openProduct(id, options = {}) {
   if (!id) { toast('មិនមានលេខសម្គាល់ទំនិញទេ។', 'warning'); return false; }
   const productId = String(id);
   const isCurrent = () => options.routeSyncNavigationId == null || options.routeSyncNavigationId === state.routeSyncNavigationId;
 
-  try {
-    if (state.session) { try { await loadOrders(); } catch {} }
-    if (!isCurrent()) return false;
+  state.currentProduct = { id: productId };
+  await showView('product', { preserveScroll: Boolean(options.preserveScroll), deferLoad: true });
+  renderProductDetailSkeleton();
 
+  try {
     try {
       sessionStorage.setItem('ecomstore.currentProductId', productId);
       sessionStorage.setItem('ecomstore.activeView', 'product');
     } catch {}
 
-    const result = await api('/api/products/' + encodeURIComponent(productId));
+    const [result] = await Promise.all([
+      api('/api/products/' + encodeURIComponent(productId)),
+      state.session ? loadOrders().catch(() => {}) : Promise.resolve()
+    ]);
     if (!isCurrent()) return false;
+
     const product = result.data;
     if (!product) throw new Error('មិនមានព័ត៌មានទំនិញនេះទេ។');
     product.poster = state.products.find(row => row.listing_type === 'product' && String(row.id) === productId)?.poster || product.poster || null;
@@ -1389,11 +1366,12 @@ async function openProduct(id, options = {}) {
     state.productGalleryIndex = 0;
     state.productGalleryVideoActive = false;
 
-    await showView('product', { preserveScroll: Boolean(options.preserveScroll) });
+    renderProductDetail();
     return true;
   } catch (error) {
     if (!isCurrent()) return false;
     toast(error.message, 'error');
+    void showView('home');
     return false;
   }
 }
