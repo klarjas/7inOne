@@ -881,7 +881,7 @@ function productCardSpecs(product = {}) {
   return values.every(([, value]) => value) ? values : [];
 }
 function specFilterValue(product, keys) {
-  const specs = product.specifications && typeof product.specifications === 'object' ? product.specifications : {};
+  const specs = normalizedProductSpecs(product);
   const normalized = Object.fromEntries(Object.entries(specs).map(([key, value]) => [String(key).toLowerCase().replace(/[^a-z0-9]/g, ''), value]));
   for (const key of keys) {
     const value = normalized[key.replace(/[^a-z0-9]/gi, '').toLowerCase()];
@@ -895,8 +895,8 @@ function renderCategorySpecFilters() {
   if (!root || !group) return;
   const definitions = [
     ['brand','ម៉ាក',['brand','manufacturer']],['cpu','CPU',['cpu','processor','cpu_model','processor_model']],
-    ['ram','RAM',['ram','memory','memory_ram']],['storage','Storage',['storage','ssd','hard_drive','capacity','storage_type_capacity']],
-    ['display','Display Size',['display','display_size','screen','screen_size']],['gpu','GPU',['gpu','graphics','graphics_card','graphics_processor']],
+    ['ram','RAM',['ram','memory','memory_ram','ram_type_capacity']],['storage','Storage',['storage','ssd','hard_drive','capacity','storage_type_capacity']],
+    ['display','Display Size',['display','display_size','screen','screen_size']],['gpu','GPU',['gpu','graphics','graphics_card','graphics_processor','gpu_model_vram']],
     ['color','Color',['color','colour']],['resolution','Resolution',['resolution','display_resolution']],['os','Operating System',['operating_system','os']]
   ];
   const products = state.products.filter(item => item.listing_type === 'product');
