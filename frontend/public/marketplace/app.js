@@ -673,26 +673,25 @@ function applySiteBranding(data = {}) {
 }
 
 function renderHomeSidePosters() {
-  const rail = $('homePromoRail');
-  if (!rail) return;
-  const posters = state.siteBranding.sidePosters || {};
-  const defaults = {
-    top: ['Free Delivery', 'ដឹកជញ្ជូនងាយស្រួល'],
-    middle: ['Secure Payment', 'ការទូទាត់មានសុវត្ថិភាព'],
-    tall: ['7inOne Promotion', 'ការផ្តល់ជូនពិសេស']
-  };
+  const rail = $('homeJobsRail');
+  const target = rail?.querySelector('[data-promo-slot="tall"]');
+  if (!target) return;
 
-  for (const slot of ['top', 'middle', 'tall']) {
-    const item = posters[slot];
-    const target = rail.querySelector(`[data-promo-slot="${slot}"]`);
-    if (!target) continue;
-    if (item?.url && item.enabled !== false) {
-      const content = `<img src="${esc(item.url)}" alt="${esc(item.alt || '7inOne promotion')}" loading="lazy" />`;
-      target.innerHTML = item.link ? `<a href="${esc(item.link)}" target="_blank" rel="noopener noreferrer">${content}</a>` : content;
-    } else {
-      target.innerHTML = `<div class="home-promo-placeholder"><b>${defaults[slot][0]}</b><span>${defaults[slot][1]}</span></div>`;
-    }
+  const item = state.siteBranding.sidePosters?.tall;
+  if (!item?.url || item.enabled === false) {
+    target.hidden = true;
+    target.replaceChildren();
+    return;
   }
+
+  const content = `<img src="${esc(item.url)}" alt="${esc(item.alt || '7inOne promotion')}" loading="lazy" />`;
+  target.innerHTML = item.link
+    ? `<a href="${esc(item.link)}" target="_blank" rel="noopener noreferrer">${content}</a>`
+    : content;
+  target.hidden = false;
+  target.querySelector('img')?.addEventListener('error', () => {
+    target.hidden = true;
+  }, { once: true });
 }
 
 /* --------------------------------------------------------------------------
@@ -793,7 +792,7 @@ function productCard(p, index) {
       </div>
       <p class="mt">
         <span class="cd-time-meta">${timeAgoKm(p.created_at)}</span>
-        <span class="cd-location-meta">${esc(location)}</span>
+        <span class="cd-location-meta">${ic('pin', 11)}<span>${esc(location)}</span></span>
         <span class="vw" title="ចំនួនអ្នកមើល">${ic('eye', 13)}${formatViews(p.view_count)}</span>
       </p>
     </div>
@@ -1008,7 +1007,7 @@ function marketplaceCard(item, index) {
         <span class="listing-poster-name">${esc(item.poster?.display_name || 'អ្នកប្រើប្រាស់')}</span>
         <span class="listing-poster-kind">${esc(item.listing_subtitle || labels[item.listing_type] || '7inOne')}</span>
       </div>
-      <p class="mt"><span class="cd-time-meta">${timeAgoKm(item.created_at)}</span><span class="cd-location-meta">${esc(item.location || 'កម្ពុជា')}</span></p>
+      <p class="mt"><span class="cd-time-meta">${timeAgoKm(item.created_at)}</span><span class="cd-location-meta">${ic('pin', 11)}<span>${esc(item.location || 'កម្ពុជា')}</span></span></p>
     </div>
   </article>`;
 }
