@@ -6628,7 +6628,8 @@ body > footer {
 
 #view-product .product-detail-page:has(.product-primary-actions) .product-detail-gallery {
   min-width: 0;
-  align-self: stretch;
+  align-self: start;
+  height: max-content;
 }
 
 #view-product .product-detail-page:has(.product-primary-actions) .product-gallery-stage {
