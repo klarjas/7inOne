@@ -3330,7 +3330,7 @@ app.put('/api/admin/supplier-products/:id/variants/:variantId/source', authentic
   const supplierCode = clean(req.body.supplier_product_code, 120);
   const supplierUrl = clean(req.body.supplier_url, 1000);
   if (!Number.isFinite(supplierPrice) || supplierPrice < 0) return fail(res, 400, 'Invalid supplier price');
-  if (supplierUrl && !/^https?:\\/\\//i.test(supplierUrl)) return fail(res, 400, 'Supplier URL must be http or https');
+  if (supplierUrl && !/^https?:\/\//i.test(supplierUrl)) return fail(res, 400, 'Supplier URL must be http or https');
   const { data: variant, error: variantError } = await supabase.from('product_variants')
     .select('id').eq('id', variantId).eq('product_id', productId).maybeSingle();
   if (variantError) return fail(res, 500, 'Could not verify product variant');
