@@ -3339,9 +3339,9 @@ async function renderAdminSupplierProducts() {
         const image=productImage(p);
         return '<article class="admin-aurora-row" data-admin-aurora-edit="'+esc(p.id)+'" tabindex="0" role="button">'+
           '<div class="admin-aurora-thumb">'+(image?'<img src="'+esc(image)+'" alt="">':ic('image',24))+'</div>'+
-          '<div class="admin-aurora-info"><strong>'+esc(p.title||'')+'</strong><span>'+esc(p.category||'Laptop')+' · '+esc(p.supplier_source?.supplier_product_code||'គ្មាន Product Code')+'</span></div>'+
-          '<div class="admin-aurora-meta"><strong>'+money(p.price)+'</strong><span>ស្តុក '+Number(p.stock||0)+'</span><small class="admin-aurora-status is-'+esc(p.status||'pending')+'">'+esc(labels[p.status]||p.status||'—')+'</small></div>'+
-          '<button type="button" class="admin-aurora-edit" data-admin-aurora-edit="'+esc(p.id)+'">'+ic('pencil',14)+' កែប្រែ</button></article>';
+          '<div class="admin-aurora-info"><strong>'+esc(p.title||'')+'</strong><span>'+esc(p.category==='computers'?'Computer':p.category||'Computer')+' · '+esc(p.listing_details?.detail_type||'Laptop')+' · '+esc(p.supplier_source?.supplier_product_code||'គ្មាន Product Code')+'</span></div>'+
+          '<div class="admin-aurora-meta"><strong>'+money(p.price)+'</strong><span>'+(Number(p.stock)>0?'មានលក់':'អស់ស្តុក')+'</span><small class="admin-aurora-status is-'+esc(p.status||'pending')+'">'+esc(labels[p.status]||p.status||'—')+'</small></div>'+
+          '<div class="admin-aurora-actions"><button type="button" class="admin-aurora-edit" data-admin-aurora-edit="'+esc(p.id)+'">'+ic('pencil',14)+' កែប្រែ</button><button type="button" class="admin-aurora-delete" data-admin-aurora-delete="'+esc(p.id)+'" aria-label="លុបផលិតផល">'+ic('trash-2',14)+' លុប</button></div></article>';
       }).join('')+'</div></section>').join('') : '<div class="admin-aurora-empty">មិនមានផលិតផល AURORA ត្រូវនឹងការស្វែងរកទេ។</div>';
   } catch(error) {
     target.innerHTML='<p class="py-6 text-center text-xs text-rose-500">មិនអាចផ្ទុកផលិតផល AURORA បានទេ។</p>';
@@ -3366,6 +3366,7 @@ function openAdminAuroraProductEditor(productId) {
   modal.id='adminAuroraProductEditModal';modal.className='admin-aurora-modal';
   modal.setAttribute('role','dialog');modal.setAttribute('aria-modal','true');
   const statusOptions=['active','pending','rejected','archived','sold'].map(v=>'<option value="'+v+'" '+(p.status===v?'selected':'')+'>'+({active:'បង្ហាញលើហាង',pending:'រង់ចាំ',rejected:'បដិសេធ',archived:'លាក់ផលិតផល',sold:'លក់រួច'}[v])+'</option>').join('');
+  const categoryOptions=[['computers','Computer'],['computer_accessories','Computer Accessories'],['mobile','Mobile'],['mobile_accessories','Mobile Accessories'],['audio','Audio'],['networking','Networking'],['storage','Storage'],['components','Components']].map(([value,label])=>'<option value="'+value+'" '+((p.category||'computers')===value?'selected':'')+'>'+label+'</option>').join('');
   const variantRows=variants.map(v=>{
     const vs=v.supplier_source||{};
     return '<div class="admin-aurora-variant" data-variant-id="'+esc(v.id)+'">'+
@@ -3381,7 +3382,7 @@ function openAdminAuroraProductEditor(productId) {
     '<form id="adminAuroraProductEditForm" data-product-id="'+esc(p.id)+'">'+
     '<section class="admin-aurora-form-section"><h3>ព័ត៌មានផលិតផល</h3><label>ឈ្មោះផលិតផល<input class="field" name="title" required maxlength="160" value="'+esc(p.title||'')+'"></label>'+
     '<div class="admin-aurora-form-grid"><label>តម្លៃលក់ ($)<input class="field" name="price" type="number" min="0" step="0.01" required value="'+Number(p.price||0)+'"></label><label>ស្តុក<input class="field" name="stock" type="number" min="0" step="1" required value="'+Number(p.stock||0)+'"></label>'+
-    '<label>Category<input class="field" name="category" value="'+esc(p.category||'computers')+'"></label><label>ប្រភេទលម្អិត<input class="field" name="detail_type" value="'+esc(details.detail_type||'Laptop')+'"></label></div>'+
+    '<label>Category<select class="field" name="category">'+categoryOptions+'</select></label><label>Subcategory<input class="field" name="subcategory" value="'+esc(details.subcategory||'laptop')+'"></label><label>ប្រភេទលម្អិត<input class="field" name="detail_type" value="'+esc(details.detail_type||'Laptop')+'"></label></div>'+
     '<label>ការពិពណ៌នា<textarea class="field" name="description" rows="3">'+esc(p.description||'')+'</textarea></label><label>ស្ថានភាពលក់<select class="field" name="status">'+statusOptions+'</select></label></section>'+
     '<section class="admin-aurora-form-section"><h3>លក្ខណៈបច្ចេកទេស</h3><div class="admin-aurora-form-grid">'+
     '<label>CPU<input class="field" name="cpu_model" value="'+esc(specs.cpu_model||specs.processor||'')+'"></label><label>RAM<input class="field" name="ram_type_capacity" value="'+esc(specs.ram_type_capacity||specs.ram||'')+'"></label>'+
@@ -3452,7 +3453,7 @@ function openAdminAuroraProductEditor(productId) {
       const payload={title:get('title'),price:Number(get('price')),stock:Number(get('stock')),category:get('category'),description:get('description')};
       await api('/api/products/'+encodeURIComponent(p.id),{method:'PATCH',body:JSON.stringify(payload)});
       const next={...specs};['cpu_model','ram_type_capacity','storage_type_capacity','screen_size','gpu_model_vram'].forEach(key=>{const value=get(key);if(value)next[key]=value;else delete next[key];});
-      await api('/api/admin/supplier-products/'+encodeURIComponent(p.id)+'/details',{method:'PUT',body:JSON.stringify({category:payload.category,subcategory:details.subcategory||'',detail_type:get('detail_type')||'Laptop',specifications:next})});
+      await api('/api/admin/supplier-products/'+encodeURIComponent(p.id)+'/details',{method:'PUT',body:JSON.stringify({category:payload.category,subcategory:get('subcategory')||'other',detail_type:get('detail_type')||'Laptop',specifications:next})});
       await api('/api/admin/supplier-products/'+encodeURIComponent(p.id)+'/source',{method:'PUT',body:JSON.stringify({supplier_name:get('supplier_name'),supplier_url:get('supplier_url'),supplier_price:Number(get('supplier_price')||0),supplier_product_code:get('supplier_product_code')})});
       if(get('status')!==p.status)await api('/api/admin/products/'+encodeURIComponent(p.id),{method:'PATCH',body:JSON.stringify({status:get('status')})});
       if(files.length){const upload=new FormData();files.forEach(file=>upload.append('images',file));await apiUploadWithProgress('/api/products/'+encodeURIComponent(p.id)+'/images',upload,progress=>{button.textContent='Upload '+progress+'%';});}
@@ -5664,7 +5665,23 @@ function bindEvents() {
       form.reset();toast('បានបង្កើតផលិតផល Supplier ជោគជ័យ។');await renderAdminSupplierProducts();
     }catch(error){toast(error.message||'មិនអាចបង្កើតផលិតផលបានទេ។','error');}
   });
-  $('adminSupplierProductsList')?.addEventListener('click',event=>{
+  $('adminSupplierProductsList')?.addEventListener('click',async event=>{
+    const deleteButton=event.target.closest('[data-admin-aurora-delete]');
+    if(deleteButton){
+      event.preventDefault();event.stopPropagation();
+      const productId=deleteButton.dataset.adminAuroraDelete;
+      const product=(state.adminSupplierProducts||[]).find(item=>String(item.id)===String(productId));
+      if(!product)return;
+      if(!window.confirm('តើអ្នកប្រាកដថាចង់លុបផលិតផល "'+(product.title||'')+'"?'))return;
+      deleteButton.disabled=true;
+      try{
+        const result=await api('/api/products/'+encodeURIComponent(productId),{method:'DELETE'});
+        closeAdminAuroraProductEditor();
+        toast(result.archived?'ផលិតផលមានប្រវត្តិបញ្ជាទិញ ដូច្នេះបានលាក់ជំនួសការលុប។':'បានលុបផលិតផលរួចរាល់។');
+        await renderAdminSupplierProducts();
+      }catch(error){deleteButton.disabled=false;toast(error.message||'មិនអាចលុបផលិតផលបានទេ។','error');}
+      return;
+    }
     const row=event.target.closest('[data-admin-aurora-edit]');
     if(row)openAdminAuroraProductEditor(row.dataset.adminAuroraEdit);
   });
