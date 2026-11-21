@@ -878,6 +878,28 @@ async function copyProductCode(button) {
   }catch{toast('មិនអាចចម្លង Product ID បានទេ។','error')}
 }
 
+// Handle marketplace card image states without inline HTML event attributes.
+document.addEventListener('load', (event) => {
+  const image = event.target;
+  if (!(image instanceof HTMLImageElement) || !image.matches('.cd-main, .cd-secondary')) return;
+  image.parentElement?.classList.add('is-loaded');
+}, true);
+
+document.addEventListener('error', (event) => {
+  const image = event.target;
+  if (!(image instanceof HTMLImageElement) || !image.matches('.cd-main, .cd-secondary')) return;
+  if (image.dataset.retryAttempted !== '1') {
+    image.dataset.retryAttempted = '1';
+    setTimeout(() => {
+      if (!image.isConnected) return;
+      image.src = image.src + (image.src.includes('?') ? '&r=1' : '?r=1');
+    }, 1500);
+    return;
+  }
+  image.parentElement?.classList.add('is-failed', 'image-failed');
+  image.style.display = 'none';
+}, true);
+
 function productCard(p, index) {
   const images = (p.product_images || []).filter((item) => item.image_url).sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0));
   const image = images[0]?.image_url || '';
@@ -894,7 +916,7 @@ function productCard(p, index) {
     <div class="ph im">
       <button class="absolute inset-0 z-[1] h-full w-full" type="button" data-action="view" data-id="${esc(p.id)}" aria-label="មើល ${esc(p.title)}"></button>
       ${image
-        ? `<span class="img-scan-wrap shimmer-scan cd-image-wrap cd-main-wrap"><img src="${esc(image)}" alt="${esc(p.title)}" loading="lazy" decoding="async" class="cd-main" onload="this.parentElement.classList.add(&#39;is-loaded&#39;)" onerror="if(this.dataset.retryAttempted!==&#39;1&#39;){this.dataset.retryAttempted=&#39;1&#39;;const image=this;setTimeout(()=>{image.src=image.src+(image.src.includes(&#39;?&#39;)?&#39;&amp;r=1&#39;:&#39;?r=1&#39;)},1500)}else{this.parentElement.classList.add(&#39;is-failed&#39;,&#39;image-failed&#39;);this.style.display=&#39;none&#39;}"></span>${secondImage ? `<span class="img-scan-wrap shimmer-scan cd-image-wrap cd-secondary-wrap"><img src="${esc(secondImage)}" alt="" loading="lazy" decoding="async" class="cd-secondary" onload="this.parentElement.classList.add(&#39;is-loaded&#39;)" onerror="if(this.dataset.retryAttempted!==&#39;1&#39;){this.dataset.retryAttempted=&#39;1&#39;;const image=this;setTimeout(()=>{image.src=image.src+(image.src.includes(&#39;?&#39;)?&#39;&amp;r=1&#39;:&#39;?r=1&#39;)},1500)}else{this.parentElement.classList.add(&#39;is-failed&#39;,&#39;image-failed&#39;);this.style.display=&#39;none&#39;}"></span>` : ''}`
+        ? `<span class="img-scan-wrap shimmer-scan cd-image-wrap cd-main-wrap"><img src="${esc(image)}" alt="${esc(p.title)}" loading="lazy" decoding="async" class="cd-main"></span>${secondImage ? `<span class="img-scan-wrap shimmer-scan cd-image-wrap cd-secondary-wrap"><img src="${esc(secondImage)}" alt="" loading="lazy" decoding="async" class="cd-secondary"></span>` : ''}`
         : ic('image', 36)}
       <button class="hv heart ${saved ? 'saved' : ''}" type="button" data-action="save" data-id="${esc(p.id)}" aria-label="រក្សាទុក" aria-pressed="${saved ? 'true' : 'false'}">
         ${ic('bookmark', 17)}
@@ -1117,7 +1139,7 @@ function marketplaceCard(item, index) {
   <article class="cd marketplace-extra-card" style="animation-delay:${Math.min(index, 12) * 30}ms">
     <div class="ph im">
       <button class="absolute inset-0 z-[1] h-full w-full" type="button" data-action="view-listing" data-id="${esc(item.id)}" data-type="${esc(item.listing_type)}" aria-label="មើល ${esc(item.title)}"></button>
-      ${image ? `<span class="img-scan-wrap shimmer-scan cd-image-wrap cd-main-wrap"><img src="${esc(image)}" alt="${esc(item.title)}" loading="lazy" decoding="async" class="cd-main" onload="this.parentElement.classList.add('is-loaded')" onerror="this.parentElement.classList.add('is-failed');this.style.display='none'"></span>` : ic('image', 36)}
+      ${image ? `<span class="img-scan-wrap shimmer-scan cd-image-wrap cd-main-wrap"><img src="${esc(image)}" alt="${esc(item.title)}" loading="lazy" decoding="async" class="cd-main"></span>` : ic('image', 36)}
       <span class="marketplace-type-badge">${labels[item.listing_type] || 'ផ្សារ'}</span>
     </div>
     <div class="cb">
@@ -1261,7 +1283,6 @@ function setListingType(type) {
   $('searchCategory').value = 'all';
   document.querySelectorAll('[data-category]').forEach((b) => b.classList.toggle('active', b.dataset.category === 'all'));
   document.querySelectorAll('[data-listing-type]').forEach((b) => b.classList.toggle('active', b.dataset.listingType === state.activeListingType));
-  $('marketplacePropertyFilters')?.toggleAttribute('hidden', state.activeListingType !== 'real_estate');
   document.querySelectorAll('[data-property-type]').forEach((b) => b.classList.toggle('active', b.dataset.propertyType === state.activePropertyType));
   void loadProducts();
 }
@@ -2807,7 +2828,6 @@ async function submitNewListing(form, endpoint, kind) {
     updateMarketplaceCategoryHeading();
     document.querySelectorAll('[data-listing-type]').forEach((button) => button.classList.toggle('active', button.dataset.listingType === state.activeListingType));
     document.querySelectorAll('[data-property-type]').forEach((button) => button.classList.toggle('active', button.dataset.propertyType === 'all'));
-    $('marketplacePropertyFilters')?.toggleAttribute('hidden', state.activeListingType !== 'real_estate');
     await loadProducts();
   } catch (error) {
     toast(error.message || 'មិនអាចបង្ហោះប្រកាសបានទេ។', 'error');
