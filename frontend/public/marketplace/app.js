@@ -133,6 +133,7 @@ const state = {
   currentStoreData: null,
   currentStoreProducts: [],
   currentStoreCategory: 'all',
+  currentStoreSubcategory: 'all',
   currentStoreSearch: '',
   currentStorePage: 1,
   currentStoreLimit: 50,
@@ -2041,7 +2042,7 @@ async function openStorefront(vendorId, options = {}) {
   const storeId = String(vendorId);
   const isCurrent = () => options.routeSyncNavigationId == null || options.routeSyncNavigationId === state.routeSyncNavigationId;
   Object.assign(state, {
-    currentStoreId: storeId, currentStoreCategory: 'all', currentStoreSearch: '',
+    currentStoreId: storeId, currentStoreCategory: 'all', currentStoreSubcategory: 'all', currentStoreSearch: '',
     currentStoreProducts: [], currentStorePage: 1, currentStoreLimit: 50,
     currentStoreTotal: 0, currentStoreLoading: true, currentStoreSkeletonVisible: false, currentStoreLoadError: false,
     currentStoreMoreLoading: false, currentStoreMoreError: false
@@ -2130,10 +2131,53 @@ function auroraProductMatchesCategory(product,category) {
   if(category==='accessories') return group.includes('accessor');
   return true;
 }
+const STORE_CATEGORY_LABELS = {
+  computers: 'កុំព្យូទ័រ (Computers)',
+  computer_accessories: 'គ្រឿងបន្លាស់កុំព្យូទ័រ (Accessories)',
+  phones: 'ទូរស័ព្ទ & អេឡិចត្រូនិក',
+  vehicles: 'រថយន្ត & ម៉ូតូ',
+  property: 'អចលនទ្រព្យ',
+  fashion: 'សម្លៀកបំពាក់',
+  furniture: 'គ្រឿងសង្ហារិម'
+};
+function storeCategoryLabel(category) {
+  const key = String(category || '').trim();
+  return STORE_CATEGORY_LABELS[key] || key || 'ផ្សេងៗ';
+}
+function storePublicProducts(products = state.currentStoreProducts) {
+  return (products || []).filter(product => product && product.status === 'active' && Number(product.stock) > 0);
+}
+function storeCategoryOptions(products = state.currentStoreProducts) {
+  const keys = [...new Set(storePublicProducts(products).map(product => String(product.category || '').trim()).filter(Boolean))].sort();
+  return keys.map(key => [key, storeCategoryLabel(key)]);
+}
+function storeSubcategoryOptions(category = state.currentStoreCategory, products = state.currentStoreProducts) {
+  const scoped = storePublicProducts(products).filter(product => category === 'all' || String(product.category || '') === category);
+  return [...new Set(scoped.map(product => String(product.subcategory || '').trim()).filter(Boolean))].sort().map(value => [value, value]);
+}
+function storeProductMatchesFilters(product) {
+  if (product.status !== 'active' || Number(product.stock) <= 0) return false;
+  if (state.currentStoreCategory !== 'all' && String(product.category || '') !== state.currentStoreCategory) return false;
+  if (state.currentStoreSubcategory !== 'all' && String(product.subcategory || '') !== state.currentStoreSubcategory) return false;
+  const query = state.currentStoreSearch.trim().toLowerCase();
+  return !query || (String(product.title || '') + ' ' + String(product.description || '')).toLowerCase().includes(query);
+}
+function renderStoreCategoryFilters() {
+  const categories = storeCategoryOptions();
+  const subcategories = storeSubcategoryOptions();
+  const categoryMarkup = [['all','ទាំងអស់'], ...categories].map(([key,label]) =>
+    '<button type="button" data-store-category="' + esc(key) + '" class="store-filter ' + (state.currentStoreCategory === key ? 'active' : '') + '">' + esc(label) + '</button>'
+  ).join('');
+  const subcategoryMarkup = subcategories.length ? '<div class="storefront-toolbar-chips storefront-subcategory-chips" id="storeSubcategoryFilters">' +
+    [['all','គ្រប់ផ្នែករង'], ...subcategories].map(([key,label]) =>
+      '<button type="button" data-store-subcategory="' + esc(key) + '" class="store-filter ' + (state.currentStoreSubcategory === key ? 'active' : '') + '">' + esc(label) + '</button>'
+    ).join('') + '</div>' : '';
+  return '<div class="storefront-toolbar-chips" id="storeCategoryFilters">' + categoryMarkup + '</div>' + subcategoryMarkup;
+}
 function renderAuroraProductList(products) {
   if(!products.length) return '<div id="auroraProductList"><div class="storefront-empty"><span>'+ic('package',30)+'</span><strong>មិនមានផលិតផលដែលត្រូវនឹងការស្វែងរកទេ</strong></div></div>';
   const groups=new Map();
-  products.forEach(p=>{const key=auroraProductGroup(p);if(!groups.has(key))groups.set(key,[]);groups.get(key).push(p);});
+  products.forEach(p=>{const key=storeCategoryLabel(p.category)+' · '+String(p.subcategory||p.detail_type||'ផ្សេងៗ');if(!groups.has(key))groups.set(key,[]);groups.get(key).push(p);});
   return '<div id="auroraProductList">'+Array.from(groups.entries()).map(entry=>{
     const group=entry[0],items=entry[1];
     return '<section class="aurora-list-group"><h3>'+esc(group)+' <span>'+items.length+' មុខ</span></h3><div class="aurora-list-items">'+items.map(p=>{
@@ -2220,16 +2264,13 @@ function renderStorefront() {
   const data = state.currentStoreData;
   const query = state.currentStoreSearch.trim().toLowerCase();
   const aurora = isAuroraStorefront(data);
-  const visible = state.currentStoreProducts.filter(product =>
-    (aurora ? auroraProductMatchesCategory(product, state.currentStoreCategory) : (state.currentStoreCategory === 'all' || product.category === state.currentStoreCategory)) &&
-    (!query || (String(product.title || '') + ' ' + String(product.description || '')).toLowerCase().includes(query))
-  );
+  const visible = state.currentStoreProducts.filter(storeProductMatchesFilters);
   const rating = Number(data.rating || 0);
   const ratingLabel = rating ? rating.toFixed(1) : '—';
   const reviewCount = Number(data.review_count || 0);
   const memberSince = data.created_at
     ? new Date(data.created_at).toLocaleDateString('km-KH', { year: 'numeric', month: 'short' }) : '—';
-  const categories = aurora ? [['all','ទាំងអស់'],['laptop','Laptop'],['expertbook','ASUS ExpertBook'],['vivobook','ASUS Vivobook'],['desktop','Desktop PC'],['accessories','Accessories']] : [['all', 'ទាំងអស់'], ...Object.entries(CATEGORIES)];
+  const categoryFiltersMarkup = renderStoreCategoryFilters();
   const hasMore = state.currentStorePage * state.currentStoreLimit < state.currentStoreTotal;
   const reviews = Array.isArray(data.reviews) ? data.reviews : [];
 
@@ -2261,9 +2302,7 @@ function renderStorefront() {
     </section>
     <section class="storefront-toolbar" aria-label="ស្វែងរកទំនិញក្នុងហាង">
       <input id="storeSearchInput" type="search" placeholder="ស្វែងរកក្នុងហាងនេះ..." value="${esc(state.currentStoreSearch)}" class="field">
-      <div class="storefront-toolbar-chips" id="storeCategoryFilters">
-        ${categories.map(([key, label]) => `<button type="button" data-store-category="${esc(key)}" class="store-filter ${state.currentStoreCategory === key ? 'active' : ''}">${esc(label)}</button>`).join('')}
-      </div>
+      ${categoryFiltersMarkup}
       <span class="storefront-result-count" id="storeResultCount">${visible.length} / ${state.currentStoreTotal} មុខទំនិញ</span>
     </section>
     <section class="storefront-products-section">
@@ -2297,7 +2336,11 @@ function renderStorefront() {
   });
   $('storeCategoryFilters')?.addEventListener('click', event => {
     const button = event.target.closest('[data-store-category]');
-    if (button) { state.currentStoreCategory = button.dataset.storeCategory; renderStorefront(); }
+    if (button) { state.currentStoreCategory = button.dataset.storeCategory; state.currentStoreSubcategory = 'all'; renderStorefront(); }
+  });
+  $('storeSubcategoryFilters')?.addEventListener('click', event => {
+    const button = event.target.closest('[data-store-subcategory]');
+    if (button) { state.currentStoreSubcategory = button.dataset.storeSubcategory; renderStorefront(); }
   });
 }
 
@@ -2305,12 +2348,8 @@ function updateStorefrontProductResults() {
   const root = $('storefrontContent');
   const section = root?.querySelector('.storefront-products-section');
   if (!section) return;
-  const query = state.currentStoreSearch.trim().toLowerCase();
+  const visible = state.currentStoreProducts.filter(storeProductMatchesFilters);
   const aurora = isAuroraStorefront();
-  const visible = state.currentStoreProducts.filter(product =>
-    (aurora ? auroraProductMatchesCategory(product, state.currentStoreCategory) : (state.currentStoreCategory === 'all' || product.category === state.currentStoreCategory)) &&
-    (!query || (String(product.title || '') + ' ' + String(product.description || '')).toLowerCase().includes(query))
-  );
   if (aurora) {
     const current = section.querySelector('#auroraProductList');
     const markup = renderAuroraProductList(visible);
