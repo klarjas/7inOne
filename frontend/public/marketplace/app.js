@@ -3354,6 +3354,7 @@ function openAdminAuroraProductEditor(productId) {
     '<label>Supplier<input class="field" name="supplier_name" value="'+esc(source.supplier_name||'CC COMPUTER')+'"></label><label>Supplier Price ($)<input class="field" name="supplier_price" type="number" min="0" step="0.01" value="'+Number(source.supplier_price||0)+'"></label>'+
     '<label>Supplier Product Code<input class="field" name="supplier_product_code" value="'+esc(source.supplier_product_code||'')+'"></label><label>Supplier URL<input class="field" name="supplier_url" type="url" value="'+esc(source.supplier_url||'')+'"></label></div></section>'+
     '<section class="admin-aurora-form-section"><h3>រូបភាពផលិតផល</h3><div class="admin-aurora-image-strip">'+(images.map(img=>'<img src="'+esc(img.image_url)+'" alt="">').join('')||'<span>មិនទាន់មានរូបភាព</span>')+'</div>'+
+    (source.supplier_name==='CC COMPUTER'&&!images.length?'<button type="button" class="admin-aurora-sync-images" data-admin-sync-images>ទាញរូបពី CC COMPUTER → Telegram</button><small>ប្រព័ន្ធនឹងស្វែងរកតាម Product Code រួច Upload រូបទៅ Telegram channel ដើម។</small>':'')+
     '<input class="field" type="file" name="images" accept="image/jpeg,image/png,image/webp" multiple><small>រូបថ្មី Upload តាម Telegram channel ដើម។ អាចមានរូបសរុបមិនលើស ១០។</small></section>'+
     '<section class="admin-aurora-form-section"><div class="admin-aurora-section-title"><h3>Variants / ជម្រើសផលិតផល</h3><span>'+variants.length+' ជម្រើស</span></div>'+
     '<div class="admin-aurora-variants">'+(variantRows||'<p class="admin-aurora-no-variants">មិនទាន់មាន Variant ទេ។</p>')+'</div>'+
@@ -3365,6 +3366,16 @@ function openAdminAuroraProductEditor(productId) {
 
   modal.addEventListener('click',async event=>{
     if(event.target===modal||event.target.closest('[data-admin-aurora-close]')){closeAdminAuroraProductEditor();return;}
+    const syncButton=event.target.closest('[data-admin-sync-images]');
+    if(syncButton){
+      syncButton.disabled=true;syncButton.textContent='កំពុងទាញរូប និង Upload ទៅ Telegram...';
+      try{
+        const result=await api('/api/admin/supplier-products/'+encodeURIComponent(p.id)+'/sync-images',{method:'POST',body:JSON.stringify({})});
+        toast('បានទាញ និងរក្សាទុករូប '+Number(result.count||0)+' រូបក្នុង Telegram។');
+        closeAdminAuroraProductEditor();await renderAdminSupplierProducts();openAdminAuroraProductEditor(p.id);
+      }catch(error){toast(error.message||'មិនអាចទាញរូបពី Supplier បានទេ។','error');syncButton.disabled=false;syncButton.textContent='ទាញរូបពី CC COMPUTER → Telegram';}
+      return;
+    }
     const remove=event.target.closest('[data-admin-variant-delete]');
     if(remove){
       if(!window.confirm('តើអ្នកចង់លុប Variant នេះមែនទេ?'))return;

@@ -3295,6 +3295,105 @@ app.get('/api/admin/supplier-products', authenticate, requireAdmin, async (_req,
   })) });
 });
 
+
+function decodeSupplierHtml(value) {
+  return String(value || '').replace(/&amp;/gi, '&').replace(/&quot;/gi, '"').replace(/&#39;|&apos;/gi, "'").replace(/&nbsp;/gi, ' ');
+}
+function supplierImageCandidates(card, baseUrl) {
+  const found = [];
+  const tags = card.match(/<img\b[^>]*>/gi) || [];
+  for (const tag of tags) {
+    const attrs = {};
+    for (const match of tag.matchAll(/([:\w-]+)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/g)) {
+      attrs[match[1].toLowerCase()] = decodeSupplierHtml(match[2] ?? match[3] ?? match[4] ?? '');
+    }
+    const raw = attrs['data-src'] || attrs['data-lazy-src'] || attrs['data-original'] || attrs.src || attrs['data-srcset'] || attrs.srcset || '';
+    const selected = raw.includes(',') ? raw.split(',').map(part => part.trim().split(/\s+/)[0]).filter(Boolean).at(-1) : raw;
+    if (!selected || /^(data:|blob:)/i.test(selected)) continue;
+    try {
+      const url = new URL(selected, baseUrl);
+      if (url.protocol !== 'https:' || !['cccomputerkh.com','www.cccomputerkh.com','cdn.shopify.com'].includes(url.hostname.toLowerCase())) continue;
+      if (!/\.(?:jpe?g|png|webp)(?:[?#]|$)/i.test(url.pathname + url.search)) continue;
+      found.push(url.href);
+    } catch {}
+  }
+  return [...new Set(found)];
+}
+async function fetchSupplierBytes(url, { html = false } = {}) {
+  const response = await fetch(url, { redirect: 'error', signal: AbortSignal.timeout(html ? 15000 : 12000), headers: { 'user-agent': '7inOne-AURORA-SupplierSync/1.0', accept: html ? 'text/html,application/xhtml+xml' : 'image/avif,image/webp,image/png,image/jpeg' } });
+  if (!response.ok) throw new Error('Supplier returned HTTP ' + response.status);
+  const finalUrl = new URL(response.url);
+  if (finalUrl.protocol !== 'https:' || !['cccomputerkh.com','www.cccomputerkh.com','cdn.shopify.com'].includes(finalUrl.hostname.toLowerCase())) throw new Error('Supplier redirected to an untrusted host.');
+  const declared = Number(response.headers.get('content-length') || 0);
+  const max = html ? 5 * 1024 * 1024 : 8 * 1024 * 1024;
+  if (declared > max) throw new Error('Supplier file exceeds the allowed size.');
+  const buffer = Buffer.from(await response.arrayBuffer());
+  if (!buffer.length || buffer.length > max) throw new Error('Supplier file is empty or too large.');
+  return { buffer, contentType: String(response.headers.get('content-type') || '').split(';')[0].toLowerCase() };
+}
+app.post('/api/admin/supplier-products/:id/sync-images', authenticate, requireAdmin, async (req, res) => {
+  if (!supabase) return fail(res, 503, 'Supabase is not configured.');
+  const productId = clean(req.params.id, 64);
+  const uploaded = [];
+  try {
+    const { data: product, error: productError } = await supabase.from('products')
+      .select('id,vendor_id,vendors!inner(store_name)').eq('id', productId).maybeSingle();
+    if (productError || !product) return fail(res, 404, 'Product not found.');
+    if (String(product.vendors?.store_name || '').trim().toLowerCase() !== 'aurora computer') return fail(res, 403, 'Supplier image sync is limited to AURORA products.');
+    const { data: source, error: sourceError } = await supabase.from('product_supplier_sources')
+      .select('supplier_name,supplier_url,supplier_product_code').eq('product_id', productId).maybeSingle();
+    if (sourceError || !source) return fail(res, 404, 'Supplier information not found.');
+    if (String(source.supplier_name || '').trim().toLowerCase() !== 'cc computer') return fail(res, 400, 'This supplier is not supported yet.');
+    const sku = clean(source.supplier_product_code, 120);
+    if (!sku) return fail(res, 400, 'Supplier product code is required.');
+    let supplierUrl;
+    try { supplierUrl = new URL(source.supplier_url || 'https://www.cccomputerkh.com/'); } catch { return fail(res, 400, 'Invalid supplier URL.'); }
+    if (supplierUrl.protocol !== 'https:' || !['cccomputerkh.com','www.cccomputerkh.com'].includes(supplierUrl.hostname.toLowerCase())) return fail(res, 400, 'Only the verified CC COMPUTER website is allowed.');
+    supplierUrl.hash = '';
+    const { count: existingCount, error: countError } = await supabase.from('product_images')
+      .select('id', { count: 'exact', head: true }).eq('product_id', productId);
+    if (countError) throw countError;
+    if ((existingCount || 0) > 0) return fail(res, 409, 'This product already has images. Remove them first if you want to sync again.');
+    const { buffer: pageBuffer } = await fetchSupplierBytes(supplierUrl.href, { html: true });
+    const html = pageBuffer.toString('utf8');
+    const escapedSku = sku.replace(/[.*+?^()|[\]\\$]/g, '\\$&');
+    const cardPattern = /<li\b[^>]*class\s*=\s*["'][^"']*(?:product|item)[^"']*["'][^>]*>[\s\S]*?<\/li>/gi;
+    const cards = html.match(cardPattern) || [];
+    const matchingCard = cards.find(card => new RegExp(escapedSku, 'i').test(card));
+    if (!matchingCard) return fail(res, 422, 'Could not locate this product code in a supplier product card. No images were uploaded.');
+    const imageUrls = supplierImageCandidates(matchingCard, supplierUrl.href).slice(0, 5);
+    if (!imageUrls.length) return fail(res, 422, 'The matching supplier product was found, but it has no supported image URL.');
+    if (imageUrls.length > 10) return fail(res, 400, 'Product image limit is 10.');
+    for (const [index, imageUrl] of imageUrls.entries()) {
+      const { buffer, contentType } = await fetchSupplierBytes(imageUrl);
+      const extByMime = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
+      if (!extByMime[contentType]) throw new Error('Supplier image has an unsupported content type.');
+      const file = { buffer, mimetype: contentType, originalname: sku.replace(/[^a-z0-9_-]/gi, '_') + '-' + (index + 1) + '.' + extByMime[contentType], size: buffer.length };
+      const invalid = imageUploadError(file, 8 * 1024 * 1024);
+      if (invalid) throw new Error(invalid);
+      uploaded.push(await uploadToTelegram(file, 8 * 1024 * 1024));
+    }
+    const { count: currentCount, error: currentError } = await supabase.from('product_images').select('id', { count: 'exact', head: true }).eq('product_id', productId);
+    if (currentError) throw currentError;
+    if ((currentCount || 0) + uploaded.length > 10) throw new Error('Product image limit is 10.');
+    const rows = uploaded.map((media, index) => ({
+      product_id: productId, telegram_message_id: media.messageId, file_id: media.fileId,
+      image_url: mediaProxyUrl(media.fileId), sort_order: (currentCount || 0) + index
+    }));
+    const { data, error } = await supabase.from('product_images').insert(rows)
+      .select('id,product_id,file_id,telegram_message_id,image_url,sort_order');
+    if (error) throw error;
+    return res.status(201).json({ success: true, count: data.length, data: data.map(image => ({
+      id: image.id, product_id: image.product_id, sort_order: image.sort_order,
+      image_url: image.file_id ? mediaProxyUrl(image.file_id) : normalizeMediaUrl(image.image_url)
+    })) });
+  } catch (error) {
+    for (const media of uploaded) await deleteTelegramMessage(media.messageId);
+    console.error('AURORA supplier image sync failed:', error.message);
+    return fail(res, 502, 'Supplier image sync failed: ' + clean(error.message, 220));
+  }
+});
+
 app.put('/api/admin/supplier-products/:id/source', authenticate, requireAdmin, async (req, res) => {
   const productId = clean(req.params.id, 64);
   const supplierName = clean(req.body.supplier_name, 120);
