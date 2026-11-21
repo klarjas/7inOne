@@ -7850,3 +7850,25 @@ body > footer {
     min-height: 280px;
   }
 }
+
+/* Dedicated, reliable shimmer motion for the product detail skeleton */
+#view-product .product-detail-skeleton .skeleton {
+  background-position: 220% 0 !important;
+  animation: productDetailSkeletonShimmer 1.45s ease-in-out infinite !important;
+}
+
+#view-product .product-detail-skeleton .skeleton::after {
+  display: none;
+}
+
+@keyframes productDetailSkeletonShimmer {
+  from { background-position: 220% 0; }
+  to { background-position: -220% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #view-product .product-detail-skeleton .skeleton {
+    animation: none !important;
+    background-position: 50% 0 !important;
+  }
+}
