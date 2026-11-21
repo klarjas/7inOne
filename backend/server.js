@@ -3331,6 +3331,185 @@ async function fetchSupplierBytes(url, { html = false } = {}) {
   if (!buffer.length || buffer.length > max) throw new Error('Supplier file is empty or too large.');
   return { buffer, contentType: String(response.headers.get('content-type') || '').split(';')[0].toLowerCase() };
 }
+
+function supplierPlainText(html) {
+  return decodeSupplierHtml(String(html || '')
+    .replace(/<script\b[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style\b[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<(?:br|\/p|\/li|\/h[1-6]|\/div|\/tr)\b[^>]*>/gi, '\n')
+    .replace(/<[^>]+>/g, ' '))
+    .replace(/[ \t]+/g, ' ').replace(/\n\s*/g, '\n').trim();
+}
+function extractCcSupplierProducts(html, baseUrl) {
+  const blocks = [];
+  const stack = [];
+  const tagPattern = /<(div|li|article)\b[^>]*>|<\/(div|li|article)\s*>/gi;
+  for (const match of html.matchAll(tagPattern)) {
+    if (match[2]) {
+      const tag = match[2].toLowerCase();
+      for (let i = stack.length - 1; i >= 0; i--) {
+        if (stack[i].tag === tag) {
+          const opened = stack.splice(i, 1)[0];
+          blocks.push({ start: opened.start, end: match.index + match[0].length, html: html.slice(opened.start, match.index + match[0].length) });
+          break;
+        }
+      }
+    } else {
+      stack.push({ tag: match[1].toLowerCase(), start: match.index });
+    }
+  }
+  const codes = [...html.matchAll(/(?:Code|Product\s*Code)\s*:\s*([A-Z0-9][A-Z0-9_-]{4,})/gi)];
+  const results = [];
+  const seen = new Set();
+  for (const found of codes) {
+    const code = String(found[1] || '').toUpperCase();
+    if (seen.has(code)) continue;
+    seen.add(code);
+    const containing = blocks.filter(block => block.start <= found.index && block.end >= found.index && block.html.length <= 40000)
+      .sort((a, b) => a.html.length - b.html.length);
+    const card = containing.find(block => /\$\s*[\d,]+(?:\.\d{1,2})?/.test(block.html) && /<img\b/i.test(block.html))?.html
+      || containing.find(block => /\$\s*[\d,]+(?:\.\d{1,2})?/.test(block.html))?.html
+      || html.slice(Math.max(0, found.index - 3500), Math.min(html.length, found.index + 1200));
+    const text = supplierPlainText(card);
+    const priceMatches = [...card.matchAll(/\$\s*([\d,]+(?:\.\d{1,2})?)/g)];
+    const supplierPrice = priceMatches.length ? Number(priceMatches[priceMatches.length - 1][1].replace(/,/g, '')) : NaN;
+    const headings = [...card.matchAll(/<(?:h1|h2|h3|h4)\b[^>]*>([\s\S]*?)<\/(?:h1|h2|h3|h4)>/gi)]
+      .map(item => supplierPlainText(item[1])).filter(Boolean);
+    const title = headings.find(value => /asus|vivobook|expertbook|zenbook|tuf|rog|msi|acer|lenovo|dell|hp|macbook/i.test(value))
+      || text.split('\n').map(line => line.trim()).find(line => /asus|vivobook|expertbook|zenbook|tuf|rog|msi|acer|lenovo|dell|hp|macbook/i.test(line) && line.length > 5 && line.length < 180)
+      || '';
+    const specs = text.split('\n').map(line => line.trim()).filter(line => line && !/^(?:Code|Product\s*Code)\s*:/i.test(line) && !/^\$/.test(line) && !/^Free\s*:/i.test(line) && !/^[-_]{3,}$/.test(line));
+    const imageUrls = supplierImageCandidates(card, baseUrl).slice(0, 5);
+    let productUrl = baseUrl;
+    const links = [...card.matchAll(/<a\b[^>]*href\s*=\s*(?:"([^"]+)"|'([^']+)'|([^\s>]+))/gi)];
+    for (const link of links) {
+      try {
+        const candidate = new URL(decodeSupplierHtml(link[1] || link[2] || link[3] || ''), baseUrl);
+        if (candidate.protocol === 'https:' && ['cccomputerkh.com','www.cccomputerkh.com'].includes(candidate.hostname.toLowerCase()) && candidate.pathname !== '/') { productUrl = candidate.href; break; }
+      } catch {}
+    }
+    results.push({
+      supplier_product_code: code,
+      title: clean(title, 160),
+      supplier_price: supplierPrice,
+      selling_price: Number.isFinite(supplierPrice) ? Math.round((supplierPrice + 5) * 100) / 100 : null,
+      description: clean(specs.join('\n'), 5000),
+      specifications: {
+        cpu_model: specs.find(line => /^-?\s*CPU\s*:/i.test(line))?.replace(/^-?\s*CPU\s*:/i, '').trim() || '',
+        ram_type_capacity: specs.find(line => /^-?\s*RAM\s*:/i.test(line))?.replace(/^-?\s*RAM\s*:/i, '').trim() || '',
+        storage_type_capacity: specs.find(line => /^-?\s*SSD\s*:/i.test(line))?.replace(/^-?\s*SSD\s*:/i, '').trim() || '',
+        screen_size: specs.find(line => /display|inch|screen/i.test(line)) || '',
+        gpu_model_vram: specs.find(line => /^-?\s*GPU\s*:/i.test(line))?.replace(/^-?\s*GPU\s*:/i, '').trim() || '',
+        full_specs: specs
+      },
+      supplier_url: productUrl,
+      image_urls: imageUrls,
+      verified: Boolean(title && Number.isFinite(supplierPrice) && supplierPrice > 0 && imageUrls.length)
+    });
+  }
+  return results;
+}
+async function loadCcSupplierCatalog(url) {
+  let parsed;
+  try { parsed = new URL(url); } catch { throw new Error('Invalid supplier URL.'); }
+  if (parsed.protocol !== 'https:' || !['cccomputerkh.com','www.cccomputerkh.com'].includes(parsed.hostname.toLowerCase())) throw new Error('Only the verified CC COMPUTER website is allowed.');
+  parsed.hash = '';
+  const { buffer } = await fetchSupplierBytes(parsed.href, { html: true });
+  return { url: parsed.href, products: extractCcSupplierProducts(buffer.toString('utf8'), parsed.href) };
+}
+app.post('/api/admin/supplier-import/scan', authenticate, requireAdmin, async (req, res) => {
+  if (!supabase) return fail(res, 503, 'Supabase is not configured.');
+  try {
+    const { url, products } = await loadCcSupplierCatalog(clean(req.body.url, 1000));
+    const { data: vendor, error: vendorError } = await supabase.from('vendors').select('id').ilike('store_name', 'AURORA Computer').maybeSingle();
+    if (vendorError || !vendor) return fail(res, 404, 'AURORA Computer shop was not found.');
+    const [{ data: sources, error: sourceError }, { data: existing, error: productError }] = await Promise.all([
+      supabase.from('product_supplier_sources').select('supplier_product_code').eq('supplier_name', 'CC COMPUTER'),
+      supabase.from('products').select('title').eq('vendor_id', vendor.id)
+    ]);
+    if (sourceError || productError) throw sourceError || productError;
+    const knownCodes = new Set((sources || []).map(row => String(row.supplier_product_code || '').trim().toUpperCase()).filter(Boolean));
+    const knownTitles = new Set((existing || []).map(row => String(row.title || '').trim().toLowerCase()).filter(Boolean));
+    const data = products.map(product => {
+      const duplicate = knownCodes.has(product.supplier_product_code) || knownTitles.has(product.title.toLowerCase());
+      const status = duplicate ? 'duplicate' : product.verified ? 'ready' : 'needs_review';
+      return { ...product, duplicate, status };
+    });
+    res.json({ data, summary: { total: data.length, ready: data.filter(item => item.status === 'ready').length, duplicate: data.filter(item => item.duplicate).length, needs_review: data.filter(item => item.status === 'needs_review').length } });
+  } catch (error) {
+    console.error('CC COMPUTER supplier scan failed:', error.message);
+    return fail(res, 502, 'Could not scan supplier catalog: ' + clean(error.message, 180));
+  }
+});
+app.post('/api/admin/supplier-import/import', authenticate, requireAdmin, async (req, res) => {
+  if (!supabase) return fail(res, 503, 'Supabase is not configured.');
+  const code = clean(req.body.supplier_product_code, 120).toUpperCase();
+  const catalogUrl = clean(req.body.catalog_url, 1000);
+  const expectedPrice = Number(req.body.expected_supplier_price);
+  const uploaded = [];
+  let createdProductId = null;
+  try {
+    if (!code || !Number.isFinite(expectedPrice) || expectedPrice <= 0) return fail(res, 400, 'Missing verified product code or supplier price.');
+    const { url, products } = await loadCcSupplierCatalog(catalogUrl);
+    const product = products.find(item => item.supplier_product_code === code);
+    if (!product || !product.verified || product.supplier_price !== expectedPrice) return fail(res, 409, 'Supplier details changed or could not be verified. Scan the catalog again.');
+    const { data: vendor, error: vendorError } = await supabase.from('vendors').select('id').ilike('store_name', 'AURORA Computer').maybeSingle();
+    if (vendorError || !vendor) return fail(res, 404, 'AURORA Computer shop was not found.');
+    const { data: duplicate, error: duplicateError } = await supabase.from('product_supplier_sources')
+      .select('product_id').eq('supplier_name', 'CC COMPUTER').ilike('supplier_product_code', code).maybeSingle();
+    if (duplicateError) throw duplicateError;
+    if (duplicate) return fail(res, 409, 'This supplier product code is already imported.');
+    const { data: sameTitle, error: titleError } = await supabase.from('products').select('id').eq('vendor_id', vendor.id).ilike('title', product.title).limit(1);
+    if (titleError) throw titleError;
+    if ((sameTitle || []).length) return fail(res, 409, 'A product with the same title already exists in AURORA.');
+    const { data: created, error: createError } = await supabase.from('products').insert({
+      vendor_id: vendor.id, title: product.title, description: product.description,
+      category: 'computers', price: product.selling_price, stock: 0,
+      location: 'Cambodia', condition: 'ថ្មី', status: 'active', renewed_at: new Date().toISOString()
+    }).select().single();
+    if (createError) throw createError;
+    createdProductId = created.id;
+    const { error: sourceError } = await supabase.from('product_supplier_sources').insert({
+      product_id: created.id, supplier_name: 'CC COMPUTER', supplier_url: product.supplier_url || url,
+      supplier_price: product.supplier_price, supplier_product_code: code,
+      notes: 'Imported from CC COMPUTER catalog. Selling price = supplier price + $5.'
+    });
+    if (sourceError) throw sourceError;
+    const { error: detailsError } = await supabase.from('product_listing_details').upsert({
+      product_id: created.id, category: 'computers', detail_type: 'Laptop',
+      specifications: product.specifications, updated_at: new Date().toISOString()
+    }, { onConflict: 'product_id' });
+    if (detailsError) throw detailsError;
+    for (const [index, imageUrl] of product.image_urls.entries()) {
+      const { buffer, contentType } = await fetchSupplierBytes(imageUrl);
+      const extByMime = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
+      if (!extByMime[contentType]) continue;
+      const file = { buffer, mimetype: contentType, originalname: code.replace(/[^a-z0-9_-]/gi, '_') + '-' + (index + 1) + '.' + extByMime[contentType], size: buffer.length };
+      const invalid = imageUploadError(file, 8 * 1024 * 1024);
+      if (invalid) continue;
+      uploaded.push(await uploadToTelegram(file, 8 * 1024 * 1024));
+    }
+    if (!uploaded.length) throw new Error('No valid product images could be uploaded to Telegram.');
+    const imageRows = uploaded.map((media, index) => ({
+      product_id: created.id, telegram_message_id: media.messageId, file_id: media.fileId,
+      image_url: mediaProxyUrl(media.fileId), sort_order: index
+    }));
+    const { error: imageError } = await supabase.from('product_images').insert(imageRows);
+    if (imageError) throw imageError;
+    res.status(201).json({ success: true, data: { id: created.id, title: product.title, supplier_price: product.supplier_price, selling_price: product.selling_price, images: uploaded.length } });
+  } catch (error) {
+    for (const media of uploaded) await deleteTelegramMessage(media.messageId);
+    if (createdProductId) {
+      await supabase.from('product_images').delete().eq('product_id', createdProductId);
+      await supabase.from('product_listing_details').delete().eq('product_id', createdProductId);
+      await supabase.from('product_supplier_sources').delete().eq('product_id', createdProductId);
+      await supabase.from('products').delete().eq('id', createdProductId);
+    }
+    console.error('CC COMPUTER supplier import failed:', error.message);
+    return fail(res, 502, 'Supplier import failed: ' + clean(error.message, 180));
+  }
+});
+
 app.post('/api/admin/supplier-products/:id/sync-images', authenticate, requireAdmin, async (req, res) => {
   if (!supabase) return fail(res, 503, 'Supabase is not configured.');
   const productId = clean(req.params.id, 64);
