@@ -265,6 +265,14 @@ export function registerMyPostsRoutes(app, {
 
         const uploadFiles = Array.isArray(req.files) ? req.files : [...(req.files?.images || []), ...(req.files?.image || [])];
         const imageEditRequested = Object.prototype.hasOwnProperty.call(body,'keep_image_message_ids') || uploadFiles.length > 0;
+        let keepIds = [];
+        if (imageEditRequested) {
+          try {
+            const rawKeep = body.keep_image_message_ids;
+            keepIds = Array.isArray(rawKeep) ? rawKeep : JSON.parse(String(rawKeep || '[]'));
+            if (!Array.isArray(keepIds)) keepIds = [];
+          } catch { return fail(res,400,'បញ្ជីរូបភាពមិនត្រឹមត្រូវទេ។'); }
+        }
         if (imageEditRequested && ['rental','land','house_sale'].includes(type)) {
           const currentGallery = row.image_file_id ? [{ file_id:row.image_file_id,message_id:row.image_message_id,mime_type:row.image_mime_type }] : [];
           const keyOf = item => String(item?.message_id || item?.file_id || '');
@@ -294,12 +302,6 @@ export function registerMyPostsRoutes(app, {
           }
         }
         if (imageEditRequested && ['job','property'].includes(type)) {
-          let keepIds = [];
-          try {
-            const rawKeep = body.keep_image_message_ids;
-            keepIds = Array.isArray(rawKeep) ? rawKeep : JSON.parse(String(rawKeep || '[]'));
-            if (!Array.isArray(keepIds)) keepIds = [];
-          } catch { return fail(res,400,'បញ្ជីរូបភាពមិនត្រឹមត្រូវទេ។'); }
           const oldGallery = Array.isArray(row.image_gallery) ? row.image_gallery : [];
           const currentGallery = oldGallery.length ? oldGallery : (row.image_file_id ? [{ file_id:row.image_file_id,message_id:row.image_message_id,mime_type:row.image_mime_type }] : []);
           const keyOf = item => String(item?.message_id || item?.file_id || '');
