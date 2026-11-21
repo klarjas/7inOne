@@ -1374,7 +1374,8 @@ async function openMarketplaceListing(type, id, options = {}) {
   const isCurrent = () => options.routeSyncNavigationId == null || options.routeSyncNavigationId === state.routeSyncNavigationId;
   state.currentProduct = { id: String(id), listing_type: type };
   await showView('product', { preserveScroll: Boolean(options.preserveScroll), deferLoad: true });
-  const cancelSkeleton = scheduleSkeleton(renderProductDetailSkeleton);
+  if (!isCurrent()) return false;
+  renderProductDetailSkeleton();
 
   try {
     let item = state.products.find(row => row.listing_type === type && String(row.id) === String(id))
@@ -1384,7 +1385,6 @@ async function openMarketplaceListing(type, id, options = {}) {
       if (!isCurrent()) return false;
       item = (result.data || []).find(row => String(row.id) === String(id));
     }
-    cancelSkeleton();
     if (!item) throw new Error('មិនមានព័ត៌មានប្រកាសនេះទេ។');
     // Keep the listing type explicit so showView builds the shared detail route
     // as product/job/<id> instead of treating a job ID as a product ID.
@@ -1403,13 +1403,11 @@ async function openMarketplaceListing(type, id, options = {}) {
     await showView('product', { preserveScroll: Boolean(options.preserveScroll) });
     return true;
   } catch (error) {
-    cancelSkeleton();
     if (!isCurrent()) return false;
     toast(error.message || 'មិនអាចបើកព័ត៌មានប្រកាសបានទេ។', 'error');
     void showView('home');
     return false;
   } finally {
-    cancelSkeleton();
   }
 }
 
@@ -1420,7 +1418,8 @@ async function openProduct(id, options = {}) {
 
   state.currentProduct = { id: productId };
   await showView('product', { preserveScroll: Boolean(options.preserveScroll), deferLoad: true });
-  const cancelSkeleton = scheduleSkeleton(renderProductDetailSkeleton);
+  if (!isCurrent()) return false;
+  renderProductDetailSkeleton();
 
   try {
     try {
@@ -1445,18 +1444,14 @@ async function openProduct(id, options = {}) {
     state.currentVendor = trust.data;
     state.productGalleryIndex = 0;
     state.productGalleryVideoActive = false;
-
-    cancelSkeleton();
     renderProductDetail();
     return true;
   } catch (error) {
-    cancelSkeleton();
     if (!isCurrent()) return false;
     toast(error.message, 'error');
     void showView('home');
     return false;
   } finally {
-    cancelSkeleton();
   }
 }
 
