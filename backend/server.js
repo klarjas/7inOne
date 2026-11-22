@@ -3455,26 +3455,25 @@ async function galleryFetchImage(rawUrl) {
   }
   throw new Error('Could not download image.');
 }
-app.post('/api/admin/products/:id/gallery-search', authenticate, requireAdmin, async (req, res) => {
+async function discoverProductGalleryCandidates(productId) {
   const { data: product, error: productError } = await supabase.from('products')
-    .select('id,title,description,category').eq('id', req.params.id).maybeSingle();
-  if (productError || !product) return fail(res, 404, 'Product not found.');
+    .select('id,title,description,category').eq('id', productId).maybeSingle();
+  if (productError || !product) throw new Error('Product not found.');
   const [{ data: source }, { data: variants }] = await Promise.all([
     supabase.from('product_supplier_sources').select('supplier_product_code').eq('product_id', product.id).maybeSingle(),
     supabase.from('product_variants').select('sku').eq('product_id', product.id).eq('is_active', true)
   ]);
   const identity = galleryIdentity(product, source?.supplier_product_code, variants || []);
-  if (!identity.modelTokens.length && !identity.code && !identity.skuTokens.length) return fail(res, 422, 'Product model or code is required.');
+  if (!identity.modelTokens.length && !identity.code && !identity.skuTokens.length) {
+    return { data: [], found: 0, skipped: true, reason: 'missing_product_model_or_code' };
+  }
   const query = [identity.title, identity.code].filter(Boolean).join(' ') + ' product image';
-  let searchHtml;
-  try {
-    const response = await fetch('https://html.duckduckgo.com/html/?q=' + encodeURIComponent(query), {
-      headers: { 'user-agent': 'Mozilla/5.0 (compatible; 7inOneGallery/1.0)', accept: 'text/html' },
-      signal: AbortSignal.timeout(15000)
-    });
-    if (!response.ok) throw new Error('Search provider HTTP ' + response.status);
-    searchHtml = await response.text();
-  } catch (error) { return fail(res, 502, 'External image search failed: ' + clean(error.message, 140)); }
+  const response = await fetch('https://html.duckduckgo.com/html/?q=' + encodeURIComponent(query), {
+    headers: { 'user-agent': 'Mozilla/5.0 (compatible; 7inOneGallery/1.0)', accept: 'text/html' },
+    signal: AbortSignal.timeout(15000)
+  });
+  if (!response.ok) throw new Error('Search provider HTTP ' + response.status);
+  const searchHtml = await response.text();
   const links = [];
   for (const match of searchHtml.matchAll(/<a[^>]+class=["'][^"']*result__a[^"']*["'][^>]+href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi)) {
     try {
@@ -3503,12 +3502,20 @@ app.post('/api/admin/products/:id/gallery-search', authenticate, requireAdmin, a
       if (candidates.length >= 10) break;
     } catch (error) { console.warn('Gallery source skipped:', link.url, clean(error.message, 120)); }
   }
-  if (!candidates.length) return res.json({ data: [], message: 'No sufficiently matched product images were found. No images were added.' });
+  if (!candidates.length) return { data: [], found: 0, message: 'No sufficiently matched product images were found.' };
   const { data, error } = await supabase.from('product_gallery_candidates')
     .upsert(candidates, { onConflict: 'product_id,image_url', ignoreDuplicates: true })
     .select('id,product_id,image_url,source_url,source_title,match_score,match_evidence,status,created_at');
-  if (error) return fail(res, 500, 'Could not save candidates. Apply the Smart Product Gallery migration first.');
-  return res.json({ data: data || [], found: candidates.length, message: 'Candidates await Admin approval and are not public.' });
+  if (error) throw new Error('Could not save candidates. Apply the Smart Product Gallery migration first.');
+  return { data: data || [], found: candidates.length, message: 'Candidates await Admin approval and are not public.' };
+}
+app.post('/api/admin/products/:id/gallery-search', authenticate, requireAdmin, async (req, res) => {
+  try {
+    return res.json({ data: (await discoverProductGalleryCandidates(req.params.id)).data,
+      found: (await Promise.resolve({found: 0})).found });
+  } catch (error) {
+    return fail(res, 502, 'External image search failed: ' + clean(error.message, 160));
+  }
 });
 app.get('/api/admin/gallery-products', authenticate, requireAdmin, async (req, res) => {
   const term = clean(req.query.q, 100);
