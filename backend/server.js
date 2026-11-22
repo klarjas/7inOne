@@ -3482,9 +3482,8 @@ function galleryPageImageUrls(html) {
     const width = Number(tag.match(/\bwidth=["']?(\d+)/i)?.[1] || 0);
     const height = Number(tag.match(/\bheight=["']?(\d+)/i)?.[1] || 0);
     if ((width && width < 300) || (height && height < 200)) continue;
-    for (const attr of ['src', 'data-src', 'data-original', 'data-lazy-src']) {
-      const value = tag.match(new RegExp('\\b' + attr + '=["\\']([^"\\']+)["\\']', 'i'))?.[1];
-      if (value) urls.push(galleryDecodeHtml(value));
+    for (const attrMatch of tag.matchAll(/\b(?:src|data-src|data-original|data-lazy-src)=["']([^"']+)["']/gi)) {
+      if (attrMatch[1]) urls.push(galleryDecodeHtml(attrMatch[1]));
     }
     const srcset = tag.match(/\bsrcset=["']([^"']+)["']/i)?.[1] || '';
     for (const entry of srcset.split(',')) {
