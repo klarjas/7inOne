@@ -3471,6 +3471,30 @@ async function galleryFetchImage(rawUrl) {
   }
   throw new Error('Could not download image.');
 }
+function galleryPageImageUrls(html) {
+  const urls = [
+    galleryHtmlAttr(html, 'og:image'),
+    galleryHtmlAttr(html, 'twitter:image'),
+    ...galleryJsonLdImages(html)
+  ].filter(Boolean);
+  for (const match of String(html || '').matchAll(/<img\b[^>]*>/gi)) {
+    const tag = match[0];
+    const width = Number(tag.match(/\bwidth=["']?(\d+)/i)?.[1] || 0);
+    const height = Number(tag.match(/\bheight=["']?(\d+)/i)?.[1] || 0);
+    if ((width && width < 300) || (height && height < 200)) continue;
+    for (const attr of ['src', 'data-src', 'data-original', 'data-lazy-src']) {
+      const value = tag.match(new RegExp('\\b' + attr + '=["\\']([^"\\']+)["\\']', 'i'))?.[1];
+      if (value) urls.push(galleryDecodeHtml(value));
+    }
+    const srcset = tag.match(/\bsrcset=["']([^"']+)["']/i)?.[1] || '';
+    for (const entry of srcset.split(',')) {
+      const value = entry.trim().split(/\s+/)[0];
+      if (value) urls.push(galleryDecodeHtml(value));
+    }
+  }
+  return [...new Set(urls)];
+}
+
 async function discoverProductGalleryCandidates(productId) {
   const { data: product, error: productError } = await supabase.from('products')
     .select('id,title,description,category').eq('id', productId).maybeSingle();
@@ -3535,7 +3559,7 @@ async function discoverProductGalleryCandidates(productId) {
       const pageDescription = galleryHtmlAttr(page.html, 'og:description') || galleryHtmlAttr(page.html, 'description');
       const match = galleryScorePage([pageTitle, pageDescription, page.html.slice(0, 160000)].join(' '), identity);
       if (!match.verified_identity) continue;
-      const rawImages = [galleryHtmlAttr(page.html, 'og:image'), galleryHtmlAttr(page.html, 'twitter:image'), ...galleryJsonLdImages(page.html)].filter(Boolean);
+      const rawImages = galleryPageImageUrls(page.html);
       for (const rawImage of rawImages) {
         let imageUrl = null;
         try { imageUrl = (await gallerySafeRemoteUrl(new URL(rawImage, page.finalUrl).href))?.href; } catch {}
