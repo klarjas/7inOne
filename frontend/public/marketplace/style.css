@@ -8349,3 +8349,220 @@ body > footer {
   text-overflow: ellipsis;
   overflow-wrap: normal;
 }
+
+
+/* --------------------------------------------------------------------------
+   Responsive Steam Dark marketplace shell
+   Isolated layout overrides only: product-card markup and rendering remain
+   untouched. Existing filter DOM hooks stay mounted for app.js.
+   -------------------------------------------------------------------------- */
+
+/* Keep the legacy search category control and its divider in the DOM, hidden
+   at every viewport so the search field remains uncluttered. */
+#searchForm #searchCategory,
+#searchForm > span.hidden.h-5.w-px.bg-slate-200 {
+  display: none !important;
+}
+
+/* Desktop category navigation lives only in the left filter sidebar. */
+@media (min-width: 901px) {
+  #view-home #categoryStrip {
+    display: none !important;
+  }
+}
+
+/* Wide desktop: edge-to-edge three-pane application shell. */
+@media (min-width: 1101px) {
+  #view-home > .home-layout-shell.amazon-store-body.shell {
+    display: grid !important;
+    grid-template-columns: 235px minmax(0, 1fr) 310px !important;
+    gap: 0 !important;
+    column-gap: 0 !important;
+    row-gap: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Expose the existing center content as grid items without changing its DOM. */
+  #view-home .home-main-content {
+    display: contents !important;
+  }
+
+  #view-home .amazon-filter-sidebar {
+    grid-column: 1 !important;
+    grid-row: 1 / span 20 !important;
+    align-self: start !important;
+    position: sticky !important;
+    top: 68px !important;
+    height: calc(100dvh - 68px) !important;
+    max-height: none !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 16px 12px !important;
+    overflow-y: auto !important;
+    border: 1px solid #2A475E !important;
+    border-radius: 0 !important;
+    background: #171A21 !important;
+    box-sizing: border-box !important;
+    scrollbar-width: thin;
+    scrollbar-color: #2A475E transparent;
+  }
+
+  #view-home .market-listing-header {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    min-width: 0 !important;
+  }
+
+  #view-home #skeletonGrid:not(.hidden),
+  #view-home #productGrid:not(.hidden),
+  #view-home #emptyHome {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    min-width: 0 !important;
+  }
+
+  #view-home #productGrid:not(.hidden) {
+    max-height: calc(100dvh - 210px) !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+    scroll-behavior: smooth;
+    padding: 16px !important;
+    box-sizing: border-box !important;
+    scrollbar-width: thin;
+    scrollbar-color: #2A475E transparent;
+  }
+
+  #view-home .home-jobs-rail {
+    grid-column: 3 !important;
+    grid-row: 1 / span 20 !important;
+    align-self: start !important;
+    position: sticky !important;
+    top: 68px !important;
+    height: calc(100dvh - 68px) !important;
+    max-height: none !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow-y: auto !important;
+    border: 1px solid #2A475E !important;
+    border-radius: 0 !important;
+    background: #171A21 !important;
+    box-sizing: border-box !important;
+    scrollbar-width: thin;
+    scrollbar-color: #2A475E transparent;
+  }
+
+  #view-home .home-jobs-rail .jobs-panel {
+    min-height: 100% !important;
+    height: 100% !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+}
+
+/* Mobile/tablet: replace the hidden sidebar with compact horizontal pills. */
+@media (max-width: 900px) {
+  #view-home #categoryStrip {
+    display: flex !important;
+    grid-column: 1 / -1 !important;
+    grid-row: 1 !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    flex-wrap: nowrap !important;
+    gap: 8px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 0 10px !important;
+    padding: 6px 2px 10px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    border: 0 !important;
+    background: transparent !important;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  #view-home #categoryStrip::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  #view-home #categoryStrip .dk .ico {
+    display: none !important;
+  }
+
+  #view-home #categoryStrip .dk {
+    display: inline-flex !important;
+    flex: 0 0 auto !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: auto !important;
+    min-width: max-content !important;
+    min-height: 34px !important;
+    padding: 7px 14px !important;
+    border: 1px solid #2A475E !important;
+    border-radius: 999px !important;
+    background: #16202D !important;
+    color: #C7D5E0 !important;
+    box-shadow: none !important;
+    white-space: nowrap !important;
+    font-size: 11px !important;
+  }
+
+  #view-home #categoryStrip .dk.active,
+  #view-home #categoryStrip .dk[aria-pressed="true"] {
+    border-color: #66C0F4 !important;
+    background: #203D55 !important;
+    color: #66C0F4 !important;
+  }
+}
+
+/* Compact admin configuration layout on desktop. */
+@media (min-width: 1024px) {
+  #view-admin > .shell {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    align-items: start !important;
+    gap: 16px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 20px 24px !important;
+    box-sizing: border-box !important;
+  }
+
+  #view-admin > .shell > * {
+    min-width: 0 !important;
+    margin-bottom: 0 !important;
+  }
+
+  #view-admin > .shell > div:first-child,
+  #view-admin > .shell > #adminSupplierProductsPanel,
+  #view-admin > .shell > div:has(#adminPendingCount) {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+  }
+}
+
+/* Native mobile app spacing without changing any product-card styles. */
+@media (max-width: 699px) {
+  #view-home {
+    padding: 8px 10px 76px !important;
+    box-sizing: border-box !important;
+  }
+
+  #view-home > .home-layout-shell.amazon-store-body.shell {
+    padding: 0 !important;
+  }
+
+  #view-home #productGrid:not(.hidden),
+  #view-home #skeletonGrid:not(.hidden) {
+    gap: 8px !important;
+  }
+}
