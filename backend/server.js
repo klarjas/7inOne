@@ -3889,6 +3889,11 @@ async function runCcComputerAutoSync() {
           if (newSellingPrice !== null && Number(row.variant.price) !== newSellingPrice) changes.push({ field_name: 'price', old_value: row.variant.price, new_value: newSellingPrice });
           if (Number(row.variant.stock) !== newStock) changes.push({ field_name: 'stock', old_value: row.variant.stock, new_value: newStock });
           for (const change of changes) {
+            const { data: pendingReview, error: pendingReviewError } = await supabase.from('supplier_update_reviews')
+              .select('id').eq('status', 'pending').eq('variant_id', row.variant.id)
+              .eq('field_name', change.field_name).limit(1);
+            if (pendingReviewError) { results.errors.push({ code, review_lookup_error: pendingReviewError.message }); continue; }
+            if (pendingReview?.length) continue;
             const { error } = await supabase.from('supplier_update_reviews').insert({
               supplier_name: 'CC COMPUTER', product_id: row.product.id, variant_id: row.variant.id,
               supplier_product_code: code, supplier_url: config.source_url,
