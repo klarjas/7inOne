@@ -8831,3 +8831,13 @@ body>footer{background:#16202D!important;color:#C7D5E0!important;border-color:#2
     gap: 10px !important;
   }
 }
+
+/* Final desktop override: outrank the older six-column auto-fill rule. */
+@media (min-width: 1200px) {
+  #view-home .home-main-content #productGrid:not(.hidden),
+  #view-home .home-main-content #skeletonGrid:not(.hidden) {
+    display: grid !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    gap: 14px !important;
+  }
+}
