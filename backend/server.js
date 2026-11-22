@@ -3731,7 +3731,7 @@ const CC_BRAND_MATCHERS = {
 };
 function ccBrandMatches(product, brandKey) {
   const matcher = CC_BRAND_MATCHERS[String(brandKey || '').toLowerCase()];
-  return Boolean(matcher && matcher.test(String(product?.title || '') + ' ' + String(product?.description || '')));
+  return Boolean(matcher && matcher.test(String(product?.title || '')));
 }
 function ccIdentityCheck(scanned, localProduct, localDetails, variant) {
   const scannedModel = supplierModelKey(scanned);
