@@ -4079,7 +4079,7 @@ async function getAuroraSupplierImportIndex(vendorId) {
   };
 }
 
-function supplierCrawlUrl(raw, baseUrl) {
+function supplierCrawlUrl(raw, baseUrl, { preserveHash = false } = {}) {
   try {
     const url = new URL(decodeSupplierHtml(raw || ''), baseUrl);
     if (url.protocol !== 'https:' || !['cccomputerkh.com','www.cccomputerkh.com'].includes(url.hostname.toLowerCase())) return null;
@@ -4087,7 +4087,7 @@ function supplierCrawlUrl(raw, baseUrl) {
     if (/\/(?:cart|checkout|my-account|account|login|register|wishlist|compare|wp-admin|wp-json)(?:\/|$)/i.test(url.pathname)) return null;
     for (const key of [...url.searchParams.keys()]) if (/^(?:utm_.+|fbclid|gclid|session|sid|add-to-cart|remove_item|coupon)$/i.test(key)) url.searchParams.delete(key);
     if ([...url.searchParams.keys()].length > 5) return null;
-    url.hash = '';
+    if (!preserveHash) url.hash = '';
     url.hostname = url.hostname.toLowerCase();
     url.pathname = url.pathname.replace(/\/{2,}/g, '/');
     if (url.pathname.length > 1) url.pathname = url.pathname.replace(/\/$/, '');
@@ -4163,19 +4163,10 @@ async function runCcComputerAutoSync() {
     const { data: configuredScanSources, error: sourceConfigError } = await supabase.from('supplier_scan_sources')
       .select('*').eq('supplier_name', 'CC COMPUTER').eq('is_active', true).order('brand_key');
     if (sourceConfigError) throw sourceConfigError;
-    const placeholderAnchors = new Set(['#msi', '#dell', '#lenovo']);
-    const scanSources = (configuredScanSources || []).filter(config => {
-      try {
-        const url = new URL(config.source_url);
-        const host = url.hostname.toLowerCase().replace(/^www\./, '');
-        const isKnownExampleAnchor = host === 'cccomputerkh.com'
-          && /\/index\.html?$/i.test(url.pathname)
-          && placeholderAnchors.has(url.hash.toLowerCase());
-        return !isKnownExampleAnchor;
-      } catch {
-        return false;
-      }
-    });
+    // Active Admin-configured URLs are valid scan entry points, including
+    // brand-section anchors such as /index.html#msi. Never silently discard
+    // a configured source because of its path or fragment.
+    const scanSources = configuredScanSources || [];
     if (!scanSources.length) {
       return {
         skipped: true,
@@ -4220,7 +4211,7 @@ async function runCcComputerAutoSync() {
     const results = { scanned: 0, updated: 0, review: 0, missing: 0, archived: 0, errors: [] };
     for (const config of scanSources) {
       const parsed = new URL(config.source_url);
-      const canonicalUrl = parsed.origin + parsed.pathname + parsed.search;
+      const canonicalUrl = parsed.href;
       let catalog = catalogCache.get(canonicalUrl);
       if (!catalog) {
         try {
@@ -4429,7 +4420,10 @@ async function loadCcSupplierCatalog(url) {
   try { parsed = new URL(url); } catch { throw new Error('Invalid supplier URL.'); }
   if (parsed.protocol !== 'https:' || !['cccomputerkh.com','www.cccomputerkh.com'].includes(parsed.hostname.toLowerCase())) throw new Error('Only the verified CC COMPUTER website is allowed.');
   parsed.hash = '';
-  const startUrl = supplierCrawlUrl(parsed.href, parsed.href);
+  // Preserve the Admin-provided fragment on the seed URL. The fetch request
+  // still reads the page document; the fragment remains part of the source
+  // context and is not treated as a reason to block or replace the URL.
+  const startUrl = supplierCrawlUrl(parsed.href, parsed.href, { preserveHash: true });
   if (!startUrl) throw new Error('The supplied URL is not a valid CC COMPUTER page.');
   const pending = [startUrl];
   const queued = new Set(pending);
