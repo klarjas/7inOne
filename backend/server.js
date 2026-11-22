@@ -3882,7 +3882,7 @@ app.post('/api/admin/supplier-import/import', authenticate, requireAdmin, async 
       if (!allPrices.length) return fail(res, 409, 'No valid variant price was found.');
       const { data: created, error: createError } = await supabase.from('products').insert({
         vendor_id: vendor.id, title: group.title, description: group.description,
-        category: group.category || 'computers', price: Math.min(...allPrices),
+        category: group.category || 'other', price: Math.min(...allPrices),
         stock: group.variants.some(item => item.availability !== 'out_of_stock') ? 1 : 0,
         location: 'Cambodia', condition: 'ថ្មី', status: 'active', renewed_at: new Date().toISOString()
       }).select().single();
@@ -3895,8 +3895,8 @@ app.post('/api/admin/supplier-import/import', authenticate, requireAdmin, async 
       if (ramValues.size > 1) delete commonSpecs.ram_type_capacity;
       if (storageValues.size > 1) delete commonSpecs.storage_type_capacity;
       const { error: detailsError } = await supabase.from('product_listing_details').upsert({
-        product_id: targetProductId, category: group.category || 'computers', subcategory: group.subcategory || 'other',
-        detail_type: group.detail_type || 'Computer', specifications: commonSpecs, updated_at: new Date().toISOString()
+        product_id: targetProductId, category: group.category || 'other', subcategory: group.subcategory || 'other',
+        detail_type: group.detail_type || 'Other', specifications: commonSpecs, updated_at: new Date().toISOString()
       }, { onConflict: 'product_id' });
       if (detailsError) throw detailsError;
     }
@@ -3907,8 +3907,8 @@ app.post('/api/admin/supplier-import/import', authenticate, requireAdmin, async 
       if (ramValues.size > 1) delete commonSpecs.ram_type_capacity;
       if (storageValues.size > 1) delete commonSpecs.storage_type_capacity;
       const { error: detailsError } = await supabase.from('product_listing_details').upsert({
-        product_id: targetProductId, category: group.category || 'computers', subcategory: group.subcategory || 'other',
-        detail_type: group.detail_type || 'Computer', specifications: commonSpecs, updated_at: new Date().toISOString()
+        product_id: targetProductId, category: group.category || 'other', subcategory: group.subcategory || 'other',
+        detail_type: group.detail_type || 'Other', specifications: commonSpecs, updated_at: new Date().toISOString()
       }, { onConflict: 'product_id' });
       if (detailsError) throw detailsError;
     }
