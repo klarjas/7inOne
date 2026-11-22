@@ -1078,8 +1078,8 @@ function productCard(p, index) {
   const vendorName = p.vendors?.store_name || 'ហាងអ្នកលក់';
   const vendorLogo = p.vendors?.store_logo_url || '';
   const verified = p.vendors?.status === 'approved';
-  const description = productCardShortCaption(p);
   const cardSpecs = productCardSpecs(p);
+  const description = productCardShortCaption(p) || cardSpecs.map(([label, value]) => `${label}: ${value}`).join('\n');
   const cardPrice = p.display_price ?? p.price;
 
   const location = p.location || 'ភ្នំពេញ';
@@ -1097,7 +1097,7 @@ function productCard(p, index) {
     <div class="cb">
       <h3 class="cursor-pointer hover:text-emerald-800" data-action="view" data-id="${esc(p.id)}">${esc(p.title)}</h3>
       <p class="pr"><span>${money(cardPrice)}</span></p>
-      ${cardSpecs.length ? `<div class="cd-key-specs">${cardSpecs.map(([label,value]) => `<span><b>${label}:</b> ${esc(value)}</span>`).join('')}</div>` : (description ? `<p class="cd-description">${esc(description)}</p>` : '')}
+      ${description ? `<p class="cd-description">${esc(description)}</p>` : ''}
       <div class="sh">
         <span class="sp" role="img" aria-label="រូប Logo ហាង">
           <span class="sp-fallback">${ic('user', 15)}</span>
