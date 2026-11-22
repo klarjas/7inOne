@@ -3455,7 +3455,7 @@ function renderSupplierImportResults(result, catalogUrl) {
       const statusClasses = {ready:'text-emerald-700',update_existing:'text-blue-700',duplicate:'text-amber-700',needs_review:'text-rose-700'};
       const variants = item.variants || [item];
       const specs = item.specifications || {};
-      const attrs = [item.category || 'computers', item.detail_type || item.subcategory || '', specs.cpu_model ? 'CPU: '+specs.cpu_model : '', specs.gpu_model_vram ? 'GPU: '+specs.gpu_model_vram : '', specs.color ? 'ពណ៌: '+specs.color : '', specs.weight ? 'ទម្ងន់: '+specs.weight : '', specs.battery ? 'ថ្ម: '+specs.battery : ''].filter(Boolean).join(' · ');
+      const attrs = ['Category: '+(item.category || 'other'), item.subcategory ? 'Subcategory: '+item.subcategory : '', item.detail_type ? 'ប្រភេទលម្អិត: '+item.detail_type : '', specs.cpu_model ? 'CPU: '+specs.cpu_model : '', specs.gpu_model_vram ? 'GPU: '+specs.gpu_model_vram : '', specs.color ? 'ពណ៌: '+specs.color : '', specs.weight ? 'ទម្ងន់: '+specs.weight : '', specs.battery ? 'ថ្ម: '+specs.battery : ''].filter(Boolean).join(' · ');
       const importVariant = variants.find(variant => !variant.already_imported) || variants[0];
       const uniqueVariantCount = variants.filter(variant => !variant.duplicate_configuration).length;
       const variantRows = variants.map(variant => {
