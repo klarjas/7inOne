@@ -590,7 +590,7 @@ const dashboardCatalog: Record<string, [string, string, string]> = {
     "តើអ្នកពិតជាចង់លុបជម្រើសនេះមែនទេ?",
     "确定删除此规格吗？",
     "Are you sure you want to delete this variant?"
-  ]
+  ],
   "Request failed": ["សំណើបានបរាជ័យ","请求失败","Request failed"],
   "Could not load dashboard": ["មិនអាចផ្ទុកផ្ទាំងគ្រប់គ្រងបានទេ","无法加载管理面板","Could not load dashboard"],
   "Application failed": ["ពាក្យស្នើសុំបានបរាជ័យ","申请失败","Application failed"],
@@ -623,6 +623,12 @@ const dashboardCatalog: Record<string, [string, string, string]> = {
   "My products": ["ផលិតផលរបស់ខ្ញុំ","我的商品","My products"],
   "Add product as Admin": ["បន្ថែមផលិតផលក្នុងនាម Admin","以管理员身份添加商品","Add product as Admin"],
   "Add a product": ["បន្ថែមផលិតផល","添加商品","Add a product"],
+  "បានដាក់ពាក្យបើកហាងរួចរាល់។ រង់ចាំ Admin អនុម័ត។": ["已提交开店申请。请等待管理员审核。","Shop application submitted. Waiting for Admin approval."],
+  "ផលិតផលបានបង្កើត។ វានឹងបង្ហាញក្រោយ Admin អនុម័ត។": ["商品已创建。管理员批准后将会显示。","Product created. It will appear after Admin approval."],
+  "បានរក្សាទុកការផ្លាស់ប្ដូរ។": ["更改已保存。","Changes saved."],
+  "បានរក្សាទុក Supplier និងតម្លៃលក់។": ["供应商信息和售价已保存。","Supplier details and retail price saved."],
+  "បានបន្ថែម Storage Variant។": ["存储规格已添加。","Storage variant added."],
+  "Supplier name, source link, product code និងតម្លៃដើម បង្ហាញតែ Admin ប៉ុណ្ណោះ។ មិនបង្ហាញដល់អតិថិជនទេ។": ["供应商名称、来源链接、商品代码和成本仅管理员可见，不会向客户显示。","Supplier name, source link, product code, and cost are visible to Admin only, not customers."],
 };
 export function dashboardText(locale: SiteLocale, source: string): string {
   const entry = dashboardCatalog[source];

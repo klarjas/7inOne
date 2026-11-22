@@ -98,7 +98,7 @@ export default function DashboardPage() {
 
   async function applyVendor(e: FormEvent) {
     e.preventDefault(); setBusy(true); setMessage('');
-    try { await api('/api/vendors/register', { method:'POST', body: JSON.stringify({ store_name:storeName, description:storeDescription }) }); setMessage('បានដាក់ពាក្យបើកហាងរួចរាល់។ រង់ចាំ Admin អនុម័ត។'); await refresh(); }
+    try { await api('/api/vendors/register', { method:'POST', body: JSON.stringify({ store_name:storeName, description:storeDescription }) }); setMessage(tx('បានដាក់ពាក្យបើកហាងរួចរាល់។ រង់ចាំ Admin អនុម័ត។')); await refresh(); }
     catch (error) { setMessage(error instanceof Error ? error.message : tx('Application failed')); }
     finally { setBusy(false); }
   }
@@ -114,7 +114,7 @@ export default function DashboardPage() {
       setSelectedImages([]);
       const fileInput = document.getElementById('product-images') as HTMLInputElement | null;
       if (fileInput) fileInput.value = '';
-      setMessage(role === 'admin' ? 'Admin product created successfully.' : 'ផលិតផលបានបង្កើត។ វានឹងបង្ហាញក្រោយ Admin អនុម័ត។'); await refresh();
+      setMessage(role === 'admin' ? 'Admin product created successfully.' : tx('ផលិតផលបានបង្កើត។ វានឹងបង្ហាញក្រោយ Admin អនុម័ត។')); await refresh();
     } catch (error) { setMessage(error instanceof Error ? error.message : tx('Could not create product')); }
     finally { setBusy(false); }
   }
@@ -124,7 +124,7 @@ export default function DashboardPage() {
   }
   async function update(path: string, body: AnyRow) {
     setBusy(true); setMessage('');
-    try { await api(path, { method:'PATCH', body:JSON.stringify(body) }); setMessage('បានរក្សាទុកការផ្លាស់ប្ដូរ។'); await refresh(); }
+    try { await api(path, { method:'PATCH', body:JSON.stringify(body) }); setMessage(tx('បានរក្សាទុកការផ្លាស់ប្ដូរ។')); await refresh(); }
     catch (error) { setMessage(error instanceof Error ? error.message : tx('Update failed')); }
     finally { setBusy(false); }
   }
@@ -150,7 +150,7 @@ export default function DashboardPage() {
     const supplier_url=prompt(tx("Supplier source URL"),source.supplier_url||'');if(supplier_url===null)return;
     const retail=prompt(tx("Retail price (USD)"),String(row.price??''));if(retail===null)return;
     setBusy(true);setMessage('');
-    try{await api('/api/admin/supplier-products/'+row.id+'/source',{method:'PUT',body:JSON.stringify({supplier_name,supplier_price:Number(supplier_price),supplier_product_code,supplier_url,notes:source.notes||''})});await api('/api/products/'+row.id,{method:'PATCH',body:JSON.stringify({price:Number(retail)})});setMessage('បានរក្សាទុក Supplier និងតម្លៃលក់។');await refresh();}
+    try{await api('/api/admin/supplier-products/'+row.id+'/source',{method:'PUT',body:JSON.stringify({supplier_name,supplier_price:Number(supplier_price),supplier_product_code,supplier_url,notes:source.notes||''})});await api('/api/products/'+row.id,{method:'PATCH',body:JSON.stringify({price:Number(retail)})});setMessage(tx('បានរក្សាទុក Supplier និងតម្លៃលក់។'));await refresh();}
     catch(error){setMessage(error instanceof Error?error.message:tx('Could not save supplier product'));}finally{setBusy(false);}
   }
   async function addStorageVariant(row:AnyRow){
@@ -159,7 +159,7 @@ export default function DashboardPage() {
     const sku=prompt(tx("SKU (optional)"),'')||'';
     const price=prompt(tx("Retail price (USD)"),'');if(price===null)return;
     const stock=prompt(tx("Stock quantity"),'0');if(stock===null)return;
-    setBusy(true);try{await api('/api/admin/supplier-products/'+row.id+'/variants',{method:'POST',body:JSON.stringify({option_name,option_value,sku,price:Number(price),stock:Number(stock),attributes:{}})});setMessage('បានបន្ថែម Storage Variant។');await refresh();}
+    setBusy(true);try{await api('/api/admin/supplier-products/'+row.id+'/variants',{method:'POST',body:JSON.stringify({option_name,option_value,sku,price:Number(price),stock:Number(stock),attributes:{}})});setMessage(tx('បានបន្ថែម Storage Variant។'));await refresh();}
     catch(error){setMessage(error instanceof Error?error.message:tx('Could not add variant'));}finally{setBusy(false);}
   }
   async function changeVariant(row:AnyRow,variant:AnyRow,patch:AnyRow){
@@ -214,7 +214,7 @@ export default function DashboardPage() {
             <aside className="overflow-hidden rounded-2xl border bg-white"><div className="border-b p-4"><h3 className="font-extrabold">{tx("Product Library")}</h3><div className="relative mt-3"><Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"/><input value={supplierQuery} onChange={e=>setSupplierQuery(e.target.value)} placeholder={tx("Search product, supplier or code")} className="w-full rounded-xl border py-2.5 pl-9 pr-3 text-sm"/></div></div><div className="max-h-[680px] overflow-y-auto p-2">{filteredSupplierProducts.map(row=><button key={row.id} onClick={()=>setSupplierSelectedId(row.id)} className={'mb-1 flex w-full items-center gap-3 rounded-xl p-3 text-left '+(supplierSelectedId===row.id?'bg-violet-50 ring-1 ring-violet-200':'hover:bg-slate-50')}><div className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-lg bg-slate-100">{row.product_images?.[0]?.image_url?<img src={row.product_images[0].image_url} alt="" className="h-full w-full object-cover"/>:<Package size={18} className="text-slate-400"/>}</div><div className="min-w-0 flex-1"><p className="truncate text-sm font-bold">{row.title}</p><p className="truncate text-[11px] text-slate-500">{row.supplier_source?.supplier_name||tx('Supplier not set')} · {row.supplier_source?.supplier_product_code||tx('No code')}</p><p className="mt-1 text-xs font-bold"><span>$</span>{Number(row.price||0).toFixed(2)} · {row.status}</p></div><span className="text-slate-400">›</span></button>)}{!filteredSupplierProducts.length&&<p className="p-5 text-center text-sm text-slate-500">{tx("No matching products.")}</p>}</div></aside>
             <div className="min-w-0">{!selectedSupplierProduct?<div className="rounded-2xl border bg-white p-8 text-center text-sm text-slate-500">{tx("ជ្រើសរើសផលិតផលពី Product Library។")}</div>:<div className="overflow-hidden rounded-2xl border bg-white">
               <div className="flex flex-wrap items-center gap-3 border-b p-4"><div className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-xl bg-slate-100">{selectedSupplierProduct.product_images?.[0]?.image_url?<img src={selectedSupplierProduct.product_images[0].image_url} alt="" className="h-full w-full object-cover"/>:<Package size={20} className="text-slate-400"/>}</div><div className="min-w-0 flex-1"><h3 className="truncate font-black">{selectedSupplierProduct.title}</h3><p className="mt-1 text-xs text-slate-500">Shop: {selectedSupplierProduct.vendors?.store_name||'—'} · {selectedSupplierProduct.status}</p></div><span className="rounded-lg bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700">Retail: $ {Number(selectedSupplierProduct.price||0).toFixed(2)}</span></div>
-              <div className="space-y-4 p-4"><div className="rounded-xl border border-violet-100 bg-violet-50 p-3"><p className="text-sm font-extrabold text-violet-900">{tx("Admin-only Supplier Information")}</p><p className="mt-1 text-xs text-violet-800">Supplier name, source link, product code និងតម្លៃដើម បង្ហាញតែ Admin ប៉ុណ្ណោះ។ មិនបង្ហាញដល់អតិថិជនទេ។</p></div>
+              <div className="space-y-4 p-4"><div className="rounded-xl border border-violet-100 bg-violet-50 p-3"><p className="text-sm font-extrabold text-violet-900">{tx("Admin-only Supplier Information")}</p><p className="mt-1 text-xs text-violet-800">{tx("Supplier name, source link, product code និងតម្លៃដើម បង្ហាញតែ Admin ប៉ុណ្ណោះ។ មិនបង្ហាញដល់អតិថិជនទេ។")}</p></div>
                 <div className="grid gap-3 sm:grid-cols-2"><div className="rounded-xl border p-3"><p className="text-[11px] font-bold uppercase text-slate-500">{tx("Supplier")}</p><p className="mt-1 font-bold">{selectedSupplierProduct.supplier_source?.supplier_name||tx('Not set')}</p></div><div className="rounded-xl border p-3"><p className="text-[11px] font-bold uppercase text-slate-500">{tx("Supplier code")}</p><p className="mt-1 font-bold">{selectedSupplierProduct.supplier_source?.supplier_product_code||'—'}</p></div><div className="rounded-xl border p-3"><p className="text-[11px] font-bold uppercase text-slate-500">{tx("Supplier cost")}</p><p className="mt-1 font-bold"><span>$</span>{Number(selectedSupplierProduct.supplier_source?.supplier_price||0).toFixed(2)}</p></div><div className="rounded-xl border p-3"><p className="text-[11px] font-bold uppercase text-slate-500">{tx("Retail price")}</p><p className="mt-1 font-bold text-emerald-700"><span>$</span>{Number(selectedSupplierProduct.price||0).toFixed(2)}</p></div></div>
                 <div className="flex flex-wrap items-center gap-2"><button disabled={busy} onClick={()=>void editSupplierProduct(selectedSupplierProduct)} className="rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-bold text-white">{tx("Edit Supplier & Pricing")}</button>{selectedSupplierProduct.supplier_source?.supplier_url&&<a href={selectedSupplierProduct.supplier_source.supplier_url} target="_blank" rel="noreferrer" className="rounded-xl border px-4 py-2.5 text-sm font-semibold text-blue-700">{tx("Open source ↗")}</a>}</div>
                 <div className="border-t pt-4"><div className="mb-3 flex flex-wrap items-center justify-between gap-2"><div><h4 className="font-extrabold">{tx("Storage Variants")}</h4><p className="mt-1 text-xs text-slate-500">{tx("RAM, SSD, Storage, SKU, retail price និង stock")}</p></div><button disabled={busy} onClick={()=>void addStorageVariant(selectedSupplierProduct)} className="rounded-xl bg-violet-700 px-3 py-2 text-xs font-bold text-white">{tx("+ Add Variant")}</button></div>
