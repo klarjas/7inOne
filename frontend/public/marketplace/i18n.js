@@ -61,7 +61,7 @@
     const missing = Array.from(requiredKeys).filter((key) =>
       typeof catalog[key] !== 'string' || !catalog[key].trim()
     );
-    return { locale: normalized, ready: missing.length === 0, missing };
+    return { locale: normalized, ready: requiredKeys.size > 0 && Object.keys(catalog).length > 0 && missing.length === 0, missing };
   }
 
   function t(key, values) {
