@@ -2801,6 +2801,7 @@ function renderMarketplaceListingInProductDetail(item, options = {}) {
 }
 
 function renderProductDetail(options = {}) {
+  const root = $('productDetail');
   const p = state.currentProduct;
   const v = state.currentVendor;
   if (!p) return;
