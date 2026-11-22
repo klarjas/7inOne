@@ -3319,7 +3319,14 @@ app.patch('/api/admin/supplier-update-reviews/:id', authenticate, requireAdmin, 
   }
   const value = typeof review.new_value === 'number' ? review.new_value : Number(review.new_value);
   if (!Number.isFinite(value) || value < 0) return fail(res, 400, 'The proposed supplier value is invalid.');
+  if (Date.now() - new Date(review.created_at).getTime() > 48 * 60 * 60 * 1000) return fail(res, 409, 'This supplier review is older than 48 hours. Run a fresh scan before approving it.');
   if (review.variant_id) {
+    const currentField = review.field_name === 'price' ? 'price' : review.field_name === 'stock' ? 'stock' : '';
+    if (!currentField) return fail(res, 400, 'Unsupported supplier update field.');
+    const { data: currentVariant, error: currentVariantError } = await supabase.from('product_variants')
+      .select('id,price,stock').eq('id', review.variant_id).eq('product_id', review.product_id).maybeSingle();
+    if (currentVariantError || !currentVariant) return fail(res, 404, 'The linked product variant no longer exists.');
+    if (Number(currentVariant[currentField]) !== Number(review.old_value)) return fail(res, 409, 'The product value changed after this review was created. Run a fresh scan before approving.');
     const patch = review.field_name === 'price' ? { price: value } : review.field_name === 'stock' ? { stock: Math.floor(value) } : null;
     if (!patch || (review.field_name === 'stock' && !Number.isInteger(value))) return fail(res, 400, 'Unsupported supplier update field.');
     const { data: variant, error: variantError } = await supabase.from('product_variants')
@@ -3334,6 +3341,12 @@ app.patch('/api/admin/supplier-update-reviews/:id', authenticate, requireAdmin, 
       stock: active.some(item => Number(item.stock) > 0) ? 1 : 0,
       updated_at: now
     }).eq('id', review.product_id);
+    if (review.field_name === 'price' && Number.isFinite(Number(review.verification?.supplier_price))) {
+      await supabase.from('product_supplier_variant_sources').update({
+        supplier_price: Number(review.verification.supplier_price),
+        supplier_url: review.supplier_url, updated_at: now
+      }).eq('variant_id', review.variant_id);
+    }
   } else {
     const patch = review.field_name === 'price' ? { price: value } : review.field_name === 'stock' && Number.isInteger(value) ? { stock: value } : null;
     if (!patch) return fail(res, 400, 'Unsupported supplier update field.');
@@ -3820,6 +3833,15 @@ async function runCcComputerAutoSync() {
       const byCode = new Map(brandProducts.map(item => [String(item.supplier_product_code || '').trim().toUpperCase(), item]));
       const completeScan = !catalog.scan?.failed_pages && !catalog.scan?.page_limit_reached && !catalog.scan?.time_limit_reached;
       results.scanned += brandProducts.length;
+      if (!brandProducts.length) {
+        const noProductsAt = new Date().toISOString();
+        await supabase.from('supplier_scan_sources').update({
+          last_scan_at: noProductsAt, last_scan_status: 'no_products_detected',
+          last_scan_product_count: 0, last_scan_error: 'No products matched this brand. Missing-product timers were not changed.',
+          updated_at: noProductsAt
+        }).eq('id', config.id);
+        continue;
+      }
 
       let freshRecords = freshCache.get(canonicalUrl);
       if (!freshRecords) {
@@ -3879,9 +3901,10 @@ async function runCcComputerAutoSync() {
           exact_product_code: firstCodeExact,
           model_and_specs: identity,
           fresh_second_read: { exact_product_code: freshCodeExact, identity: freshIdentity, same_price_and_stock: sameSupplierSnapshot },
+          supplier_price: Number(first.supplier_price), supplier_availability: first.availability,
           checked_at: now
         };
-        const allPassed = firstCodeExact && identity.ok && freshCodeExact && freshIdentity.ok && sameSupplierSnapshot;
+        const allPassed = Boolean(first.verified && fresh?.verified && firstCodeExact && identity.ok && freshCodeExact && freshIdentity.ok && sameSupplierSnapshot);
         if (!allPassed) {
           const changes = [];
           const newSellingPrice = Number.isFinite(Number(first.supplier_price)) ? Math.round((Number(first.supplier_price) + 5) * 100) / 100 : null;
