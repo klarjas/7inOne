@@ -3331,10 +3331,10 @@ function galleryDecodeHtml(value) {
 }
 function galleryHtmlAttr(html, attr) {
   const key = String(attr).replace(/[^a-z0-9:-]/gi, '');
-  const re = new RegExp('<meta[^>]+(?:property|name)=["\\']' + key + '["\\'][^>]+content=["\\']([^"\\']+)["\\']', 'i');
+  const re = new RegExp("<meta[^>]+(?:property|name)=[\"']" + key + "[\"'][^>]+content=[\"']([^\"']+)[\"']", 'i');
   const first = html.match(re);
   if (first) return galleryDecodeHtml(first[1]);
-  const reversed = new RegExp('<meta[^>]+content=["\\']([^"\\']+)["\\'][^>]+(?:property|name)=["\\']' + key + '["\\']', 'i');
+  const reversed = new RegExp("<meta[^>]+content=[\"']([^\"']+)[\"'][^>]+(?:property|name)=[\"']" + key + "[\"']", 'i');
   return galleryDecodeHtml(html.match(reversed)?.[1] || '');
 }
 function galleryJsonLdImages(html) {
