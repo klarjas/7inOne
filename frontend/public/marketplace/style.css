@@ -8855,12 +8855,14 @@ body>footer{background:#16202D!important;color:#C7D5E0!important;border-color:#2
   transform:translate3d(0,10px,0) scale(.995);
   pointer-events:none;
 }
-#homeDetailInspector:not(.hidden) #productDetail .product-detail-page{
-  animation:inspectorFadeSlide 420ms cubic-bezier(.22,1,.36,1) both;
+#homeDetailInspector:not(.hidden) #productDetail{
+  opacity:1;
+  transition:opacity 180ms ease-out;
 }
-@keyframes inspectorFadeSlide{
-  from{opacity:0;transform:translate3d(0,12px,0)}
-  to{opacity:1;transform:translate3d(0,0,0)}
+#homeDetailInspector .product-hero-grid,
+#homeDetailInspector .product-detail-page,
+#homeDetailInspector .cd{
+  animation:none!important;
 }
 #homeDetailInspector .product-hero-grid,
 #homeDetailInspector .product-seller-card,
@@ -8971,3 +8973,19 @@ body>footer{background:#16202D!important;color:#C7D5E0!important;border-color:#2
     animation:none!important;transition:none!important;transform:none!important;
   }
 }
+
+/* Keep detail media geometry stable; hydration preserves the existing image node. */
+#homeDetailInspector .product-gallery-stage,
+#homeDetailInspector .product-listing-gallery .product-gallery-stage{
+  aspect-ratio:1 / 1!important;
+  background:#101822!important;
+  min-height:0;
+  overflow:hidden;
+}
+#homeDetailInspector .product-gallery-stage>img,
+#homeDetailInspector .product-listing-main-image{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+}
+img{content-visibility:auto}

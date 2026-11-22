@@ -780,6 +780,7 @@ const state = {
   currentProduct: null,
   currentVendor: null,
   detailRequestId: 0,
+  detailHydratedKey: null,
   currentVariantId: null,
   activeSpecFilters: {},
   activeSubcategory: 'all',
@@ -2223,6 +2224,7 @@ function closeHomeDetailInspector() {
   const detail = $('productDetail');
   const mount = $('productDetailPageMount');
   ++state.detailRequestId;
+  state.detailHydratedKey = null;
   $('steamDiscoveryHub')?.classList.remove('hidden');
   state.currentProduct = null;
   state.currentVendor = null;
@@ -2349,6 +2351,28 @@ function setPropertyType(type) {
   void loadProducts();
 }
 
+function renderProductDetailMarkup(root, markup, options = {}) {
+  if (!root) return;
+  const isHydration = options.isBackgroundHydration === true;
+  const previousImage = isHydration ? root.querySelector('#productMainImage, .product-listing-main-image') : null;
+  const previousSrc = previousImage?.getAttribute('src') || '';
+  const scrollContainer = root.closest('#homeDetailInspector') || root;
+  const previousScrollTop = isHydration ? scrollContainer.scrollTop : 0;
+  const template = document.createElement('template');
+  template.innerHTML = markup;
+  if (previousImage && previousSrc) {
+    const nextImage = template.content.querySelector('#productMainImage, .product-listing-main-image');
+    const nextSrc = nextImage?.getAttribute('src') || '';
+    let sameImage = nextSrc === previousSrc;
+    if (!sameImage && nextSrc) {
+      try { sameImage = new URL(nextSrc, document.baseURI).href === new URL(previousSrc, document.baseURI).href; } catch {}
+    }
+    if (nextImage && sameImage) nextImage.replaceWith(previousImage);
+  }
+  root.replaceChildren(template.content);
+  if (isHydration) scrollContainer.scrollTop = previousScrollTop;
+}
+
 function renderProductDetailSkeleton() {
   const root = $('productDetail');
   if (!root) return;
@@ -2403,16 +2427,25 @@ function renderProductDetailSkeleton() {
 async function openMarketplaceListing(type, id, options = {}) {
   if (!id || !['job', 'real_estate'].includes(type)) return false;
   const listingId = String(id);
+  const detailKey = type + ':' + listingId;
+  const inspector = $('homeDetailInspector');
+  const alreadyOpen = inspector && !inspector.classList.contains('hidden') &&
+    String(state.currentProduct?.id || '') === listingId &&
+    state.currentProduct?.listing_type === type && state.detailHydratedKey === detailKey;
+  if (alreadyOpen) return true;
+
   const requestId = ++state.detailRequestId;
-  const isCurrent = () => requestId === state.detailRequestId &&
-    (options.routeSyncNavigationId == null || options.routeSyncNavigationId === state.routeSyncNavigationId) &&
-    (!inlineInspector || String(state.currentProduct?.id || '') === listingId);
   const inlineInspector = options.inlineInspector === true || (
     !options.forceFullPage && options.routeSyncNavigationId == null && $('view-home')?.classList.contains('active')
   );
+  const isCurrent = () => requestId === state.detailRequestId &&
+    (options.routeSyncNavigationId == null || options.routeSyncNavigationId === state.routeSyncNavigationId) &&
+    String(state.currentProduct?.id || '') === listingId &&
+    state.currentProduct?.listing_type === type;
   const cachedItem = state.products.find(row => row.listing_type === type && String(row.id) === listingId)
     || state.jobs.find(row => row.listing_type === type && String(row.id) === listingId);
 
+  state.detailHydratedKey = null;
   state.currentMarketplaceListing = cachedItem ? { ...cachedItem, listing_type: type } : null;
   state.currentProduct = cachedItem ? { ...cachedItem, listing_type: type } : { id: listingId, listing_type: type };
   state.currentVendor = null;
@@ -2442,20 +2475,24 @@ async function openMarketplaceListing(type, id, options = {}) {
   }
 
   try {
-    // Keep the cached preview visible while refreshing the complete listing in the background.
     const result = await api('/api/marketplace/listings?limit=100&type=' + encodeURIComponent(type));
     if (!isCurrent()) return false;
     const freshItem = (result.data || []).find(row => String(row.id) === listingId);
     if (!freshItem && !cachedItem) throw new Error('មិនមានព័ត៌មានប្រកាសនេះទេ។');
-    const item = { ...(freshItem || cachedItem), listing_type: type };
+    const current = state.currentProduct || cachedItem || {};
+    const fresh = freshItem || cachedItem || {};
+    const merged = { ...current, ...fresh, listing_type: type };
+    const oldImages = Array.isArray(current.image_urls) ? current.image_urls : (current.image_url ? [current.image_url] : []);
+    const newImages = Array.isArray(fresh.image_urls) ? fresh.image_urls : (fresh.image_url ? [fresh.image_url] : []);
+    if (oldImages.length && oldImages.length === newImages.length && oldImages.every((url, index) => url === newImages[index])) {
+      merged.image_urls = current.image_urls;
+      merged.image_url = current.image_url || fresh.image_url;
+    }
     if (!isCurrent()) return false;
-
-    state.currentMarketplaceListing = item;
-    state.currentProduct = item;
-    state.currentVendor = null;
-    state.productGalleryIndex = 0;
-    state.productGalleryVideoActive = false;
-    renderProductDetail();
+    state.currentMarketplaceListing = merged;
+    state.currentProduct = merged;
+    state.detailHydratedKey = detailKey;
+    renderProductDetail({ isBackgroundHydration: true });
     return true;
   } catch (error) {
     if (!isCurrent()) return false;
@@ -2465,7 +2502,6 @@ async function openMarketplaceListing(type, id, options = {}) {
       else void showView('home');
       return false;
     }
-    // A cached listing is already usable; retain it if the background refresh fails.
     return true;
   }
 }
@@ -2473,16 +2509,24 @@ async function openMarketplaceListing(type, id, options = {}) {
 async function openProduct(id, options = {}) {
   if (!id) { toast('មិនមានលេខសម្គាល់ទំនិញទេ។', 'warning'); return false; }
   const productId = String(id);
-  const requestId = ++state.detailRequestId;
-  const isCurrent = () => requestId === state.detailRequestId &&
-    (options.routeSyncNavigationId == null || options.routeSyncNavigationId === state.routeSyncNavigationId) &&
-    (!inlineInspector || String(state.currentProduct?.id || '') === productId);
+  const detailKey = 'product:' + productId;
+  const inspector = $('homeDetailInspector');
+  const alreadyOpen = inspector && !inspector.classList.contains('hidden') &&
+    String(state.currentProduct?.id || '') === productId &&
+    state.currentProduct?.listing_type === 'product' && state.detailHydratedKey === detailKey;
+  if (alreadyOpen) return true;
 
+  const requestId = ++state.detailRequestId;
   const inlineInspector = options.inlineInspector === true || (
     !options.forceFullPage && options.routeSyncNavigationId == null && $('view-home')?.classList.contains('active')
   );
+  const isCurrent = () => requestId === state.detailRequestId &&
+    (options.routeSyncNavigationId == null || options.routeSyncNavigationId === state.routeSyncNavigationId) &&
+    String(state.currentProduct?.id || '') === productId &&
+    state.currentProduct?.listing_type === 'product';
   const cachedItem = state.products.find(row => row.listing_type === 'product' && String(row.id) === productId) || null;
 
+  state.detailHydratedKey = null;
   state.currentProduct = cachedItem ? { ...cachedItem } : { id: productId, listing_type: 'product' };
   state.currentVendor = cachedItem
     ? { ...(cachedItem.vendors || {}), id: cachedItem.vendors?.id || cachedItem.vendor_id, reviews: cachedItem.vendors?.reviews || [] }
@@ -2522,27 +2566,41 @@ async function openProduct(id, options = {}) {
     const results = await Promise.all(detailRequests);
     if (!isCurrent()) return false;
 
-    const product = results[0]?.data;
-    if (!product) throw new Error('មិនមានព័ត៌មានទំនិញនេះទេ។');
-    product.poster = cachedItem?.poster || product.poster || null;
+    const fetched = results[0]?.data;
+    if (!fetched) throw new Error('មិនមានព័ត៌មានទំនិញនេះទេ។');
+    fetched.poster = cachedItem?.poster || fetched.poster || null;
 
     let trust = results[2];
-    if (!trust && product.vendor_id) {
-      trust = await api('/api/vendors/' + encodeURIComponent(product.vendor_id) + '/ratings');
+    const fetchedVendorId = fetched.vendor_id || fetched.vendors?.id || vendorId;
+    if (!trust && fetchedVendorId) {
+      trust = await api('/api/vendors/' + encodeURIComponent(fetchedVendorId) + '/ratings');
       if (!isCurrent()) return false;
     }
 
     if (!isCurrent()) return false;
-    state.currentProduct = product;
-    state.currentVendor = trust?.data || {
-      ...(product.vendors || cachedItem?.vendors || {}),
-      id: product.vendor_id || cachedItem?.vendor_id || product.vendors?.id,
-      reviews: (product.vendors || cachedItem?.vendors)?.reviews || []
+    const current = state.currentProduct || cachedItem || {};
+    const merged = { ...current, ...fetched, listing_type: 'product' };
+    const oldImages = Array.isArray(current.product_images) ? current.product_images : [];
+    const newImages = Array.isArray(fetched.product_images) ? fetched.product_images : [];
+    const imageUrls = rows => rows.map(row => typeof row === 'string' ? row : row?.image_url || '').filter(Boolean);
+    const oldUrls = imageUrls(oldImages);
+    const newUrls = imageUrls(newImages);
+    if (oldUrls.length && oldUrls.length === newUrls.length && oldUrls.every((url, index) => url === newUrls[index])) {
+      merged.product_images = current.product_images;
+    }
+    const currentVendor = state.currentVendor || cachedItem?.vendors || {};
+    const fetchedVendor = fetched.vendors || {};
+    state.currentProduct = merged;
+    state.currentVendor = {
+      ...currentVendor,
+      ...fetchedVendor,
+      ...(trust?.data || {}),
+      id: fetchedVendorId || currentVendor.id,
+      reviews: trust?.data?.reviews || fetchedVendor.reviews || currentVendor.reviews || []
     };
-    state.currentVariantId = product.variants?.[0]?.id || state.currentVariantId || null;
-    state.productGalleryIndex = 0;
-    state.productGalleryVideoActive = false;
-    renderProductDetail();
+    state.currentVariantId = state.currentVariantId || fetched.variants?.[0]?.id || null;
+    state.detailHydratedKey = detailKey;
+    renderProductDetail({ isBackgroundHydration: true });
     return true;
   } catch (error) {
     if (!isCurrent()) return false;
@@ -2552,7 +2610,6 @@ async function openProduct(id, options = {}) {
       else void showView('home');
       return false;
     }
-    // Keep the instant cached detail visible if the background refresh fails.
     return true;
   }
 }
@@ -2645,7 +2702,7 @@ function detailBottomActions(item) {
   return `<div class="detail-bottom-actions"><button type="button" data-detail-action="save">${ic('bookmark',16)} <span>រក្សាទុក</span></button><button type="button" data-detail-action="report">${ic('flag',16)} <span>រាយការណ៍</span></button><button type="button" data-detail-action="share">${ic('share',16)} <span>ចែករំលែក</span></button></div>`;
 }
 
-function renderMarketplaceListingInProductDetail(item) {
+function renderMarketplaceListingInProductDetail(item, options = {}) {
   const root = $('productDetail');
   if (!root) return;
   const type = item.listing_type;
@@ -2680,7 +2737,7 @@ function renderMarketplaceListingInProductDetail(item) {
   const imageHtml = gallery.length
     ? `<div class="product-gallery-stage"><img class="product-listing-main-image" src="${esc(gallery[0])}" alt="${esc(item.title)}"></div>${gallery.length > 1 ? `<div class="product-gallery-thumbs">${gallery.map((url,index)=>`<button type="button" class="product-gallery-thumb ${index===0?'active':''}" data-shared-listing-image="${index}"><img src="${esc(url)}" alt="រូបភាព ${index+1}" loading="lazy"></button>`).join('')}</div>` : ''}`
     : `<div class="product-gallery-stage">${ic('image',48)}</div>`;
-  root.innerHTML = `
+  renderProductDetailMarkup(root, `
     <div class="product-detail-page">
       <section class="product-hero-grid">
         <div class="product-detail-gallery">${imageHtml}${listingVideoButton(item)}</div>
@@ -2709,7 +2766,7 @@ function renderMarketplaceListingInProductDetail(item) {
           <p class="product-meta-item">${esc(item.contact_phone || item.phone || '')}</p>
         </div>
       </section>
-    </div>`;
+    </div>`, options);
   bindListingDetailActions(root, item);
   root.querySelector('[data-listing-chat]')?.addEventListener('click', () => { void startListingPosterChat(item); });
   root.querySelectorAll('[data-shared-listing-image]').forEach(button => button.addEventListener('click', () => {
@@ -2721,12 +2778,12 @@ function renderMarketplaceListingInProductDetail(item) {
   }));
 }
 
-function renderProductDetail() {
+function renderProductDetail(options = {}) {
   const p = state.currentProduct;
   const v = state.currentVendor;
   if (!p) return;
   if (p.listing_type === 'job' || p.listing_type === 'real_estate') {
-    renderMarketplaceListingInProductDetail(p);
+    renderMarketplaceListingInProductDetail(p, options);
     return;
   }
   if (!v) return;
@@ -2777,7 +2834,7 @@ function renderProductDetail() {
         </form>`
       : `<div class="product-review-gate"><p>${reviewedOrderIds.size ? 'អ្នកបានវាយតម្លៃការបញ្ជាទិញដែលមានរួចហើយ។' : 'អាចវាយតម្លៃបានក្រោយពេលការបញ្ជាទិញពីហាងនេះត្រូវបានបញ្ចប់។'}</p></div>`;
 
-  $('productDetail').innerHTML = `
+  renderProductDetailMarkup($('productDetail'), `
   <div class="product-detail-page">
     <section class="product-hero-grid">
       <div class="product-detail-gallery">${galleryHtml}</div>
@@ -2878,7 +2935,7 @@ function renderProductDetail() {
       <button type="button" data-product-action="offer">${ic('tag', 16)}<span>តថ្លៃ</span></button>
       <button type="button" class="brand-gradient" data-product-action="buy">${ic('bag', 16)}<span>ទិញឥឡូវនេះ</span></button>
     </div>
-  </div>`;
+  </div>`, options);
 
   $('productDetail').querySelectorAll('[data-product-variant]').forEach(button => button.addEventListener('click', () => {
     const variant = (p.variants || []).find(item => String(item.id) === String(button.dataset.productVariant));
