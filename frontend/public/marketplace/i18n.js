@@ -71,7 +71,7 @@
       throw new Error('Missing translation "' + key + '" for locale "' + currentLocale + '".');
     }
     if (!values || typeof values !== 'object') return template;
-    return template.replace(/\{([a-zA-Z0-9_]+)\\}/g, (match, name) =>
+    return template.replace(/\{([a-zA-Z0-9_]+)\}/g, (match, name) =>
       Object.prototype.hasOwnProperty.call(values, name) ? String(values[name]) : match
     );
   }
