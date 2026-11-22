@@ -78,6 +78,82 @@ const CATEGORIES = {
 const DEFAULT_MAINTENANCE_MSG = 'ប្រព័ន្ធកំពុងធ្វើការអភិវឌ្ឍន៍ និងបន្ថែមមុខងារថ្មីៗ សូមអធ្យាស្រ័យចំពោះការរំខាន!';
 const PRODUCT_DESC_SEPARATOR = '\n<!--7INONE:MORE-->\n';
 
+
+const MARKETPLACE_UI_MESSAGES = Object.freeze({
+  "មុខងារនេះសម្រាប់ Admin ប៉ុណ្ណោះ។": { 'zh-CN': "此功能仅限管理员使用。", en: "This feature is for Admins only." },
+  "មិនអាចចម្លង Product ID បានទេ។": { 'zh-CN': "无法复制商品 ID。", en: "Could not copy Product ID." },
+  "សូមជ្រើសរើសរូបភាព Story។": { 'zh-CN': "请选择动态图片。", en: "Please select a Story image." },
+  "សូមប្រើរូប JPG, PNG ឬ WEBP ដែលមានទំហំមិនលើស 8MB។": { 'zh-CN': "请使用不超过 8MB 的 JPG、PNG 或 WEBP 图片。", en: "Use a JPG, PNG, or WEBP image no larger than 8MB." },
+  "បានផុស Story ជោគជ័យ! Story នឹងបាត់ក្រោយ 24 ម៉ោង។": { 'zh-CN': "动态发布成功！动态将在 24 小时后消失。", en: "Story posted successfully! It will disappear after 24 hours." },
+  "សូមជ្រើសរើសរូបភាពជាមុនសិន។": { 'zh-CN': "请先选择图片。", en: "Please select an image first." },
+  "បានផុសរូបភាពជោគជ័យ!": { 'zh-CN': "图片发布成功！", en: "Image posted successfully!" },
+  "មិនមានលេខសម្គាល់ទំនិញទេ។": { 'zh-CN': "缺少商品 ID。", en: "Product ID is missing." },
+  "Google Maps Link មិនត្រឹមត្រូវ។": { 'zh-CN': "Google Maps 链接无效。", en: "The Google Maps link is invalid." },
+  "បានចម្លង Link រួចរាល់!": { 'zh-CN': "链接已复制！", en: "Link copied!" },
+  "មិនអាចចម្លង Link បានទេ។": { 'zh-CN': "无法复制链接。", en: "Could not copy the link." },
+  "បានរក្សាទុកប្រកាស!": { 'zh-CN': "帖子已保存！", en: "Post saved!" },
+  "បានផ្ញើរបាយការណ៍ទៅ Admin រួចរាល់។": { 'zh-CN': "举报已发送给管理员。", en: "Report sent to Admin." },
+  "បានផ្ញើការវាយតម្លៃរួចរាល់។": { 'zh-CN': "评价已提交。", en: "Review submitted." },
+  "មិនមានព័ត៌មានហាងនេះទេ។": { 'zh-CN': "未找到该店铺信息。", en: "Shop information is unavailable." },
+  "រកមិនឃើញផលិតផលនេះទេ។": { 'zh-CN': "未找到该商品。", en: "Product not found." },
+  "រូបភាពសរុបមិនអាចលើស ១០ រូបទេ។": { 'zh-CN': "图片总数不能超过 10 张。", en: "You can upload no more than 10 images." },
+  "សូមប្រើ JPG / PNG / WEBP មិនលើស ២០MB ក្នុងមួយរូប។": { 'zh-CN': "请使用 JPG、PNG 或 WEBP 图片，每张不超过 20MB。", en: "Use JPG, PNG, or WEBP images up to 20MB each." },
+  "បានរក្សាទុកការកែប្រែផលិតផល។": { 'zh-CN': "商品修改已保存。", en: "Product changes saved." },
+  "ហាងរបស់អ្នកបានផ្ទៀងផ្ទាត់រួចហើយ។": { 'zh-CN': "您的店铺已通过验证。", en: "Your shop is already verified." },
+  "ហាងនេះត្រូវបានបិទដោយ Admin។": { 'zh-CN': "该店铺已被管理员停用。", en: "This shop has been disabled by Admin." },
+  "សូមប្រើ JPG, PNG ឬ WEBP ប៉ុណ្ណោះ។": { 'zh-CN': "仅支持 JPG、PNG 或 WEBP 格式。", en: "Only JPG, PNG, or WEBP files are allowed." },
+  "រូបភាពនីមួយៗមិនអាចធំជាង 8MB បានទេ។": { 'zh-CN': "每张图片不能超过 8MB。", en: "Each image must be no larger than 8MB." },
+  "អាចដាក់រូបភាពបានអតិបរមា ១០ រូប។": { 'zh-CN': "最多可上传 10 张图片。", en: "You can upload up to 10 images." },
+  "បានដកទីតាំងលំនាំដើមចេញ។": { 'zh-CN': "默认位置已移除。", en: "Default location removed." },
+  "សូមជ្រើសរើសទីតាំងដល់កម្រិតភូមិជាមុនសិន។": { 'zh-CN': "请先选择到村级的位置。", en: "Please select a location down to the village level first." },
+  "បានរក្សាទុកទីតាំងលំនាំដើមជោគជ័យ!": { 'zh-CN': "默认位置保存成功！", en: "Default location saved successfully!" },
+  "បានលុប Variant។": { 'zh-CN': "变体已删除。", en: "Variant deleted." },
+  "បានរក្សាទុក Variant។": { 'zh-CN': "变体已保存。", en: "Variant saved." },
+  "សូមបញ្ចូលឈ្មោះ Variant និងតម្លៃលក់។": { 'zh-CN': "请输入变体名称和售价。", en: "Enter the variant name and selling price." },
+  "បានបន្ថែម Variant។": { 'zh-CN': "变体已添加。", en: "Variant added." },
+  "បានរក្សាទុកព័ត៌មានផលិតផល AURORA។": { 'zh-CN': "AURORA 商品信息已保存。", en: "AURORA product information saved." },
+  "មិនទាន់រកឃើញហាង AURORA Computer។": { 'zh-CN': "尚未找到 AURORA Computer 店铺。", en: "AURORA Computer shop was not found." },
+  "បានរក្សាទុកព័ត៌មាន AURORA Computer។": { 'zh-CN': "AURORA Computer 信息已保存。", en: "AURORA Computer information saved." },
+  "ទំនិញនេះអស់ស្តុកហើយ។": { 'zh-CN': "该商品已售罄。", en: "This product is out of stock." },
+  "សូមចូលគណនី 7inOne ជាមុនសិន។": { 'zh-CN': "请先登录 7inOne 账户。", en: "Please sign in to your 7inOne account first." },
+  "បានចាកចេញពីគណនីរួចរាល់។": { 'zh-CN': "已成功退出账户。", en: "Signed out successfully." },
+  "បានចូលគណនីជោគជ័យ!": { 'zh-CN': "登录成功！", en: "Signed in successfully!" },
+  "បានរក្សាទុកទំនិញជោគជ័យ!": { 'zh-CN': "商品保存成功！", en: "Product saved successfully!" },
+  "បានលុបទំនិញរួចរាល់។": { 'zh-CN': "商品已删除。", en: "Product deleted." },
+  "បានផ្ញើសំណើតម្លៃជោគជ័យ!": { 'zh-CN': "报价请求已发送！", en: "Price request sent successfully!" },
+  "បានដាក់ពាក្យស្នើសុំអ្នកលក់ជោគជ័យ!": { 'zh-CN': "卖家申请已提交！", en: "Seller application submitted successfully!" },
+  "បានរក្សាទុកព័ត៌មាន Profile ជោគជ័យ!": { 'zh-CN': "个人资料保存成功！", en: "Profile saved successfully!" },
+  "បានប្ដូររូបភាព Profile ជោគជ័យ!": { 'zh-CN': "头像更换成功！", en: "Profile photo updated successfully!" },
+  "ព័ត៌មានបន្ថែមមិនត្រឹមត្រូវទេ។": { 'zh-CN': "补充信息无效。", en: "Additional information is invalid." },
+  "បានកែប្រែប្រកាសជោគជ័យ។": { 'zh-CN': "帖子更新成功。", en: "Post updated successfully." },
+  "បានផ្ញើ OTP តាម Telegram។": { 'zh-CN': "验证码已通过 Telegram 发送。", en: "OTP sent via Telegram." },
+  "បានប្ដូរ Password ជោគជ័យ!": { 'zh-CN': "密码修改成功！", en: "Password changed successfully!" },
+  "បានសង្គ្រោះ Password ជោគជ័យ។ សូមចូលគណនីម្ដងទៀត។": { 'zh-CN': "密码重置成功。请重新登录。", en: "Password reset successfully. Please sign in again." },
+  "បានធ្វើបច្ចុប្បន្នភាពសំណើតម្លៃ។": { 'zh-CN': "报价请求已更新。", en: "Price request updated." },
+  "បានធ្វើបច្ចុប្បន្នភាពការបញ្ជាទិញ។": { 'zh-CN': "订单已更新。", en: "Order updated." },
+  "បានរក្សាទុកព័ត៌មានហាង។": { 'zh-CN': "店铺信息已保存。", en: "Shop information saved." },
+  "បានរក្សាទុក Brand ជោគជ័យ!": { 'zh-CN': "品牌保存成功！", en: "Brand saved successfully!" },
+  "បានអនុម័ត និង Upload រូបទៅ Telegram រួចរាល់។": { 'zh-CN': "已批准并将图片上传至 Telegram。", en: "Image approved and uploaded to Telegram." },
+  "បានបដិសេធរូបភាព។": { 'zh-CN': "图片已拒绝。", en: "Image rejected." },
+  "បានបញ្ចប់ Auto Sync។": { 'zh-CN': "自动同步已完成。", en: "Auto Sync completed." },
+  "បានបង្កើតផលិតផល Supplier ជោគជ័យ។": { 'zh-CN': "供应商商品创建成功。", en: "Supplier product created successfully." },
+  "បានធ្វើបច្ចុប្បន្នភាពពាក្យស្នើសុំ។": { 'zh-CN': "申请已更新。", en: "Application updated." },
+  "មិនអាចភ្ជាប់ប្រព័ន្ធបានទេ៖ ": { 'zh-CN': "系统连接失败：", en: "Could not connect to the system: " },
+  "មិនអាចទាញការកំណត់ប្រព័ន្ធបានទេ៖ ": { 'zh-CN': "无法加载系统设置：", en: "Could not load system settings: " },
+  "មិនអាចផ្ទុក Dashboard៖ ": { 'zh-CN': "无法加载控制面板：", en: "Could not load dashboard: " },
+  "មិនអាចផ្ទុក Admin៖ ": { 'zh-CN': "无法加载管理后台：", en: "Could not load Admin: " },
+  "មិនអាចទាញយកការងារបានទេ៖ ": { 'zh-CN': "无法加载职位：", en: "Could not load jobs: " },
+  "មិនអាចទាញយកប្រកាសបានទេ៖ ": { 'zh-CN': "无法加载帖子：", en: "Could not load posts: " },
+});
+function marketplaceUiText(value) {
+  const source = String(value ?? '');
+  const locale = window.SiteI18n?.locale || 'km';
+  if (locale === 'km') return source;
+  if (MARKETPLACE_UI_MESSAGES[source]?.[locale]) return MARKETPLACE_UI_MESSAGES[source][locale];
+  const prefix = Object.keys(MARKETPLACE_UI_MESSAGES).find(key => key.endsWith('： ') && source.startsWith(key));
+  return prefix ? MARKETPLACE_UI_MESSAGES[prefix][locale] + source.slice(prefix.length) : source;
+}
+
 /* --------------------------------------------------------------------------
    2. Application State
    -------------------------------------------------------------------------- */
