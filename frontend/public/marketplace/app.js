@@ -835,6 +835,21 @@ function productImage(p) {
   return (p.product_images || []).slice().sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0)).find((x) => x.image_url)?.image_url || '';
 }
 
+function productCardShortCaption(product = {}) {
+  let caption = productDescriptionParts(product).short;
+  const title = String(product.title || '').trim();
+  if (!caption || !title) return caption;
+
+  const normalize = value => String(value || '').normalize('NFKC').toLowerCase()
+    .replace(/[\\s\\p{P}\\p{S}]+/gu, ' ').trim();
+  const normalizedTitle = normalize(title);
+
+  caption = caption.split(/\\r?\\n/).filter(line => normalize(line) !== normalizedTitle).join('\\n').trim();
+  const escapedTitle = title.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\function productDescriptionParts(product = {}) {');
+  caption = caption.replace(new RegExp('^\\\\s*' + escapedTitle + '(?:\\\\s*[-–—:|•]\\\\s*|\\\\s*\\\\r?\\\\n)', 'i'), '').trim();
+  return caption;
+}
+
 function productDescriptionParts(product = {}) {
   const raw = String(product.description || '');
   if (raw.includes(PRODUCT_DESC_SEPARATOR)) {
@@ -1020,7 +1035,7 @@ function productCard(p, index) {
   const vendorName = p.vendors?.store_name || 'ហាងអ្នកលក់';
   const vendorLogo = p.vendors?.store_logo_url || '';
   const verified = p.vendors?.status === 'approved';
-  const description = productDescriptionParts(p).short;
+  const description = productCardShortCaption(p);
   const cardSpecs = productCardSpecs(p);
   const cardPrice = p.display_price ?? p.price;
 
