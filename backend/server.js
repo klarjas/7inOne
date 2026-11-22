@@ -3457,6 +3457,19 @@ app.post('/api/admin/products/:id/gallery-search', authenticate, requireAdmin, a
   if (error) return fail(res, 500, 'Could not save candidates. Apply the Smart Product Gallery migration first.');
   return res.json({ data: data || [], found: candidates.length, message: 'Candidates await Admin approval and are not public.' });
 });
+app.get('/api/admin/gallery-products', authenticate, requireAdmin, async (req, res) => {
+  const term = clean(req.query.q, 100);
+  if (term.length < 2) return res.json({ data: [] });
+  const { data, error } = await supabase.from('products')
+    .select('id,title,category,product_images(id)')
+    .ilike('title', '%' + term.replace(/[,%_]/g, ' ') + '%')
+    .order('created_at', { ascending: false }).limit(30);
+  if (error) return fail(res, 500, 'Could not search products for Smart Gallery.');
+  return res.json({ data: (data || []).map(item => ({
+    id: item.id, title: item.title, category: item.category,
+    image_count: (item.product_images || []).length
+  })) });
+});
 app.get('/api/admin/product-gallery-candidates', authenticate, requireAdmin, async (req, res) => {
   const status = clean(req.query.status || 'pending', 20);
   if (!['pending','approved','rejected','failed','all'].includes(status)) return fail(res, 400, 'Invalid candidate status.');
