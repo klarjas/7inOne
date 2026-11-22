@@ -857,6 +857,22 @@
           </details>
           <label class="mb-4 block"><span class="label">ស្វែងរកផលិតផល</span><input class="field" id="adminSupplierSearch" placeholder="ស្វែងរកតាមឈ្មោះ ឬ Category..."></label>
           <div class="mb-2 text-[10px] text-slate-500">ចុចលើជួរផលិតផល ឬប៊ូតុង «កែប្រែ» ដើម្បីបើក Popup។</div><div id="adminSupplierProductsList"><p class="py-6 text-center text-xs text-slate-400">កំពុងផ្ទុកផលិតផល...</p></div>
+          <section class="mt-6 rounded-2xl border border-slate-200 p-4" id="adminSmartGalleryPanel">
+            <div class="mb-3">
+              <p class="text-[10px] font-bold text-violet-700">SMART PRODUCT GALLERY</p>
+              <h3 class="mt-1 text-sm font-bold">ស្វែងរករូបផលិតផលបន្ថែម</h3>
+              <p class="mt-1 text-[10px] text-slate-500">ស្វែងរកតាមឈ្មោះផលិតផល រួចពិនិត្យម៉ូដែល និងរូបភាពមុនអនុម័ត។ រូបដែលអនុម័តនឹង Upload ទៅ Telegram មុនបង្ហាញក្នុង Gallery។</p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <input class="field min-w-0 flex-1" id="adminGalleryProductSearch" placeholder="ស្វែងរកឈ្មោះផលិតផល..." autocomplete="off">
+              <button type="button" id="adminGalleryProductSearchRun" class="rounded-full bg-slate-900 px-4 py-2 text-[10px] font-bold text-white">ស្វែងរកផលិតផល</button>
+            </div>
+            <div id="adminGalleryProductResults" class="mt-3 space-y-2"><p class="text-[10px] text-slate-400">វាយឈ្មោះផលិតផលដើម្បីចាប់ផ្តើម។</p></div>
+            <div class="mt-5 border-t border-slate-100 pt-4">
+              <div class="mb-2 flex items-center justify-between gap-2"><b class="text-[11px]">រូបភាពរង់ចាំ Admin អនុម័ត</b><button type="button" id="adminGalleryCandidatesRefresh" class="text-[10px] font-bold text-violet-700">ផ្ទុកឡើងវិញ</button></div>
+              <div id="adminGalleryCandidates" class="space-y-3"><p class="text-[10px] text-slate-400">កំពុងផ្ទុក...</p></div>
+            </div>
+          </section>
         </section>
 
         <!-- Admin-managed official shop -->
