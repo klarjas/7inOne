@@ -8627,3 +8627,171 @@ body > footer {
   #homeDetailInspector .product-utility-actions button{flex:1 1 100%!important;min-width:0!important}
   #homeDetailInspector .product-spec-grid{grid-template-columns:minmax(0,1fr)!important}
 }
+
+
+/* --------------------------------------------------------------------------
+   7inOne · Global Steam Dark Slate & Steel Blue surface normalization
+   Final theme layer: overrides legacy light surfaces without changing layout,
+   markup, DOM IDs, application logic, API calls, or upload behavior.
+   -------------------------------------------------------------------------- */
+:root{
+  color-scheme:dark;
+  --page:#1B2838;
+  --surface:#16202D;
+  --surface-raised:#203244;
+  --surface-stage:#101822;
+  --line:#2A475E;
+  --ink:#FFFFFF;
+  --text:#C7D5E0;
+  --muted:#9FB2C3;
+  --accent:#66C0F4;
+  --price:#BEEE11;
+}
+html,body{
+  background:
+    radial-gradient(ellipse at 12% 0%,rgba(42,71,94,.62),transparent 42%),
+    radial-gradient(ellipse at 92% 12%,rgba(49,98,130,.22),transparent 36%),
+    linear-gradient(145deg,#2A475E 0%,#1B2838 48%,#171A21 100%) !important;
+  color:var(--text) !important;
+}
+body>main,.view,#view-home,#view-product,#view-profile,#view-seller,#view-admin,
+.home-main-content,.home-layout-shell,.account-shell{
+  background:transparent !important;
+  color:var(--text);
+}
+body>footer{background:#16202D!important;color:#C7D5E0!important;border-color:#2A475E!important}
+.glass,.modal-box,.account-panel,.account-hero,.account-shortcut,
+.product-card,.cd,.product-hero-card,.product-description-card,.product-reviews,
+.product-review,.product-gallery-column,.product-buybox,.product-related-section,
+.product-seller-card,.storefront-profile,.storefront-skeleton-card,.route-load-error,
+.seller-chat-shell,.seller-chat-inbox-item,.seller-media-item,.seller-search,
+.seller-filter,.seller-action-button,.admin-chat-item,.support-chat-archive,
+.home-promo-slot,.poster-admin-preview,.marketplace-detail-thumbs button,
+.marketplace-listing-detail-info .marketplace-detail-facts p,
+.marketplace-listing-detail-info .marketplace-detail-description{
+  background-color:var(--surface)!important;
+  color:var(--text)!important;
+  border-color:var(--line)!important;
+  box-shadow:0 10px 28px rgba(0,0,0,.18)!important;
+}
+.product-card,.cd{border-radius:16px!important}
+.cd .im,.product-gallery-stage,.product-gallery-thumb,.product-detail-info,
+.product-detail-metrics,.product-detail-rating,.product-spec-item,
+.product-detail-facts,.product-detail-description,.product-detail-related,
+.product-detail-page .product-section,.product-hero-grid,
+.account-cover,.account-avatar,.account-shortcut-icon,
+.profile-cover,.profile-avatar,.profile-shortcut,.profile-tab-content,
+.seller-verification-card,.seller-kpi-card,.seller-dashboard-card,
+.seller-panel,.seller-tab-panel,.seller-product-copy,
+.seller-filter-panel,.seller-toolbar,.seller-empty-state,
+#homeDetailInspector .product-hero-card,
+#homeDetailInspector .product-description-card,
+#homeDetailInspector .product-reviews{
+  background-color:var(--surface)!important;
+  color:var(--text)!important;
+  border-color:var(--line)!important;
+}
+.cd .im,.product-gallery-stage,.product-gallery-thumb,
+.product-detail-image-stage,.product-image-stage,.product-media-stage,
+.product-album-picker,.product-image-album,.product-album-empty{
+  background-color:var(--surface-stage)!important;
+  border-color:var(--line)!important;
+}
+.field,input.field,select.field,textarea.field,
+.seller-search input,.seller-search select,
+#searchForm,#searchForm input{
+  background-color:var(--surface-stage)!important;
+  color:#FFFFFF!important;
+  border-color:var(--line)!important;
+}
+.field::placeholder,input::placeholder,textarea::placeholder{color:#8FA6B8!important;opacity:1}
+.field:focus,input.field:focus,select.field:focus,textarea.field:focus{
+  border-color:var(--accent)!important;
+  box-shadow:0 0 0 3px rgba(102,192,244,.14)!important;
+}
+.cat-pill,.tag-btn,.market-hero .tags button,.home-main-content .market-hero .tags button,
+#sortSelect,.menu-action,.close-btn,.product-utility-actions button,
+.product-action-secondary,.product-save-action,.product-gallery-arrow,
+.seller-chat-header-icon,.seller-chat-attach,.seller-chat-inbox-item,
+.seller-filter,.seller-action-button,.account-shortcut{
+  background-color:var(--surface-raised)!important;
+  color:var(--text)!important;
+  border-color:var(--line)!important;
+}
+.cat-pill.active,.cat-pill[aria-pressed="true"],.tab.active,
+#categoryStrip .dk.active,#categoryStrip .dk[aria-pressed="true"]{
+  background:#203D55!important;
+  color:var(--accent)!important;
+  border-color:var(--accent)!important;
+}
+.cat-pill:hover,.tag-btn:hover,.menu-action:hover,.account-shortcut:hover,
+.seller-filter:hover,.seller-action-button:hover{
+  background:#29445B!important;
+  color:#FFFFFF!important;
+  border-color:var(--accent)!important;
+}
+.tab{color:#9FB2C3!important}
+.tab.active{border-color:var(--accent)!important;color:var(--accent)!important}
+.label,.account-shortcut b,.account-page-heading h1,
+.product-detail-title,.product-section-heading h2,
+.product-section-heading h3,.product-review strong,
+.seller-dashboard h1,.seller-dashboard h2,.seller-dashboard h3,
+.seller-panel h2,.seller-panel h3,.product-detail-info h1,
+.product-detail-info h2{color:#FFFFFF!important}
+.text-slate-900,.text-slate-800,.text-slate-700,
+.text-gray-900,.text-gray-800,.text-gray-700,
+.text-zinc-900,.text-zinc-800,.text-neutral-900{
+  color:#C7D5E0!important;
+}
+.text-slate-600,.text-slate-500,.text-slate-400,
+.text-gray-600,.text-gray-500,.text-gray-400,
+.text-zinc-600,.text-zinc-500,.text-neutral-600{
+  color:#9FB2C3!important;
+}
+[class~="bg-white"],[class~="bg-slate-50"],[class~="bg-slate-100"],
+[class~="bg-gray-50"],[class~="bg-gray-100"],[class~="bg-zinc-50"],
+[class~="bg-neutral-50"],[class~="bg-white/80"],[class~="bg-white/90"]{
+  background-color:var(--surface)!important;
+  color:var(--text)!important;
+}
+[class~="border-slate-100"],[class~="border-slate-200"],
+[class~="border-gray-100"],[class~="border-gray-200"],
+[class~="border-zinc-100"],[class~="border-zinc-200"]{
+  border-color:var(--line)!important;
+}
+.modal{background:rgba(7,13,20,.76)!important}
+.modal-box{background:#16202D!important;color:#C7D5E0!important;border-color:#2A475E!important}
+.modal-box header,.modal-box .bg-white,.modal-box .bg-slate-50,
+.modal-box .bg-gray-50{background:#16202D!important;color:#C7D5E0!important}
+#sellerChatModal .seller-chat-shell,
+#sellerChatModal .seller-chat-shell>header,
+#sellerChatInboxPane,#sellerChatProductContext,
+#sellerChatForm,#sellerChatThread>header{
+  background:#16202D!important;color:#C7D5E0!important;border-color:#2A475E!important;
+}
+.seller-chat-bubble.other,.support-chat-bubble.admin{
+  background:#203244!important;color:#C7D5E0!important;border-color:#2A475E!important;
+}
+.seller-chat-inbox-item:hover,.admin-chat-item:hover{
+  background:#203244!important;border-color:#66C0F4!important;
+}
+.seller-chat-header-icon,.seller-chat-attach{color:#C7D5E0!important}
+.verified,.verified-store-badge{
+  background:#17372F!important;color:#8BE0B5!important;border-color:#285B4D!important;
+}
+.product-category-badge,.product-badge,.badge-soft{
+  background:#203D55!important;color:#66C0F4!important;border-color:#2A475E!important;
+}
+.product-price,.product-detail-price,.seller-product-price,.hub-item-price{color:#BEEE11!important}
+.star,.product-review-star-picker button{background:#203244!important;border-color:#2A475E!important}
+.star.active,.star.preview{color:#BEEE11!important}
+.skeleton{background:linear-gradient(110deg,#16202D 8%,#203244 18%,#16202D 33%)!important;background-size:220% 100%!important}
+.skeleton:after{background:linear-gradient(90deg,transparent,rgba(102,192,244,.12),transparent)!important}
+.file-preview{background:repeating-linear-gradient(135deg,#16202D,#16202D 8px,#203244 8px,#203244 16px)!important}
+.table-row:hover{background:#203244!important}
+.home-detail-inspector-heading{background:#171A21!important;color:#FFFFFF!important}
+.maintenance-switch{background:#2A475E!important}
+.maintenance-switch:checked{background:#316282!important}
+@media(prefers-reduced-motion:reduce){
+  .post-glow{animation:none!important}
+}
