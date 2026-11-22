@@ -947,11 +947,11 @@ function productCardSpecs(product = {}) {
   const isComputer = /laptop|desktop|computer|pc/.test(detailType) ||
     String(product.category || '').toLowerCase() === 'computers';
   if (isComputer) {
-    const cpu = find(['cpu','processor','cpu_model','processor_model']);
-    const ram = find(['ram','memory','memory_ram','ram_type_capacity']);
-    const storage = find(['storage','ssd','hard_drive','storage_type_capacity','hdd']);
-    const display = find(['display','display_size','screen','screen_size']);
-    const gpu = find(['gpu','graphics','graphics_card','graphics_processor','gpu_model_vram']);
+    const cpu = find(['cpu_model','processor_model','cpu','processor']);
+    const ram = find(['ram_type_capacity','memory_ram','ram','memory']);
+    const storage = find(['storage_type_capacity','hard_drive','storage','ssd','hdd']);
+    const display = find(['display_size','screen_size','display','screen']);
+    const gpu = find(['gpu_model_vram','graphics_card','graphics_processor','gpu','graphics']);
     const ramLine = [ram, storage ? 'SSD: ' + storage : ''].filter(Boolean).join(' | ');
     return [
       ['CPU', cpu],
