@@ -3511,8 +3511,8 @@ async function discoverProductGalleryCandidates(productId) {
 }
 app.post('/api/admin/products/:id/gallery-search', authenticate, requireAdmin, async (req, res) => {
   try {
-    return res.json({ data: (await discoverProductGalleryCandidates(req.params.id)).data,
-      found: (await Promise.resolve({found: 0})).found });
+    const result = await discoverProductGalleryCandidates(req.params.id);
+    return res.json(result);
   } catch (error) {
     return fail(res, 502, 'External image search failed: ' + clean(error.message, 160));
   }
