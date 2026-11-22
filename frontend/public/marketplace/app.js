@@ -874,7 +874,7 @@ function productCardSpecs(product = {}) {
   const specs = normalizedProductSpecs(product);
   const entries = Object.entries(specs).filter(([key, value]) => {
     const normalizedKey = String(key).toLowerCase().replace(/[^a-z0-9]/g, '');
-    return value !== undefined && value !== null && String(value).trim() &&
+    return value !== undefined && value !== null && typeof value !== 'object' && String(value).trim() &&
       !['googlemapurl','url','imageurl','videourl'].includes(normalizedKey) &&
       !/^spec[0-9]+$/.test(normalizedKey);
   });
@@ -895,24 +895,24 @@ function productCardSpecs(product = {}) {
     const storage = find(['storage','ssd','hard_drive','storage_type_capacity','hdd']);
     const display = find(['display','display_size','screen','screen_size']);
     const gpu = find(['gpu','graphics','graphics_card','graphics_processor','gpu_model_vram']);
-    const ramLine = [ram ? 'RAM: ' + ram : '', storage ? 'SSD: ' + storage : ''].filter(Boolean).join(' | ');
+    const ramLine = [ram, storage ? 'SSD: ' + storage : ''].filter(Boolean).join(' | ');
     return [
       ['CPU', cpu],
-      [ramLine ? 'RAM' : '', ramLine],
+      [ram ? 'RAM' : (storage ? 'SSD' : ''), ramLine],
       ['Display', display],
       ['GPU', gpu]
     ].filter(([, value]) => value).slice(0, 4);
   }
   const labels = {
     brand:'Brand', manufacturer:'Brand', model:'Model', color:'Color', colour:'Color',
-    cpu:'CPU', processor:'CPU', cpu_model:'CPU', processor_model:'CPU',
-    ram:'RAM', memory:'RAM', memory_ram:'RAM', ram_type_capacity:'RAM',
-    storage:'Storage', ssd:'SSD', hdd:'HDD', hard_drive:'Storage', storage_type_capacity:'Storage',
-    display:'Display', display_size:'Display', screen:'Display', screen_size:'Display',
-    gpu:'GPU', graphics:'Graphics', graphics_card:'Graphics', graphics_processor:'Graphics', gpu_model_vram:'GPU',
-    battery:'Battery', battery_capacity:'Battery', battery_life:'Battery Life', battery_health:'Battery Health',
+    cpu:'CPU', processor:'CPU', cpumodel:'CPU', processormodel:'CPU',
+    ram:'RAM', memory:'RAM', memoryram:'RAM', ramtypecapacity:'RAM',
+    storage:'Storage', ssd:'SSD', hdd:'HDD', harddrive:'Storage', storagetypecapacity:'Storage',
+    display:'Display', displaysize:'Display', screen:'Display', screensize:'Display',
+    gpu:'GPU', graphics:'Graphics', graphicscard:'Graphics', graphicsprocessor:'Graphics', gpumodelvram:'GPU',
+    battery:'Battery', batterycapacity:'Battery', batterylife:'Battery Life', batteryhealth:'Battery Health',
     weight:'Weight', dimensions:'Dimensions', material:'Material', size:'Size',
-    resolution:'Resolution', display_resolution:'Resolution', operating_system:'OS', os:'OS',
+    resolution:'Resolution', displayresolution:'Resolution', operatingsystem:'OS', os:'OS',
     warranty:'Warranty', connectivity:'Connectivity', capacity:'Capacity', power:'Power'
   };
   return entries.map(([key, value]) => {
