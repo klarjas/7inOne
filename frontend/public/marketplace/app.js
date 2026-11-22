@@ -857,7 +857,10 @@ function productDescriptionParts(product = {}) {
 }
 
 function normalizedProductSpecs(product = {}) {
-  const specs = { ...(product.specifications && typeof product.specifications === 'object' ? product.specifications : {}) };
+  const listingSpecs = product.listing_details?.specifications && typeof product.listing_details.specifications === 'object'
+    ? product.listing_details.specifications : {};
+  const productSpecs = product.specifications && typeof product.specifications === 'object' ? product.specifications : {};
+  const specs = { ...listingSpecs, ...productSpecs };
   const detailType = String(product.detail_type || product.listing_details?.detail_type || '');
   const legacyKeys = detailType === 'Laptop'
     ? { cpu_model:'spec_0', ram_type_capacity:'spec_1', gpu_model_vram:'spec_2', storage_type_capacity:'spec_3', screen_size:'spec_4', battery_health:'spec_5' }
@@ -869,21 +872,54 @@ function normalizedProductSpecs(product = {}) {
 }
 function productCardSpecs(product = {}) {
   const specs = normalizedProductSpecs(product);
-  const normalized = Object.fromEntries(Object.entries(specs).map(([key, value]) => [String(key).toLowerCase().replace(/[^a-z0-9]/g, ''), value]));
+  const entries = Object.entries(specs).filter(([key, value]) => {
+    const normalizedKey = String(key).toLowerCase().replace(/[^a-z0-9]/g, '');
+    return value !== undefined && value !== null && String(value).trim() &&
+      !['googlemapurl','url','imageurl','videourl'].includes(normalizedKey) &&
+      !/^spec[0-9]+$/.test(normalizedKey);
+  });
+  const normalized = Object.fromEntries(entries.map(([key, value]) => [String(key).toLowerCase().replace(/[^a-z0-9]/g, ''), String(value).trim()]));
   const find = keys => {
     for (const key of keys) {
       const value = normalized[key.replace(/[^a-z0-9]/gi, '').toLowerCase()];
-      if (value !== undefined && value !== null && String(value).trim()) return String(value).trim();
+      if (value) return value;
     }
     return '';
   };
-  const values = [
-    ['CPU', find(['cpu','processor','cpu_model','processor_model'])],
-    ['RAM', find(['ram','memory','memory_ram','ram_type_capacity'])],
-    ['Display', find(['display','display_size','screen','screen_size'])],
-    ['GPU', find(['gpu','graphics','graphics_card','graphics_processor','gpu_model_vram'])]
-  ];
-  return values.every(([, value]) => value) ? values : [];
+  const detailType = String(product.detail_type || product.listing_details?.detail_type || '').toLowerCase();
+  const isComputer = /laptop|desktop|computer|pc/.test(detailType) ||
+    String(product.category || '').toLowerCase() === 'computers';
+  if (isComputer) {
+    const cpu = find(['cpu','processor','cpu_model','processor_model']);
+    const ram = find(['ram','memory','memory_ram','ram_type_capacity']);
+    const storage = find(['storage','ssd','hard_drive','storage_type_capacity','hdd']);
+    const display = find(['display','display_size','screen','screen_size']);
+    const gpu = find(['gpu','graphics','graphics_card','graphics_processor','gpu_model_vram']);
+    const ramLine = [ram ? 'RAM: ' + ram : '', storage ? 'SSD: ' + storage : ''].filter(Boolean).join(' | ');
+    return [
+      ['CPU', cpu],
+      [ramLine ? 'RAM' : '', ramLine],
+      ['Display', display],
+      ['GPU', gpu]
+    ].filter(([, value]) => value).slice(0, 4);
+  }
+  const labels = {
+    brand:'Brand', manufacturer:'Brand', model:'Model', color:'Color', colour:'Color',
+    cpu:'CPU', processor:'CPU', cpu_model:'CPU', processor_model:'CPU',
+    ram:'RAM', memory:'RAM', memory_ram:'RAM', ram_type_capacity:'RAM',
+    storage:'Storage', ssd:'SSD', hdd:'HDD', hard_drive:'Storage', storage_type_capacity:'Storage',
+    display:'Display', display_size:'Display', screen:'Display', screen_size:'Display',
+    gpu:'GPU', graphics:'Graphics', graphics_card:'Graphics', graphics_processor:'Graphics', gpu_model_vram:'GPU',
+    battery:'Battery', battery_capacity:'Battery', battery_life:'Battery Life', battery_health:'Battery Health',
+    weight:'Weight', dimensions:'Dimensions', material:'Material', size:'Size',
+    resolution:'Resolution', display_resolution:'Resolution', operating_system:'OS', os:'OS',
+    warranty:'Warranty', connectivity:'Connectivity', capacity:'Capacity', power:'Power'
+  };
+  return entries.map(([key, value]) => {
+    const normalizedKey = String(key).toLowerCase().replace(/[^a-z0-9]/g, '');
+    const label = labels[normalizedKey] || String(key).replace(/([a-z])([A-Z])/g, '$1 $2').replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim().replace(/\b\w/g, char => char.toUpperCase());
+    return [label, String(value).trim()];
+  }).filter(([label, value]) => label && value).slice(0, 4);
 }
 function specFilterValue(product, keys) {
   const specs = normalizedProductSpecs(product);
