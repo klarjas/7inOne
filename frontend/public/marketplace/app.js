@@ -563,29 +563,56 @@ function formatViews(value) {
 
 // Translate exact UI-owned text and accessible labels after dynamic views render.
 // User-entered product, shop, profile, and chat content is intentionally excluded.
+// Preserve each UI node's original source so locale changes can move in both directions.
+const marketplaceOriginalText = new WeakMap();
+const marketplaceOriginalAttributes = new WeakMap();
+const MARKETPLACE_USER_CONTENT_SELECTOR = '[data-user-content], [contenteditable="true"], .product-title, .product-description, .storefront-title, .profile-display-name, .chat-message, .post-user-content, .user-generated';
+
 function applyMarketplaceDynamicTranslations(root = document) {
   const locale = window.SiteI18n?.locale || 'km';
-  if (locale === 'km') return;
-  const excluded = '[data-user-content], [contenteditable="true"], .product-title, .product-description, .storefront-title, .profile-display-name, .chat-message, .post-user-content, .user-generated';
+  if (!root) return;
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
   const nodes = [];
   while (walker.nextNode()) nodes.push(walker.currentNode);
   nodes.forEach(node => {
-    if (node.parentElement?.closest(excluded)) return;
-    const source = node.nodeValue;
-    const translated = marketplaceUiText(source.trim());
-    if (translated !== source.trim()) node.nodeValue = source.replace(source.trim(), translated);
+    if (node.parentElement?.closest(MARKETPLACE_USER_CONTENT_SELECTOR)) return;
+    if (!marketplaceOriginalText.has(node)) marketplaceOriginalText.set(node, node.nodeValue || '');
+    const original = marketplaceOriginalText.get(node);
+    const trimmed = original.trim();
+    if (!trimmed) return;
+    const translated = locale === 'km' ? trimmed : marketplaceUiTextForLocale(trimmed, locale);
+    node.nodeValue = original.replace(trimmed, translated);
   });
-  root.querySelectorAll?.('[placeholder], [title], [aria-label]').forEach(el => {
-    if (el.closest(excluded)) return;
-    ['placeholder','title','aria-label'].forEach(attr => {
-      const source = el.getAttribute(attr);
-      if (!source) return;
-      const translated = marketplaceUiText(source);
-      if (translated !== source) el.setAttribute(attr, translated);
+
+  const attributeSelector = '[placeholder], [title], [aria-label]';
+  const elements = [];
+  if (root.nodeType === Node.ELEMENT_NODE && root.matches(attributeSelector)) elements.push(root);
+  root.querySelectorAll?.(attributeSelector).forEach(el => elements.push(el));
+  elements.forEach(el => {
+    if (el.closest(MARKETPLACE_USER_CONTENT_SELECTOR)) return;
+    let originals = marketplaceOriginalAttributes.get(el);
+    if (!originals) {
+      originals = Object.create(null);
+      marketplaceOriginalAttributes.set(el, originals);
+    }
+    ['placeholder', 'title', 'aria-label'].forEach(attr => {
+      const current = el.getAttribute(attr);
+      if (current === null) return;
+      if (!Object.prototype.hasOwnProperty.call(originals, attr)) originals[attr] = current;
+      const original = originals[attr];
+      const translated = locale === 'km' ? original : marketplaceUiTextForLocale(original, locale);
+      if (translated !== current) el.setAttribute(attr, translated);
     });
   });
 }
+
+function marketplaceUiTextForLocale(value, locale) {
+  const source = String(value ?? '');
+  if (MARKETPLACE_UI_MESSAGES[source]?.[locale]) return MARKETPLACE_UI_MESSAGES[source][locale];
+  const prefix = Object.keys(MARKETPLACE_UI_MESSAGES).find(key => key.endsWith('៖ ') && source.startsWith(key));
+  return prefix ? MARKETPLACE_UI_MESSAGES[prefix][locale] + source.slice(prefix.length) : source;
+}
+
 function installMarketplaceDynamicTranslations() {
   const run = () => {
     applyMarketplaceDynamicTranslations(document.body);
@@ -595,8 +622,12 @@ function installMarketplaceDynamicTranslations() {
         record.addedNodes.forEach(node => {
           if (node.nodeType === Node.ELEMENT_NODE) applyMarketplaceDynamicTranslations(node);
           else if (node.nodeType === Node.TEXT_NODE && !node.parentElement?.closest('[data-user-content], [contenteditable="true"], .product-title, .product-description, .storefront-title, .profile-display-name, .chat-message, .post-user-content, .user-generated')) {
-            const translated = marketplaceUiText(node.nodeValue.trim());
-            if (translated !== node.nodeValue.trim()) node.nodeValue = node.nodeValue.replace(node.nodeValue.trim(), translated);
+            if (!marketplaceOriginalText.has(node)) marketplaceOriginalText.set(node, node.nodeValue || '');
+            const original = marketplaceOriginalText.get(node);
+            const trimmed = original.trim();
+            const locale = window.SiteI18n?.locale || 'km';
+            const translated = locale === 'km' ? trimmed : marketplaceUiTextForLocale(trimmed, locale);
+            if (trimmed) node.nodeValue = original.replace(trimmed, translated);
           }
         });
       });
