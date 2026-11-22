@@ -3490,6 +3490,42 @@ function handleStorefrontAction(event) {
 /* --------------------------------------------------------------------------
    10. Profile, Orders & Saved Items
    -------------------------------------------------------------------------- */
+
+async function saveAction(productId, button) {
+  const id = String(productId || '').trim();
+  if (!id || !requireLogin()) return false;
+  const wasSaved = [...state.savedIds].some(value => String(value) === id);
+  if (button) button.disabled = true;
+  try {
+    if (wasSaved) {
+      await api('/api/saved/' + encodeURIComponent(id), { method: 'DELETE' });
+      state.savedIds = new Set([...state.savedIds].filter(value => String(value) !== id));
+      if (button) {
+        button.classList.remove('is-saved');
+        button.setAttribute('aria-pressed', 'false');
+        const label = button.querySelector('span');
+        if (label) label.textContent = 'រក្សាទុក';
+      }
+      toast('បានដកចេញពីទំនិញដែលបានរក្សាទុក។');
+      return false;
+    }
+    await api('/api/saved/' + encodeURIComponent(id), { method: 'POST' });
+    state.savedIds.add(id);
+    if (button) {
+      button.classList.add('is-saved');
+      button.setAttribute('aria-pressed', 'true');
+      const label = button.querySelector('span');
+      if (label) label.textContent = 'បានរក្សាទុក';
+    }
+    toast('បានរក្សាទុកទំនិញ!');
+    return true;
+  } catch (error) {
+    toast(error.message || 'មិនអាចរក្សាទុកទំនិញបានទេ។', 'error');
+    throw error;
+  } finally {
+    if (button) button.disabled = false;
+  }
+}
 async function loadSaved() {
   const r = await api('/api/saved');
   state.savedIds = new Set((r.data || []).map((x) => x.products?.id).filter(Boolean));
