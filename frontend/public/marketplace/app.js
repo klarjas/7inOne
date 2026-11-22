@@ -3488,6 +3488,37 @@ async function scanAuroraSupplierCatalog(url, offset = 0) {
   }
 }
 
+
+async function renderSupplierUpdateReviews() {
+  const target = $('adminSupplierReviewList');
+  if (!target || !isAdmin()) return;
+  try {
+    const result = await api('/api/admin/supplier-update-reviews?status=pending');
+    const reviews = result.data || [];
+    if (!reviews.length) {
+      target.innerHTML = '<p class="text-[10px] text-slate-400">មិនមានការផ្លាស់ប្តូររង់ចាំពិនិត្យទេ។</p>';
+      return;
+    }
+    target.innerHTML = reviews.map(item => {
+      const product = (state.adminSupplierProducts || []).find(p => String(p.id) === String(item.product_id));
+      const fieldLabel = item.field_name === 'price' ? 'តម្លៃលក់' : item.field_name === 'stock' ? 'ស្តុក' : item.field_name;
+      const oldValue = item.field_name === 'price' ? money(item.old_value) : String(item.old_value ?? '—');
+      const newValue = item.field_name === 'price' ? money(item.new_value) : String(item.new_value ?? '—');
+      const verification = item.verification || {};
+      const reasons = [];
+      if (!verification.exact_product_code) reasons.push('Product Code មិនត្រូវគ្នា');
+      if (!verification.model_and_specs?.ok) reasons.push('Model/Specs ត្រូវការពិនិត្យ');
+      if (!verification.fresh_second_read?.same_price_and_stock) reasons.push('ការឆែកម្ដងទៀតមិនដូចគ្នា');
+      return '<article class="rounded-xl border border-amber-200 bg-white p-3">'+
+        '<div class="flex flex-wrap items-start justify-between gap-2"><div><b class="text-[11px]">'+esc(product?.title || item.product_id)+'</b><p class="mt-1 text-[10px] text-slate-500">'+esc(item.supplier_product_code)+' · '+esc(fieldLabel)+'</p></div><strong class="text-[11px]">'+esc(oldValue)+' → '+esc(newValue)+'</strong></div>'+
+        (reasons.length?'<p class="mt-2 text-[10px] text-amber-700">'+esc(reasons.join(' · '))+'</p>':'')+
+        '<div class="mt-3 flex gap-2"><button type="button" class="rounded-full bg-slate-900 px-3 py-1.5 text-[10px] font-bold text-white" data-supplier-review-decision="approved" data-review-id="'+esc(item.id)+'">អនុម័ត</button><button type="button" class="rounded-full border border-slate-200 px-3 py-1.5 text-[10px] font-bold" data-supplier-review-decision="rejected" data-review-id="'+esc(item.id)+'">បដិសេធ</button></div></article>';
+    }).join('');
+  } catch (error) {
+    target.innerHTML = '<p class="text-[10px] text-rose-500">'+esc(error.message || 'មិនអាចផ្ទុកការពិនិត្យបានទេ។')+'</p>';
+  }
+}
+
 async function renderAdminSupplierProducts() {
   const target = $('adminSupplierProductsList');
   if (!target || !isAdmin()) return;
@@ -3495,6 +3526,7 @@ async function renderAdminSupplierProducts() {
   try {
     const result = await api('/api/admin/supplier-products');
     state.adminSupplierProducts = result.data || [];
+    void renderSupplierUpdateReviews();
     const term = String($('adminSupplierSearch')?.value || '').trim().toLowerCase();
     const products = state.adminSupplierProducts.filter(p => {
       const aurora = String(p.vendors?.store_name || '').trim().toLowerCase() === 'aurora computer';
@@ -5830,6 +5862,41 @@ function bindEvents() {
       toast(error.message||'មិនអាចនាំចូលផលិតផលបានទេ។','error');
     }
   });
+  $('adminSupplierAutoSyncRun')?.addEventListener('click', async event => {
+    const button = event.currentTarget, status = $('adminSupplierAutoSyncStatus');
+    button.disabled = true; button.textContent = 'កំពុងស្កេន...';
+    if (status) status.textContent = 'កំពុងស្កេន CC COMPUTER និងផ្ទៀងផ្ទាត់តម្លៃ/ស្តុក...';
+    try {
+      const result = await api('/api/admin/supplier-auto-sync/run', { method: 'POST', body: JSON.stringify({}) });
+      const data = result.data || {};
+      if (status) status.textContent = 'ស្កេន '+Number(data.scanned||0)+' មុខ · Update '+Number(data.updated||0)+' · ត្រូវពិនិត្យ '+Number(data.review||0)+' · បាត់ '+Number(data.missing||0)+' · លាក់ '+Number(data.archived||0);
+      toast('បានបញ្ចប់ Auto Sync។');
+      await renderAdminSupplierProducts();
+      await renderSupplierUpdateReviews();
+    } catch (error) {
+      if (status) status.textContent = error.message || 'Auto Sync បរាជ័យ។';
+      toast(error.message || 'Auto Sync បរាជ័យ។', 'error');
+    } finally {
+      button.disabled = false; button.textContent = 'ស្កេនឥឡូវនេះ';
+    }
+  });
+  $('adminSupplierReviewList')?.addEventListener('click', async event => {
+    const button = event.target.closest('[data-supplier-review-decision]');
+    if (!button) return;
+    button.disabled = true;
+    try {
+      await api('/api/admin/supplier-update-reviews/' + encodeURIComponent(button.dataset.reviewId), {
+        method: 'PATCH', body: JSON.stringify({ status: button.dataset.supplierReviewDecision })
+      });
+      toast(button.dataset.supplierReviewDecision === 'approved' ? 'បានអនុម័តការផ្លាស់ប្តូរ។' : 'បានបដិសេធការផ្លាស់ប្តូរ។');
+      await renderAdminSupplierProducts();
+      await renderSupplierUpdateReviews();
+    } catch (error) {
+      button.disabled = false;
+      toast(error.message || 'មិនអាចរក្សាទុកការសម្រេចបានទេ។', 'error');
+    }
+  });
+
   $('adminSupplierRefresh')?.addEventListener('click',()=>void renderAdminSupplierProducts());
   $('adminSupplierSearch')?.addEventListener('input',()=>void renderAdminSupplierProducts());
   $('adminSupplierCreateForm')?.addEventListener('submit',async event=>{
