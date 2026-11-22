@@ -11,6 +11,8 @@ import { registerSupportChat } from './support-chat.js';
 import { registerSellerChat } from './seller-chat.js';
 import { registerMyPostsRoutes } from './my-posts.js';
 import { randomUUID, randomBytes, randomInt, createHash, createHmac, timingSafeEqual, createCipheriv, createDecipheriv } from 'node:crypto';
+import { lookup } from 'node:dns/promises';
+import { isIP } from 'node:net';
 
 const app = express();
 const port = Number(process.env.PORT || 10000);
@@ -3296,13 +3298,29 @@ app.patch('/api/admin/vendors/:id', authenticate, requireAdmin, async (req, res)
 
 // Smart Product Gallery: discover exact-model image candidates for Admin review.
 // Approved images are copied into Telegram through the existing upload pipeline.
-function gallerySafeRemoteUrl(raw) {
+function galleryIsPrivateAddress(address) {
+  const value = String(address || '').toLowerCase();
+  if (isIP(value) === 4) {
+    const parts = value.split('.').map(Number), a = parts[0], b = parts[1];
+    return a === 0 || a === 10 || a === 127 || a >= 224 ||
+      (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) ||
+      (a === 192 && b === 168) || (a === 100 && b >= 64 && b <= 127);
+  }
+  if (isIP(value) === 6) {
+    return value === '::' || value === '::1' || value.startsWith('fc') ||
+      value.startsWith('fd') || value.startsWith('fe8') || value.startsWith('fe9') ||
+      value.startsWith('fea') || value.startsWith('feb') || value.startsWith('ff') ||
+      value.startsWith('::ffff:');
+  }
+  return true;
+}
+async function gallerySafeRemoteUrl(raw) {
   try {
     const url = new URL(raw), host = url.hostname.toLowerCase();
-    if (url.protocol !== 'https:' || !host || host === 'localhost' || host.endsWith('.localhost') ||
-        host.endsWith('.local') || host === '127.0.0.1' || host === '::1' ||
-        /^10\./.test(host) || /^192\.168\./.test(host) || /^172\.(1[6-9]|2\d|3[01])\./.test(host) ||
-        url.username || url.password) return null;
+    if (url.protocol !== 'https:' || !host || isIP(host) || host === 'localhost' ||
+        host.endsWith('.localhost') || host.endsWith('.local') || url.username || url.password) return null;
+    const addresses = await lookup(host, { all: true, verbatim: true });
+    if (!addresses.length || addresses.some(item => galleryIsPrivateAddress(item.address))) return null;
     return url;
   } catch { return null; }
 }
@@ -3357,14 +3375,14 @@ function galleryScorePage(text, identity) {
     verified_identity: Boolean(codePass || modelPass) };
 }
 async function galleryFetchPage(rawUrl) {
-  let url = gallerySafeRemoteUrl(rawUrl);
+  let url = await gallerySafeRemoteUrl(rawUrl);
   if (!url) throw new Error('Unsafe source URL.');
   for (let attempt = 0; attempt <= 3; attempt++) {
     const response = await fetch(url, { redirect: 'manual', headers: { 'user-agent': 'Mozilla/5.0 (compatible; 7inOneGallery/1.0)', accept: 'text/html,application/xhtml+xml' }, signal: AbortSignal.timeout(12000) });
     if ([301,302,303,307,308].includes(response.status)) {
       const location = response.headers.get('location');
       if (!location || attempt === 3) throw new Error('Too many redirects.');
-      url = gallerySafeRemoteUrl(new URL(location, url).href);
+      url = await gallerySafeRemoteUrl(new URL(location, url).href);
       if (!url) throw new Error('Unsafe redirected URL.');
       continue;
     }
@@ -3426,7 +3444,7 @@ app.post('/api/admin/products/:id/gallery-search', authenticate, requireAdmin, a
   for (const match of searchHtml.matchAll(/<a[^>]+class=["'][^"']*result__a[^"']*["'][^>]+href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi)) {
     try {
       const wrapped = new URL(galleryDecodeHtml(match[1]), 'https://duckduckgo.com');
-      const safe = gallerySafeRemoteUrl(wrapped.searchParams.get('uddg') || wrapped.href);
+      const safe = await gallerySafeRemoteUrl(wrapped.searchParams.get('uddg') || wrapped.href);
       if (safe && !links.some(item => item.url === safe.href)) links.push({ url: safe.href, title: galleryDecodeHtml(match[2].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ')).slice(0, 240) });
     } catch {}
     if (links.length >= 12) break;
@@ -3442,7 +3460,7 @@ app.post('/api/admin/products/:id/gallery-search', authenticate, requireAdmin, a
       const rawImages = [galleryHtmlAttr(page.html, 'og:image'), galleryHtmlAttr(page.html, 'twitter:image'), ...galleryJsonLdImages(page.html)].filter(Boolean);
       for (const rawImage of rawImages) {
         let imageUrl = null;
-        try { imageUrl = gallerySafeRemoteUrl(new URL(rawImage, page.finalUrl).href)?.href; } catch {}
+        try { imageUrl = (await gallerySafeRemoteUrl(new URL(rawImage, page.finalUrl).href))?.href; } catch {}
         if (!imageUrl || candidates.some(item => item.image_url === imageUrl)) continue;
         candidates.push({ product_id: product.id, image_url: imageUrl, source_url: page.finalUrl, source_title: pageTitle, match_score: match.score, match_evidence: match });
         if (candidates.length >= 10) break;
