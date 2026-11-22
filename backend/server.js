@@ -3430,7 +3430,9 @@ function extractCcSupplierProducts(html, baseUrl) {
       || parentHeadings.find(value => /asus|vivobook|expertbook|zenbook|tuf|rog|msi|acer|lenovo|dell|hp|macbook/i.test(value))
       || text.split('\n').map(line => line.trim()).find(line => /asus|vivobook|expertbook|zenbook|tuf|rog|msi|acer|lenovo|dell|hp|macbook/i.test(line) && line.length > 5 && line.length < 180)
       || parentText.split('\n').map(line => line.trim()).find(line => /asus|vivobook|expertbook|zenbook|tuf|rog|msi|acer|lenovo|dell|hp|macbook/i.test(line) && line.length > 5 && line.length < 180)
-      || '';
+      || headings.find(value => value.length > 4 && value.length < 180 && !/^(?:home|shop|products|category|categories|cart|checkout)$/i.test(value))
+      || parentHeadings.find(value => value.length > 4 && value.length < 180 && !/^(?:home|shop|products|category|categories|cart|checkout)$/i.test(value))
+      || ''; 
     const specs = text.split('\n').map(line => line.trim()).filter(line => line && !/^(?:Code|Product\s*Code)\s*:/i.test(line) && !/^\$/.test(line) && !/^Free\s*:/i.test(line) && !/^[-_]{3,}$/.test(line));
     const imageUrls = supplierImageCandidates(card, baseUrl).slice(0, 5);
     if (!imageUrls.length) imageUrls.push(...supplierImageCandidates(imageCard, baseUrl).slice(0, 5));
@@ -3612,18 +3614,109 @@ async function getAuroraSupplierImportIndex(vendorId) {
   };
 }
 
+function supplierCrawlUrl(raw, baseUrl) {
+  try {
+    const url = new URL(decodeSupplierHtml(raw || ''), baseUrl);
+    if (url.protocol !== 'https:' || !['cccomputerkh.com','www.cccomputerkh.com'].includes(url.hostname.toLowerCase())) return null;
+    if (/\.(?:pdf|zip|rar|7z|docx?|xlsx?|pptx?|jpe?g|png|gif|webp|svg|mp4|mp3|css|js|xml)(?:$|[?#])/i.test(url.pathname)) return null;
+    if (/\/(?:cart|checkout|my-account|account|login|register|wishlist|compare|wp-admin|wp-json)(?:\/|$)/i.test(url.pathname)) return null;
+    for (const key of [...url.searchParams.keys()]) if (/^(?:utm_.+|fbclid|gclid|session|sid|add-to-cart|remove_item|coupon)$/i.test(key)) url.searchParams.delete(key);
+    if ([...url.searchParams.keys()].length > 5) return null;
+    url.hash = '';
+    url.hostname = url.hostname.toLowerCase();
+    url.pathname = url.pathname.replace(/\/{2,}/g, '/');
+    if (url.pathname.length > 1) url.pathname = url.pathname.replace(/\/$/, '');
+    return url.href;
+  } catch { return null; }
+}
+function supplierPageLinks(html, pageUrl) {
+  const links = new Set();
+  for (const match of String(html || '').matchAll(/<a\b[^>]*href\s*=\s*(?:"([^"]+)"|'([^']+)'|([^\s>]+))/gi)) {
+    const candidate = supplierCrawlUrl(match[1] || match[2] || match[3] || '', pageUrl);
+    if (candidate) links.add(candidate);
+  }
+  return [...links];
+}
+function mergeSupplierProductRecords(records) {
+  const byCode = new Map();
+  for (const item of records) {
+    const code = String(item.supplier_product_code || '').trim().toUpperCase();
+    if (!code) continue;
+    const previous = byCode.get(code);
+    if (!previous) { byCode.set(code, item); continue; }
+    const score = value => (value.title ? 2 : 0) + (value.image_urls?.length ? 2 : 0)
+      + Object.values(value.specifications || {}).filter(v => Array.isArray(v) ? v.length : Boolean(v)).length
+      + (value.description?.length || 0) / 1000;
+    const best = score(item) > score(previous) ? item : previous;
+    const other = best === item ? previous : item;
+    byCode.set(code, {
+      ...other, ...best,
+      image_urls: [...new Set([...(best.image_urls || []), ...(other.image_urls || [])])].slice(0, 5),
+      specifications: { ...(other.specifications || {}), ...(best.specifications || {}) },
+      availability: best.availability === 'out_of_stock' || other.availability === 'out_of_stock' ? 'out_of_stock' : 'available',
+      verified: Boolean(best.verified || other.verified)
+    });
+  }
+  return [...byCode.values()];
+}
 async function loadCcSupplierCatalog(url) {
   let parsed;
   try { parsed = new URL(url); } catch { throw new Error('Invalid supplier URL.'); }
   if (parsed.protocol !== 'https:' || !['cccomputerkh.com','www.cccomputerkh.com'].includes(parsed.hostname.toLowerCase())) throw new Error('Only the verified CC COMPUTER website is allowed.');
   parsed.hash = '';
-  const { buffer } = await fetchSupplierBytes(parsed.href, { html: true });
-  return { url: parsed.href, products: extractCcSupplierProducts(buffer.toString('utf8'), parsed.href) };
+  const startUrl = supplierCrawlUrl(parsed.href, parsed.href);
+  if (!startUrl) throw new Error('The supplied URL is not a valid CC COMPUTER page.');
+  const pending = [startUrl];
+  const queued = new Set(pending);
+  const visited = new Set();
+  const records = [];
+  const errors = [];
+  const MAX_PAGES = 250;
+  const MAX_DURATION_MS = 105000;
+  const startedAt = Date.now();
+  while (pending.length && visited.size < MAX_PAGES && Date.now() - startedAt < MAX_DURATION_MS) {
+    const batch = pending.splice(0, 4).filter(page => !visited.has(page));
+    if (!batch.length) continue;
+    for (const page of batch) visited.add(page);
+    const results = await Promise.all(batch.map(async page => {
+      try {
+        const { buffer, contentType } = await fetchSupplierBytes(page, { html: true });
+        if (contentType && !/(?:text\/html|application\/xhtml\+xml)/i.test(contentType)) return { page, html: '', error: 'non_html' };
+        return { page, html: buffer.toString('utf8') };
+      } catch (error) { return { page, html: '', error: clean(error.message, 120) }; }
+    }));
+    for (const result of results) {
+      if (result.error) {
+        errors.push({ url: result.page, reason: result.error });
+        if (result.page === startUrl && !records.length) throw new Error('Could not load the supplied supplier page: ' + result.error);
+        continue;
+      }
+      records.push(...extractCcSupplierProducts(result.html, result.page));
+      for (const link of supplierPageLinks(result.html, result.page)) {
+        if (!queued.has(link) && !visited.has(link) && queued.size < 1500) {
+          queued.add(link);
+          pending.push(link);
+        }
+      }
+    }
+  }
+  const products = mergeSupplierProductRecords(records);
+  if (!visited.size) throw new Error('No supplier pages could be scanned.');
+  return {
+    url: startUrl, products,
+    scan: {
+      pages_scanned: visited.size, pages_discovered: queued.size, pages_remaining: pending.length,
+      page_limit_reached: visited.size >= MAX_PAGES && pending.length > 0,
+      time_limit_reached: Date.now() - startedAt >= MAX_DURATION_MS && pending.length > 0,
+      failed_pages: errors.length, warnings: errors.slice(0, 12)
+    }
+  };
 }
+
 app.post('/api/admin/supplier-import/scan', authenticate, requireAdmin, async (req, res) => {
   if (!supabase) return fail(res, 503, 'Supabase is not configured.');
   try {
-    const { url, products: scannedProducts } = await loadCcSupplierCatalog(clean(req.body.url, 1000));
+    const { url, products: scannedProducts, scan } = await loadCcSupplierCatalog(clean(req.body.url, 1000));
     const groupedProducts = groupCcSupplierProducts(scannedProducts);
     const requestedOffset = Math.max(0, Number.parseInt(req.body.offset, 10) || 0);
     const isSingleProductUrl = groupedProducts.length <= 1;
@@ -3683,6 +3776,7 @@ app.post('/api/admin/supplier-import/scan', authenticate, requireAdmin, async (r
     });
     res.json({
       data,
+      scan,
       pagination: { offset: requestedOffset, limit: batchSize, total: groupedProducts.length, next_offset: requestedOffset + data.length, has_more: !isSingleProductUrl && requestedOffset + data.length < groupedProducts.length, single_product: isSingleProductUrl },
       summary: {
         total: groupedProducts.length, batch: data.length,
