@@ -9015,3 +9015,31 @@ img{content-visibility:auto}
 .inspector-floating-actions [data-float-action="save"].is-saved{border-color:#66C0F4;color:#66C0F4;background:#203244}
 #homeDetailInspector .product-primary-actions,#homeDetailInspector .product-utility-actions,#homeDetailInspector .product-mobile-actions{display:none!important}
 @media(max-width:480px){.inspector-floating-actions{grid-template-columns:1.2fr 1fr auto;gap:6px;padding-left:8px;padding-right:8px}.inspector-floating-actions button{gap:5px;padding-left:9px;padding-right:9px;font-size:11px}}
+
+
+/* Compact inspector + adjacent full-details popover (Steam Dark). */
+#homeDetailInspector{overflow:visible!important;max-height:none!important}
+#homeDetailInspector .product-detail-page{overflow:visible!important}
+#homeDetailInspector .product-detail-info{min-width:0}
+#homeDetailInspector .product-heading-block{display:flex;flex-direction:column;align-items:stretch;gap:8px}
+#homeDetailInspector .product-detail-title{margin:0}
+#homeDetailInspector .product-short-summary-text{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+#homeDetailInspector .details-popover-trigger{display:inline-flex;align-items:center;justify-content:center;gap:7px;width:100%;min-height:36px;margin-top:2px;padding:7px 10px;border:1px solid #2A475E;border-radius:10px;background:#16202D;color:#66C0F4;font-size:11px;font-weight:700;cursor:pointer}
+#homeDetailInspector .details-popover-trigger:hover{background:#203244;border-color:#66C0F4}
+#homeDetailInspector .product-detail-description,#homeDetailInspector .product-trust-reviews-grid,#homeDetailInspector .product-safety-note,#homeDetailInspector .product-related-section{display:none!important}
+.details-popover{position:fixed;z-index:120;top:88px;right:405px;display:flex;flex-direction:column;width:min(560px,calc(100vw - 450px));max-height:calc(100dvh - 112px);overflow:hidden;border:1px solid #2A475E;border-radius:16px;background:#171A21;color:#C7D5E0;box-shadow:0 22px 70px rgba(0,0,0,.62)}
+.details-popover.hidden{display:none!important}.details-popover.is-open{display:flex}
+.details-popover-header{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:52px;padding:10px 14px;border-bottom:1px solid #2A475E;background:#16202D;flex:0 0 auto}
+.details-popover-close{display:grid;place-items:center;width:30px;height:30px;flex:0 0 30px;border:1px solid #2A475E;border-radius:9px;background:#203244;color:#C7D5E0;font-size:22px;line-height:1}
+.details-popover-close:hover{border-color:#66C0F4;color:#66C0F4}
+.details-popover-body{min-height:0;overflow:auto;padding:16px;overscroll-behavior:contain}
+.details-popover-body .product-detail-description,.details-popover-body .product-trust-reviews-grid,.details-popover-body .product-safety-note,.details-popover-body .product-related-section,.details-popover-body .detail-bottom-actions{display:block!important;max-width:none;width:100%;margin-top:14px}
+.details-popover-body .product-detail-description{margin-top:0}
+.details-popover-body .product-spec-section,.details-popover-body .product-description-copy,.details-popover-body .product-reviews,.details-popover-body .product-review-form,.details-popover-body .product-review-gate,.details-popover-body .product-safety-note,.details-popover-body .product-related-section{border-color:#2A475E!important;background:#16202D!important;color:#C7D5E0!important}
+.details-popover-body h2,.details-popover-body h3,.details-popover-body .product-review b{color:#E5EAF0!important}
+.details-popover-body p,.details-popover-body small,.details-popover-body .product-review p{color:#AFC0CF!important}
+.details-popover-body .product-spec-grid>div,.details-popover-body .product-review{border-color:#2A475E!important;background:#1B2838!important}
+.details-popover-body .product-review-form .field{background:#101822!important;border-color:#2A475E!important;color:#E5EAF0!important}
+.details-popover-body .detail-map-frame{width:100%;min-height:220px}
+@media(max-width:1100px){.details-popover{top:auto;right:50%;bottom:calc(72px + env(safe-area-inset-bottom));transform:translateX(50%);width:min(680px,calc(100vw - 24px));max-height:min(72dvh,680px);border-radius:16px}}
+@media(max-width:640px){.details-popover{bottom:calc(66px + env(safe-area-inset-bottom));width:calc(100vw - 16px);max-height:76dvh;border-radius:16px}.details-popover-body{padding:12px}}
