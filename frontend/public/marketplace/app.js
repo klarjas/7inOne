@@ -144,6 +144,13 @@ const MARKETPLACE_UI_MESSAGES = Object.freeze({
   "មិនអាចផ្ទុក Admin៖ ": { 'zh-CN': "无法加载管理后台：", en: "Could not load Admin: " },
   "មិនអាចទាញយកការងារបានទេ៖ ": { 'zh-CN': "无法加载职位：", en: "Could not load jobs: " },
   "មិនអាចទាញយកប្រកាសបានទេ៖ ": { 'zh-CN': "无法加载帖子：", en: "Could not load posts: " },
+  "បោះបង់": { 'zh-CN': "取消", en: "Cancel" },
+  "មូលហេតុ": { 'zh-CN': "原因", en: "Reason" },
+  "យល់ព្រម": { 'zh-CN': "确认", en: "Confirm" },
+  "ផ្ញើរបាយការណ៍": { 'zh-CN': "提交举报", en: "Submit report" },
+  "សរសេរមូលហេតុនៅទីនេះ...": { 'zh-CN': "请在此填写原因...", en: "Write the reason here..." },
+  "បញ្ជាក់សកម្មភាព": { 'zh-CN': "确认操作", en: "Confirm action" },
+  "បិទ": { 'zh-CN': "关闭", en: "Close" },
 });
 function marketplaceUiText(value) {
   const source = String(value ?? '');
@@ -392,7 +399,7 @@ function toast(message, type = 'success') {
       : 'border-slate-800 bg-slate-900 text-white';
 
   el.className = `toast pointer-events-auto flex items-center gap-3 rounded-2xl border px-4 py-3 text-[11px] font-semibold ${styleClass}`;
-  el.innerHTML = `<span class="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-white/10">${ic(type === 'error' ? 'x' : 'check', 15)}</span><span class="flex-1">${esc(message)}</span><button aria-label="បិទ">${ic('x', 14)}</button>`;
+  el.innerHTML = `<span class="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-white/10">${ic(type === 'error' ? 'x' : 'check', 15)}</span><span class="flex-1">${esc(message)}</span><button aria-label="${esc(marketplaceUiText('បិទ'))}">${ic('x', 14)}</button>`;
   el.querySelector('button').onclick = () => el.remove();
   area.appendChild(el);
   setTimeout(() => el.remove(), 3200);
@@ -431,14 +438,14 @@ function appDialog({ mode = 'confirm', title = 'បញ្ជាក់សកម�
     wrap.setAttribute('aria-hidden', 'true');
     const isPrompt = mode === 'prompt';
     const field = isPrompt
-      ? `<label class="app-dialog-field"><span>មូលហេតុ</span><textarea id="appDialogInput" class="field" rows="4" maxlength="1200" placeholder="${esc(placeholder)}"></textarea></label>`
+      ? `<label class="app-dialog-field"><span>${esc(marketplaceUiText('មូលហេតុ'))}</span><textarea id="appDialogInput" class="field" rows="4" maxlength="1200" placeholder="${esc(placeholder)}"></textarea></label>`
       : '';
     wrap.innerHTML = `<section class="modal-box app-dialog-box" role="dialog" aria-modal="true" aria-labelledby="appDialogTitle" aria-describedby="appDialogMessage">
       <div class="app-dialog-heading"><span class="app-dialog-icon">${ic(isPrompt ? 'flag' : 'alert', 19)}</span><div><h2 id="appDialogTitle">${esc(title)}</h2><p id="appDialogMessage">${esc(message)}</p></div></div>
       <form id="appDialogForm" class="app-dialog-form" novalidate>${field}
         <div class="app-dialog-actions">
-          <button type="button" class="app-dialog-cancel" id="appDialogCancel">បោះបង់</button>
-          <button type="submit" class="app-dialog-submit ${danger ? 'is-danger' : ''}">${esc(confirmLabel || (isPrompt ? 'ផ្ញើរបាយការណ៍' : 'យល់ព្រម'))}</button>
+          <button type="button" class="app-dialog-cancel" id="appDialogCancel">${esc(marketplaceUiText('បោះបង់'))}</button>
+          <button type="submit" class="app-dialog-submit ${danger ? 'is-danger' : ''}">${esc(confirmLabel || marketplaceUiText(isPrompt ? 'ផ្ញើរបាយការណ៍' : 'យល់ព្រម'))}</button>
         </div>
       </form>
     </section>`;
