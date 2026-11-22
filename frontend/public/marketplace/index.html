@@ -176,6 +176,11 @@
           <button type="button" data-home-side="orders" aria-label="ការបញ្ជាទិញ"><span data-icon="clipboard" data-icon-size="16"></span><span data-i18n="ការបញ្ជាទិញ">ការបញ្ជាទិញ</span></button>
         </div>
 
+        <button id="supportChatLauncher" type="button" class="relative grid h-10 w-10 place-items-center rounded-full text-slate-200 hover:bg-[#203244] hover:text-[#66C0F4] hidden" aria-label="ឆាតអ្នកទិញ និងអ្នកលក់" title="ប្រអប់សារ">
+          <span data-nav-icon="chat"></span>
+          <span id="sellerChatUnreadBadge" class="absolute -right-0.5 -top-0.5 hidden min-w-[18px] rounded-full bg-rose-600 px-1 py-0.5 text-center text-[9px] font-bold leading-none text-white"></span>
+        </button>
+
         <!-- Notifications -->
         <div class="relative">
           <button aria-label="ការជូនដំណឹង" data-i18n-attr="aria-label:ការជូនដំណឹង" class="relative grid h-10 w-10 place-items-center text-slate-600 hover:text-emerald-700" id="notificationBtn">
@@ -351,6 +356,7 @@
               <button type="button" id="closeHomeDetailInspector" aria-label="បិទព័ត៌មានលម្អិត">×</button>
             </div>
             <div class="product-detail-page" id="productDetail"></div>
+            <div id="inspectorFloatingActions" class="inspector-floating-actions hidden" aria-label="សកម្មភាពរហ័ស"></div>
           </section>
 
           <section id="steamDiscoveryHub" class="steam-discovery-hub" aria-label="Steam Store Discovery Hub">
@@ -1360,11 +1366,6 @@
     </section>
   </div>
 
-  <!-- Floating Chat Launcher -->
-  <button id="supportChatLauncher" type="button" class="hidden" aria-label="ឆាតអ្នកទិញ និងអ្នកលក់">
-    <span data-nav-icon="chat"></span>
-    <span id="sellerChatUnreadBadge" class="absolute -right-1 -top-1 hidden min-w-5 rounded-full bg-rose-600 px-1.5 py-0.5 text-[9px] font-bold text-white"></span>
-  </button>
 
   <!-- Global YouTube Video Popup: outside hidden marketplace views -->
   <dialog id="homeShortsPopup" class="home-shorts-popup" aria-label="មើលវីដេអូ YouTube">
