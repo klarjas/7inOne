@@ -2153,7 +2153,78 @@ function renderProducts() {
   if (listingSub) listingSub.textContent = state.searchTerm ? `លទ្ធផលស្វែងរកសម្រាប់ «${esc(state.searchTerm)}»` : 'ផលិតផល ការងារ ផ្ទះជួល និងដីលក់ បង្ហាញតាមពេលបង្ហោះថ្មីបំផុត';
   $('emptyHome').classList.toggle('hidden', list.length > 0);
   $('productGrid').classList.toggle('hidden', list.length === 0);
+
   $('skeletonGrid').classList.add('hidden');
+  renderSteamDiscoveryHub();
+}
+
+function renderSteamDiscoveryHub() {
+  const trendingRoot = $('hubTrendingList');
+  const savedRoot = $('hubSavedList');
+  const savedCount = $('hubSavedCount');
+  if (!trendingRoot || !savedRoot) return;
+
+  const products = (Array.isArray(state.products) ? state.products : [])
+    .filter(item => item?.listing_type === 'product');
+  const formatViews = value => {
+    const count = Math.max(0, Number(value) || 0);
+    return new Intl.NumberFormat('en', { notation: count >= 1000 ? 'compact' : 'standard', maximumFractionDigits: 1 }).format(count) + ' views';
+  };
+  const miniCard = (item, showViews = false) => {
+    const image = item.product_images?.find(img => img?.image_url)?.image_url || item.image_url || item.cover_url || '';
+    const rawPrice = item.price_label ?? item.display_price ?? item.price;
+    const priceText = String(rawPrice ?? '').trim();
+    const numericPrice = Number(priceText.replace(/,/g, ''));
+    const price = !priceText ? 'ទាក់ទងអ្នកលក់' : (/[ $៛]/.test(priceText) ? priceText : (Number.isFinite(numericPrice) ? money(numericPrice) : priceText));
+    return `<button type="button" class="hub-item-card" data-hub-product-id="${esc(item.id)}" aria-label="មើលព័ត៌មាន ${esc(item.title || 'ទំនិញ')}">
+      <span class="hub-item-thumb">${image ? `<img src="${esc(image)}" alt="" loading="lazy">` : ic('image',18)}</span>
+      <span class="hub-item-copy">
+        <span class="hub-item-title">${esc(item.title || 'ទំនិញមិនមានឈ្មោះ')}</span>
+        <span class="hub-item-meta"><span class="hub-item-price">${esc(price)}</span>${showViews ? `<span class="hub-item-views">${esc(formatViews(item.view_count))}</span>` : ''}</span>
+      </span>
+    </button>`;
+  };
+
+  const trending = [...products]
+    .sort((a,b) => (Number(b.view_count) || 0) - (Number(a.view_count) || 0))
+    .slice(0,4);
+  trendingRoot.innerHTML = trending.length
+    ? trending.map(item => miniCard(item,true)).join('')
+    : '<p class="hub-empty-message">មិនទាន់មានទំនិញពេញនិយមទេ។</p>';
+
+  const savedIds = state.savedIds instanceof Set ? state.savedIds : new Set();
+  const saved = products.filter(item => savedIds.has(item.id) || savedIds.has(String(item.id))).slice(0,3);
+  if (savedCount) savedCount.textContent = String(products.filter(item => savedIds.has(item.id) || savedIds.has(String(item.id))).length);
+  savedRoot.innerHTML = saved.length
+    ? saved.map(item => miniCard(item,false)).join('')
+    : `<p class="hub-empty-message">${state.session ? 'ចុចរូប Bookmark លើទំនិញដើម្បីរក្សាទុក' : 'ចូលគណនី ដើម្បីមើលទំនិញដែលបានរក្សាទុក'}</p>`;
+}
+
+function showHomeDetailInspector() {
+  const inspector = $('homeDetailInspector');
+  const detail = $('productDetail');
+  if (!inspector || !detail) return;
+  inspector.appendChild(detail);
+  $('steamDiscoveryHub')?.classList.add('hidden');
+  inspector.classList.remove('hidden');
+}
+
+function mountProductDetailPage() {
+  const mount = $('productDetailPageMount');
+  const detail = $('productDetail');
+  if (mount && detail && detail.parentElement !== mount) mount.appendChild(detail);
+}
+
+function closeHomeDetailInspector() {
+  const inspector = $('homeDetailInspector');
+  const detail = $('productDetail');
+  const mount = $('productDetailPageMount');
+  if (detail && mount && detail.parentElement !== mount) mount.appendChild(detail);
+  inspector?.classList.add('hidden');
+  $('steamDiscoveryHub')?.classList.remove('hidden');
+  state.currentProduct = null;
+  state.currentVendor = null;
+  state.currentMarketplaceListing = null;
 }
 
 async function loadProducts() {
@@ -2319,8 +2390,12 @@ function renderProductDetailSkeleton() {
 async function openMarketplaceListing(type, id, options = {}) {
   if (!id || !['job', 'real_estate'].includes(type)) return false;
   const isCurrent = () => options.routeSyncNavigationId == null || options.routeSyncNavigationId === state.routeSyncNavigationId;
+  const inlineInspector = options.inlineInspector === true || (
+    !options.forceFullPage && options.routeSyncNavigationId == null && $('view-home')?.classList.contains('active')
+  );
   state.currentProduct = { id: String(id), listing_type: type };
-  await showView('product', { preserveScroll: Boolean(options.preserveScroll), deferLoad: true });
+  if (inlineInspector) showHomeDetailInspector();
+  else { mountProductDetailPage(); await showView('product', { preserveScroll: Boolean(options.preserveScroll), deferLoad: true }); }
   if (!isCurrent()) return false;
   renderProductDetailSkeleton();
 
@@ -2341,18 +2416,24 @@ async function openMarketplaceListing(type, id, options = {}) {
     state.currentVendor = null;
     state.productGalleryIndex = 0;
     state.productGalleryVideoActive = false;
-    try {
-      sessionStorage.setItem('ecomstore.activeView', 'product');
-      sessionStorage.setItem('ecomstore.currentProductId', String(id));
-      sessionStorage.setItem('ecomstore.currentListingType', type);
-      sessionStorage.setItem('ecomstore.currentListingId', String(id));
-    } catch {}
-    await showView('product', { preserveScroll: Boolean(options.preserveScroll) });
+    if (!inlineInspector) {
+      try {
+        sessionStorage.setItem('ecomstore.activeView', 'product');
+        sessionStorage.setItem('ecomstore.currentProductId', String(id));
+        sessionStorage.setItem('ecomstore.currentListingType', type);
+        sessionStorage.setItem('ecomstore.currentListingId', String(id));
+      } catch {}
+      mountProductDetailPage();
+      await showView('product', { preserveScroll: Boolean(options.preserveScroll) });
+    } else {
+      renderProductDetail();
+    }
     return true;
   } catch (error) {
     if (!isCurrent()) return false;
     toast(error.message || 'មិនអាចបើកព័ត៌មានប្រកាសបានទេ។', 'error');
-    void showView('home');
+    if (inlineInspector) closeHomeDetailInspector();
+    else void showView('home');
     return false;
   }
 }
@@ -2362,16 +2443,22 @@ async function openProduct(id, options = {}) {
   const productId = String(id);
   const isCurrent = () => options.routeSyncNavigationId == null || options.routeSyncNavigationId === state.routeSyncNavigationId;
 
+  const inlineInspector = options.inlineInspector === true || (
+    !options.forceFullPage && options.routeSyncNavigationId == null && $('view-home')?.classList.contains('active')
+  );
   state.currentProduct = { id: productId };
-  await showView('product', { preserveScroll: Boolean(options.preserveScroll), deferLoad: true });
+  if (inlineInspector) showHomeDetailInspector();
+  else { mountProductDetailPage(); await showView('product', { preserveScroll: Boolean(options.preserveScroll), deferLoad: true }); }
   if (!isCurrent()) return false;
   renderProductDetailSkeleton();
 
   try {
-    try {
-      sessionStorage.setItem('ecomstore.currentProductId', productId);
-      sessionStorage.setItem('ecomstore.activeView', 'product');
-    } catch {}
+    if (!inlineInspector) {
+      try {
+        sessionStorage.setItem('ecomstore.currentProductId', productId);
+        sessionStorage.setItem('ecomstore.activeView', 'product');
+      } catch {}
+    }
 
     const [result] = await Promise.all([
       api('/api/products/' + encodeURIComponent(productId)),
@@ -2396,7 +2483,8 @@ async function openProduct(id, options = {}) {
   } catch (error) {
     if (!isCurrent()) return false;
     toast(error.message, 'error');
-    void showView('home');
+    if (inlineInspector) closeHomeDetailInspector();
+    else void showView('home');
     return false;
   }
 }
@@ -2831,7 +2919,7 @@ function renderProductDetail() {
       const kind = btn.dataset.productAction;
       if (kind === 'store') void openStorefront(v.id);
       if (kind === 'buy') openCheckout(p);
-      if (kind === 'save') saveAction(p.id, btn);
+      if (kind === 'save') Promise.resolve(saveAction(p.id, btn)).finally(renderSteamDiscoveryHub);
       if (kind === 'offer') {
         if (!requireLogin()) return;
         state.currentOfferProduct = {...p, price: effectivePrice, variant_id: selectedVariant?.id || null};
@@ -2845,7 +2933,7 @@ function renderProductDetail() {
 
   $('productDetail').querySelector('.product-related-grid')?.addEventListener('click', (e) => {
     const save = e.target.closest('[data-action="save"]');
-    if (save) { e.preventDefault(); e.stopPropagation(); saveAction(save.dataset.id, save); return; }
+    if (save) { e.preventDefault(); e.stopPropagation(); Promise.resolve(saveAction(save.dataset.id, save)).finally(renderSteamDiscoveryHub); return; }
     const view = e.target.closest('[data-action="view"]');
     if (view) { void openProduct(view.dataset.id); return; }
     const store = e.target.closest('[data-action="store"]');
@@ -3225,7 +3313,7 @@ function handleStorefrontAction(event) {
   const auroraEdit=event.target.closest('[data-aurora-edit]');
   if(auroraEdit){event.preventDefault();event.stopPropagation();openAuroraProductEditor(auroraEdit.dataset.auroraEdit);return;}
   const heart = event.target.closest('[data-action="save"]');
-  if (heart) { event.preventDefault(); event.stopPropagation(); saveAction(heart.dataset.id, heart); return; }
+  if (heart) { event.preventDefault(); event.stopPropagation(); Promise.resolve(saveAction(heart.dataset.id, heart)).finally(renderSteamDiscoveryHub); return; }
   const view = event.target.closest('[data-action="view"]');
   if (view) void openProduct(view.dataset.id);
 }
@@ -3236,6 +3324,7 @@ function handleStorefrontAction(event) {
 async function loadSaved() {
   const r = await api('/api/saved');
   state.savedIds = new Set((r.data || []).map((x) => x.products?.id).filter(Boolean));
+  renderSteamDiscoveryHub();
   return r.data || [];
 }
 
@@ -5912,13 +6001,22 @@ function bindEvents() {
       renderProducts();
     });
   });
+  $('homeJobsRail')?.addEventListener('click', (event) => {
+    const quickPost = event.target.closest('#hubQuickPostBtn');
+    if (quickPost) { $('postAdBtn')?.click(); return; }
+    const close = event.target.closest('#closeHomeDetailInspector');
+    if (close) { closeHomeDetailInspector(); return; }
+    const card = event.target.closest('[data-hub-product-id]');
+    if (card) { void openProduct(card.dataset.hubProductId, { inlineInspector: true, preserveScroll: true }); }
+  });
+
   $('productGrid').addEventListener('click', (e) => {
     const copyId=e.target.closest('[data-copy-product-code]');
     if(copyId){e.preventDefault();e.stopPropagation();void copyProductCode(copyId);return;}
     const otherListing = e.target.closest('[data-action="view-listing"]');
     if (otherListing) { openMarketplaceListing(otherListing.dataset.type, otherListing.dataset.id); return; }
     const heart = e.target.closest('[data-action="save"]');
-    if (heart) { e.preventDefault(); e.stopPropagation(); saveAction(heart.dataset.id, heart); return; }
+    if (heart) { e.preventDefault(); e.stopPropagation(); Promise.resolve(saveAction(heart.dataset.id, heart)).finally(renderSteamDiscoveryHub); return; }
     const store = e.target.closest('[data-action="store"]');
     if (store) { e.preventDefault(); e.stopPropagation(); void openStorefront(store.dataset.vendorId); return; }
     const view = e.target.closest('[data-action="view"]');
@@ -6006,6 +6104,7 @@ function bindEvents() {
       state.session = null;
       state.me = null;
       state.savedIds.clear();
+      renderSteamDiscoveryHub();
       syncHeader();
       showView('home');
       toast('បានចាកចេញពីគណនីរួចរាល់។');
@@ -6500,7 +6599,7 @@ function bindEvents() {
     const open = e.target.closest('[data-open-product]');
     if (open) { void openProduct(open.dataset.openProduct); return; }
     const remove = e.target.closest('[data-remove-saved]');
-    if (remove) saveAction(remove.dataset.removeSaved, remove);
+    if (remove) Promise.resolve(saveAction(remove.dataset.removeSaved, remove)).finally(renderSteamDiscoveryHub);
   });
   $('profileTabContent')?.addEventListener('submit', async (e) => {
     const form = e.target.closest('[data-my-post-edit-form]');
@@ -6962,6 +7061,7 @@ async function boot() {
     }
 
     await Promise.allSettled(tasks);
+    renderSteamDiscoveryHub();
     document.documentElement.classList.remove('route-restoring');
   } catch (err) {
     console.error('Boot error:', err);
