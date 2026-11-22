@@ -11,6 +11,8 @@ import { registerSupportChat } from './support-chat.js';
 import { registerSellerChat } from './seller-chat.js';
 import { registerMyPostsRoutes } from './my-posts.js';
 import { randomUUID, randomBytes, randomInt, createHash, createHmac, timingSafeEqual, createCipheriv, createDecipheriv } from 'node:crypto';
+import { lookup } from 'node:dns/promises';
+import { isIP } from 'node:net';
 
 const app = express();
 const port = Number(process.env.PORT || 10000);
@@ -2894,6 +2896,11 @@ app.post('/api/products/:id/images', authenticate, upload.array('images', 10), a
     }));
     const { data, error } = await supabase.from('product_images').insert(rows).select('id,product_id,file_id,telegram_message_id,image_url,sort_order');
     if (error) throw new Error('Image uploads succeeded, but the product image records could not be saved. Please contact support.');
+    if ((count || 0) + files.length === 1) {
+      void discoverProductGalleryCandidates(product.id).then(result => {
+        console.info('Smart Product Gallery first-image discovery:', { productId: product.id, candidates: result.found || 0, skipped: Boolean(result.skipped) });
+      }).catch(error => console.warn('Smart Product Gallery first-image discovery failed:', product.id, clean(error.message, 180)));
+    }
     return res.status(201).json({ data: (data || []).map(image => ({
       id: image.id, product_id: image.product_id, sort_order: image.sort_order,
       image_url: image.file_id ? mediaProxyUrl(image.file_id) : normalizeMediaUrl(image.image_url)
@@ -3291,6 +3298,387 @@ app.patch('/api/admin/vendors/:id', authenticate, requireAdmin, async (req, res)
     if (targetProfile?.role === 'vendor') await supabase.from('profiles').update({ role: 'customer' }).eq('id', data.user_id);
   }
   res.json({ data });
+});
+
+
+// Smart Product Gallery: discover exact-model image candidates for Admin review.
+// Approved images are copied into Telegram through the existing upload pipeline.
+function galleryIsPrivateAddress(address) {
+  const value = String(address || '').toLowerCase();
+  if (isIP(value) === 4) {
+    const parts = value.split('.').map(Number), a = parts[0], b = parts[1];
+    return a === 0 || a === 10 || a === 127 || a >= 224 ||
+      (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) ||
+      (a === 192 && b === 168) || (a === 100 && b >= 64 && b <= 127);
+  }
+  if (isIP(value) === 6) {
+    return value === '::' || value === '::1' || value.startsWith('fc') ||
+      value.startsWith('fd') || value.startsWith('fe8') || value.startsWith('fe9') ||
+      value.startsWith('fea') || value.startsWith('feb') || value.startsWith('ff') ||
+      value.startsWith('::ffff:');
+  }
+  return true;
+}
+async function gallerySafeRemoteUrl(raw) {
+  try {
+    const url = new URL(raw), host = url.hostname.toLowerCase();
+    if (url.protocol !== 'https:' || !host || isIP(host) || host === 'localhost' ||
+        host.endsWith('.localhost') || host.endsWith('.local') || url.username || url.password) return null;
+    const addresses = await lookup(host, { all: true, verbatim: true });
+    if (!addresses.length || addresses.some(item => galleryIsPrivateAddress(item.address))) return null;
+    return url;
+  } catch { return null; }
+}
+function galleryDecodeHtml(value) {
+  return String(value || '').replace(/&amp;/g, '&').replace(/&quot;/g, '"')
+    .replace(/&#39;|&apos;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&#(\d+);/g, (_m, n) => String.fromCodePoint(Number(n) || 0));
+}
+function galleryHtmlAttr(html, attr) {
+  const key = String(attr).replace(/[^a-z0-9:-]/gi, '');
+  const re = new RegExp("<meta[^>]+(?:property|name)=[\"']" + key + "[\"'][^>]+content=[\"']([^\"']+)[\"']", 'i');
+  const first = html.match(re);
+  if (first) return galleryDecodeHtml(first[1]);
+  const reversed = new RegExp("<meta[^>]+content=[\"']([^\"']+)[\"'][^>]+(?:property|name)=[\"']" + key + "[\"']", 'i');
+  return galleryDecodeHtml(html.match(reversed)?.[1] || '');
+}
+function galleryJsonLdImages(html) {
+  const found = [];
+  for (const match of html.matchAll(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)) {
+    try {
+      const parsed = JSON.parse(match[1]);
+      const visit = value => {
+        if (!value || typeof value !== 'object') return;
+        if (Array.isArray(value)) return value.forEach(visit);
+        if (value.image) for (const image of (Array.isArray(value.image) ? value.image : [value.image])) {
+          const url = typeof image === 'string' ? image : image?.url || image?.contentUrl;
+          if (url) found.push(url);
+        }
+        if (value['@graph']) visit(value['@graph']);
+      };
+      visit(parsed);
+    } catch {}
+  }
+  return found;
+}
+function galleryIdentity(product, supplierCode, variants) {
+  const tokens = String(product.title || '').toLowerCase().match(/[a-z0-9][a-z0-9._+-]{1,}/g) || [];
+  const generic = new Set(['laptop','desktop','computer','notebook','monitor','phone','smartphone','wireless','gaming','original','official','product','series','brand','new']);
+  const brandToken = tokens[0] || '';
+  const modelTokens = [...new Set([brandToken, ...tokens.filter(token => /\d/.test(token) || token.length >= 5)])]
+    .filter(token => token.length >= 2 && !generic.has(token)).slice(0, 8);
+  const code = String(supplierCode || '').trim().toLowerCase();
+  const skuTokens = (variants || []).map(row => String(row.sku || '').trim().toLowerCase()).filter(Boolean);
+  return { title: String(product.title || ''), code, modelTokens, skuTokens };
+}
+function galleryScorePage(text, identity) {
+  const haystack = ' ' + String(text || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim().replace(/\s+/g, ' ') + ' ';
+  const normalize = value => String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim().replace(/\s+/g, ' ');
+  const code = normalize(identity.code);
+  const exactCode = Boolean(code && haystack.includes(' ' + code + ' '));
+  const matchedModels = identity.modelTokens.filter(token => haystack.includes(' ' + normalize(token) + ' '));
+  const matchedSkus = identity.skuTokens.filter(token => haystack.includes(' ' + normalize(token) + ' '));
+  const numericModelMatch = matchedModels.some(token => /\d/.test(token));
+  const modelPass = identity.modelTokens.length > 0 && numericModelMatch &&
+    matchedModels.length >= Math.min(2, identity.modelTokens.length);
+  const codePass = exactCode || matchedSkus.length > 0;
+  const verificationLevel = codePass && modelPass ? 'code_verified' : modelPass ? 'model_review_required' : 'unverified';
+  return {
+    score: Math.min(100, (codePass ? 75 : 0) + Math.min(25, matchedModels.length * 12)),
+    exact_product_code: exactCode,
+    matched_model_tokens: matchedModels,
+    matched_skus: matchedSkus,
+    numeric_model_match: numericModelMatch,
+    verification_level: verificationLevel,
+    verified_identity: Boolean(modelPass)
+  };
+}
+async function galleryFetchPage(rawUrl) {
+  let url = await gallerySafeRemoteUrl(rawUrl);
+  if (!url) throw new Error('Unsafe source URL.');
+  for (let attempt = 0; attempt <= 3; attempt++) {
+    const response = await fetch(url, { redirect: 'manual', headers: { 'user-agent': 'Mozilla/5.0 (compatible; 7inOneGallery/1.0)', accept: 'text/html,application/xhtml+xml' }, signal: AbortSignal.timeout(12000) });
+    if ([301,302,303,307,308].includes(response.status)) {
+      const location = response.headers.get('location');
+      if (!location || attempt === 3) throw new Error('Too many redirects.');
+      url = await gallerySafeRemoteUrl(new URL(location, url).href);
+      if (!url) throw new Error('Unsafe redirected URL.');
+      continue;
+    }
+    if (!response.ok) throw new Error('Source page HTTP ' + response.status);
+    const type = String(response.headers.get('content-type') || '').toLowerCase();
+    if (!type.includes('text/html') && !type.includes('application/xhtml+xml')) throw new Error('Source is not an HTML page.');
+    const length = Number(response.headers.get('content-length') || 0);
+    if (length > 2 * 1024 * 1024) throw new Error('Source page too large.');
+    const html = await response.text();
+    if (Buffer.byteLength(html) > 2 * 1024 * 1024) throw new Error('Source page too large.');
+    return { html, finalUrl: url.href };
+  }
+  throw new Error('Could not fetch source page.');
+}
+function galleryImageDimensions(buffer, mimeType) {
+  try {
+    if (mimeType === 'image/png' && buffer.length >= 24 && buffer.subarray(0, 8).equals(Buffer.from([137,80,78,71,13,10,26,10]))) {
+      return { width: buffer.readUInt32BE(16), height: buffer.readUInt32BE(20) };
+    }
+    if (mimeType === 'image/webp' && buffer.length >= 30 && buffer.toString('ascii', 0, 4) === 'RIFF' && buffer.toString('ascii', 8, 12) === 'WEBP') {
+      const kind = buffer.toString('ascii', 12, 16);
+      if (kind === 'VP8X') return { width: 1 + buffer.readUIntLE(24, 3), height: 1 + buffer.readUIntLE(27, 3) };
+      if (kind === 'VP8 ' && buffer.length >= 30) return { width: buffer.readUInt16LE(26) & 0x3fff, height: buffer.readUInt16LE(28) & 0x3fff };
+      if (kind === 'VP8L' && buffer[20] === 0x2f) return { width: 1 + buffer[21] + ((buffer[22] & 0x3f) << 8), height: 1 + (buffer[22] >> 6) + (buffer[23] << 2) + ((buffer[24] & 0x0f) << 10) };
+    }
+    if (mimeType === 'image/jpeg' && buffer.length > 4 && buffer[0] === 0xff && buffer[1] === 0xd8) {
+      let offset = 2;
+      while (offset + 9 < buffer.length) {
+        if (buffer[offset] !== 0xff) { offset++; continue; }
+        const marker = buffer[offset + 1], size = buffer.readUInt16BE(offset + 2);
+        if ([0xc0,0xc1,0xc2,0xc3,0xc5,0xc6,0xc7,0xc9,0xca,0xcb,0xcd,0xce,0xcf].includes(marker)) {
+          return { height: buffer.readUInt16BE(offset + 5), width: buffer.readUInt16BE(offset + 7) };
+        }
+        if (size < 2) break;
+        offset += size + 2;
+      }
+    }
+  } catch {}
+  return null;
+}
+async function galleryFetchImage(rawUrl) {
+  let url = await gallerySafeRemoteUrl(rawUrl);
+  if (!url) throw new Error('Unsafe image URL.');
+  for (let attempt = 0; attempt <= 3; attempt++) {
+    const response = await fetch(url, { redirect: 'manual', headers: { 'user-agent': '7inOne-ProductGallery/1.0', accept: 'image/jpeg,image/png,image/webp' }, signal: AbortSignal.timeout(15000) });
+    if ([301,302,303,307,308].includes(response.status)) {
+      const location = response.headers.get('location');
+      if (!location || attempt === 3) throw new Error('Too many image redirects.');
+      url = await gallerySafeRemoteUrl(new URL(location, url).href);
+      if (!url) throw new Error('Unsafe redirected image URL.');
+      continue;
+    }
+    if (!response.ok) throw new Error('Image source HTTP ' + response.status);
+    const mimeType = String(response.headers.get('content-type') || '').split(';')[0].trim().toLowerCase();
+    if (!['image/jpeg','image/png','image/webp'].includes(mimeType)) throw new Error('Only JPG, PNG or WEBP are accepted.');
+    const length = Number(response.headers.get('content-length') || 0);
+    if (length > 20 * 1024 * 1024) throw new Error('Image is larger than 20MB.');
+    const buffer = Buffer.from(await response.arrayBuffer());
+    if (!buffer.length || buffer.length > 20 * 1024 * 1024) throw new Error('Image size is invalid.');
+    const signatureOk = mimeType === 'image/jpeg' ? buffer[0] === 0xff && buffer[1] === 0xd8
+      : mimeType === 'image/png' ? buffer.subarray(0, 8).equals(Buffer.from([137,80,78,71,13,10,26,10]))
+      : buffer.toString('ascii', 0, 4) === 'RIFF' && buffer.toString('ascii', 8, 12) === 'WEBP';
+    if (!signatureOk) throw new Error('Image file signature does not match its content type.');
+    const dimensions = galleryImageDimensions(buffer, mimeType);
+    if (!dimensions || dimensions.width < 600 || dimensions.height < 400) throw new Error('Image resolution is too small or could not be verified (minimum 600 × 400).');
+    return { buffer, mimeType, dimensions };
+  }
+  throw new Error('Could not download image.');
+}
+function galleryPageImageUrls(html) {
+  const urls = [
+    galleryHtmlAttr(html, 'og:image'),
+    galleryHtmlAttr(html, 'twitter:image'),
+    ...galleryJsonLdImages(html)
+  ].filter(Boolean);
+  for (const match of String(html || '').matchAll(/<img\b[^>]*>/gi)) {
+    const tag = match[0];
+    const width = Number(tag.match(/\bwidth=["']?(\d+)/i)?.[1] || 0);
+    const height = Number(tag.match(/\bheight=["']?(\d+)/i)?.[1] || 0);
+    if ((width && width < 300) || (height && height < 200)) continue;
+    for (const attrMatch of tag.matchAll(/\b(?:src|data-src|data-original|data-lazy-src)=["']([^"']+)["']/gi)) {
+      if (attrMatch[1]) urls.push(galleryDecodeHtml(attrMatch[1]));
+    }
+    const srcset = tag.match(/\bsrcset=["']([^"']+)["']/i)?.[1] || '';
+    for (const entry of srcset.split(',')) {
+      const value = entry.trim().split(/\s+/)[0];
+      if (value) urls.push(galleryDecodeHtml(value));
+    }
+  }
+  return [...new Set(urls)];
+}
+
+async function discoverProductGalleryCandidates(productId) {
+  const { data: product, error: productError } = await supabase.from('products')
+    .select('id,title,description,category').eq('id', productId).maybeSingle();
+  if (productError || !product) throw new Error('Product not found.');
+  const [{ data: source }, { data: variants }] = await Promise.all([
+    supabase.from('product_supplier_sources').select('supplier_product_code').eq('product_id', product.id).maybeSingle(),
+    supabase.from('product_variants').select('sku').eq('product_id', product.id).eq('is_active', true)
+  ]);
+  const identity = galleryIdentity(product, source?.supplier_product_code, variants || []);
+  if (!identity.modelTokens.length && !identity.code && !identity.skuTokens.length) {
+    return { data: [], found: 0, skipped: true, reason: 'missing_product_model_or_code' };
+  }
+
+  // Search several query patterns so discovery is not limited to one exact phrase.
+  // The search engine indexes a broad range of public websites; it cannot guarantee every site on the internet.
+  const modelQuery = identity.modelTokens.join(' ');
+  const queries = [...new Set([
+    [identity.title, identity.code].filter(Boolean).join(' ') + ' product images',
+    [identity.title, ...identity.skuTokens].filter(Boolean).join(' ') + ' official product',
+    '"' + identity.title + '" specifications images',
+    [modelQuery, identity.code].filter(Boolean).join(' ') + ' product gallery'
+  ].map(value => value.trim()).filter(Boolean))];
+
+  const links = [];
+  const seenLinks = new Set();
+  for (const query of queries) {
+    try {
+      const response = await fetch('https://html.duckduckgo.com/html/?q=' + encodeURIComponent(query), {
+        headers: { 'user-agent': 'Mozilla/5.0 (compatible; 7inOneGallery/1.0)', accept: 'text/html' },
+        signal: AbortSignal.timeout(15000)
+      });
+      if (!response.ok) continue;
+      const searchHtml = await response.text();
+      for (const match of searchHtml.matchAll(/<a[^>]+class=["'][^"']*result__a[^"']*["'][^>]+href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi)) {
+        try {
+          const wrapped = new URL(galleryDecodeHtml(match[1]), 'https://duckduckgo.com');
+          const safe = await gallerySafeRemoteUrl(wrapped.searchParams.get('uddg') || wrapped.href);
+          if (!safe || seenLinks.has(safe.href)) continue;
+          seenLinks.add(safe.href);
+          links.push({
+            url: safe.href,
+            title: galleryDecodeHtml(match[2].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ')).slice(0, 240)
+          });
+        } catch {}
+        if (links.length >= 48) break;
+      }
+    } catch (error) {
+      console.warn('Gallery search query skipped:', clean(error.message, 120));
+    }
+    if (links.length >= 48) break;
+  }
+
+  const candidates = [];
+  const seenImages = new Set();
+  let inspectedPages = 0;
+  for (const link of links) {
+    if (inspectedPages >= 30 || candidates.length >= 20) break;
+    inspectedPages++;
+    try {
+      const page = await galleryFetchPage(link.url);
+      const pageTitle = galleryHtmlAttr(page.html, 'og:title') || galleryHtmlAttr(page.html, 'twitter:title') || link.title;
+      const pageDescription = galleryHtmlAttr(page.html, 'og:description') || galleryHtmlAttr(page.html, 'description');
+      const match = galleryScorePage([pageTitle, pageDescription, page.html.slice(0, 160000)].join(' '), identity);
+      if (!match.verified_identity) continue;
+      const rawImages = galleryPageImageUrls(page.html);
+      for (const rawImage of rawImages) {
+        let imageUrl = null;
+        try { imageUrl = (await gallerySafeRemoteUrl(new URL(rawImage, page.finalUrl).href))?.href; } catch {}
+        if (!imageUrl || seenImages.has(imageUrl)) continue;
+        seenImages.add(imageUrl);
+        const sourceDomain = new URL(page.finalUrl).hostname.toLowerCase().replace(/^www\./, '');
+        candidates.push({
+          product_id: product.id,
+          image_url: imageUrl,
+          source_url: page.finalUrl,
+          source_title: pageTitle,
+          match_score: match.score,
+          match_evidence: {
+            ...match,
+            source_domain: sourceDomain,
+            source_title: pageTitle,
+            source_page_url: page.finalUrl,
+            supplier_product_code: identity.code || null,
+            expected_skus: identity.skuTokens,
+            review_note: match.verification_level === 'model_review_required'
+              ? 'Model evidence found, but product code/SKU was not verified. Admin must inspect manually.'
+              : 'Product code/SKU and model evidence found. Admin approval is still required.'
+          }
+        });
+        if (candidates.length >= 20) break;
+      }
+    } catch (error) {
+      console.warn('Gallery source skipped:', link.url, clean(error.message, 120));
+    }
+  }
+  if (!candidates.length) return {
+    data: [], found: 0, searched_queries: queries.length, inspected_pages: inspectedPages,
+    message: 'No sufficiently matched product images were found across the searched public websites.'
+  };
+  const { data, error } = await supabase.from('product_gallery_candidates')
+    .upsert(candidates, { onConflict: 'product_id,image_url', ignoreDuplicates: true })
+    .select('id,product_id,image_url,source_url,source_title,match_score,match_evidence,status,created_at');
+  if (error) throw new Error('Could not save candidates. Apply the Smart Product Gallery migration first.');
+  return {
+    data: data || [],
+    found: candidates.length,
+    searched_queries: queries.length,
+    inspected_pages: inspectedPages,
+    message: 'Searched multiple public-web query patterns. Candidates remain private and await Admin review; model-only matches are clearly flagged for extra checking.'
+  };
+}
+app.post('/api/admin/products/:id/gallery-search', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const result = await discoverProductGalleryCandidates(req.params.id);
+    return res.json(result);
+  } catch (error) {
+    return fail(res, 502, 'External image search failed: ' + clean(error.message, 160));
+  }
+});
+app.get('/api/admin/gallery-products', authenticate, requireAdmin, async (req, res) => {
+  const term = clean(req.query.q, 100);
+  if (term.length < 2) return res.json({ data: [] });
+  const { data, error } = await supabase.from('products')
+    .select('id,title,category,product_images(id)')
+    .ilike('title', '%' + term.replace(/[,%_]/g, ' ') + '%')
+    .order('created_at', { ascending: false }).limit(30);
+  if (error) return fail(res, 500, 'Could not search products for Smart Gallery.');
+  return res.json({ data: (data || []).map(item => ({
+    id: item.id, title: item.title, category: item.category,
+    image_count: (item.product_images || []).length
+  })) });
+});
+app.get('/api/admin/product-gallery-candidates', authenticate, requireAdmin, async (req, res) => {
+  const status = clean(req.query.status || 'pending', 20);
+  if (!['pending','approved','rejected','failed','all'].includes(status)) return fail(res, 400, 'Invalid candidate status.');
+  let query = supabase.from('product_gallery_candidates').select('id,product_id,image_url,source_url,source_title,match_score,match_evidence,status,created_at,products(title)').order('created_at', { ascending: false }).limit(200);
+  if (status !== 'all') query = query.eq('status', status);
+  const { data, error } = await query;
+  if (error) return fail(res, 500, 'Could not load gallery candidates. Apply the Smart Product Gallery migration first.');
+  return res.json({ data: data || [] });
+});
+app.post('/api/admin/product-gallery-candidates/:id/approve', authenticate, requireAdmin, async (req, res) => {
+  const { data: candidate, error } = await supabase.from('product_gallery_candidates').select('*').eq('id', req.params.id).eq('status', 'pending').maybeSingle();
+  if (error || !candidate) return fail(res, 404, 'Pending image candidate not found.');
+  const { count, error: countError } = await supabase.from('product_images').select('id', { count: 'exact', head: true }).eq('product_id', candidate.product_id);
+  if (countError) return fail(res, 500, 'Could not check product image count.');
+  if ((count || 0) >= 10) return fail(res, 409, 'Maximum 10 product images reached.');
+  let uploaded = null;
+  try {
+    const remote = await galleryFetchImage(candidate.image_url);
+    const extension = remote.mimeType === 'image/png' ? 'png' : remote.mimeType === 'image/webp' ? 'webp' : 'jpg';
+    const file = { buffer: remote.buffer, mimetype: remote.mimeType, size: remote.buffer.length, originalname: 'gallery-' + candidate.id + '.' + extension };
+    const invalid = imageUploadError(file, 20 * 1024 * 1024);
+    if (invalid) return fail(res, 400, invalid);
+    uploaded = await uploadToTelegram(file, 20 * 1024 * 1024);
+    const { data: lastImage } = await supabase.from('product_images').select('sort_order').eq('product_id', candidate.product_id).order('sort_order', { ascending: false }).limit(1).maybeSingle();
+    const { data: image, error: imageError } = await supabase.from('product_images').insert({
+      product_id: candidate.product_id, telegram_message_id: uploaded.messageId, file_id: uploaded.fileId,
+      image_url: mediaProxyUrl(uploaded.fileId), sort_order: Number(lastImage?.sort_order ?? -1) + 1
+    }).select('id,product_id,file_id,telegram_message_id,image_url,sort_order').single();
+    if (imageError) throw new Error('Telegram upload succeeded but gallery record could not be saved.');
+    const { error: reviewError } = await supabase.from('product_gallery_candidates').update({
+      status: 'approved', telegram_message_id: uploaded.messageId, telegram_file_id: uploaded.fileId,
+      reviewed_by: req.user.id, reviewed_at: new Date().toISOString(), updated_at: new Date().toISOString()
+    }).eq('id', candidate.id).eq('status', 'pending');
+    if (reviewError) {
+      await supabase.from('product_images').delete().eq('id', image.id);
+      throw new Error('Could not finalize candidate approval.');
+    }
+    return res.json({ data: { ...image, image_url: mediaProxyUrl(image.file_id) }, status: 'approved' });
+  } catch (error) {
+    if (uploaded?.messageId) await deleteTelegramMessage(uploaded.messageId);
+    console.error('Smart Product Gallery approval failed:', error.message);
+    await supabase.from('product_gallery_candidates').update({ status: 'failed', reviewed_by: req.user.id, reviewed_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq('id', candidate.id).eq('status', 'pending');
+    return fail(res, 502, 'Could not add image to Telegram gallery: ' + clean(error.message, 160));
+  }
+});
+app.patch('/api/admin/product-gallery-candidates/:id', authenticate, requireAdmin, async (req, res) => {
+  if (clean(req.body.status, 20) !== 'rejected') return fail(res, 400, 'Only rejection is supported.');
+  const { data, error } = await supabase.from('product_gallery_candidates').update({
+    status: 'rejected', reviewed_by: req.user.id, reviewed_at: new Date().toISOString(), updated_at: new Date().toISOString()
+  }).eq('id', req.params.id).eq('status', 'pending').select().maybeSingle();
+  if (error) return fail(res, 500, 'Could not reject candidate.');
+  if (!data) return fail(res, 404, 'Pending candidate not found.');
+  return res.json({ data });
 });
 
 app.get('/api/admin/supplier-update-reviews', authenticate, requireAdmin, async (req, res) => {
@@ -3772,10 +4160,29 @@ async function runCcComputerAutoSync() {
   if (ccSupplierSyncPromise) return ccSupplierSyncPromise;
   ccSupplierSyncPromise = (async () => {
     const startedAt = new Date().toISOString();
-    const { data: scanSources, error: sourceConfigError } = await supabase.from('supplier_scan_sources')
+    const { data: configuredScanSources, error: sourceConfigError } = await supabase.from('supplier_scan_sources')
       .select('*').eq('supplier_name', 'CC COMPUTER').eq('is_active', true).order('brand_key');
     if (sourceConfigError) throw sourceConfigError;
-    if (!scanSources?.length) return { skipped: true, reason: 'no_active_scan_sources' };
+    const placeholderAnchors = new Set(['#msi', '#dell', '#lenovo']);
+    const scanSources = (configuredScanSources || []).filter(config => {
+      try {
+        const url = new URL(config.source_url);
+        const host = url.hostname.toLowerCase().replace(/^www\./, '');
+        const isKnownExampleAnchor = host === 'cccomputerkh.com'
+          && /\/index\.html?$/i.test(url.pathname)
+          && placeholderAnchors.has(url.hash.toLowerCase());
+        return !isKnownExampleAnchor;
+      } catch {
+        return false;
+      }
+    });
+    if (!scanSources.length) {
+      return {
+        skipped: true,
+        reason: configuredScanSources?.length ? 'awaiting_verified_supplier_urls' : 'no_active_scan_sources',
+        blocked_placeholder_count: (configuredScanSources || []).length - scanSources.length
+      };
+    }
 
     const { data: vendor, error: vendorError } = await supabase.from('vendors')
       .select('id').ilike('store_name', 'AURORA Computer').maybeSingle();
@@ -3810,7 +4217,6 @@ async function runCcComputerAutoSync() {
     }).filter(row => row.variant && row.product && String(row.source.supplier_product_code || '').trim());
 
     const catalogCache = new Map();
-    const freshCache = new Map();
     const results = { scanned: 0, updated: 0, review: 0, missing: 0, archived: 0, errors: [] };
     for (const config of scanSources) {
       const parsed = new URL(config.source_url);
@@ -3843,18 +4249,26 @@ async function runCcComputerAutoSync() {
         continue;
       }
 
-      let freshRecords = freshCache.get(canonicalUrl);
-      if (!freshRecords) {
-        try {
-          const { buffer } = await fetchSupplierBytes(canonicalUrl, { html: true });
-          freshRecords = mergeSupplierProductRecords(extractCcSupplierProducts(buffer.toString('utf8'), canonicalUrl));
-          freshCache.set(canonicalUrl, freshRecords);
-        } catch (error) {
-          results.errors.push({ brand: config.brand_key, fresh_check_error: clean(error.message, 180) });
-          freshRecords = null;
-        }
+      // Three independent reads are required before any supplier price/stock change:
+      // 1) the full catalog crawl above, 2) a fresh page read, and 3) another fresh page read.
+      // Do not reuse cached HTML between verification passes.
+      let secondRecords = null;
+      let thirdRecords = null;
+      try {
+        const { buffer } = await fetchSupplierBytes(canonicalUrl, { html: true });
+        secondRecords = mergeSupplierProductRecords(extractCcSupplierProducts(buffer.toString('utf8'), canonicalUrl));
+      } catch (error) {
+        results.errors.push({ brand: config.brand_key, second_read_error: clean(error.message, 180) });
       }
-      const freshByCode = new Map((freshRecords || []).filter(item => ccBrandMatches(item, config.brand_key))
+      try {
+        const { buffer } = await fetchSupplierBytes(canonicalUrl, { html: true });
+        thirdRecords = mergeSupplierProductRecords(extractCcSupplierProducts(buffer.toString('utf8'), canonicalUrl));
+      } catch (error) {
+        results.errors.push({ brand: config.brand_key, third_read_error: clean(error.message, 180) });
+      }
+      const secondByCode = new Map((secondRecords || []).filter(item => ccBrandMatches(item, config.brand_key))
+        .map(item => [String(item.supplier_product_code || '').trim().toUpperCase(), item]));
+      const thirdByCode = new Map((thirdRecords || []).filter(item => ccBrandMatches(item, config.brand_key))
         .map(item => [String(item.supplier_product_code || '').trim().toUpperCase(), item]));
       const brandTracked = tracked.filter(row => ccBrandMatches(row.product, config.brand_key));
       const now = new Date().toISOString();
@@ -3891,20 +4305,42 @@ async function runCcComputerAutoSync() {
 
         const firstCodeExact = String(first.supplier_product_code || '').trim().toUpperCase() === code;
         const identity = ccIdentityCheck(first, row.product, row.details, row.variant);
-        const fresh = freshByCode.get(code);
-        const freshCodeExact = Boolean(fresh && String(fresh.supplier_product_code || '').trim().toUpperCase() === code);
-        const freshIdentity = fresh ? ccIdentityCheck(fresh, row.product, row.details, row.variant) : { ok: false, reason: 'fresh_read_missing' };
-        const sameSupplierSnapshot = Boolean(fresh && Number(fresh.supplier_price) === Number(first.supplier_price)
-          && fresh.availability === first.availability
-          && supplierModelKey(fresh) === supplierModelKey(first));
+        const second = secondByCode.get(code);
+        const third = thirdByCode.get(code);
+        const secondCodeExact = Boolean(second && String(second.supplier_product_code || '').trim().toUpperCase() === code);
+        const thirdCodeExact = Boolean(third && String(third.supplier_product_code || '').trim().toUpperCase() === code);
+        const secondIdentity = second ? ccIdentityCheck(second, row.product, row.details, row.variant) : { ok: false, reason: 'second_read_missing' };
+        const thirdIdentity = third ? ccIdentityCheck(third, row.product, row.details, row.variant) : { ok: false, reason: 'third_read_missing' };
+        const sameSnapshot = (left, right) => Boolean(left && right
+          && Number(left.supplier_price) === Number(right.supplier_price)
+          && left.availability === right.availability
+          && supplierModelKey(left) === supplierModelKey(right));
+        const firstSecondMatch = sameSnapshot(first, second);
+        const firstThirdMatch = sameSnapshot(first, third);
+        const secondThirdMatch = sameSnapshot(second, third);
+        const allThreeSnapshotsMatch = firstSecondMatch && firstThirdMatch && secondThirdMatch;
         const verification = {
           exact_product_code: firstCodeExact,
           model_and_specs: identity,
-          fresh_second_read: { exact_product_code: freshCodeExact, identity: freshIdentity, same_price_and_stock: sameSupplierSnapshot },
+          second_read: {
+            exact_product_code: secondCodeExact, identity: secondIdentity,
+            same_price_and_stock_as_first: firstSecondMatch
+          },
+          third_read: {
+            exact_product_code: thirdCodeExact, identity: thirdIdentity,
+            same_price_and_stock_as_first: firstThirdMatch
+          },
+          all_three_reads_match: allThreeSnapshotsMatch,
           supplier_price: Number(first.supplier_price), supplier_availability: first.availability,
           checked_at: now
         };
-        const allPassed = Boolean(first.verified && fresh?.verified && firstCodeExact && identity.ok && freshCodeExact && freshIdentity.ok && sameSupplierSnapshot);
+        const allPassed = Boolean(
+          first.verified && second?.verified && third?.verified &&
+          firstCodeExact && identity.ok &&
+          secondCodeExact && secondIdentity.ok &&
+          thirdCodeExact && thirdIdentity.ok &&
+          allThreeSnapshotsMatch
+        );
         if (!allPassed) {
           const changes = [];
           const newSellingPrice = Number.isFinite(Number(first.supplier_price)) ? Math.round((Number(first.supplier_price) + 5) * 100) / 100 : null;

@@ -1078,8 +1078,8 @@ function productCard(p, index) {
   const vendorName = p.vendors?.store_name || 'ហាងអ្នកលក់';
   const vendorLogo = p.vendors?.store_logo_url || '';
   const verified = p.vendors?.status === 'approved';
-  const description = productCardShortCaption(p);
   const cardSpecs = productCardSpecs(p);
+  const description = productCardShortCaption(p) || cardSpecs.map(([label, value]) => `${label}: ${value}`).join('\n');
   const cardPrice = p.display_price ?? p.price;
 
   const location = p.location || 'ភ្នំពេញ';
@@ -1097,7 +1097,7 @@ function productCard(p, index) {
     <div class="cb">
       <h3 class="cursor-pointer hover:text-emerald-800" data-action="view" data-id="${esc(p.id)}">${esc(p.title)}</h3>
       <p class="pr"><span>${money(cardPrice)}</span></p>
-      ${cardSpecs.length ? `<div class="cd-key-specs">${cardSpecs.map(([label,value]) => `<span><b>${label}:</b> ${esc(value)}</span>`).join('')}</div>` : (description ? `<p class="cd-description">${esc(description)}</p>` : '')}
+      ${description ? `<p class="cd-description">${esc(description)}</p>` : ''}
       <div class="sh">
         <span class="sp" role="img" aria-label="រូប Logo ហាង">
           <span class="sp-fallback">${ic('user', 15)}</span>
@@ -3489,6 +3489,64 @@ async function scanAuroraSupplierCatalog(url, offset = 0) {
 }
 
 
+async function renderAdminGalleryCandidates() {
+  const target = $('adminGalleryCandidates');
+  if (!target || !isAdmin()) return;
+  try {
+    const result = await api('/api/admin/product-gallery-candidates?status=pending');
+    const items = result.data || [];
+    if (!items.length) {
+      target.innerHTML = '<p class="text-[10px] text-slate-400">មិនមានរូបភាពរង់ចាំអនុម័តទេ។</p>';
+      return;
+    }
+    target.innerHTML = items.map(item => {
+      const evidence = item.match_evidence || {};
+      const matches = (evidence.matched_model_tokens || []).join(', ');
+      const sourceDomain = evidence.source_domain || (() => { try { return new URL(item.source_url).hostname.replace(/^www\./, ''); } catch { return '—'; } })();
+      const codeVerified = evidence.verification_level === 'code_verified';
+      const verificationLabel = codeVerified ? 'Model + Code/SKU មានភស្តុតាង' : 'Model match ប៉ុណ្ណោះ · ត្រូវពិនិត្យបន្ថែម';
+      const verificationClass = codeVerified ? 'text-emerald-700 bg-emerald-50' : 'text-amber-700 bg-amber-50';
+      return '<article class="rounded-xl border border-slate-200 bg-white p-3">' +
+        '<div class="grid grid-cols-[88px_minmax(0,1fr)] gap-3">' +
+          '<a href="' + esc(item.image_url) + '" target="_blank" rel="noopener noreferrer"><img src="' + esc(item.image_url) + '" alt="" loading="lazy" class="h-24 w-full rounded-lg object-contain bg-slate-50"></a>' +
+          '<div class="min-w-0"><b class="block text-[11px]">' + esc(item.products?.title || item.source_title || 'ផលិតផល') + '</b>' +
+            '<p class="mt-1 text-[10px] text-slate-500">Website: ' + esc(sourceDomain) + ' · Match score: ' + Number(item.match_score || 0) + '/100</p>' +
+            '<p class="mt-1 text-[10px] text-slate-500">Model ដែលត្រូវគ្នា: ' + esc(matches || '—') + '</p>' +
+            '<p class="mt-1 text-[10px] text-slate-500">Product Code/SKU: ' + esc(evidence.exact_product_code ? 'ត្រូវគ្នា' : (evidence.matched_skus || []).length ? 'SKU ត្រូវគ្នា' : 'មិនទាន់ផ្ទៀងផ្ទាត់') + '</p>' +
+            '<span class="mt-1 inline-block rounded-full px-2 py-1 text-[9px] font-bold ' + verificationClass + '">' + verificationLabel + '</span>' +
+            '<a class="mt-1 inline-block text-[10px] font-semibold text-violet-700 underline" href="' + esc(item.source_url) + '" target="_blank" rel="noopener noreferrer">មើល Website ប្រភព</a>' +
+          '</div></div>' +
+        '<p class="mt-2 text-[10px] text-slate-500">' + esc(evidence.review_note || 'Admin ត្រូវពិនិត្យរូបភាព និងម៉ូដែលជាក់ស្តែង មុនអនុម័ត។') + '</p>' +
+        '<div class="mt-3 flex gap-2"><button type="button" class="rounded-full bg-emerald-600 px-3 py-1.5 text-[10px] font-bold text-white" data-gallery-approve="' + esc(item.id) + '">អនុម័ត និង Upload Telegram</button>' +
+        '<button type="button" class="rounded-full border border-slate-200 px-3 py-1.5 text-[10px] font-bold" data-gallery-reject="' + esc(item.id) + '">បដិសេធ</button></div></article>';
+    }).join('');
+  } catch (error) {
+    target.innerHTML = '<p class="text-[10px] text-rose-500">' + esc(error.message || 'មិនអាចផ្ទុករូបភាពរង់ចាំអនុម័តបានទេ។') + '</p>';
+  }
+}
+
+async function searchAdminGalleryProducts() {
+  const target = $('adminGalleryProductResults');
+  const term = String($('adminGalleryProductSearch')?.value || '').trim();
+  if (!target) return;
+  if (term.length < 2) {
+    target.innerHTML = '<p class="text-[10px] text-rose-500">សូមបញ្ចូលឈ្មោះផលិតផលយ៉ាងតិច ២ តួអក្សរ។</p>';
+    return;
+  }
+  target.innerHTML = '<p class="text-[10px] text-slate-400">កំពុងស្វែងរក...</p>';
+  try {
+    const result = await api('/api/admin/gallery-products?q=' + encodeURIComponent(term));
+    const items = result.data || [];
+    target.innerHTML = items.length ? items.map(item =>
+      '<article class="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-slate-50 p-3">' +
+        '<div class="min-w-0"><b class="block truncate text-[11px]">' + esc(item.title) + '</b><small class="text-[10px] text-slate-500">' + esc(item.category || '—') + ' · រូបបច្ចុប្បន្ន ' + Number(item.image_count || 0) + '/10</small></div>' +
+        '<button type="button" class="rounded-full bg-violet-700 px-3 py-1.5 text-[10px] font-bold text-white" data-gallery-search-product="' + esc(item.id) + '" ' + (Number(item.image_count) >= 10 ? 'disabled' : '') + '>ស្វែងរករូបបន្ថែម</button>' +
+      '</article>').join('') : '<p class="text-[10px] text-slate-400">រកមិនឃើញផលិតផលទេ។</p>';
+  } catch (error) {
+    target.innerHTML = '<p class="text-[10px] text-rose-500">' + esc(error.message || 'មិនអាចស្វែងរកផលិតផលបានទេ។') + '</p>';
+  }
+}
+
 async function renderSupplierUpdateReviews() {
   const target = $('adminSupplierReviewList');
   if (!target || !isAdmin()) return;
@@ -3527,6 +3585,7 @@ async function renderAdminSupplierProducts() {
     const result = await api('/api/admin/supplier-products');
     state.adminSupplierProducts = result.data || [];
     void renderSupplierUpdateReviews();
+    void renderAdminGalleryCandidates();
     const term = String($('adminSupplierSearch')?.value || '').trim().toLowerCase();
     const products = state.adminSupplierProducts.filter(p => {
       const aurora = String(p.vendors?.store_name || '').trim().toLowerCase() === 'aurora computer';
@@ -5860,6 +5919,47 @@ function bindEvents() {
     } catch (error) {
       button.disabled = false; button.textContent = 'នាំចូលផលិតផលនេះ';
       toast(error.message||'មិនអាចនាំចូលផលិតផលបានទេ។','error');
+    }
+  });
+  $('adminGalleryProductSearchRun')?.addEventListener('click', () => void searchAdminGalleryProducts());
+  $('adminGalleryProductSearch')?.addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); void searchAdminGalleryProducts(); } });
+  $('adminGalleryCandidatesRefresh')?.addEventListener('click', () => void renderAdminGalleryCandidates());
+  $('adminGalleryProductResults')?.addEventListener('click', async event => {
+    const button = event.target.closest('[data-gallery-search-product]');
+    if (!button) return;
+    button.disabled = true;
+    const original = button.textContent;
+    button.textContent = 'កំពុងស្វែងរក...';
+    try {
+      const result = await api('/api/admin/products/' + encodeURIComponent(button.dataset.gallerySearchProduct) + '/gallery-search', { method: 'POST', body: JSON.stringify({}) });
+      toast(result.message || ('រកឃើញរូប ' + Number(result.found || 0) + '។'));
+      await renderAdminGalleryCandidates();
+    } catch (error) {
+      toast(error.message || 'មិនអាចស្វែងរករូបបានទេ។', 'error');
+    } finally {
+      button.disabled = false;
+      button.textContent = original;
+    }
+  });
+  $('adminGalleryCandidates')?.addEventListener('click', async event => {
+    const approve = event.target.closest('[data-gallery-approve]');
+    const reject = event.target.closest('[data-gallery-reject]');
+    const button = approve || reject;
+    if (!button) return;
+    button.disabled = true;
+    try {
+      if (approve) {
+        await api('/api/admin/product-gallery-candidates/' + encodeURIComponent(approve.dataset.galleryApprove) + '/approve', { method: 'POST', body: JSON.stringify({}) });
+        toast('បានអនុម័ត និង Upload រូបទៅ Telegram រួចរាល់។');
+      } else {
+        await api('/api/admin/product-gallery-candidates/' + encodeURIComponent(reject.dataset.galleryReject), { method: 'PATCH', body: JSON.stringify({ status: 'rejected' }) });
+        toast('បានបដិសេធរូបភាព។');
+      }
+      await renderAdminGalleryCandidates();
+      await renderAdminSupplierProducts();
+    } catch (error) {
+      button.disabled = false;
+      toast(error.message || 'មិនអាចរក្សាទុកការសម្រេចបានទេ។', 'error');
     }
   });
   $('adminSupplierAutoSyncRun')?.addEventListener('click', async event => {
