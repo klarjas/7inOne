@@ -3382,7 +3382,7 @@ function galleryScorePage(text, identity) {
   const modelPass = identity.modelTokens.length > 0 && numericModelMatch &&
     matchedModels.length >= Math.min(2, identity.modelTokens.length);
   const codePass = exactCode || matchedSkus.length > 0;
-  const verificationLevel = codePass ? 'code_verified' : modelPass ? 'model_review_required' : 'unverified';
+  const verificationLevel = codePass && modelPass ? 'code_verified' : modelPass ? 'model_review_required' : 'unverified';
   return {
     score: Math.min(100, (codePass ? 75 : 0) + Math.min(25, matchedModels.length * 12)),
     exact_product_code: exactCode,
@@ -3390,7 +3390,7 @@ function galleryScorePage(text, identity) {
     matched_skus: matchedSkus,
     numeric_model_match: numericModelMatch,
     verification_level: verificationLevel,
-    verified_identity: Boolean(codePass || modelPass)
+    verified_identity: Boolean(modelPass)
   };
 }
 async function galleryFetchPage(rawUrl) {
