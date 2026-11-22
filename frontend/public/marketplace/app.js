@@ -151,6 +151,59 @@ const MARKETPLACE_UI_MESSAGES = Object.freeze({
   "សរសេរមូលហេតុនៅទីនេះ...": { 'zh-CN': "请在此填写原因...", en: "Write the reason here..." },
   "បញ្ជាក់សកម្មភាព": { 'zh-CN': "确认操作", en: "Confirm action" },
   "បិទ": { 'zh-CN': "关闭", en: "Close" },
+  "ទិញឥឡូវនេះ": { 'zh-CN': "立即购买", en: "Buy now" },
+  "មិនបានបញ្ជាក់": { 'zh-CN': "未注明", en: "Not specified" },
+  "រក្សាទុករូបភាព": { 'zh-CN': "保存图片", en: "Save image" },
+  "ពង្រីករូបភាព": { 'zh-CN': "放大图片", en: "Zoom image" },
+  "ចូលគណនី និងទិញទំនិញពីហាងនេះ ដើម្បីអាចវាយតម្លៃអ្នកលក់បាន។": { 'zh-CN': "请登录并购买该店铺的商品后，才能评价卖家。", en: "Sign in and purchase from this shop to review the seller." },
+  "ចូលគណនី": { 'zh-CN': "登录", en: "Sign in" },
+  "ការវាយតម្លៃផ្កាយ": { 'zh-CN': "星级评价", en: "Star rating" },
+  "សរសេរអំពីគុណភាពទំនិញ និងសេវាកម្មរបស់ហាង...": { 'zh-CN': "请描述商品质量和店铺服务...", en: "Describe the product quality and shop service..." },
+  "អ្នកបានវាយតម្លៃការបញ្ជាទិញដែលមានរួចហើយ។": { 'zh-CN': "您已评价过现有订单。", en: "You have already reviewed an existing order." },
+  "អាចវាយតម្លៃបានក្រោយពេលការបញ្ជាទិញពីហាងនេះត្រូវបានបញ្ចប់។": { 'zh-CN': "该店铺订单完成后即可评价。", en: "You can review after an order from this shop is completed." },
+  "ទំនិញ": { 'zh-CN': "商品", en: "Product" },
+  "សំណើតថ្លៃ": { 'zh-CN': "议价请求", en: "Price offer" },
+  "អ្នកលក់": { 'zh-CN': "卖家", en: "Seller" },
+  "អ្នកលក់បានផ្ទៀងផ្ទាត់": { 'zh-CN': "已认证卖家", en: "Verified seller" },
+  "ប្រភេទ": { 'zh-CN': "类别", en: "Category" },
+  "ស្ថានភាព": { 'zh-CN': "状态", en: "Condition" },
+  "កាលបរិច្ឆេទបង្ហោះ": { 'zh-CN': "发布日期", en: "Date posted" },
+  "រូបភាពផលិតផល": { 'zh-CN': "商品图片", en: "Product image" },
+  "ហាងអ្នកលក់": { 'zh-CN': "卖家店铺", en: "Seller shop" },
+  "ទាំងអស់": { 'zh-CN': "全部", en: "All" },
+  "គ្រប់ផ្នែករង": { 'zh-CN': "所有子类别", en: "All subcategories" },
+  "ស្តុក ": { 'zh-CN': "库存 ", en: "In stock " },
+  "អស់ស្តុក": { 'zh-CN': "缺货", en: "Out of stock" },
+  "កែប្រែ": { 'zh-CN': "编辑", en: "Edit" },
+  "រូបថ្មី Upload តាម Telegram ដើម។ រូបចាស់មិនត្រូវបានលុបដោយស្វ័យប្រវត្តិទេ។": { 'zh-CN': "新图片将通过原有 Telegram 流程上传。旧图片不会自动删除。", en: "New images use the existing Telegram upload flow. Old images are not automatically deleted." },
+  "បង្ហាញផលិតផលនៅលើហាង": { 'zh-CN': "在店铺中显示商品", en: "Show product in shop" },
+  "រក្សាទុក": { 'zh-CN': "保存", en: "Save" },
+  "កំពុងផ្ទុកព័ត៌មានហាង": { 'zh-CN': "正在加载店铺信息", en: "Loading shop information" },
+  "មិនទាន់មានពិន្ទុ": { 'zh-CN': "暂无评分", en: "Not rated yet" },
+  "មុខទំនិញ": { 'zh-CN': "件商品", en: "products" },
+  "ពិនិត្យ": { 'zh-CN': "条评价", en: "reviews" },
+  "ស្វែងរកទំនិញក្នុងហាង": { 'zh-CN': "搜索店铺商品", en: "Search shop products" },
+  "ស្វែងរកក្នុងហាងនេះ...": { 'zh-CN': "搜索此店铺...", en: "Search this shop..." },
+  "មិនអាចផ្ទុកទំនិញបន្ថែមបានទេ។ សូមព្យាយាមម្តងទៀត។": { 'zh-CN': "无法加载更多商品。请重试。", en: "Could not load more products. Please try again." },
+  "អ្នកមិនទាន់រក្សាទុកទំនិញណាមួយទេ។": { 'zh-CN': "您尚未收藏任何商品。", en: "You haven't saved any products yet." },
+  "មិនទាន់មានការបញ្ជាទិញ។": { 'zh-CN': "暂无订单。", en: "No orders yet." },
+  "មិនទាន់មានសំណើតម្លៃ។": { 'zh-CN': "暂无报价请求。", en: "No price offers yet." },
+  "ស្វែងរកប្រកាស...": { 'zh-CN': "搜索帖子...", en: "Search posts..." },
+  "មុខតំណែង / Job Title": { 'zh-CN': "职位名称", en: "Job title" },
+  "ចំណងជើងអចលនទ្រព្យ": { 'zh-CN': "房产标题", en: "Property title" },
+  "ចំនួនត្រូវជ្រើសរើស": { 'zh-CN': "招聘人数", en: "Number of vacancies" },
+  "ប្រភេទការងារ": { 'zh-CN': "工作类型", en: "Employment type" },
+  "ប្រាក់ខែចាប់ពី (USD)": { 'zh-CN': "最低薪资 (USD)", en: "Salary from (USD)" },
+  "ប្រាក់ខែដល់ (USD)": { 'zh-CN': "最高薪资 (USD)", en: "Salary up to (USD)" },
+  "ជំនាញ (បំបែកដោយក្បៀស)": { 'zh-CN': "技能（用逗号分隔）", en: "Skills (comma-separated)" },
+  "ភាសា (បំបែកដោយក្បៀស)": { 'zh-CN': "语言（用逗号分隔）", en: "Languages (comma-separated)" },
+  "អត្ថប្រយោជន៍ (បំបែកដោយក្បៀស)": { 'zh-CN': "福利（用逗号分隔）", en: "Benefits (comma-separated)" },
+  "មិនទាន់មានរូបភាព": { 'zh-CN': "暂无图片", en: "No images yet" },
+  "រក្សារូបនេះ": { 'zh-CN': "保留此图片", en: "Keep this image" },
+  "ជ្រើសរើសរូបថ្មី (JPG / PNG / WEBP · 8MB)": { 'zh-CN': "选择新图片（JPG / PNG / WEBP · 8MB）", en: "Choose new image (JPG / PNG / WEBP · 8MB)" },
+  "ប្រចាំថ្ងៃ": { 'zh-CN': "每日", en: "Daily" },
+  "ប្រចាំឆ្នាំ": { 'zh-CN': "每年", en: "Yearly" },
+  "ប្រភេទអចលនទ្រព្យលម្អិត": { 'zh-CN': "详细房产类型", en: "Detailed property type" },
 });
 function marketplaceUiText(value) {
   const source = String(value ?? '');
@@ -385,6 +438,55 @@ function formatViews(value) {
   const num = Number(value || 0);
   return num >= 1000 ? (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K' : String(num);
 }
+
+
+// Translate exact UI-owned text and accessible labels after dynamic views render.
+// User-entered product, shop, profile, and chat content is intentionally excluded.
+function applyMarketplaceDynamicTranslations(root = document) {
+  const locale = window.SiteI18n?.locale || 'km';
+  if (locale === 'km') return;
+  const excluded = '[data-user-content], [contenteditable="true"], .product-title, .product-description, .storefront-title, .profile-display-name, .chat-message, .post-user-content, .user-generated';
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  const nodes = [];
+  while (walker.nextNode()) nodes.push(walker.currentNode);
+  nodes.forEach(node => {
+    if (node.parentElement?.closest(excluded)) return;
+    const source = node.nodeValue;
+    const translated = marketplaceUiText(source.trim());
+    if (translated !== source.trim()) node.nodeValue = source.replace(source.trim(), translated);
+  });
+  root.querySelectorAll?.('[placeholder], [title], [aria-label]').forEach(el => {
+    if (el.closest(excluded)) return;
+    ['placeholder','title','aria-label'].forEach(attr => {
+      const source = el.getAttribute(attr);
+      if (!source) return;
+      const translated = marketplaceUiText(source);
+      if (translated !== source) el.setAttribute(attr, translated);
+    });
+  });
+}
+function installMarketplaceDynamicTranslations() {
+  const run = () => {
+    applyMarketplaceDynamicTranslations(document.body);
+    if (window.__7inoneLocaleObserver) window.__7inoneLocaleObserver.disconnect();
+    window.__7inoneLocaleObserver = new MutationObserver(records => {
+      records.forEach(record => {
+        record.addedNodes.forEach(node => {
+          if (node.nodeType === Node.ELEMENT_NODE) applyMarketplaceDynamicTranslations(node);
+          else if (node.nodeType === Node.TEXT_NODE && !node.parentElement?.closest('[data-user-content], [contenteditable="true"], .product-title, .product-description, .storefront-title, .profile-display-name, .chat-message, .post-user-content, .user-generated')) {
+            const translated = marketplaceUiText(node.nodeValue.trim());
+            if (translated !== node.nodeValue.trim()) node.nodeValue = node.nodeValue.replace(node.nodeValue.trim(), translated);
+          }
+        });
+      });
+    });
+    window.__7inoneLocaleObserver.observe(document.body, { childList: true, subtree: true });
+  };
+  if (document.body) run();
+  else document.addEventListener('DOMContentLoaded', run, { once: true });
+}
+window.addEventListener('7inone:locale-change', () => applyMarketplaceDynamicTranslations(document.body));
+installMarketplaceDynamicTranslations();
 
 function toast(message, type = 'success') {
   message = marketplaceUiText(message);
