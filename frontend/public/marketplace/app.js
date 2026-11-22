@@ -2356,18 +2356,21 @@ function renderProductDetailMarkup(root, markup, options = {}) {
   const isHydration = options.isBackgroundHydration === true;
   const previousImage = isHydration ? root.querySelector('#productMainImage, .product-listing-main-image') : null;
   const previousSrc = previousImage?.getAttribute('src') || '';
-  const previousScrollTop = isHydration ? root.scrollTop : 0;
+  const scrollContainer = root.closest('#homeDetailInspector') || root;
+  const previousScrollTop = isHydration ? scrollContainer.scrollTop : 0;
   const template = document.createElement('template');
   template.innerHTML = markup;
   if (previousImage && previousSrc) {
     const nextImage = template.content.querySelector('#productMainImage, .product-listing-main-image');
     const nextSrc = nextImage?.getAttribute('src') || '';
-    if (nextImage && nextSrc && new URL(nextSrc, document.baseURI).href === new URL(previousSrc, document.baseURI).href) {
-      nextImage.replaceWith(previousImage);
+    let sameImage = nextSrc === previousSrc;
+    if (!sameImage && nextSrc) {
+      try { sameImage = new URL(nextSrc, document.baseURI).href === new URL(previousSrc, document.baseURI).href; } catch {}
     }
+    if (nextImage && sameImage) nextImage.replaceWith(previousImage);
   }
   root.replaceChildren(template.content);
-  if (isHydration) root.scrollTop = previousScrollTop;
+  if (isHydration) scrollContainer.scrollTop = previousScrollTop;
 }
 
 function renderProductDetailSkeleton() {
