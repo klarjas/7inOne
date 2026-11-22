@@ -2201,11 +2201,16 @@ function renderSteamDiscoveryHub() {
 function showHomeDetailInspector() {
   const inspector = $('homeDetailInspector');
   const detail = $('productDetail');
-  const mount = $('productDetailPageMount');
-  if (!inspector || !detail || !mount) return;
+  if (!inspector || !detail) return;
   inspector.appendChild(detail);
   $('steamDiscoveryHub')?.classList.add('hidden');
   inspector.classList.remove('hidden');
+}
+
+function mountProductDetailPage() {
+  const mount = $('productDetailPageMount');
+  const detail = $('productDetail');
+  if (mount && detail && detail.parentElement !== mount) mount.appendChild(detail);
 }
 
 function closeHomeDetailInspector() {
@@ -2385,7 +2390,7 @@ async function openMarketplaceListing(type, id, options = {}) {
   const inlineInspector = options.inlineInspector === true;
   state.currentProduct = { id: String(id), listing_type: type };
   if (inlineInspector) showHomeDetailInspector();
-  else await showView('product', { preserveScroll: Boolean(options.preserveScroll), deferLoad: true });
+  else { mountProductDetailPage(); await showView('product', { preserveScroll: Boolean(options.preserveScroll), deferLoad: true }); }
   if (!isCurrent()) return false;
   renderProductDetailSkeleton();
 
@@ -2413,7 +2418,10 @@ async function openMarketplaceListing(type, id, options = {}) {
         sessionStorage.setItem('ecomstore.currentListingType', type);
         sessionStorage.setItem('ecomstore.currentListingId', String(id));
       } catch {}
+      mountProductDetailPage();
       await showView('product', { preserveScroll: Boolean(options.preserveScroll) });
+    } else {
+      renderProductDetail();
     }
     return true;
   } catch (error) {
@@ -2433,7 +2441,7 @@ async function openProduct(id, options = {}) {
   const inlineInspector = options.inlineInspector === true;
   state.currentProduct = { id: productId };
   if (inlineInspector) showHomeDetailInspector();
-  else await showView('product', { preserveScroll: Boolean(options.preserveScroll), deferLoad: true });
+  else { mountProductDetailPage(); await showView('product', { preserveScroll: Boolean(options.preserveScroll), deferLoad: true }); }
   if (!isCurrent()) return false;
   renderProductDetailSkeleton();
 
