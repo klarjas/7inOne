@@ -2703,6 +2703,55 @@ function detailBottomActions(item) {
   return `<div class="detail-bottom-actions"><button type="button" data-detail-action="save">${ic('bookmark',16)} <span>រក្សាទុក</span></button><button type="button" data-detail-action="report">${ic('flag',16)} <span>រាយការណ៍</span></button><button type="button" data-detail-action="share">${ic('share',16)} <span>ចែករំលែក</span></button></div>`;
 }
 
+function populateDetailsPopover(root, options = {}) {
+  const inspector = $('homeDetailInspector');
+  const modal = $('detailsPopoverModal');
+  const body = $('detailsPopoverBody');
+  if (!root || !inspector?.contains(root) || !modal || !body) return;
+  const wasOpen = modal.classList.contains('is-open');
+  body.replaceChildren();
+  const moved = new Set();
+  ['.product-detail-description','.product-trust-reviews-grid','.product-safety-note','.product-related-section','.detail-bottom-actions'].forEach(selector => {
+    root.querySelectorAll(selector).forEach(node => {
+      if (moved.has(node) || [...moved].some(parent => parent.contains(node))) return;
+      moved.add(node);
+      body.appendChild(node);
+    });
+  });
+  root.querySelectorAll('.product-detail-info > .product-meta-item').forEach(node => {
+    if (node.textContent.trim()) body.appendChild(node);
+  });
+  const titleAnchor = root.querySelector('.product-heading-block') || root.querySelector('.product-facts-list');
+  if (titleAnchor && !root.querySelector('[data-open-details-popover]')) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'details-popover-trigger';
+    button.dataset.openDetailsPopover = 'true';
+    button.innerHTML = `${ic('file',15)} <span>មើលព័ត៌មានលម្អិត</span> ${ic('chevronRight',14)}`;
+    button.addEventListener('click', openDetailsPopover);
+    titleAnchor.insertAdjacentElement('afterend', button);
+  }
+  if (body.childElementCount) {
+    modal.classList.toggle('hidden', !wasOpen);
+    modal.classList.toggle('is-open', wasOpen);
+    modal.setAttribute('aria-hidden', String(!wasOpen));
+  } else closeDetailsPopover();
+}
+function openDetailsPopover() {
+  const modal = $('detailsPopoverModal'), body = $('detailsPopoverBody');
+  if (!modal || !body?.childElementCount) return;
+  modal.classList.remove('hidden');
+  modal.classList.add('is-open');
+  modal.setAttribute('aria-hidden', 'false');
+}
+function closeDetailsPopover() {
+  const modal = $('detailsPopoverModal');
+  if (!modal) return;
+  modal.classList.remove('is-open');
+  modal.classList.add('hidden');
+  modal.setAttribute('aria-hidden', 'true');
+}
+
 function renderMarketplaceListingInProductDetail(item, options = {}) {
   const root = $('productDetail');
   if (!root) return;
@@ -2798,6 +2847,7 @@ function renderMarketplaceListingInProductDetail(item, options = {}) {
     if (main) main.src = gallery[index];
     root.querySelectorAll('[data-shared-listing-image]').forEach(node => node.classList.toggle('active', node === button));
   }));
+  populateDetailsPopover(root, options);
 }
 
 function renderProductDetail(options = {}) {
@@ -3109,6 +3159,7 @@ function renderProductDetail(options = {}) {
     const store = e.target.closest('[data-action="store"]');
     if (store) void openStorefront(store.dataset.vendorId);
   });
+  populateDetailsPopover($('productDetail'), options);
 }
 
 function updateProductLightbox() {
@@ -6009,6 +6060,12 @@ function bindEvents() {
     button.addEventListener('click', () => setListingType(button.dataset.listingType));
   });
   $('homeShortsPopupClose')?.addEventListener('click', closeListingVideoPopup);
+  $('closeDetailsPopover')?.addEventListener('click', closeDetailsPopover);
+  $('detailsPopoverModal')?.addEventListener('click', event => {
+    if (event.target === $('detailsPopoverModal')) closeDetailsPopover();
+  });
+  document.addEventListener('keydown', event => { if (event.key === 'Escape') closeDetailsPopover(); });
+
   (() => {
     const dialog = $('homeShortsPopup');
     if (!dialog || dialog.dataset.popupControlsBound) return;
