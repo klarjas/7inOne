@@ -344,56 +344,93 @@
         </div>
 
         <!-- Jobs panel replaces the homepage Community Photo Feed UI. -->
-        <aside class="home-promo-rail home-jobs-rail" id="homeJobsRail" aria-label="ការងារ 7inOne">
-          <section class="jobs-panel" aria-label="បញ្ជីការងារ">
-            <div class="jobs-panel-heading">
-              <div>
-                <span class="jobs-panel-kicker">7INONE CAREERS</span>
-                <h2>ការងារ</h2>
-                <p>ស្វែងរកឱកាសការងារនៅកម្ពុជា</p>
-              </div>
-              <span class="jobs-panel-icon" data-icon="arrowUpRight" aria-hidden="true"></span>
+        <aside class="home-promo-rail home-jobs-rail" id="homeJobsRail" aria-label="Steam Discovery និងការងារ 7inOne">
+          <section id="homeDetailInspector" class="home-detail-inspector hidden" aria-label="ព័ត៌មានលម្អិតទំនិញ" aria-live="polite">
+            <div class="home-detail-inspector-heading">
+              <span>ព័ត៌មានលម្អិត</span>
+              <button type="button" id="closeHomeDetailInspector" aria-label="បិទព័ត៌មានលម្អិត">×</button>
             </div>
-            <label class="jobs-search">
-              <span data-icon="search" aria-hidden="true"></span>
-              <input id="jobsSearchInput" type="search" placeholder="ស្វែងរកការងារ ឬក្រុមហ៊ុន..." autocomplete="off">
-            </label>
-            <div class="jobs-filter-heading">
-              <b>ប្រភេទការងារ</b>
-            </div>
-            <div class="jobs-category-list" id="jobsCategoryList">
-              <button type="button" data-job-category="all" class="is-active">ការងារទាំងអស់</button>
-              <button type="button" data-job-category="it">IT &amp; Technology</button>
-              <button type="button" data-job-category="office">Office &amp; Administration</button>
-              <button type="button" data-job-category="sales">Sales &amp; Marketing</button>
-              <button type="button" data-job-category="transport">Transport &amp; Delivery</button>
-              <button type="button" data-job-category="hospitality">Restaurant &amp; Hotel</button>
-              <button type="button" data-job-category="construction">Construction &amp; Engineering</button>
-              <button type="button" data-job-category="education">Education</button>
-              <button type="button" data-job-category="healthcare">Healthcare</button>
-              <button type="button" data-job-category="factory">Factory &amp; Manufacturing</button>
-              <button type="button" data-job-category="agriculture">Agriculture</button>
-              <button type="button" data-job-category="services">Beauty &amp; Services</button>
-              <button type="button" data-job-category="other">Other Jobs</button>
-            </div>
-            <div class="jobs-subcategory-list" id="jobsSubcategoryList" hidden></div>
-            <div class="jobs-results-heading">
-              <div><b>ការងារទាំងអស់</b><small id="jobsResultCount">0 ការងារ</small></div>
-              <select id="jobsSortSelect" aria-label="តម្រៀបការងារ">
-                <option value="newest">បង្ហោះថ្មីៗ</option>
-                <option value="salary_asc">តម្លៃទាបទៅខ្ពស់</option>
-                <option value="salary_desc">តម្លៃខ្ពស់ទៅទាប</option>
-              </select>
-            </div>
-            <div class="jobs-list" id="jobsList" aria-live="polite">
-              <div class="jobs-empty-state">
-                <span data-icon="briefcase" aria-hidden="true"></span>
-                <b>មិនទាន់មានការងារបង្ហោះទេ</b>
-                <p>ការងារថ្មីៗនឹងបង្ហាញនៅទីនេះ នៅពេលនិយោជកចាប់ផ្តើមប្រកាសជ្រើសរើសបុគ្គលិក។</p>
-              </div>
-            </div>
-            <div class="home-promo-slot tall jobs-promo-slot" data-promo-slot="tall" hidden></div>
           </section>
+
+          <section id="steamDiscoveryHub" class="steam-discovery-hub" aria-label="Steam Store Discovery Hub">
+            <section class="hub-quick-post-card">
+              <span class="hub-quick-post-kicker">7INONE MARKETPLACE</span>
+              <h2>ចង់ដាក់លក់ទំនិញ ឬប្រកាស?</h2>
+              <p>ចាប់ផ្តើមបង្ហោះទំនិញ ឬឱកាសថ្មីៗរបស់អ្នកនៅទីនេះ</p>
+              <button type="button" id="hubQuickPostBtn">+ ប្រកាសឥឡូវនេះ</button>
+            </section>
+
+            <section class="hub-section" aria-labelledby="hubTrendingTitle">
+              <div class="hub-section-heading">
+                <h3 id="hubTrendingTitle"><span data-icon="flame" aria-hidden="true"></span> ទំនិញកំពុងពេញនិយម</h3>
+                <span class="hub-section-caption">TRENDING NOW</span>
+              </div>
+              <div id="hubTrendingList" class="hub-item-list" aria-live="polite">
+                <p class="hub-empty-message">កំពុងផ្ទុកទំនិញពេញនិយម...</p>
+              </div>
+            </section>
+
+            <section class="hub-section" aria-labelledby="hubSavedTitle">
+              <div class="hub-section-heading">
+                <h3 id="hubSavedTitle"><span data-icon="bookmark" aria-hidden="true"></span> ទំនិញដែលបានរក្សាទុក</h3>
+                <span id="hubSavedCount" class="hub-count-badge">0</span>
+              </div>
+              <div id="hubSavedList" class="hub-item-list" aria-live="polite">
+                <p class="hub-empty-message">ចុចរូប Bookmark លើទំនិញដើម្បីរក្សាទុក</p>
+              </div>
+            </section>
+          </section>
+
+          <details class="hub-careers-toggle">
+            <summary><span data-icon="briefcase" aria-hidden="true"></span> ការងារ <span class="hub-careers-summary-note">7INONE CAREERS</span></summary>
+            <section class="jobs-panel" aria-label="បញ្ជីការងារ">
+              <div class="jobs-panel-heading">
+                <div>
+                  <span class="jobs-panel-kicker">7INONE CAREERS</span>
+                  <h2>ការងារ</h2>
+                  <p>ស្វែងរកឱកាសការងារនៅកម្ពុជា</p>
+                </div>
+                <span class="jobs-panel-icon" data-icon="arrowUpRight" aria-hidden="true"></span>
+              </div>
+              <label class="jobs-search">
+                <span data-icon="search" aria-hidden="true"></span>
+                <input id="jobsSearchInput" type="search" placeholder="ស្វែងរកការងារ ឬក្រុមហ៊ុន..." autocomplete="off">
+              </label>
+              <div class="jobs-filter-heading"><b>ប្រភេទការងារ</b></div>
+              <div class="jobs-category-list" id="jobsCategoryList">
+                <button type="button" data-job-category="all" class="is-active">ការងារទាំងអស់</button>
+                <button type="button" data-job-category="it">IT &amp; Technology</button>
+                <button type="button" data-job-category="office">Office &amp; Administration</button>
+                <button type="button" data-job-category="sales">Sales &amp; Marketing</button>
+                <button type="button" data-job-category="transport">Transport &amp; Delivery</button>
+                <button type="button" data-job-category="hospitality">Restaurant &amp; Hotel</button>
+                <button type="button" data-job-category="construction">Construction &amp; Engineering</button>
+                <button type="button" data-job-category="education">Education</button>
+                <button type="button" data-job-category="healthcare">Healthcare</button>
+                <button type="button" data-job-category="factory">Factory &amp; Manufacturing</button>
+                <button type="button" data-job-category="agriculture">Agriculture</button>
+                <button type="button" data-job-category="services">Beauty &amp; Services</button>
+                <button type="button" data-job-category="other">Other Jobs</button>
+              </div>
+              <div class="jobs-subcategory-list" id="jobsSubcategoryList" hidden></div>
+              <div class="jobs-results-heading">
+                <div><b>ការងារទាំងអស់</b><small id="jobsResultCount">0 ការងារ</small></div>
+                <select id="jobsSortSelect" aria-label="តម្រៀបការងារ">
+                  <option value="newest">បង្ហោះថ្មីៗ</option>
+                  <option value="salary_asc">តម្លៃទាបទៅខ្ពស់</option>
+                  <option value="salary_desc">តម្លៃខ្ពស់ទៅទាប</option>
+                </select>
+              </div>
+              <div class="jobs-list" id="jobsList" aria-live="polite">
+                <div class="jobs-empty-state">
+                  <span data-icon="briefcase" aria-hidden="true"></span>
+                  <b>មិនទាន់មានការងារបង្ហោះទេ</b>
+                  <p>ការងារថ្មីៗនឹងបង្ហាញនៅទីនេះ នៅពេលនិយោជកចាប់ផ្តើមប្រកាសជ្រើសរើសបុគ្គលិក។</p>
+                </div>
+              </div>
+              <div class="home-promo-slot tall jobs-promo-slot" data-promo-slot="tall" hidden></div>
+            </section>
+          </details>
         </aside>
 
       </div>
@@ -407,7 +444,7 @@
           <span>/</span>
           <span class="font-semibold text-slate-800">ព័ត៌មានលម្អិត</span>
         </nav>
-        <div class="product-detail-page" id="productDetail" aria-live="polite"></div>
+        <div id="productDetailPageMount"><div class="product-detail-page" id="productDetail" aria-live="polite"></div></div>
       </div>
     </section>
 
