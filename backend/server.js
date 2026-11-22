@@ -3810,7 +3810,6 @@ async function runCcComputerAutoSync() {
     }).filter(row => row.variant && row.product && String(row.source.supplier_product_code || '').trim());
 
     const catalogCache = new Map();
-    const freshCache = new Map();
     const results = { scanned: 0, updated: 0, review: 0, missing: 0, archived: 0, errors: [] };
     for (const config of scanSources) {
       const parsed = new URL(config.source_url);
@@ -3843,18 +3842,26 @@ async function runCcComputerAutoSync() {
         continue;
       }
 
-      let freshRecords = freshCache.get(canonicalUrl);
-      if (!freshRecords) {
-        try {
-          const { buffer } = await fetchSupplierBytes(canonicalUrl, { html: true });
-          freshRecords = mergeSupplierProductRecords(extractCcSupplierProducts(buffer.toString('utf8'), canonicalUrl));
-          freshCache.set(canonicalUrl, freshRecords);
-        } catch (error) {
-          results.errors.push({ brand: config.brand_key, fresh_check_error: clean(error.message, 180) });
-          freshRecords = null;
-        }
+      // Three independent reads are required before any supplier price/stock change:
+      // 1) the full catalog crawl above, 2) a fresh page read, and 3) another fresh page read.
+      // Do not reuse cached HTML between verification passes.
+      let secondRecords = null;
+      let thirdRecords = null;
+      try {
+        const { buffer } = await fetchSupplierBytes(canonicalUrl, { html: true });
+        secondRecords = mergeSupplierProductRecords(extractCcSupplierProducts(buffer.toString('utf8'), canonicalUrl));
+      } catch (error) {
+        results.errors.push({ brand: config.brand_key, second_read_error: clean(error.message, 180) });
       }
-      const freshByCode = new Map((freshRecords || []).filter(item => ccBrandMatches(item, config.brand_key))
+      try {
+        const { buffer } = await fetchSupplierBytes(canonicalUrl, { html: true });
+        thirdRecords = mergeSupplierProductRecords(extractCcSupplierProducts(buffer.toString('utf8'), canonicalUrl));
+      } catch (error) {
+        results.errors.push({ brand: config.brand_key, third_read_error: clean(error.message, 180) });
+      }
+      const secondByCode = new Map((secondRecords || []).filter(item => ccBrandMatches(item, config.brand_key))
+        .map(item => [String(item.supplier_product_code || '').trim().toUpperCase(), item]));
+      const thirdByCode = new Map((thirdRecords || []).filter(item => ccBrandMatches(item, config.brand_key))
         .map(item => [String(item.supplier_product_code || '').trim().toUpperCase(), item]));
       const brandTracked = tracked.filter(row => ccBrandMatches(row.product, config.brand_key));
       const now = new Date().toISOString();
@@ -3891,20 +3898,42 @@ async function runCcComputerAutoSync() {
 
         const firstCodeExact = String(first.supplier_product_code || '').trim().toUpperCase() === code;
         const identity = ccIdentityCheck(first, row.product, row.details, row.variant);
-        const fresh = freshByCode.get(code);
-        const freshCodeExact = Boolean(fresh && String(fresh.supplier_product_code || '').trim().toUpperCase() === code);
-        const freshIdentity = fresh ? ccIdentityCheck(fresh, row.product, row.details, row.variant) : { ok: false, reason: 'fresh_read_missing' };
-        const sameSupplierSnapshot = Boolean(fresh && Number(fresh.supplier_price) === Number(first.supplier_price)
-          && fresh.availability === first.availability
-          && supplierModelKey(fresh) === supplierModelKey(first));
+        const second = secondByCode.get(code);
+        const third = thirdByCode.get(code);
+        const secondCodeExact = Boolean(second && String(second.supplier_product_code || '').trim().toUpperCase() === code);
+        const thirdCodeExact = Boolean(third && String(third.supplier_product_code || '').trim().toUpperCase() === code);
+        const secondIdentity = second ? ccIdentityCheck(second, row.product, row.details, row.variant) : { ok: false, reason: 'second_read_missing' };
+        const thirdIdentity = third ? ccIdentityCheck(third, row.product, row.details, row.variant) : { ok: false, reason: 'third_read_missing' };
+        const sameSnapshot = (left, right) => Boolean(left && right
+          && Number(left.supplier_price) === Number(right.supplier_price)
+          && left.availability === right.availability
+          && supplierModelKey(left) === supplierModelKey(right));
+        const firstSecondMatch = sameSnapshot(first, second);
+        const firstThirdMatch = sameSnapshot(first, third);
+        const secondThirdMatch = sameSnapshot(second, third);
+        const allThreeSnapshotsMatch = firstSecondMatch && firstThirdMatch && secondThirdMatch;
         const verification = {
           exact_product_code: firstCodeExact,
           model_and_specs: identity,
-          fresh_second_read: { exact_product_code: freshCodeExact, identity: freshIdentity, same_price_and_stock: sameSupplierSnapshot },
+          second_read: {
+            exact_product_code: secondCodeExact, identity: secondIdentity,
+            same_price_and_stock_as_first: firstSecondMatch
+          },
+          third_read: {
+            exact_product_code: thirdCodeExact, identity: thirdIdentity,
+            same_price_and_stock_as_first: firstThirdMatch
+          },
+          all_three_reads_match: allThreeSnapshotsMatch,
           supplier_price: Number(first.supplier_price), supplier_availability: first.availability,
           checked_at: now
         };
-        const allPassed = Boolean(first.verified && fresh?.verified && firstCodeExact && identity.ok && freshCodeExact && freshIdentity.ok && sameSupplierSnapshot);
+        const allPassed = Boolean(
+          first.verified && second?.verified && third?.verified &&
+          firstCodeExact && identity.ok &&
+          secondCodeExact && secondIdentity.ok &&
+          thirdCodeExact && thirdIdentity.ok &&
+          allThreeSnapshotsMatch
+        );
         if (!allPassed) {
           const changes = [];
           const newSellingPrice = Number.isFinite(Number(first.supplier_price)) ? Math.round((Number(first.supplier_price) + 5) * 100) / 100 : null;
