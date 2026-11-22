@@ -13,8 +13,8 @@
   "scripts": {
     "build": "npm run build --workspace frontend",
     "start": "node backend/server.js",
-    "check": "node --check backend/server.js && node --check backend/my-posts.js && node --check frontend/public/marketplace/app.js",
-    "prebuild": "node scripts/build-marketplace-css.mjs"
+    "check": "node scripts/build-marketplace-assets.mjs && node scripts/check-marketplace-modules.mjs && node --check scripts/build-marketplace-assets.mjs && node --check scripts/build-marketplace-css.mjs && node --check backend/server.js && node --check backend/my-posts.js && node --check frontend/public/marketplace/app.js",
+    "prebuild": "node scripts/build-marketplace-assets.mjs && node scripts/build-marketplace-css.mjs"
   },
   "devDependencies": {
     "typescript": "^5.9.2",

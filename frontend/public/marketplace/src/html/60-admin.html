@@ -1,0 +1,161 @@
+    <!-- 6. ADMIN VIEW -->
+    <section class="view" id="view-admin">
+      <div class="shell py-7 sm:py-9">
+        <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p class="text-[10px] font-bold text-rose-600">ADMIN CONTROL CENTER</p>
+            <h1 class="mt-1 text-2xl font-bold">ផ្ទាំងគ្រប់គ្រងប្រព័ន្ធ &amp; អ្នកលក់</h1>
+          </div>
+          <span class="rounded-full bg-rose-50 px-3 py-1.5 text-[10px] font-bold text-rose-600">សិទ្ធិអ្នកគ្រប់គ្រង</span>
+        </div>
+
+        <!-- Maintenance Mode -->
+        <div class="mb-6 rounded-3xl bg-white p-5 soft-shadow sm:p-6">
+          <h2 class="text-lg font-bold">ស្ថានភាពប្រព័ន្ធ (Maintenance Mode)</h2>
+          <label class="mt-4 flex cursor-pointer items-center justify-between gap-4 rounded-2xl border border-slate-100 bg-slate-50 p-4">
+            <span><b class="block text-[12px]">បើកមុខងារកំពុងអភិវឌ្ឍន៍</b><small class="text-[10px] text-slate-500">ពេលបើក អ្នកទិញ និងអ្នកលក់មិនអាចប្រើ Marketplace បានទេ។</small></span>
+            <input class="maintenance-switch" id="maintenanceToggle" type="checkbox" />
+          </label>
+          <label class="mt-4 block"><span class="label">សារជូនដំណឹង</span><textarea class="field min-h-[80px]" id="maintenanceMessageInput" maxlength="1000"></textarea></label>
+          <div class="mt-4 flex items-center justify-between">
+            <p class="text-[10px] text-slate-400" id="maintenanceStatusHint">ស្ថានភាពបច្ចុប្បន្ន៖ កំពុងដំណើរការ</p>
+            <button class="brand-gradient rounded-full px-5 py-2.5 text-[11px] font-bold text-white" id="saveMaintenanceSettings" type="button">រក្សាទុកស្ថានភាព</button>
+          </div>
+        </div>
+
+        <!-- Branding & Hero Banner -->
+        <div class="mb-6 rounded-3xl bg-white p-5 soft-shadow sm:p-7" id="siteBrandingPanel">
+          <h2 class="mb-5 text-xl font-bold">ការកំណត់ Brand &amp; Hero Banner</h2>
+          <div class="grid gap-5 xl:grid-cols-2">
+            <section class="rounded-2xl bg-slate-50 p-4">
+              <div class="mb-4 flex items-center gap-4 rounded-2xl bg-white p-4">
+                <div class="brand-logo-preview" id="brandLogoPreview"><span>7</span></div>
+                <div><b class="block text-sm" id="brandPreviewTitle">7inOne</b><small class="text-[10px] text-slate-500" id="brandPreviewSubtitle">ផ្សារទិញលក់កម្ពុជា</small></div>
+              </div>
+              <label class="mb-3 block"><span class="label">Header Logo</span><input id="brandingLogoUpload" class="field bg-white" type="file" accept="image/jpeg,image/png,image/webp" /></label>
+              <div class="mb-3 flex items-center gap-4 rounded-2xl bg-white p-3">
+                <div class="brand-logo-preview" id="brandFaviconPreview"><span>7</span></div>
+                <div><b class="block text-xs">Browser Favicon</b></div>
+              </div>
+              <label class="mb-3 block"><span class="label">Browser Favicon</span><input id="brandingFaviconUpload" class="field bg-white" type="file" accept="image/jpeg,image/png,image/webp" /></label>
+              <label class="mb-3 block"><span class="label">ឈ្មោះ Brand</span><input id="brandTitleInput" class="field bg-white" maxlength="80" value="7inOne" /></label>
+              <label class="block"><span class="label">អក្សរតូចក្រោម Logo</span><input id="brandSubtitleInput" class="field bg-white" maxlength="120" value="ផ្សារទិញលក់កម្ពុជា" /></label>
+            </section>
+
+            <section class="rounded-2xl bg-slate-50 p-4">
+              <div class="hero-admin-preview mb-4">
+                <div>
+                  <small class="text-amber-200" id="brandHeroPreviewBadge">ផ្សារអនឡាញ</small>
+                  <b class="mt-1 block text-sm" id="brandHeroPreviewTitle">ទិញលក់ងាយៗ នៅជិតអ្នក</b>
+                  <span class="mt-1 block text-[10px] opacity-80" id="brandHeroPreviewSubtitle">ស្វែងរកទំនិញ...</span>
+                </div>
+                <div id="heroBannerPreviews" class="hero-admin-preview-images">
+                  <div class="hero-admin-preview-empty">01</div>
+                  <div class="hero-admin-preview-empty">02</div>
+                  <div class="hero-admin-preview-empty">03</div>
+                </div>
+              </div>
+              <label class="mb-3 block"><span class="label">Hero Images (1-3 រូប)</span><input id="brandingHeroUpload" class="field bg-white" type="file" accept="image/jpeg,image/png,image/webp" multiple /></label>
+              <label class="mb-3 block"><span class="label">Hero Badge</span><input id="heroBadgeInput" class="field bg-white" maxlength="100" /></label>
+              <label class="mb-3 block"><span class="label">ចំណងជើង Banner</span><input id="heroTitleInput" class="field bg-white" maxlength="160" /></label>
+              <label class="block"><span class="label">អត្ថបទពិពណ៌នា Banner</span><textarea id="heroSubtitleInput" class="field min-h-[80px] bg-white" maxlength="600"></textarea></label>
+              <label class="mt-3 flex items-center gap-2 text-[10px]"><input id="clearHeroImages" type="checkbox" /> លុបរូប Banner ចាស់ទាំងអស់</label>
+            </section>
+          </div>
+
+          <!-- Side Promo Posters -->
+          <div class="mt-6 border-t border-slate-100 pt-5" id="sidePosterAdmin">
+            <h3 class="mb-3 text-base font-bold">គ្រប់គ្រង Poster ខាងស្ដាំ</h3>
+            <div class="grid gap-4 lg:grid-cols-3">
+              <section class="rounded-2xl bg-slate-50 p-3">
+                <b class="text-xs">Poster ផ្ដេក ១</b>
+                <div class="poster-admin-preview" id="posterPreviewTop">Preview</div>
+                <input id="posterUploadTop" class="field mt-2 bg-white" type="file" accept="image/jpeg,image/png,image/webp" />
+                <input id="posterLinkTop" class="field mt-2 bg-white" type="url" placeholder="Link ពេលចុច https://..." />
+                <label class="mt-2 flex items-center gap-2 text-[10px]"><input id="posterEnabledTop" type="checkbox" checked /> បង្ហាញ Poster</label>
+                <label class="mt-1 flex items-center gap-2 text-[10px]"><input id="posterClearTop" type="checkbox" /> លុប Poster</label>
+              </section>
+              <section class="rounded-2xl bg-slate-50 p-3">
+                <b class="text-xs">Poster ផ្ដេក ២</b>
+                <div class="poster-admin-preview" id="posterPreviewMiddle">Preview</div>
+                <input id="posterUploadMiddle" class="field mt-2 bg-white" type="file" accept="image/jpeg,image/png,image/webp" />
+                <input id="posterLinkMiddle" class="field mt-2 bg-white" type="url" placeholder="Link ពេលចុច https://..." />
+                <label class="mt-2 flex items-center gap-2 text-[10px]"><input id="posterEnabledMiddle" type="checkbox" checked /> បង្ហាញ Poster</label>
+                <label class="mt-1 flex items-center gap-2 text-[10px]"><input id="posterClearMiddle" type="checkbox" /> លុប Poster</label>
+              </section>
+              <section class="rounded-2xl bg-slate-50 p-3">
+                <b class="text-xs">Poster បញ្ឈរ</b>
+                <div class="poster-admin-preview poster-admin-preview-tall" id="posterPreviewTall">Preview</div>
+                <input id="posterUploadTall" class="field mt-2 bg-white" type="file" accept="image/jpeg,image/png,image/webp" />
+                <input id="posterLinkTall" class="field mt-2 bg-white" type="url" placeholder="Link ពេលចុច https://..." />
+                <label class="mt-2 flex items-center gap-2 text-[10px]"><input id="posterEnabledTall" type="checkbox" checked /> បង្ហាញ Poster</label>
+                <label class="mt-1 flex items-center gap-2 text-[10px]"><input id="posterClearTall" type="checkbox" /> លុប Poster</label>
+              </section>
+            </div>
+          </div>
+
+          <div class="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4">
+            <p class="text-[10px] text-slate-500" id="brandingStatus">ការកំណត់ Brand បច្ចុប្បន្ន</p>
+            <button class="brand-gradient rounded-full px-6 py-3 text-[11px] font-bold text-white" id="saveBrandingBtn" type="button">រក្សាទុកការកំណត់ Brand &amp; Banner</button>
+          </div>
+        </div>
+
+        <!-- Telegram Diagnostics -->
+        <div class="mb-6 rounded-3xl bg-white p-5 soft-shadow sm:p-6">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 class="text-lg font-bold">ស្ថានភាព Telegram Bot</h2>
+              <p class="text-[10px] text-slate-400">ពិនិត្យ Bot, Channel និងសិទ្ធិផ្ទុករូបភាព។</p>
+            </div>
+            <button class="rounded-full bg-slate-900 px-5 py-2.5 text-[11px] font-bold text-white" id="telegramDiagnosticsBtn" type="button">ពិនិត្យស្ថានភាព</button>
+          </div>
+          <div class="admin-telegram-diagnostics-result mt-4" id="telegramDiagnosticsResult" aria-live="polite">ចុច «ពិនិត្យស្ថានភាព» ដើម្បីពិនិត្យការភ្ជាប់ Telegram។</div>
+        </div>
+
+        <!-- Vendor Verification Applications -->
+        <div class="mb-5 grid grid-cols-3 gap-3">
+          <div class="rounded-2xl bg-white p-4 soft-shadow"><p class="text-[10px] text-slate-500">កំពុងរង់ចាំ</p><b class="mt-1 block text-2xl" id="adminPendingCount">0</b></div>
+          <div class="rounded-2xl bg-white p-4 soft-shadow"><p class="text-[10px] text-slate-500">បានអនុម័ត</p><b class="mt-1 block text-2xl text-emerald-700" id="adminApprovedCount">0</b></div>
+          <div class="rounded-2xl bg-white p-4 soft-shadow"><p class="text-[10px] text-slate-500">បានបដិសេធ</p><b class="mt-1 block text-2xl text-rose-600" id="adminRejectedCount">0</b></div>
+        </div>
+
+        <div class="rounded-3xl bg-white p-5 soft-shadow sm:p-6">
+          <h2 class="mb-4 font-bold">ពាក្យស្នើសុំអ្នកលក់</h2>
+          <div class="space-y-3" id="adminApplications"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ========================================================================
+       FOOTER & MOBILE BOTTOM NAV
+       ======================================================================== -->
+  <footer class="border-t">
+    <div class="shell flex flex-col gap-3 py-7 sm:flex-row sm:items-center sm:justify-between">
+      <div class="flex items-center gap-2.5">
+        <span class="brand-gradient grid h-8 w-8 place-items-center rounded-xl text-[11px] font-bold text-white" id="footerLogoMark">7</span>
+        <div>
+          <b class="block text-[12px]" id="footerSiteTitle">7inOne</b>
+          <p class="text-[9.5px] text-slate-400" id="footerSiteSubtitle">ផ្សារទិញលក់កម្ពុជា</p>
+        </div>
+      </div>
+      <p class="text-[10px] text-slate-400">© <span id="year"></span> 7inOne · ទីផ្សារទិញលក់អនឡាញទំនុកចិត្តខ្ពស់នៅកម្ពុជា</p>
+      <div class="flex gap-4 text-[11px] font-semibold text-slate-500">
+        <button data-view="home">ទំព័រដើម</button>
+        <button data-view="profile">គណនី</button>
+        <button data-view="seller">ហាងខ្ញុំ</button>
+      </div>
+    </div>
+  </footer>
+
+  <nav class="mobile-market-nav" id="mobileMarketNav" aria-label="ម៉ឺនុយ">
+    <button type="button" data-view="home" class="mobile-market-item active"><span data-nav-icon="home"></span><small>ទំព័រដើម</small></button>
+    <button type="button" data-action="saved" class="mobile-market-item"><span data-nav-icon="heart"></span><small>រក្សាទុក</small></button>
+    <button type="button" id="mobileMarketPost" class="fab" aria-label="ដាក់លក់ទំនិញ"><span data-nav-icon="plus"></span></button>
+    <button type="button" data-action="open-chat" class="mobile-market-item"><span data-nav-icon="chat"></span><small>សារ</small></button>
+    <button type="button" data-view="profile" class="mobile-market-item"><span data-nav-icon="user"></span><small>គណនី</small></button>
+  </nav>
+
+  <!-- ========================================================================
+       MODALS & FLOATING CHAT
+       ======================================================================== -->

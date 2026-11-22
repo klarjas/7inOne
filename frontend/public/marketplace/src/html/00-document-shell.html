@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#1B2838" />
+  <title>7inOne — ផ្សារទិញលក់អនឡាញនៅកម្ពុជា</title>
+  <meta name="description" content="7inOne — ផ្សារទិញលក់ពិតប្រាកដនៅកម្ពុជា ដំណើរការដោយគណនី និងទិន្នន័យ Supabase។" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%232B74B8'/%3E%3Ctext x='32' y='47' font-family='Arial,sans-serif' font-size='44' font-weight='700' text-anchor='middle' fill='%23fff'%3E7%3C/text%3E%3C/svg%3E" data-site-favicon="true" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Hanuman:wght@300&family=Kantumruy+Pro:wght@400&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="./tailwind.css" />
+  <link rel="stylesheet" href="./style.css" />
+
+  <!-- Instant Route Restoration (Prevents Flash of Wrong Page) -->
+  <script>
+    (function () {
+      var allowed = ['home', 'profile', 'seller', 'admin', 'product', 'store'];
+      var rawHash = String(window.location.hash || '').replace(/^#/, '');
+      var parts = rawHash.split('/');
+      var hashView = parts[0] || '';
+      var fromStorage = '';
+      var decodeRouteId = function (val) {
+        try { return decodeURIComponent(val); } catch (e) { return val; }
+      };
+      var listingType = hashView === 'product' && ['job', 'real_estate'].includes(parts[1]) ? parts[1] : '';
+      var listingId = listingType ? decodeRouteId(parts[2] || '') : '';
+      var productId = hashView === 'product' && !listingType ? decodeRouteId(parts.slice(1).join('/')) : '';
+      var storeId = hashView === 'store' ? decodeRouteId(parts.slice(1).join('/')) : '';
+
+      try {
+        fromStorage = sessionStorage.getItem('ecomstore.activeView') || '';
+        if (!listingType && !productId && (hashView === 'product' || fromStorage === 'product')) {
+          var storedListingType = sessionStorage.getItem('ecomstore.currentListingType') || '';
+          var storedListingId = sessionStorage.getItem('ecomstore.currentListingId') || '';
+          if (['job', 'real_estate'].includes(storedListingType) && storedListingId) {
+            listingType = storedListingType;
+            listingId = storedListingId;
+          } else {
+            productId = sessionStorage.getItem('ecomstore.currentProductId') || '';
+          }
+        }
+        if (!storeId && (hashView === 'store' || fromStorage === 'store')) {
+          storeId = sessionStorage.getItem('ecomstore.currentStoreId') || '';
+        }
+      } catch (e) {}
+
+      var initial = allowed.includes(hashView) ? hashView : (allowed.includes(fromStorage) ? fromStorage : 'home');
+      if (initial === 'product' && !productId && !(listingType && listingId)) initial = 'home';
+      if (initial === 'store' && !storeId) initial = 'home';
+
+      document.documentElement.dataset.initialView = initial;
+      document.documentElement.dataset.initialProductId = productId;
+      document.documentElement.dataset.initialListingType = listingType;
+      document.documentElement.dataset.initialListingId = listingId;
+      document.documentElement.dataset.initialStoreId = storeId;
+      document.documentElement.classList.add('route-restoring');
+    })();
+  </script>
+  <style>
+    html.route-restoring,
+    html.route-restoring body {
+      background: radial-gradient(circle at 50% 0%, #2A475E 0%, #1B2838 55%, #171A21 100%);
+      margin: 0;
+    }
+
+    html.route-restoring .view,
+    html.route-restoring footer,
+    html.route-restoring .mobile-market-nav {
+      display: none;
+    }
+
+    html.route-restoring body::before {
+      content: "";
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      width: 80px;
+      height: 80px;
+      margin: -40px 0 0 -40px;
+      padding: 10px;
+      box-sizing: border-box;
+      border-radius: 50%;
+      background: repeating-conic-gradient(
+        #0000 0 5%,
+        #1A9FFF 10%,
+        #66C0F4 16%,
+        #0000 22% 50%
+      );
+      -webkit-mask: conic-gradient(#000 0 0) content-box exclude, conic-gradient(#000 0 0);
+      mask: conic-gradient(#000 0 0) content-box exclude, conic-gradient(#000 0 0);
+      filter: blur(8px);
+      z-index: 99999;
+      pointer-events: none;
+      animation: l2 1.5s linear infinite;
+    }
+
+    html.route-restoring body::after {
+      content: "កំពុងផ្ទុកទំនិញ...";
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      margin-top: 45px;
+      transform: translateX(-50%);
+      color: #9FB2C3;
+      font-family: 'Kantumruy Pro', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      z-index: 99999;
+      pointer-events: none;
+    }
+
+    @keyframes l2 {
+      to {
+        rotate: 1turn;
+      }
+    }
+  </style>
+</head>
+
+<body class="font-khmer">
+  <!-- ========================================================================
+       HEADER & GLOBAL SEARCH
+       ======================================================================== -->
+  <header class="hd glass sticky top-0 z-50">
+    <div class="shell flex flex-wrap items-center gap-3">
+      <button class="site-brand-lockup flex shrink-0 items-center gap-3 text-left" data-view="home" aria-label="7inOne home">
+        <span class="site-logo-mark brand-gradient grid place-items-center text-white" id="siteLogoMark">
+          <span id="logoIcon"></span>
+        </span>
+        <span class="min-w-0 leading-tight">
+          <b class="site-title block truncate" id="siteTitle">7inOne</b>
+          <small class="site-subtitle block truncate" id="siteSubtitle">ផ្សារទិញលក់កម្ពុជា</small>
+        </span>
+      </button>
+      <div class="delivery-location" aria-label="ទីតាំងរបស់អ្នក ប្រទេសកម្ពុជា">
+        <span class="delivery-pin" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"></path>
+            <circle cx="12" cy="10" r="2.5"></circle>
+          </svg>
+        </span>
+        <span><small>ទីតាំងរបស់អ្នក</small><b>ប្រទេសកម្ពុជា</b></span>
+      </div>
+      <div class="site-online-counter" id="siteOnlineCounter" aria-live="polite" aria-label="ចំនួនអ្នកកំពុង Online">
+        <b class="site-online-heading">អ្នកតាមដាន</b>
+        <span class="site-online-copy"><span class="site-online-icon" aria-hidden="true"></span><span class="site-online-value"><b id="siteOnlineCount">—</b><small>នាក់ Online</small></span></span>
+      </div>
+
+      <form class="order-3 flex w-full items-center md:order-none md:ml-5 md:flex-1" id="searchForm">
+        <select class="hidden h-9 max-w-[145px] cursor-pointer bg-transparent px-3 text-[11px] font-semibold text-slate-600 outline-none sm:block" id="searchCategory">
+          <option value="all">គ្រប់ប្រភេទ</option>
+          <option value="phones">ទូរស័ព្ទ &amp; អេឡិចត្រូនិក</option>
+          <option value="vehicles">រថយន្ត &amp; ម៉ូតូ</option>
+          <option value="property">អចលនទ្រព្យ</option>
+          <option value="fashion">សម្លៀកបំពាក់</option>
+          <option value="furniture">គ្រឿងសង្ហារិម</option>
+        </select>
+        <span class="hidden h-5 w-px bg-slate-200 sm:block"></span>
+        <span class="ml-2 text-slate-400" id="searchIcon"></span>
+        <input class="min-w-0 flex-1 bg-transparent px-2.5 outline-none" id="searchInput" placeholder="ស្វែងរកទំនិញដែលអ្នកចង់បាន..." type="search" />
+        <button aria-label="ស្វែងរក" class="brand-gradient grid shrink-0 place-items-center text-white" id="searchBtn"></button>
+      </form>
+
+      <div class="ml-auto flex shrink-0 items-center gap-2">
+        <button class="hidden items-center gap-2 brand-gradient px-4 py-2 text-[12px] font-bold text-white sm:flex" id="postAdBtn">
+          <span id="postIcon"></span>ប្រកាស
+        </button>
+        <button aria-label="ប្រកាស" class="grid h-10 w-10 place-items-center brand-gradient text-white sm:hidden" id="mobilePostBtn"></button>
+        <div class="header-shortcuts">
+          <button type="button" data-home-side="saved" aria-label="ទំនិញដែលបានរក្សាទុក"><span data-icon="heart" data-icon-size="16"></span><span>រក្សាទុក</span></button>
+          <button type="button" data-home-side="orders" aria-label="ការបញ្ជាទិញ"><span data-icon="clipboard" data-icon-size="16"></span><span>ការបញ្ជាទិញ</span></button>
+        </div>
+
+        <!-- Notifications -->
+        <div class="relative">
+          <button aria-label="ការជូនដំណឹង" class="relative grid h-10 w-10 place-items-center text-slate-600 hover:text-emerald-700" id="notificationBtn">
+            <span id="bellIcon"></span>
+            <i class="absolute right-2.5 top-2.5 h-2 w-2 rounded-full border-2 border-white bg-rose-500"></i>
+          </button>
+          <div class="dropdown absolute right-0 top-[calc(100%+10px)] z-[70] w-[min(320px,calc(100vw-24px))] bg-white p-4" id="notificationMenu">
+            <p class="mb-3 text-sm font-bold">ការជូនដំណឹង</p>
+            <div class="space-y-2" id="notificationList"></div>
+          </div>
+        </div>
+
+        <!-- Account Menu -->
+        <div class="relative">
+          <button class="flex items-center gap-2 p-1" id="profileMenuBtn">
+            <div aria-label="រូបអ្នកប្រើ" class="nav-avatar h-9 w-9 overflow-hidden rounded-full border-2 border-white bg-emerald-50 shadow-sm" id="navAvatar" role="img"></div>
+            <span class="hidden text-left leading-tight lg:block">
+              <b class="block text-[11px]" id="navName">ភ្ញៀវ</b>
+              <small class="block text-[9px] text-slate-400" id="navRole">មិនទាន់ចូលគណនី</small>
+            </span>
+            <span class="hidden text-slate-400 lg:block" id="chevronIcon"></span>
+          </button>
+          <div class="dropdown absolute right-0 top-[calc(100%+10px)] z-[70] w-56 bg-white p-2" id="profileMenu">
+            <div class="border-b border-slate-100 px-3 py-3">
+              <b class="text-sm" id="menuUserName">សួស្តី!</b>
+              <p class="text-[10px] text-slate-400" id="menuUserStatus">សូមស្វាគមន៍មកកាន់ 7inOne</p>
+            </div>
+            <button class="menu-action" data-action="profile"><span id="menuUserIcon"></span>គណនីរបស់ខ្ញុំ</button>
+            <button class="menu-action" data-action="seller-dashboard"><span id="menuStoreIcon"></span>គ្រប់គ្រងហាង</button>
+            <button class="menu-action" data-action="admin"><span id="menuAdminIcon"></span>ផ្ទាំង Admin</button>
+            <button class="menu-action" data-action="saved"><span id="menuSaveIcon"></span>ទំនិញដែលបានរក្សាទុក</button>
+            <button class="menu-action" data-action="login"><span id="menuLoginIcon"></span>ចូល / ប្តូរគណនី</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </header>
+
+  <!-- ========================================================================
+       MAIN VIEWS
+       ======================================================================== -->
+  <main class="bottom-pad">

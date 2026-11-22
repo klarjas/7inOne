@@ -1,0 +1,165 @@
+    <!-- 4. PROFILE VIEW -->
+    <section class="view" id="view-profile">
+      <div class="shell account-shell py-7 sm:py-9">
+        <section class="account-hero overflow-hidden bg-white">
+          <div class="cover relative h-44 sm:h-56">
+            <div class="absolute left-5 top-5 z-10 rounded-full border border-white/30 bg-slate-950/35 px-3 py-1.5 text-[9px] font-bold tracking-wide text-white backdrop-blur">7INONE MEMBER</div>
+            <label class="absolute right-4 top-4 z-10 flex cursor-pointer items-center gap-2 rounded-xl bg-white/95 px-3 py-2 text-[10px] font-bold text-slate-700 shadow">
+              <span id="coverCam"></span> កែរូប Cover
+              <input accept="image/jpeg,image/png,image/webp" class="hidden" id="coverUpload" type="file" />
+            </label>
+          </div>
+          <div class="px-5 pb-5 sm:px-8">
+            <div class="account-identity flex flex-wrap items-end justify-between gap-4">
+              <div class="flex min-w-0 items-end gap-4">
+                <div class="relative shrink-0">
+                  <div aria-label="រូប Profile" class="account-avatar h-24 w-24 overflow-hidden border-4 border-white bg-emerald-50 shadow-xl sm:h-32 sm:w-32" id="profileAvatar" role="img"></div>
+                  <label class="absolute bottom-1 right-1 grid h-8 w-8 cursor-pointer place-items-center rounded-full border-2 border-white bg-emerald-700 text-white shadow" id="avatarCam">
+                    <input accept="image/jpeg,image/png,image/webp" class="hidden" id="avatarUpload" type="file" />
+                  </label>
+                </div>
+                <div class="min-w-0 pb-1">
+                  <p class="mb-1 text-[9px] font-bold uppercase tracking-wider text-slate-400">ACCOUNT PROFILE</p>
+                  <h2 class="relative top-2 truncate text-lg font-bold sm:text-xl" id="profileHeadingName">គណនីអ្នកប្រើប្រាស់</h2>
+                  <p class="mt-1 truncate text-[10px] text-slate-500" id="profileHeadingMeta">សមាជិក 7inOne</p>
+                  <div class="mt-2 flex flex-wrap gap-2" id="profileSellerBadge"></div>
+                </div>
+              </div>
+              <button class="mb-1 rounded-full brand-gradient px-5 py-2.5 text-[11px] font-bold text-white" id="profileApplyTop">ចុះឈ្មោះក្លាយជាអ្នកលក់</button>
+            </div>
+
+            <div class="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-3">
+              <button class="account-shortcut" data-profile-jump="saved">
+                <span class="account-shortcut-icon bg-rose-50 text-rose-600" data-icon="heart"></span>
+                <span><b>ទំនិញដែលបានរក្សាទុក</b><small>ផលិតផលដែលអ្នកចាប់អារម្មណ៍</small></span>
+                <span class="account-shortcut-arrow" data-icon="arrow"></span>
+              </button>
+              <button class="account-shortcut" data-profile-jump="history">
+                <span class="account-shortcut-icon bg-emerald-50 text-emerald-700" data-icon="clipboard"></span>
+                <span><b>ការទិញ និងសំណើតថ្លៃ</b><small>តាមដានប្រតិបត្តិការរបស់អ្នក</small></span>
+                <span class="account-shortcut-arrow" data-icon="arrow"></span>
+              </button>
+              <button class="account-shortcut" data-profile-jump="seller">
+                <span class="account-shortcut-icon bg-amber-50 text-amber-700" data-icon="store"></span>
+                <span><b>ស្ថានភាពហាង</b><small>គ្រប់គ្រងការផ្ទៀងផ្ទាត់អ្នកលក់</small></span>
+                <span class="account-shortcut-arrow" data-icon="arrow"></span>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <div class="mt-5 grid gap-5 lg:grid-cols-[.85fr_1.15fr]">
+          <!-- Profile settings launchers: keep forms in dedicated dialogs. -->
+          <section class="account-panel bg-white p-5 sm:p-6">
+            <div class="mb-4">
+              <p class="text-[9px] font-bold tracking-wider text-emerald-700">ACCOUNT SETTINGS</p>
+              <h3 class="mt-1 text-base font-bold">ការកំណត់គណនី</h3>
+              <p class="mt-1 text-[11px] text-slate-500">ជ្រើសរើសផ្នែកដែលអ្នកចង់កែប្រែ។</p>
+            </div>
+            <div class="grid gap-3 sm:grid-cols-2">
+              <button type="button" data-open-profile-modal="profileInfoModal" class="flex w-full items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 text-left transition hover:border-emerald-300 hover:bg-emerald-50/40">
+                <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-emerald-50 text-emerald-700" data-icon="user" data-icon-size="20"></span>
+                <span class="min-w-0 flex-1"><b class="block text-[12px]">ព័ត៌មានផ្ទាល់ខ្លួន</b><small class="mt-1 block text-[10px] text-slate-500">កែឈ្មោះ លេខទូរស័ព្ទ ទីតាំង និងអំពីខ្ញុំ</small></span>
+                <span class="text-slate-400" data-icon="arrow"></span>
+              </button>
+              <button type="button" data-open-profile-modal="telegramSecurityModal" class="flex w-full items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 text-left transition hover:border-sky-300 hover:bg-sky-50/40">
+                <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-sky-50 text-sky-700" data-icon="shield" data-icon-size="20"></span>
+                <span class="min-w-0 flex-1"><b class="block text-[12px]">សុវត្ថិភាពគណនី</b><small class="mt-1 block text-[10px] text-slate-500">ភ្ជាប់ Telegram, ទទួល OTP និងប្ដូរ Password</small></span>
+                <span class="text-slate-400" data-icon="arrow"></span>
+              </button>
+            </div>
+          </section>
+
+          <dialog id="profileInfoModal" class="m-auto max-h-[88vh] w-[min(560px,calc(100vw-24px))] max-w-none overflow-y-auto rounded-3xl border-0 bg-white p-0 shadow-2xl backdrop:bg-slate-950/60">
+            <div class="p-5 sm:p-6">
+              <div class="mb-5 flex items-center justify-between gap-3">
+                <span></span>
+                <button type="button" data-close-profile-modal="profileInfoModal" aria-label="បិទ" class="grid h-9 w-9 place-items-center rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200"><span data-icon="x" data-icon-size="16"></span></button>
+              </div>
+                          <div class="mb-5 flex items-center justify-between gap-3">
+              <div>
+                <p class="text-[9px] font-bold tracking-wider text-emerald-700">PERSONAL INFORMATION</p>
+                <h3 class="mt-1 text-base font-bold">ព័ត៌មានផ្ទាល់ខ្លួន</h3>
+              </div>
+              <span class="rounded-full bg-slate-100 px-2.5 py-1 text-[9px] font-semibold text-slate-500">កែប្រែបាន</span>
+            </div>
+            <form class="space-y-3" id="profileForm">
+              <label class="block"><span class="label">ឈ្មោះពេញ</span><input class="field" id="profileName" maxlength="60" required /></label>
+              <label class="block"><span class="label">លេខទូរស័ព្ទ</span><input class="field" id="profilePhone" placeholder="012 345 678" /></label>
+              <label class="block"><span class="label">ទីតាំង / ខេត្ត</span>
+                <select class="field" id="profileLocation">
+                  <option>ភ្នំពេញ</option><option>សៀមរាប</option><option>បាត់ដំបង</option><option>ព្រះសីហនុ</option>
+                  <option>កំពង់ចាម</option><option>កំពត</option><option>តាកែវ</option><option>កណ្តាល</option><option>ផ្សេងៗ</option>
+                </select>
+              </label>
+              <label class="block"><span class="label">អំពីខ្ញុំ</span><textarea class="field min-h-[90px]" id="profileBio" maxlength="250" placeholder="សរសេរព័ត៌មានខ្លីៗអំពីខ្លួនអ្នក..."></textarea></label>
+              <button class="brand-gradient w-full rounded-full py-3 text-[11px] font-bold text-white">រក្សាទុកការកែប្រែ</button>
+            </form>
+            </div>
+          </dialog>
+
+          <dialog id="telegramSecurityModal" class="m-auto max-h-[88vh] w-[min(560px,calc(100vw-24px))] max-w-none overflow-y-auto rounded-3xl border-0 bg-white p-0 shadow-2xl backdrop:bg-slate-950/60">
+            <div class="p-5 sm:p-6">
+              <div class="mb-5 flex items-center justify-between gap-3">
+                <span></span>
+                <button type="button" data-close-profile-modal="telegramSecurityModal" aria-label="បិទ" class="grid h-9 w-9 place-items-center rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200"><span data-icon="x" data-icon-size="16"></span></button>
+              </div>
+                          <!-- Telegram Account Security -->
+            <div class="mt-6 border-t border-slate-100 pt-5">
+              <p class="text-[9px] font-bold tracking-wider text-emerald-700">ACCOUNT SECURITY</p>
+              <h3 class="mt-1 text-base font-bold">ភ្ជាប់ Telegram និងប្ដូរ Password</h3>
+
+              <div class="mt-4 rounded-2xl border border-emerald-100 bg-emerald-50/50 p-4">
+                <div class="flex items-center justify-between gap-2">
+                  <div>
+                    <b class="text-[11px]" id="telegramLoginLinkStatus">Telegram Login មិនទាន់ភ្ជាប់</b>
+                    <p class="mt-1 text-[9px] text-slate-500" id="telegramLoginLinkHint">ភ្ជាប់ Telegram ID ដើម្បីចូលគណនី 7inOne នៅពេលក្រោយ។</p>
+                  </div>
+                  <span class="rounded-full bg-white px-2.5 py-1 text-[9px] font-bold text-emerald-700">LOGIN</span>
+                </div>
+                <div class="mt-3 flex justify-center" id="telegramProfileWidgetWrap"><div id="telegramProfileWidget"></div></div>
+              </div>
+
+              <div class="mt-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <div class="flex items-center justify-between gap-2">
+                  <div>
+                    <b class="text-[11px]" id="telegramAccountStatus">Telegram Bot មិនទាន់ភ្ជាប់</b>
+                    <p class="mt-1 text-[9px] text-slate-400" id="telegramAccountHint">ភ្ជាប់ Bot Chat ដើម្បីទទួល OTP និងសារសុវត្ថិភាព។</p>
+                  </div>
+                  <button class="rounded-full bg-sky-600 px-4 py-2 text-[10px] font-bold text-white" id="connectTelegramBtn" type="button">Connect Bot</button>
+                </div>
+                <a class="mt-3 hidden block rounded-xl border border-sky-200 bg-white px-3 py-2 text-center text-[10px] font-bold text-sky-700" href="#" id="telegramConnectLink" target="_blank" rel="noopener noreferrer">បើក Telegram Bot ដើម្បីចុច Start</a>
+                <button class="mt-2 hidden text-[10px] font-bold text-emerald-700" id="refreshTelegramStatusBtn" type="button">ពិនិត្យស្ថានភាពឡើងវិញ</button>
+              </div>
+
+              <form class="mt-4 space-y-3" id="telegramPasswordForm">
+                <button class="w-full rounded-full border border-emerald-200 bg-emerald-50 py-2.5 text-[10px] font-bold text-emerald-800" id="sendTelegramOtpBtn" type="button" disabled>ផ្ញើ OTP តាម Telegram</button>
+                <label class="block"><span class="label">OTP ៦ ខ្ទង់</span><input class="field" id="telegramPasswordOtp" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" placeholder="បញ្ចូលលេខកូដពី Telegram" required /></label>
+                <label class="block"><span class="label">Password ថ្មី</span><input class="field" id="telegramNewPassword" type="password" minlength="8" maxlength="72" placeholder="យ៉ាងតិច ៨ តួអក្សរ" required /></label>
+                <button class="brand-gradient w-full rounded-full py-3 text-[11px] font-bold text-white" id="changeTelegramPasswordBtn" type="submit" disabled>ផ្ទៀងផ្ទាត់ និងប្ដូរ Password</button>
+              </form>
+            </div>
+            </div>
+          </dialog>
+
+          <!-- Right Column: Activity Tabs -->
+          <section class="account-panel min-w-0 bg-white p-5 sm:p-6">
+            <div class="flex flex-wrap items-end justify-between gap-2">
+              <div>
+                <p class="text-[9px] font-bold tracking-wider text-emerald-700">ACCOUNT ACTIVITY</p>
+                <h3 class="mt-1 text-base font-bold">សកម្មភាព និងការគ្រប់គ្រង</h3>
+              </div>
+              <span class="text-[10px] font-semibold text-slate-400" id="profileActivityCount"></span>
+            </div>
+            <div class="mt-5 flex gap-2 overflow-x-auto border-b border-slate-100 pb-2">
+              <button class="tab active" data-profile-tab="saved">បានរក្សាទុក</button>
+              <button class="tab" data-profile-tab="history">ប្រវត្តិទិញ/តថ្លៃ</button>
+              <button class="tab" data-profile-tab="my-posts">ប្រកាសរបស់ខ្ញុំ</button>
+              <button class="tab" data-profile-tab="seller">ហាងរបស់ខ្ញុំ</button>
+            </div>
+            <div class="min-h-[330px] py-4" id="profileTabContent"></div>
+          </section>
+        </div>
+      </div>
+    </section>
+
