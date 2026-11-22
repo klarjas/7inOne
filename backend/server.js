@@ -3790,7 +3790,7 @@ async function runCcComputerAutoSync() {
     if (productsError || detailsError) throw productsError || detailsError;
     const productById = new Map((products || []).map(row => [String(row.id), row]));
     const detailsById = new Map((details || []).map(row => [String(row.product_id), row]));
-    const tracked = allSources.filter(source => { try { return new URL(source.supplier_url || 'https://cccomputerkh.com/').hostname.toLowerCase().replace(/^www\\./, '') === 'cccomputerkh.com'; } catch { return false; } }).map(source => {
+    const tracked = allSources.filter(source => { try { return new URL(source.supplier_url || 'https://cccomputerkh.com/').hostname.toLowerCase().replace(/^www\./, '') === 'cccomputerkh.com'; } catch { return false; } }).map(source => {
       const variant = variantById.get(String(source.variant_id));
       const product = variant ? productById.get(String(variant.product_id)) : null;
       return { source, variant, product, details: product ? detailsById.get(String(product.id)) : null };
