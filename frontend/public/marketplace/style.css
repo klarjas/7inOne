@@ -8841,3 +8841,133 @@ body>footer{background:#16202D!important;color:#C7D5E0!important;border-color:#2
     gap: 14px !important;
   }
 }
+
+
+/* 7inOne · Borderless List Show detail inspector and fluid discovery interactions */
+#homeDetailInspector{
+  opacity:1;
+  transform:translate3d(0,0,0);
+  transition:opacity 220ms cubic-bezier(.22,1,.36,1),transform 220ms cubic-bezier(.22,1,.36,1);
+  will-change:opacity,transform;
+}
+#homeDetailInspector.is-closing{
+  opacity:0;
+  transform:translate3d(0,10px,0) scale(.995);
+  pointer-events:none;
+}
+#homeDetailInspector:not(.hidden) #productDetail .product-detail-page{
+  animation:inspectorFadeSlide 420ms cubic-bezier(.22,1,.36,1) both;
+}
+@keyframes inspectorFadeSlide{
+  from{opacity:0;transform:translate3d(0,12px,0)}
+  to{opacity:1;transform:translate3d(0,0,0)}
+}
+#homeDetailInspector .product-hero-grid,
+#homeDetailInspector .product-seller-card,
+#homeDetailInspector .product-detail-description,
+#homeDetailInspector .detail-spec-grid>div,
+#homeDetailInspector .product-reviews,
+#homeDetailInspector .product-safety-note,
+#homeDetailInspector .product-review,
+#homeDetailInspector .product-hero-card,
+#homeDetailInspector .product-description-card,
+#homeDetailInspector .product-detail-info,
+#homeDetailInspector .product-spec-item{
+  border:none!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+#homeDetailInspector .product-hero-grid,
+#homeDetailInspector .product-seller-card,
+#homeDetailInspector .product-detail-description,
+#homeDetailInspector .detail-spec-grid,
+#homeDetailInspector .product-spec-grid,
+#homeDetailInspector .product-reviews,
+#homeDetailInspector .product-safety-note,
+#homeDetailInspector .product-review{
+  padding:14px 0!important;
+  border-bottom:1px solid rgba(102,192,244,.12)!important;
+  border-radius:0!important;
+}
+#homeDetailInspector .detail-spec-grid,
+#homeDetailInspector .product-spec-grid{
+  display:flex!important;
+  flex-direction:column!important;
+  gap:0!important;
+}
+#homeDetailInspector .detail-spec-grid>div,
+#homeDetailInspector .product-spec-grid>div,
+#homeDetailInspector .product-spec-item{
+  display:flex!important;
+  justify-content:space-between!important;
+  align-items:baseline!important;
+  gap:12px!important;
+  padding:9px 0!important;
+  border:0!important;
+  border-bottom:1px solid rgba(255,255,255,.06)!important;
+  border-radius:0!important;
+}
+#homeDetailInspector .detail-spec-grid>div>*:first-child,
+#homeDetailInspector .product-spec-grid>div>*:first-child,
+#homeDetailInspector .product-spec-item>*:first-child{color:#8F98A0!important}
+#homeDetailInspector .detail-spec-grid>div>*:last-child,
+#homeDetailInspector .product-spec-grid>div>*:last-child,
+#homeDetailInspector .product-spec-item>*:last-child{color:#E5EDF6!important;font-weight:500!important;text-align:right}
+#homeDetailInspector .product-detail-title{
+  font-size:18px!important;
+  line-height:1.5!important;
+  font-weight:600!important;
+  color:#FFFFFF!important;
+}
+#homeDetailInspector .product-facts-price,
+#homeDetailInspector .product-detail-price{
+  font-size:22px!important;
+  font-weight:700!important;
+  color:#BEEE11!important;
+}
+#homeDetailInspector .product-short-summary-text,
+#homeDetailInspector .product-detail-description,
+#homeDetailInspector .product-review,
+#homeDetailInspector .product-seller-card p,
+#homeDetailInspector .product-safety-note{
+  font-size:13px!important;
+  line-height:1.85!important;
+  color:#B8C7D4!important;
+}
+#homeDetailInspector .product-short-summary-text,
+#homeDetailInspector .product-detail-description,
+#homeDetailInspector .product-review p{
+  display:block!important;
+  -webkit-line-clamp:unset!important;
+  line-clamp:unset!important;
+  max-height:none!important;
+  overflow:visible!important;
+}
+#homeDetailInspector .product-top-meta .product-category-badge{opacity:.82}
+#homeDetailInspector .product-top-meta{gap:6px 10px!important}
+#homeDetailInspector .product-detail-page .product-section,
+#homeDetailInspector .product-related-section{background:transparent!important;box-shadow:none!important;border:0!important}
+#steamDiscoveryHub .hub-item-card{
+  border:0!important;
+  border-bottom:1px solid rgba(102,192,244,.12)!important;
+  border-radius:0!important;
+  background:rgba(255,255,255,.03)!important;
+  padding:10px 4px!important;
+  transition:background-color 180ms cubic-bezier(.22,1,.36,1),transform 220ms cubic-bezier(.22,1,.36,1);
+  will-change:background-color,transform;
+}
+#steamDiscoveryHub .hub-item-card:hover{
+  border-color:rgba(102,192,244,.12)!important;
+  background:rgba(102,192,244,.10)!important;
+  transform:translate3d(2px,0,0);
+}
+#steamDiscoveryHub .hub-item-card:active{transform:scale(.99)}
+#steamDiscoveryHub .hub-item-views{
+  border:0!important;
+  background:rgba(255,255,255,.05)!important;
+}
+@media(prefers-reduced-motion:reduce){
+  #homeDetailInspector,#homeDetailInspector .product-detail-page,#steamDiscoveryHub .hub-item-card{
+    animation:none!important;transition:none!important;transform:none!important;
+  }
+}
