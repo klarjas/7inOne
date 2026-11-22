@@ -3292,6 +3292,83 @@ app.patch('/api/admin/vendors/:id', authenticate, requireAdmin, async (req, res)
   }
   res.json({ data });
 });
+
+app.get('/api/admin/supplier-update-reviews', authenticate, requireAdmin, async (req, res) => {
+  const status = clean(req.query.status || 'pending', 20);
+  if (!['pending','approved','rejected','applied','failed','all'].includes(status)) return fail(res, 400, 'Invalid review status.');
+  let query = supabase.from('supplier_update_reviews').select('*').order('created_at', { ascending: false }).limit(300);
+  if (status !== 'all') query = query.eq('status', status);
+  const { data, error } = await query;
+  if (error) return fail(res, 500, 'Could not load supplier update reviews.');
+  res.json({ data: data || [] });
+});
+app.patch('/api/admin/supplier-update-reviews/:id', authenticate, requireAdmin, async (req, res) => {
+  const decision = clean(req.body.status, 20);
+  if (!['approved','rejected'].includes(decision)) return fail(res, 400, 'Review status must be approved or rejected.');
+  const { data: review, error: reviewError } = await supabase.from('supplier_update_reviews')
+    .select('*').eq('id', clean(req.params.id, 64)).eq('status', 'pending').maybeSingle();
+  if (reviewError) return fail(res, 500, 'Could not load supplier review.');
+  if (!review) return fail(res, 404, 'Pending supplier review not found.');
+  const now = new Date().toISOString();
+  if (decision === 'rejected') {
+    const { data, error } = await supabase.from('supplier_update_reviews').update({
+      status: 'rejected', reviewed_by: req.user.id, reviewed_at: now, updated_at: now
+    }).eq('id', review.id).select().single();
+    if (error) return fail(res, 500, 'Could not reject supplier update.');
+    return res.json({ data });
+  }
+  const value = typeof review.new_value === 'number' ? review.new_value : Number(review.new_value);
+  if (!Number.isFinite(value) || value < 0) return fail(res, 400, 'The proposed supplier value is invalid.');
+  if (Date.now() - new Date(review.created_at).getTime() > 48 * 60 * 60 * 1000) return fail(res, 409, 'This supplier review is older than 48 hours. Run a fresh scan before approving it.');
+  if (review.variant_id) {
+    const currentField = review.field_name === 'price' ? 'price' : review.field_name === 'stock' ? 'stock' : '';
+    if (!currentField) return fail(res, 400, 'Unsupported supplier update field.');
+    const { data: currentVariant, error: currentVariantError } = await supabase.from('product_variants')
+      .select('id,price,stock').eq('id', review.variant_id).eq('product_id', review.product_id).maybeSingle();
+    if (currentVariantError || !currentVariant) return fail(res, 404, 'The linked product variant no longer exists.');
+    if (Number(currentVariant[currentField]) !== Number(review.old_value)) return fail(res, 409, 'The product value changed after this review was created. Run a fresh scan before approving.');
+    const patch = review.field_name === 'price' ? { price: value } : review.field_name === 'stock' ? { stock: Math.floor(value) } : null;
+    if (!patch || (review.field_name === 'stock' && !Number.isInteger(value))) return fail(res, 400, 'Unsupported supplier update field.');
+    const { data: variant, error: variantError } = await supabase.from('product_variants')
+      .update({ ...patch, updated_at: now }).eq('id', review.variant_id).eq('product_id', review.product_id)
+      .select('id,product_id,price,stock').maybeSingle();
+    if (variantError || !variant) return fail(res, 500, 'Could not apply the supplier update to this variant.');
+    const { data: variants } = await supabase.from('product_variants')
+      .select('price,stock,is_active').eq('product_id', review.product_id);
+    const active = (variants || []).filter(item => item.is_active);
+    if (active.length) await supabase.from('products').update({
+      price: Math.min(...active.map(item => Number(item.price)).filter(Number.isFinite)),
+      stock: active.some(item => Number(item.stock) > 0) ? 1 : 0,
+      updated_at: now
+    }).eq('id', review.product_id);
+    if (review.field_name === 'price' && Number.isFinite(Number(review.verification?.supplier_price))) {
+      await supabase.from('product_supplier_variant_sources').update({
+        supplier_price: Number(review.verification.supplier_price),
+        supplier_url: review.supplier_url, updated_at: now
+      }).eq('variant_id', review.variant_id);
+    }
+  } else {
+    const patch = review.field_name === 'price' ? { price: value } : review.field_name === 'stock' && Number.isInteger(value) ? { stock: value } : null;
+    if (!patch) return fail(res, 400, 'Unsupported supplier update field.');
+    const { error } = await supabase.from('products').update({ ...patch, updated_at: now }).eq('id', review.product_id);
+    if (error) return fail(res, 500, 'Could not apply the supplier update.');
+  }
+  const { data, error } = await supabase.from('supplier_update_reviews').update({
+    status: 'applied', reviewed_by: req.user.id, reviewed_at: now, applied_at: now, updated_at: now
+  }).eq('id', review.id).select().single();
+  if (error) return fail(res, 500, 'Update applied but review history could not be finalized.');
+  res.json({ data });
+});
+app.post('/api/admin/supplier-auto-sync/run', authenticate, requireAdmin, async (_req, res) => {
+  try {
+    const result = await runCcComputerAutoSync();
+    res.json({ success: true, data: result });
+  } catch (error) {
+    console.error('Manual CC COMPUTER auto-sync failed:', error.message);
+    fail(res, 502, 'Supplier auto-sync failed: ' + clean(error.message, 180));
+  }
+});
+
 // Admin-only supplier product workspace. Supplier metadata never enters publicProduct responses.
 app.get('/api/admin/supplier-products', authenticate, requireAdmin, async (_req, res) => {
   const { data: products, error } = await supabase.from('products')
@@ -3659,6 +3736,258 @@ function mergeSupplierProductRecords(records) {
   }
   return [...byCode.values()];
 }
+
+const CC_BRAND_MATCHERS = {
+  msi: /\b(?:msi|crosshair|vector|raider|katana|cyborg|stealth|titan|prestige|modern)\b/i,
+  dell: /\b(?:dell|latitude|inspiron|xps|precision|alienware|vostro|g-series)\b/i,
+  lenovo: /\b(?:lenovo|thinkpad|thinkbook|legion|ideapad|yoga)\b/i
+};
+function ccBrandMatches(product, brandKey) {
+  const matcher = CC_BRAND_MATCHERS[String(brandKey || '').toLowerCase()];
+  return Boolean(matcher && matcher.test(String(product?.title || '')));
+}
+function ccIdentityCheck(scanned, localProduct, localDetails, variant) {
+  const scannedModel = supplierModelKey(scanned);
+  const localModel = supplierModelKey(localProduct);
+  if (!scannedModel || !localModel || scannedModel !== localModel) {
+    return { ok: false, reason: 'model_mismatch', scanned_model: scannedModel, local_model: localModel };
+  }
+  const localSpecs = localDetails?.specifications || {};
+  const variantSpecs = variant?.attributes || {};
+  const keys = ['cpu_model','gpu_model_vram','screen_size','ram_type_capacity','storage_type_capacity'];
+  let comparable = 0;
+  for (const key of keys) {
+    const supplierValue = normalizeSupplierIdentity(scanned?.specifications?.[key] || '');
+    const localValue = normalizeSupplierIdentity(localSpecs[key] || variantSpecs[key] || '');
+    if (!supplierValue || !localValue) continue;
+    comparable++;
+    if (supplierValue !== localValue) return { ok: false, reason: 'specification_mismatch', key, supplier_value: supplierValue, local_value: localValue };
+  }
+  if (!comparable) return { ok: false, reason: 'no_comparable_identifying_specs' };
+  return { ok: true, comparable_specs: comparable };
+}
+let ccSupplierSyncPromise = null;
+async function runCcComputerAutoSync() {
+  if (!supabase) return { skipped: true, reason: 'supabase_not_configured' };
+  if (ccSupplierSyncPromise) return ccSupplierSyncPromise;
+  ccSupplierSyncPromise = (async () => {
+    const startedAt = new Date().toISOString();
+    const { data: scanSources, error: sourceConfigError } = await supabase.from('supplier_scan_sources')
+      .select('*').eq('supplier_name', 'CC COMPUTER').eq('is_active', true).order('brand_key');
+    if (sourceConfigError) throw sourceConfigError;
+    if (!scanSources?.length) return { skipped: true, reason: 'no_active_scan_sources' };
+
+    const { data: vendor, error: vendorError } = await supabase.from('vendors')
+      .select('id').ilike('store_name', 'AURORA Computer').maybeSingle();
+    if (vendorError || !vendor) throw vendorError || new Error('AURORA Computer shop was not found.');
+
+    const { data: sourceRows, error: sourceRowsError } = await supabase.from('product_supplier_variant_sources')
+      .select('variant_id,supplier_product_code,supplier_url,supplier_price,last_seen_at,missing_since,last_scan_status')
+      .order('updated_at', { ascending: true });
+    if (sourceRowsError) throw sourceRowsError;
+    const allSources = sourceRows || [];
+    const variantIds = allSources.map(row => row.variant_id);
+    if (!variantIds.length) return { scanned: 0, updated: 0, review: 0, missing: 0 };
+
+    const { data: variants, error: variantsError } = await supabase.from('product_variants')
+      .select('id,product_id,sku,price,stock,is_active,attributes,option_value')
+      .in('id', variantIds);
+    if (variantsError) throw variantsError;
+    const variantById = new Map((variants || []).map(row => [String(row.id), row]));
+    const productIds = [...new Set((variants || []).map(row => row.product_id))];
+    if (!productIds.length) return { scanned: 0, updated: 0, review: 0, missing: 0 };
+    const [{ data: products, error: productsError }, { data: details, error: detailsError }] = await Promise.all([
+      supabase.from('products').select('id,title,price,stock,status,vendor_id').eq('vendor_id', vendor.id).in('id', productIds),
+      supabase.from('product_listing_details').select('product_id,specifications').in('product_id', productIds)
+    ]);
+    if (productsError || detailsError) throw productsError || detailsError;
+    const productById = new Map((products || []).map(row => [String(row.id), row]));
+    const detailsById = new Map((details || []).map(row => [String(row.product_id), row]));
+    const tracked = allSources.filter(source => { try { return new URL(source.supplier_url || 'https://cccomputerkh.com/').hostname.toLowerCase().replace(/^www\./, '') === 'cccomputerkh.com'; } catch { return false; } }).map(source => {
+      const variant = variantById.get(String(source.variant_id));
+      const product = variant ? productById.get(String(variant.product_id)) : null;
+      return { source, variant, product, details: product ? detailsById.get(String(product.id)) : null };
+    }).filter(row => row.variant && row.product && String(row.source.supplier_product_code || '').trim());
+
+    const catalogCache = new Map();
+    const freshCache = new Map();
+    const results = { scanned: 0, updated: 0, review: 0, missing: 0, archived: 0, errors: [] };
+    for (const config of scanSources) {
+      const parsed = new URL(config.source_url);
+      const canonicalUrl = parsed.origin + parsed.pathname + parsed.search;
+      let catalog = catalogCache.get(canonicalUrl);
+      if (!catalog) {
+        try {
+          catalog = await loadCcSupplierCatalog(config.source_url);
+          catalogCache.set(canonicalUrl, catalog);
+        } catch (error) {
+          results.errors.push({ brand: config.brand_key, error: clean(error.message, 180) });
+          await supabase.from('supplier_scan_sources').update({
+            last_scan_at: new Date().toISOString(), last_scan_status: 'failed',
+            last_scan_error: clean(error.message, 1000), updated_at: new Date().toISOString()
+          }).eq('id', config.id);
+          continue;
+        }
+      }
+      const brandProducts = (catalog.products || []).filter(item => ccBrandMatches(item, config.brand_key));
+      const byCode = new Map(brandProducts.map(item => [String(item.supplier_product_code || '').trim().toUpperCase(), item]));
+      const completeScan = !catalog.scan?.failed_pages && !catalog.scan?.page_limit_reached && !catalog.scan?.time_limit_reached;
+      results.scanned += brandProducts.length;
+      if (!brandProducts.length) {
+        const noProductsAt = new Date().toISOString();
+        await supabase.from('supplier_scan_sources').update({
+          last_scan_at: noProductsAt, last_scan_status: 'no_products_detected',
+          last_scan_product_count: 0, last_scan_error: 'No products matched this brand. Missing-product timers were not changed.',
+          updated_at: noProductsAt
+        }).eq('id', config.id);
+        continue;
+      }
+
+      let freshRecords = freshCache.get(canonicalUrl);
+      if (!freshRecords) {
+        try {
+          const { buffer } = await fetchSupplierBytes(canonicalUrl, { html: true });
+          freshRecords = mergeSupplierProductRecords(extractCcSupplierProducts(buffer.toString('utf8'), canonicalUrl));
+          freshCache.set(canonicalUrl, freshRecords);
+        } catch (error) {
+          results.errors.push({ brand: config.brand_key, fresh_check_error: clean(error.message, 180) });
+          freshRecords = null;
+        }
+      }
+      const freshByCode = new Map((freshRecords || []).filter(item => ccBrandMatches(item, config.brand_key))
+        .map(item => [String(item.supplier_product_code || '').trim().toUpperCase(), item]));
+      const brandTracked = tracked.filter(row => ccBrandMatches(row.product, config.brand_key));
+      const now = new Date().toISOString();
+
+      for (const row of brandTracked) {
+        const code = String(row.source.supplier_product_code || '').trim().toUpperCase();
+        const first = byCode.get(code);
+        if (!first) {
+          if (!completeScan) continue;
+          const missingSince = row.source.missing_since || now;
+          await supabase.from('product_supplier_variant_sources').update({
+            missing_since: missingSince, last_scan_at: now, last_scan_status: 'missing',
+            updated_at: now
+          }).eq('variant_id', row.variant.id);
+          results.missing++;
+          if (Date.now() - new Date(missingSince).getTime() >= 14 * 24 * 60 * 60 * 1000) {
+            const { error: deactivateError } = await supabase.from('product_variants')
+              .update({ is_active: false, stock: 0, updated_at: now }).eq('id', row.variant.id);
+            if (deactivateError) { results.errors.push({ code, error: deactivateError.message }); continue; }
+            const { data: remaining, error: remainingError } = await supabase.from('product_variants')
+              .select('id,is_active').eq('product_id', row.product.id);
+            if (remainingError) { results.errors.push({ code, error: remainingError.message }); continue; }
+            if (!(remaining || []).some(item => item.is_active)) {
+              await supabase.from('products').update({ status: 'archived', stock: 0, updated_at: now })
+                .eq('id', row.product.id).in('status', ['active','pending']);
+            }
+            await supabase.from('product_supplier_variant_sources').update({
+              last_scan_status: 'missing_14d', updated_at: now
+            }).eq('variant_id', row.variant.id);
+            results.archived++;
+          }
+          continue;
+        }
+
+        const firstCodeExact = String(first.supplier_product_code || '').trim().toUpperCase() === code;
+        const identity = ccIdentityCheck(first, row.product, row.details, row.variant);
+        const fresh = freshByCode.get(code);
+        const freshCodeExact = Boolean(fresh && String(fresh.supplier_product_code || '').trim().toUpperCase() === code);
+        const freshIdentity = fresh ? ccIdentityCheck(fresh, row.product, row.details, row.variant) : { ok: false, reason: 'fresh_read_missing' };
+        const sameSupplierSnapshot = Boolean(fresh && Number(fresh.supplier_price) === Number(first.supplier_price)
+          && fresh.availability === first.availability
+          && supplierModelKey(fresh) === supplierModelKey(first));
+        const verification = {
+          exact_product_code: firstCodeExact,
+          model_and_specs: identity,
+          fresh_second_read: { exact_product_code: freshCodeExact, identity: freshIdentity, same_price_and_stock: sameSupplierSnapshot },
+          supplier_price: Number(first.supplier_price), supplier_availability: first.availability,
+          checked_at: now
+        };
+        const allPassed = Boolean(first.verified && fresh?.verified && firstCodeExact && identity.ok && freshCodeExact && freshIdentity.ok && sameSupplierSnapshot);
+        if (!allPassed) {
+          const changes = [];
+          const newSellingPrice = Number.isFinite(Number(first.supplier_price)) ? Math.round((Number(first.supplier_price) + 5) * 100) / 100 : null;
+          const newStock = first.availability === 'out_of_stock' ? 0 : 1;
+          if (newSellingPrice !== null && Number(row.variant.price) !== newSellingPrice) changes.push({ field_name: 'price', old_value: row.variant.price, new_value: newSellingPrice });
+          if (Number(row.variant.stock) !== newStock) changes.push({ field_name: 'stock', old_value: row.variant.stock, new_value: newStock });
+          for (const change of changes) {
+            const { data: pendingReview, error: pendingReviewError } = await supabase.from('supplier_update_reviews')
+              .select('id').eq('status', 'pending').eq('variant_id', row.variant.id)
+              .eq('field_name', change.field_name).limit(1);
+            if (pendingReviewError) { results.errors.push({ code, review_lookup_error: pendingReviewError.message }); continue; }
+            if (pendingReview?.length) continue;
+            const { error } = await supabase.from('supplier_update_reviews').insert({
+              supplier_name: 'CC COMPUTER', product_id: row.product.id, variant_id: row.variant.id,
+              supplier_product_code: code, supplier_url: config.source_url,
+              field_name: change.field_name, old_value: change.old_value, new_value: change.new_value,
+              verification, status: 'pending'
+            });
+            if (error) results.errors.push({ code, review_error: error.message });
+            else results.review++;
+          }
+          await supabase.from('product_supplier_variant_sources').update({
+            last_scan_at: now, last_scan_status: 'needs_review', updated_at: now
+          }).eq('variant_id', row.variant.id);
+          continue;
+        }
+
+        const supplierPrice = Number(first.supplier_price);
+        const sellingPrice = Math.round((supplierPrice + 5) * 100) / 100;
+        const stock = first.availability === 'out_of_stock' ? 0 : 1;
+        const changes = [];
+        if (Number(row.variant.price) !== sellingPrice) changes.push({ field_name: 'price', old_value: row.variant.price, new_value: sellingPrice });
+        if (Number(row.variant.stock) !== stock) changes.push({ field_name: 'stock', old_value: row.variant.stock, new_value: stock });
+        if (changes.length) {
+          const { error: updateError } = await supabase.from('product_variants').update({
+            price: sellingPrice, stock, updated_at: now
+          }).eq('id', row.variant.id);
+          if (updateError) { results.errors.push({ code, update_error: updateError.message }); continue; }
+          results.updated++;
+          for (const change of changes) {
+            const { error } = await supabase.from('supplier_update_reviews').insert({
+              supplier_name: 'CC COMPUTER', product_id: row.product.id, variant_id: row.variant.id,
+              supplier_product_code: code, supplier_url: config.source_url,
+              field_name: change.field_name, old_value: change.old_value, new_value: change.new_value,
+              verification, status: 'applied', applied_at: now
+            });
+            if (error) results.errors.push({ code, audit_error: error.message });
+          }
+          const { data: activeVariants } = await supabase.from('product_variants')
+            .select('price,stock,is_active').eq('product_id', row.product.id);
+          const visibleVariants = (activeVariants || []).filter(item => item.is_active);
+          if (visibleVariants.length) {
+            await supabase.from('products').update({
+              price: Math.min(...visibleVariants.map(item => Number(item.price)).filter(Number.isFinite)),
+              stock: visibleVariants.some(item => Number(item.stock) > 0) ? 1 : 0,
+              updated_at: now
+            }).eq('id', row.product.id);
+          }
+        }
+        await supabase.from('product_supplier_variant_sources').update({
+          supplier_price: supplierPrice, supplier_url: config.source_url,
+          last_seen_at: now, missing_since: null, last_scan_at: now,
+          last_scan_status: 'present', updated_at: now
+        }).eq('variant_id', row.variant.id);
+      }
+
+      await supabase.from('supplier_scan_sources').update({
+        last_scan_at: now,
+        last_scan_status: completeScan ? 'success' : 'partial',
+        last_scan_product_count: brandProducts.length,
+        last_scan_error: catalog.scan?.failed_pages ? JSON.stringify(catalog.scan.warnings || []) : '',
+        updated_at: now
+      }).eq('id', config.id);
+    }
+    console.log('CC COMPUTER supplier auto-sync completed:', { startedAt, ...results });
+    return results;
+  })().catch(error => {
+    console.error('CC COMPUTER supplier auto-sync failed:', error.message);
+    throw error;
+  }).finally(() => { ccSupplierSyncPromise = null; });
+  return ccSupplierSyncPromise;
+}
+
 async function loadCcSupplierCatalog(url) {
   let parsed;
   try { parsed = new URL(url); } catch { throw new Error('Invalid supplier URL.'); }
@@ -3882,7 +4211,7 @@ app.post('/api/admin/supplier-import/import', authenticate, requireAdmin, async 
       if (!allPrices.length) return fail(res, 409, 'No valid variant price was found.');
       const { data: created, error: createError } = await supabase.from('products').insert({
         vendor_id: vendor.id, title: group.title, description: group.description,
-        category: group.category || 'computers', price: Math.min(...allPrices),
+        category: group.category || 'other', price: Math.min(...allPrices),
         stock: group.variants.some(item => item.availability !== 'out_of_stock') ? 1 : 0,
         location: 'Cambodia', condition: 'ថ្មី', status: 'active', renewed_at: new Date().toISOString()
       }).select().single();
@@ -3895,8 +4224,8 @@ app.post('/api/admin/supplier-import/import', authenticate, requireAdmin, async 
       if (ramValues.size > 1) delete commonSpecs.ram_type_capacity;
       if (storageValues.size > 1) delete commonSpecs.storage_type_capacity;
       const { error: detailsError } = await supabase.from('product_listing_details').upsert({
-        product_id: targetProductId, category: group.category || 'computers', subcategory: group.subcategory || 'other',
-        detail_type: group.detail_type || 'Computer', specifications: commonSpecs, updated_at: new Date().toISOString()
+        product_id: targetProductId, category: group.category || 'other', subcategory: group.subcategory || 'other',
+        detail_type: group.detail_type || 'Other', specifications: commonSpecs, updated_at: new Date().toISOString()
       }, { onConflict: 'product_id' });
       if (detailsError) throw detailsError;
     }
@@ -3907,8 +4236,8 @@ app.post('/api/admin/supplier-import/import', authenticate, requireAdmin, async 
       if (ramValues.size > 1) delete commonSpecs.ram_type_capacity;
       if (storageValues.size > 1) delete commonSpecs.storage_type_capacity;
       const { error: detailsError } = await supabase.from('product_listing_details').upsert({
-        product_id: targetProductId, category: group.category || 'computers', subcategory: group.subcategory || 'other',
-        detail_type: group.detail_type || 'Computer', specifications: commonSpecs, updated_at: new Date().toISOString()
+        product_id: targetProductId, category: group.category || 'other', subcategory: group.subcategory || 'other',
+        detail_type: group.detail_type || 'Other', specifications: commonSpecs, updated_at: new Date().toISOString()
       }, { onConflict: 'product_id' });
       if (detailsError) throw detailsError;
     }
@@ -4307,3 +4636,9 @@ vendorShortCleanupTimer.unref?.();
 void cleanupExpiredVendorShorts();
 productLifecycleTimer.unref?.();
 void cleanupExpiredProducts();
+
+const ccSupplierAutoSyncTimer = setInterval(() => {
+  void runCcComputerAutoSync().catch(error => console.warn('Scheduled CC COMPUTER auto-sync failed:', error.message));
+}, 12 * 60 * 60 * 1000);
+ccSupplierAutoSyncTimer.unref?.();
+void runCcComputerAutoSync().catch(error => console.warn('Startup CC COMPUTER auto-sync failed:', error.message));

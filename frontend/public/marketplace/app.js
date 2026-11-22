@@ -835,6 +835,26 @@ function productImage(p) {
   return (p.product_images || []).slice().sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0)).find((x) => x.image_url)?.image_url || '';
 }
 
+function productCardShortCaption(product = {}) {
+  let caption = productDescriptionParts(product).short;
+  const title = String(product.title || '').trim();
+  if (!caption || !title) return caption;
+
+  const normalize = value => String(value || '').normalize('NFKC').toLowerCase()
+    .replace(/[\s\p{P}\p{S}]+/gu, ' ').trim();
+  const normalizedTitle = normalize(title);
+  const leadingText = caption.slice(0, title.length);
+  const afterTitle = caption.slice(title.length);
+
+  if (normalize(leadingText) === normalizedTitle && (!afterTitle || /^[\s\-–—:|•]/u.test(afterTitle))) {
+    caption = afterTitle.replace(/^\s*(?:[-–—:|•]\s*)?/, '').trim();
+  }
+
+  return caption.split(/\r?\n/)
+    .filter(line => normalize(line) !== normalizedTitle)
+    .join('\n').trim();
+}
+
 function productDescriptionParts(product = {}) {
   const raw = String(product.description || '');
   if (raw.includes(PRODUCT_DESC_SEPARATOR)) {
@@ -870,8 +890,46 @@ function normalizedProductSpecs(product = {}) {
   for (const [key, legacy] of Object.entries(legacyKeys)) if (specs[key] == null && specs[legacy] != null) specs[key] = specs[legacy];
   return specs;
 }
+function supplierCaptionSpecs(product = {}) {
+  const caption = productCardShortCaption(product);
+  const aliases = {
+    brand:'brand',manufacturer:'brand',make:'brand',model:'model',productmodel:'model',series:'series',
+    cpu:'cpu',processor:'cpu',cpumodel:'cpu',processormodel:'cpu',
+    ram:'ram',memory:'ram',memoryram:'ram',ramtypecapacity:'ram',
+    ssd:'storage',storage:'storage',harddrive:'storage',hdd:'storage',storagetypecapacity:'storage',
+    display:'display',displaysize:'display',screen:'display',screensize:'display',
+    resolution:'resolution',displayresolution:'resolution',
+    gpu:'gpu',graphics:'gpu',graphicscard:'gpu',graphicsprocessor:'gpu',gpumodelvram:'gpu',
+    color:'color',colour:'color',battery:'battery',batterycapacity:'battery',
+    batterylife:'battery_life',batteryhealth:'battery_health',weight:'weight',dimensions:'dimensions',size:'size',
+    os:'os',operatingsystem:'os',warranty:'warranty',connectivity:'connectivity',
+    capacity:'capacity',power:'power',material:'material',condition:'condition',
+    voltage:'voltage',frequency:'frequency',speed:'speed',torque:'torque',mileage:'mileage',
+    fueltype:'fuel_type',transmission:'transmission',engine:'engine',year:'year',
+    gender:'gender',style:'style',fit:'fit',fabric:'material',
+    storagecapacity:'storage_capacity',camera:'camera',cameras:'camera',
+    waterresistance:'water_resistance',compatibility:'compatibility',warrantyperiod:'warranty'
+  };
+  const parsed = {};
+  const add = (rawLabel, rawValue) => {
+    const key = String(rawLabel || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    const canonical = aliases[key];
+    const value = String(rawValue || '').replace(/^[\s:：=-]+|[\s,;]+$/g, '').trim();
+    if (canonical && value && !parsed[canonical]) parsed[canonical] = value;
+  };
+  for (const rawLine of caption.split(/\r?\n/)) {
+    const line = rawLine.replace(/^\s*[-•*]\s*/, '').trim();
+    if (!line) continue;
+    for (const part of line.split(/\s*[|｜]\s*/)) {
+      const match = part.match(/^([^:：=]+)\s*[:：=]\s*(.+)$/);
+      if (match) add(match[1], match[2]);
+    }
+  }
+  return parsed;
+}
+
 function productCardSpecs(product = {}) {
-  const specs = normalizedProductSpecs(product);
+  const specs = { ...supplierCaptionSpecs(product), ...normalizedProductSpecs(product) };
   const entries = Object.entries(specs).filter(([key, value]) => {
     const normalizedKey = String(key).toLowerCase().replace(/[^a-z0-9]/g, '');
     return value !== undefined && value !== null && typeof value !== 'object' && String(value).trim() &&
@@ -890,11 +948,11 @@ function productCardSpecs(product = {}) {
   const isComputer = /laptop|desktop|computer|pc/.test(detailType) ||
     String(product.category || '').toLowerCase() === 'computers';
   if (isComputer) {
-    const cpu = find(['cpu','processor','cpu_model','processor_model']);
-    const ram = find(['ram','memory','memory_ram','ram_type_capacity']);
-    const storage = find(['storage','ssd','hard_drive','storage_type_capacity','hdd']);
-    const display = find(['display','display_size','screen','screen_size']);
-    const gpu = find(['gpu','graphics','graphics_card','graphics_processor','gpu_model_vram']);
+    const cpu = find(['cpu_model','processor_model','cpu','processor']);
+    const ram = find(['ram_type_capacity','memory_ram','ram','memory']);
+    const storage = find(['storage_type_capacity','hard_drive','storage','ssd','hdd']);
+    const display = find(['display_size','screen_size','display','screen']);
+    const gpu = find(['gpu_model_vram','graphics_card','graphics_processor','gpu','graphics']);
     const ramLine = [ram, storage ? 'SSD: ' + storage : ''].filter(Boolean).join(' | ');
     return [
       ['CPU', cpu],
@@ -1020,7 +1078,7 @@ function productCard(p, index) {
   const vendorName = p.vendors?.store_name || 'ហាងអ្នកលក់';
   const vendorLogo = p.vendors?.store_logo_url || '';
   const verified = p.vendors?.status === 'approved';
-  const description = productDescriptionParts(p).short;
+  const description = productCardShortCaption(p);
   const cardSpecs = productCardSpecs(p);
   const cardPrice = p.display_price ?? p.price;
 
@@ -3397,7 +3455,7 @@ function renderSupplierImportResults(result, catalogUrl) {
       const statusClasses = {ready:'text-emerald-700',update_existing:'text-blue-700',duplicate:'text-amber-700',needs_review:'text-rose-700'};
       const variants = item.variants || [item];
       const specs = item.specifications || {};
-      const attrs = [item.category || 'computers', item.detail_type || item.subcategory || '', specs.cpu_model ? 'CPU: '+specs.cpu_model : '', specs.gpu_model_vram ? 'GPU: '+specs.gpu_model_vram : '', specs.color ? 'ពណ៌: '+specs.color : '', specs.weight ? 'ទម្ងន់: '+specs.weight : '', specs.battery ? 'ថ្ម: '+specs.battery : ''].filter(Boolean).join(' · ');
+      const attrs = ['Category: '+(item.category || 'other'), item.subcategory ? 'Subcategory: '+item.subcategory : '', item.detail_type ? 'ប្រភេទលម្អិត: '+item.detail_type : '', specs.cpu_model ? 'CPU: '+specs.cpu_model : '', specs.gpu_model_vram ? 'GPU: '+specs.gpu_model_vram : '', specs.color ? 'ពណ៌: '+specs.color : '', specs.weight ? 'ទម្ងន់: '+specs.weight : '', specs.battery ? 'ថ្ម: '+specs.battery : ''].filter(Boolean).join(' · ');
       const importVariant = variants.find(variant => !variant.already_imported) || variants[0];
       const uniqueVariantCount = variants.filter(variant => !variant.duplicate_configuration).length;
       const variantRows = variants.map(variant => {
@@ -3430,6 +3488,37 @@ async function scanAuroraSupplierCatalog(url, offset = 0) {
   }
 }
 
+
+async function renderSupplierUpdateReviews() {
+  const target = $('adminSupplierReviewList');
+  if (!target || !isAdmin()) return;
+  try {
+    const result = await api('/api/admin/supplier-update-reviews?status=pending');
+    const reviews = result.data || [];
+    if (!reviews.length) {
+      target.innerHTML = '<p class="text-[10px] text-slate-400">មិនមានការផ្លាស់ប្តូររង់ចាំពិនិត្យទេ។</p>';
+      return;
+    }
+    target.innerHTML = reviews.map(item => {
+      const product = (state.adminSupplierProducts || []).find(p => String(p.id) === String(item.product_id));
+      const fieldLabel = item.field_name === 'price' ? 'តម្លៃលក់' : item.field_name === 'stock' ? 'ស្តុក' : item.field_name;
+      const oldValue = item.field_name === 'price' ? money(item.old_value) : String(item.old_value ?? '—');
+      const newValue = item.field_name === 'price' ? money(item.new_value) : String(item.new_value ?? '—');
+      const verification = item.verification || {};
+      const reasons = [];
+      if (!verification.exact_product_code) reasons.push('Product Code មិនត្រូវគ្នា');
+      if (!verification.model_and_specs?.ok) reasons.push('Model/Specs ត្រូវការពិនិត្យ');
+      if (!verification.fresh_second_read?.same_price_and_stock) reasons.push('ការឆែកម្ដងទៀតមិនដូចគ្នា');
+      return '<article class="rounded-xl border border-amber-200 bg-white p-3">'+
+        '<div class="flex flex-wrap items-start justify-between gap-2"><div><b class="text-[11px]">'+esc(product?.title || item.product_id)+'</b><p class="mt-1 text-[10px] text-slate-500">'+esc(item.supplier_product_code)+' · '+esc(fieldLabel)+'</p></div><strong class="text-[11px]">'+esc(oldValue)+' → '+esc(newValue)+'</strong></div>'+
+        (reasons.length?'<p class="mt-2 text-[10px] text-amber-700">'+esc(reasons.join(' · '))+'</p>':'')+
+        '<div class="mt-3 flex gap-2"><button type="button" class="rounded-full bg-slate-900 px-3 py-1.5 text-[10px] font-bold text-white" data-supplier-review-decision="approved" data-review-id="'+esc(item.id)+'">អនុម័ត</button><button type="button" class="rounded-full border border-slate-200 px-3 py-1.5 text-[10px] font-bold" data-supplier-review-decision="rejected" data-review-id="'+esc(item.id)+'">បដិសេធ</button></div></article>';
+    }).join('');
+  } catch (error) {
+    target.innerHTML = '<p class="text-[10px] text-rose-500">'+esc(error.message || 'មិនអាចផ្ទុកការពិនិត្យបានទេ។')+'</p>';
+  }
+}
+
 async function renderAdminSupplierProducts() {
   const target = $('adminSupplierProductsList');
   if (!target || !isAdmin()) return;
@@ -3437,6 +3526,7 @@ async function renderAdminSupplierProducts() {
   try {
     const result = await api('/api/admin/supplier-products');
     state.adminSupplierProducts = result.data || [];
+    void renderSupplierUpdateReviews();
     const term = String($('adminSupplierSearch')?.value || '').trim().toLowerCase();
     const products = state.adminSupplierProducts.filter(p => {
       const aurora = String(p.vendors?.store_name || '').trim().toLowerCase() === 'aurora computer';
@@ -5772,6 +5862,41 @@ function bindEvents() {
       toast(error.message||'មិនអាចនាំចូលផលិតផលបានទេ។','error');
     }
   });
+  $('adminSupplierAutoSyncRun')?.addEventListener('click', async event => {
+    const button = event.currentTarget, status = $('adminSupplierAutoSyncStatus');
+    button.disabled = true; button.textContent = 'កំពុងស្កេន...';
+    if (status) status.textContent = 'កំពុងស្កេន CC COMPUTER និងផ្ទៀងផ្ទាត់តម្លៃ/ស្តុក...';
+    try {
+      const result = await api('/api/admin/supplier-auto-sync/run', { method: 'POST', body: JSON.stringify({}) });
+      const data = result.data || {};
+      if (status) status.textContent = 'ស្កេន '+Number(data.scanned||0)+' មុខ · Update '+Number(data.updated||0)+' · ត្រូវពិនិត្យ '+Number(data.review||0)+' · បាត់ '+Number(data.missing||0)+' · លាក់ '+Number(data.archived||0);
+      toast('បានបញ្ចប់ Auto Sync។');
+      await renderAdminSupplierProducts();
+      await renderSupplierUpdateReviews();
+    } catch (error) {
+      if (status) status.textContent = error.message || 'Auto Sync បរាជ័យ។';
+      toast(error.message || 'Auto Sync បរាជ័យ។', 'error');
+    } finally {
+      button.disabled = false; button.textContent = 'ស្កេនឥឡូវនេះ';
+    }
+  });
+  $('adminSupplierReviewList')?.addEventListener('click', async event => {
+    const button = event.target.closest('[data-supplier-review-decision]');
+    if (!button) return;
+    button.disabled = true;
+    try {
+      await api('/api/admin/supplier-update-reviews/' + encodeURIComponent(button.dataset.reviewId), {
+        method: 'PATCH', body: JSON.stringify({ status: button.dataset.supplierReviewDecision })
+      });
+      toast(button.dataset.supplierReviewDecision === 'approved' ? 'បានអនុម័តការផ្លាស់ប្តូរ។' : 'បានបដិសេធការផ្លាស់ប្តូរ។');
+      await renderAdminSupplierProducts();
+      await renderSupplierUpdateReviews();
+    } catch (error) {
+      button.disabled = false;
+      toast(error.message || 'មិនអាចរក្សាទុកការសម្រេចបានទេ។', 'error');
+    }
+  });
+
   $('adminSupplierRefresh')?.addEventListener('click',()=>void renderAdminSupplierProducts());
   $('adminSupplierSearch')?.addEventListener('input',()=>void renderAdminSupplierProducts());
   $('adminSupplierCreateForm')?.addEventListener('submit',async event=>{
