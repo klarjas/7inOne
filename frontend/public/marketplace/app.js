@@ -2173,7 +2173,9 @@ function renderSteamDiscoveryHub() {
   const miniCard = (item, showViews = false) => {
     const image = item.product_images?.find(img => img?.image_url)?.image_url || item.image_url || item.cover_url || '';
     const rawPrice = item.price_label ?? item.display_price ?? item.price;
-    const price = rawPrice == null || rawPrice === '' ? 'ទាក់ទងអ្នកលក់' : (typeof rawPrice === 'string' && /[$៛]/.test(rawPrice) ? rawPrice : money(Number(rawPrice)));
+    const priceText = String(rawPrice ?? '').trim();
+    const numericPrice = Number(priceText.replace(/,/g, ''));
+    const price = !priceText ? 'ទាក់ទងអ្នកលក់' : (/[ $៛]/.test(priceText) ? priceText : (Number.isFinite(numericPrice) ? money(numericPrice) : priceText));
     return `<button type="button" class="hub-item-card" data-hub-product-id="${esc(item.id)}" aria-label="មើលព័ត៌មាន ${esc(item.title || 'ទំនិញ')}">
       <span class="hub-item-thumb">${image ? `<img src="${esc(image)}" alt="" loading="lazy">` : ic('image',18)}</span>
       <span class="hub-item-copy">
@@ -2192,7 +2194,7 @@ function renderSteamDiscoveryHub() {
 
   const savedIds = state.savedIds instanceof Set ? state.savedIds : new Set();
   const saved = products.filter(item => savedIds.has(item.id) || savedIds.has(String(item.id))).slice(0,3);
-  if (savedCount) savedCount.textContent = String(savedIds.size);
+  if (savedCount) savedCount.textContent = String(products.filter(item => savedIds.has(item.id) || savedIds.has(String(item.id))).length);
   savedRoot.innerHTML = saved.length
     ? saved.map(item => miniCard(item,false)).join('')
     : `<p class="hub-empty-message">${state.session ? 'ចុចរូប Bookmark លើទំនិញដើម្បីរក្សាទុក' : 'ចូលគណនី ដើម្បីមើលទំនិញដែលបានរក្សាទុក'}</p>`;
@@ -2388,7 +2390,9 @@ function renderProductDetailSkeleton() {
 async function openMarketplaceListing(type, id, options = {}) {
   if (!id || !['job', 'real_estate'].includes(type)) return false;
   const isCurrent = () => options.routeSyncNavigationId == null || options.routeSyncNavigationId === state.routeSyncNavigationId;
-  const inlineInspector = options.inlineInspector === true;
+  const inlineInspector = options.inlineInspector === true || (
+    !options.forceFullPage && options.routeSyncNavigationId == null && $('view-home')?.classList.contains('active')
+  );
   state.currentProduct = { id: String(id), listing_type: type };
   if (inlineInspector) showHomeDetailInspector();
   else { mountProductDetailPage(); await showView('product', { preserveScroll: Boolean(options.preserveScroll), deferLoad: true }); }
@@ -2439,7 +2443,9 @@ async function openProduct(id, options = {}) {
   const productId = String(id);
   const isCurrent = () => options.routeSyncNavigationId == null || options.routeSyncNavigationId === state.routeSyncNavigationId;
 
-  const inlineInspector = options.inlineInspector === true;
+  const inlineInspector = options.inlineInspector === true || (
+    !options.forceFullPage && options.routeSyncNavigationId == null && $('view-home')?.classList.contains('active')
+  );
   state.currentProduct = { id: productId };
   if (inlineInspector) showHomeDetailInspector();
   else { mountProductDetailPage(); await showView('product', { preserveScroll: Boolean(options.preserveScroll), deferLoad: true }); }
