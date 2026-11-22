@@ -3292,6 +3292,70 @@ app.patch('/api/admin/vendors/:id', authenticate, requireAdmin, async (req, res)
   }
   res.json({ data });
 });
+
+app.get('/api/admin/supplier-update-reviews', authenticate, requireAdmin, async (req, res) => {
+  const status = clean(req.query.status || 'pending', 20);
+  if (!['pending','approved','rejected','applied','failed','all'].includes(status)) return fail(res, 400, 'Invalid review status.');
+  let query = supabase.from('supplier_update_reviews').select('*').order('created_at', { ascending: false }).limit(300);
+  if (status !== 'all') query = query.eq('status', status);
+  const { data, error } = await query;
+  if (error) return fail(res, 500, 'Could not load supplier update reviews.');
+  res.json({ data: data || [] });
+});
+app.patch('/api/admin/supplier-update-reviews/:id', authenticate, requireAdmin, async (req, res) => {
+  const decision = clean(req.body.status, 20);
+  if (!['approved','rejected'].includes(decision)) return fail(res, 400, 'Review status must be approved or rejected.');
+  const { data: review, error: reviewError } = await supabase.from('supplier_update_reviews')
+    .select('*').eq('id', clean(req.params.id, 64)).eq('status', 'pending').maybeSingle();
+  if (reviewError) return fail(res, 500, 'Could not load supplier review.');
+  if (!review) return fail(res, 404, 'Pending supplier review not found.');
+  const now = new Date().toISOString();
+  if (decision === 'rejected') {
+    const { data, error } = await supabase.from('supplier_update_reviews').update({
+      status: 'rejected', reviewed_by: req.user.id, reviewed_at: now, updated_at: now
+    }).eq('id', review.id).select().single();
+    if (error) return fail(res, 500, 'Could not reject supplier update.');
+    return res.json({ data });
+  }
+  const value = typeof review.new_value === 'number' ? review.new_value : Number(review.new_value);
+  if (!Number.isFinite(value) || value < 0) return fail(res, 400, 'The proposed supplier value is invalid.');
+  if (review.variant_id) {
+    const patch = review.field_name === 'price' ? { price: value } : review.field_name === 'stock' ? { stock: Math.floor(value) } : null;
+    if (!patch || (review.field_name === 'stock' && !Number.isInteger(value))) return fail(res, 400, 'Unsupported supplier update field.');
+    const { data: variant, error: variantError } = await supabase.from('product_variants')
+      .update({ ...patch, updated_at: now }).eq('id', review.variant_id).eq('product_id', review.product_id)
+      .select('id,product_id,price,stock').maybeSingle();
+    if (variantError || !variant) return fail(res, 500, 'Could not apply the supplier update to this variant.');
+    const { data: variants } = await supabase.from('product_variants')
+      .select('price,stock,is_active').eq('product_id', review.product_id);
+    const active = (variants || []).filter(item => item.is_active);
+    if (active.length) await supabase.from('products').update({
+      price: Math.min(...active.map(item => Number(item.price)).filter(Number.isFinite)),
+      stock: active.some(item => Number(item.stock) > 0) ? 1 : 0,
+      updated_at: now
+    }).eq('id', review.product_id);
+  } else {
+    const patch = review.field_name === 'price' ? { price: value } : review.field_name === 'stock' && Number.isInteger(value) ? { stock: value } : null;
+    if (!patch) return fail(res, 400, 'Unsupported supplier update field.');
+    const { error } = await supabase.from('products').update({ ...patch, updated_at: now }).eq('id', review.product_id);
+    if (error) return fail(res, 500, 'Could not apply the supplier update.');
+  }
+  const { data, error } = await supabase.from('supplier_update_reviews').update({
+    status: 'applied', reviewed_by: req.user.id, reviewed_at: now, applied_at: now, updated_at: now
+  }).eq('id', review.id).select().single();
+  if (error) return fail(res, 500, 'Update applied but review history could not be finalized.');
+  res.json({ data });
+});
+app.post('/api/admin/supplier-auto-sync/run', authenticate, requireAdmin, async (_req, res) => {
+  try {
+    const result = await runCcComputerAutoSync();
+    res.json({ success: true, data: result });
+  } catch (error) {
+    console.error('Manual CC COMPUTER auto-sync failed:', error.message);
+    fail(res, 502, 'Supplier auto-sync failed: ' + clean(error.message, 180));
+  }
+});
+
 // Admin-only supplier product workspace. Supplier metadata never enters publicProduct responses.
 app.get('/api/admin/supplier-products', authenticate, requireAdmin, async (_req, res) => {
   const { data: products, error } = await supabase.from('products')
