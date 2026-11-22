@@ -144,16 +144,16 @@
             <circle cx="12" cy="10" r="2.5"></circle>
           </svg>
         </span>
-        <span><small>ទីតាំងរបស់អ្នក</small><b>ប្រទេសកម្ពុជា</b></span>
+        <span><small data-i18n="ទីតាំងរបស់អ្នក">ទីតាំងរបស់អ្នក</small><b data-i18n="ប្រទេសកម្ពុជា">ប្រទេសកម្ពុជា</b></span>
       </div>
       <div class="site-online-counter" id="siteOnlineCounter" aria-live="polite" aria-label="ចំនួនអ្នកកំពុង Online">
-        <b class="site-online-heading">អ្នកតាមដាន</b>
-        <span class="site-online-copy"><span class="site-online-icon" aria-hidden="true"></span><span class="site-online-value"><b id="siteOnlineCount">—</b><small>នាក់ Online</small></span></span>
+        <b class="site-online-heading" data-i18n="អ្នកតាមដាន">អ្នកតាមដាន</b>
+        <span class="site-online-copy"><span class="site-online-icon" aria-hidden="true"></span><span class="site-online-value"><b id="siteOnlineCount">—</b><small data-i18n="នាក់ Online">នាក់ Online</small></span></span>
       </div>
 
       <form class="order-3 flex w-full items-center md:order-none md:ml-5 md:flex-1" id="searchForm">
         <select class="hidden h-9 max-w-[145px] cursor-pointer bg-transparent px-3 text-[11px] font-semibold text-slate-600 outline-none sm:block" id="searchCategory">
-          <option value="all">គ្រប់ប្រភេទ</option>
+          <option value="all" data-i18n="គ្រប់ប្រភេទ">គ្រប់ប្រភេទ</option>
           <option value="phones">ទូរស័ព្ទ &amp; អេឡិចត្រូនិក</option>
           <option value="vehicles">រថយន្ត &amp; ម៉ូតូ</option>
           <option value="property">អចលនទ្រព្យ</option>
@@ -162,28 +162,28 @@
         </select>
         <span class="hidden h-5 w-px bg-slate-200 sm:block"></span>
         <span class="ml-2 text-slate-400" id="searchIcon"></span>
-        <input class="min-w-0 flex-1 bg-transparent px-2.5 outline-none" id="searchInput" placeholder="ស្វែងរកទំនិញដែលអ្នកចង់បាន..." type="search" />
-        <button aria-label="ស្វែងរក" class="brand-gradient grid shrink-0 place-items-center text-white" id="searchBtn"></button>
+        <input class="min-w-0 flex-1 bg-transparent px-2.5 outline-none" id="searchInput" placeholder="ស្វែងរកទំនិញដែលអ្នកចង់បាន..." data-i18n-attr="placeholder:ស្វែងរកទំនិញដែលអ្នកចង់បាន..." type="search" />
+        <button aria-label="ស្វែងរក" data-i18n-attr="aria-label:ស្វែងរក" class="brand-gradient grid shrink-0 place-items-center text-white" id="searchBtn"></button>
       </form>
 
       <div class="ml-auto flex shrink-0 items-center gap-2">
         <button class="hidden items-center gap-2 brand-gradient px-4 py-2 text-[12px] font-bold text-white sm:flex" id="postAdBtn">
-          <span id="postIcon"></span>ប្រកាស
+          <span id="postIcon"></span><span data-i18n="ប្រកាស">ប្រកាស</span>
         </button>
-        <button aria-label="ប្រកាស" class="grid h-10 w-10 place-items-center brand-gradient text-white sm:hidden" id="mobilePostBtn"></button>
+        <button aria-label="ប្រកាស" data-i18n-attr="aria-label:ប្រកាស" class="grid h-10 w-10 place-items-center brand-gradient text-white sm:hidden" id="mobilePostBtn"></button>
         <div class="header-shortcuts">
-          <button type="button" data-home-side="saved" aria-label="ទំនិញដែលបានរក្សាទុក"><span data-icon="heart" data-icon-size="16"></span><span>រក្សាទុក</span></button>
-          <button type="button" data-home-side="orders" aria-label="ការបញ្ជាទិញ"><span data-icon="clipboard" data-icon-size="16"></span><span>ការបញ្ជាទិញ</span></button>
+          <button type="button" data-home-side="saved" aria-label="ទំនិញដែលបានរក្សាទុក"><span data-icon="heart" data-icon-size="16"></span><span data-i18n="រក្សាទុក">រក្សាទុក</span></button>
+          <button type="button" data-home-side="orders" aria-label="ការបញ្ជាទិញ"><span data-icon="clipboard" data-icon-size="16"></span><span data-i18n="ការបញ្ជាទិញ">ការបញ្ជាទិញ</span></button>
         </div>
 
         <!-- Notifications -->
         <div class="relative">
-          <button aria-label="ការជូនដំណឹង" class="relative grid h-10 w-10 place-items-center text-slate-600 hover:text-emerald-700" id="notificationBtn">
+          <button aria-label="ការជូនដំណឹង" data-i18n-attr="aria-label:ការជូនដំណឹង" class="relative grid h-10 w-10 place-items-center text-slate-600 hover:text-emerald-700" id="notificationBtn">
             <span id="bellIcon"></span>
             <i class="absolute right-2.5 top-2.5 h-2 w-2 rounded-full border-2 border-white bg-rose-500"></i>
           </button>
           <div class="dropdown absolute right-0 top-[calc(100%+10px)] z-[70] w-[min(320px,calc(100vw-24px))] bg-white p-4" id="notificationMenu">
-            <p class="mb-3 text-sm font-bold">ការជូនដំណឹង</p>
+            <p class="mb-3 text-sm font-bold" data-i18n="ការជូនដំណឹង">ការជូនដំណឹង</p>
             <div class="space-y-2" id="notificationList"></div>
           </div>
         </div>
@@ -193,21 +193,21 @@
           <button class="flex items-center gap-2 p-1" id="profileMenuBtn">
             <div aria-label="រូបអ្នកប្រើ" class="nav-avatar h-9 w-9 overflow-hidden rounded-full border-2 border-white bg-emerald-50 shadow-sm" id="navAvatar" role="img"></div>
             <span class="hidden text-left leading-tight lg:block">
-              <b class="block text-[11px]" id="navName">ភ្ញៀវ</b>
-              <small class="block text-[9px] text-slate-400" id="navRole">មិនទាន់ចូលគណនី</small>
+              <b class="block text-[11px]" id="navName" data-i18n="ភ្ញៀវ">ភ្ញៀវ</b>
+              <small class="block text-[9px] text-slate-400" id="navRole" data-i18n="មិនទាន់ចូលគណនី">មិនទាន់ចូលគណនី</small>
             </span>
             <span class="hidden text-slate-400 lg:block" id="chevronIcon"></span>
           </button>
           <div class="dropdown absolute right-0 top-[calc(100%+10px)] z-[70] w-56 bg-white p-2" id="profileMenu">
             <div class="border-b border-slate-100 px-3 py-3">
-              <b class="text-sm" id="menuUserName">សួស្តី!</b>
-              <p class="text-[10px] text-slate-400" id="menuUserStatus">សូមស្វាគមន៍មកកាន់ 7inOne</p>
+              <b class="text-sm" id="menuUserName" data-i18n="សួស្តី!">សួស្តី!</b>
+              <p class="text-[10px] text-slate-400" id="menuUserStatus" data-i18n="សូមស្វាគមន៍មកកាន់ 7inOne">សូមស្វាគមន៍មកកាន់ 7inOne</p>
             </div>
-            <button class="menu-action" data-action="profile"><span id="menuUserIcon"></span>គណនីរបស់ខ្ញុំ</button>
-            <button class="menu-action" data-action="seller-dashboard"><span id="menuStoreIcon"></span>គ្រប់គ្រងហាង</button>
-            <button class="menu-action" data-action="admin"><span id="menuAdminIcon"></span>ផ្ទាំង Admin</button>
+            <button class="menu-action" data-action="profile"><span id="menuUserIcon"></span><span data-i18n="គណនីរបស់ខ្ញុំ">គណនីរបស់ខ្ញុំ</span></button>
+            <button class="menu-action" data-action="seller-dashboard"><span id="menuStoreIcon"></span><span data-i18n="គ្រប់គ្រងហាង">គ្រប់គ្រងហាង</span></button>
+            <button class="menu-action" data-action="admin"><span id="menuAdminIcon"></span><span data-i18n="ផ្ទាំង Admin">ផ្ទាំង Admin</span></button>
             <button class="menu-action" data-action="saved"><span id="menuSaveIcon"></span>ទំនិញដែលបានរក្សាទុក</button>
-            <button class="menu-action" data-action="login"><span id="menuLoginIcon"></span>ចូល / ប្តូរគណនី</button>
+            <button class="menu-action" data-action="login"><span id="menuLoginIcon"></span><span data-i18n="ចូល / ប្តូរគណនី">ចូល / ប្តូរគណនី</span></button>
           </div>
         </div>
       </div>
@@ -225,20 +225,20 @@
         <!-- Amazon-style filters: existing category and sort actions are preserved. -->
         <aside class="home-sidebar amazon-filter-sidebar" aria-label="តម្រងទំនិញ">
           <section class="store-filter-group marketplace-type-filter">
-            <h3>ប្រភេទប្រកាស</h3>
-            <button class="store-filter-link active" type="button" data-listing-type="all">ទាំងអស់</button>
-            <button class="store-filter-link" type="button" data-listing-type="product">ផលិតផល</button>
-            <button class="store-filter-link" type="button" data-listing-type="job">ការងារ</button>
-            <button class="store-filter-link" type="button" data-listing-type="real_estate">អចលនទ្រព្យ</button>
+            <h3 data-i18n="ប្រភេទប្រកាស">ប្រភេទប្រកាស</h3>
+            <button class="store-filter-link active" type="button" data-listing-type="all" data-i18n="ទាំងអស់">ទាំងអស់</button>
+            <button class="store-filter-link" type="button" data-listing-type="product" data-i18n="ផលិតផល">ផលិតផល</button>
+            <button class="store-filter-link" type="button" data-listing-type="job" data-i18n="ការងារ">ការងារ</button>
+            <button class="store-filter-link" type="button" data-listing-type="real_estate" data-i18n="អចលនទ្រព្យ">អចលនទ្រព្យ</button>
           </section>
           <section class="store-filter-group" id="marketplaceCategoryGroups">
             <div class="marketplace-category-group" data-marketplace-category-group="all" hidden>
-              <h3 id="marketplaceCategoryHeading">ប្រភេទទាំងអស់</h3>
-              <button class="store-filter-link active" type="button" data-listing-type="all">ប្រកាសទាំងអស់</button>
+              <h3 id="marketplaceCategoryHeading" data-i18n="ប្រភេទទាំងអស់">ប្រភេទទាំងអស់</h3>
+              <button class="store-filter-link active" type="button" data-listing-type="all" data-i18n="ប្រកាសទាំងអស់">ប្រកាសទាំងអស់</button>
             </div>
             <div class="marketplace-category-group" data-marketplace-category-group="product" hidden>
-              <h3>ប្រភេទផលិតផល</h3>
-              <button class="store-filter-link active" type="button" data-category="all">ទំនិញទាំងអស់</button>
+              <h3 data-i18n="ប្រភេទផលិតផល">ប្រភេទផលិតផល</h3>
+              <button class="store-filter-link active" type="button" data-category="all" data-i18n="ទំនិញទាំងអស់">ទំនិញទាំងអស់</button>
               <button class="store-filter-link" type="button" data-category="phones">ទូរស័ព្ទ និង អេឡិចត្រូនិក</button>
               <button class="store-filter-link" type="button" data-category="vehicles">រថយន្ត និង ម៉ូតូ</button>
               <button class="store-filter-link" type="button" data-category="property">អចលនទ្រព្យ</button>
@@ -330,7 +330,7 @@
                     <!-- Skeleton & Product Grid -->
           <div id="skeletonGrid" class="steam-loader-wrap global-loading" role="status" aria-live="polite">
             <div class="loader" aria-hidden="true"></div>
-            <span>កំពុងផ្ទុកទំនិញ...</span>
+            <span data-i18n="កំពុងផ្ទុកទំនិញ...">កំពុងផ្ទុកទំនិញ...</span>
           </div>
           <div class="hidden pb-10" id="productGrid"></div>
 
@@ -1363,6 +1363,7 @@
 
   <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./i18n.js" defer></script>
   <script src="./app.js" defer></script>
   </body>
 </html>

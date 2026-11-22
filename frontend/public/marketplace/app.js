@@ -78,6 +78,667 @@ const CATEGORIES = {
 const DEFAULT_MAINTENANCE_MSG = 'ប្រព័ន្ធកំពុងធ្វើការអភិវឌ្ឍន៍ និងបន្ថែមមុខងារថ្មីៗ សូមអធ្យាស្រ័យចំពោះការរំខាន!';
 const PRODUCT_DESC_SEPARATOR = '\n<!--7INONE:MORE-->\n';
 
+
+const MARKETPLACE_UI_MESSAGES = Object.freeze({
+  "មុខងារនេះសម្រាប់ Admin ប៉ុណ្ណោះ។": { 'zh-CN': "此功能仅限管理员使用。", en: "This feature is for Admins only." },
+  "មិនអាចចម្លង Product ID បានទេ។": { 'zh-CN': "无法复制商品 ID。", en: "Could not copy Product ID." },
+  "សូមជ្រើសរើសរូបភាព Story។": { 'zh-CN': "请选择动态图片。", en: "Please select a Story image." },
+  "សូមប្រើរូប JPG, PNG ឬ WEBP ដែលមានទំហំមិនលើស 8MB។": { 'zh-CN': "请使用不超过 8MB 的 JPG、PNG 或 WEBP 图片。", en: "Use a JPG, PNG, or WEBP image no larger than 8MB." },
+  "បានផុស Story ជោគជ័យ! Story នឹងបាត់ក្រោយ 24 ម៉ោង។": { 'zh-CN': "动态发布成功！动态将在 24 小时后消失。", en: "Story posted successfully! It will disappear after 24 hours." },
+  "សូមជ្រើសរើសរូបភាពជាមុនសិន។": { 'zh-CN': "请先选择图片。", en: "Please select an image first." },
+  "បានផុសរូបភាពជោគជ័យ!": { 'zh-CN': "图片发布成功！", en: "Image posted successfully!" },
+  "មិនមានលេខសម្គាល់ទំនិញទេ។": { 'zh-CN': "缺少商品 ID。", en: "Product ID is missing." },
+  "Google Maps Link មិនត្រឹមត្រូវ។": { 'zh-CN': "Google Maps 链接无效。", en: "The Google Maps link is invalid." },
+  "បានចម្លង Link រួចរាល់!": { 'zh-CN': "链接已复制！", en: "Link copied!" },
+  "មិនអាចចម្លង Link បានទេ។": { 'zh-CN': "无法复制链接。", en: "Could not copy the link." },
+  "បានរក្សាទុកប្រកាស!": { 'zh-CN': "帖子已保存！", en: "Post saved!" },
+  "បានផ្ញើរបាយការណ៍ទៅ Admin រួចរាល់។": { 'zh-CN': "举报已发送给管理员。", en: "Report sent to Admin." },
+  "បានផ្ញើការវាយតម្លៃរួចរាល់។": { 'zh-CN': "评价已提交。", en: "Review submitted." },
+  "មិនមានព័ត៌មានហាងនេះទេ។": { 'zh-CN': "未找到该店铺信息。", en: "Shop information is unavailable." },
+  "រកមិនឃើញផលិតផលនេះទេ។": { 'zh-CN': "未找到该商品。", en: "Product not found." },
+  "រូបភាពសរុបមិនអាចលើស ១០ រូបទេ។": { 'zh-CN': "图片总数不能超过 10 张。", en: "You can upload no more than 10 images." },
+  "សូមប្រើ JPG / PNG / WEBP មិនលើស ២០MB ក្នុងមួយរូប។": { 'zh-CN': "请使用 JPG、PNG 或 WEBP 图片，每张不超过 20MB。", en: "Use JPG, PNG, or WEBP images up to 20MB each." },
+  "បានរក្សាទុកការកែប្រែផលិតផល។": { 'zh-CN': "商品修改已保存。", en: "Product changes saved." },
+  "ហាងរបស់អ្នកបានផ្ទៀងផ្ទាត់រួចហើយ។": { 'zh-CN': "您的店铺已通过验证。", en: "Your shop is already verified." },
+  "ហាងនេះត្រូវបានបិទដោយ Admin។": { 'zh-CN': "该店铺已被管理员停用。", en: "This shop has been disabled by Admin." },
+  "សូមប្រើ JPG, PNG ឬ WEBP ប៉ុណ្ណោះ។": { 'zh-CN': "仅支持 JPG、PNG 或 WEBP 格式。", en: "Only JPG, PNG, or WEBP files are allowed." },
+  "រូបភាពនីមួយៗមិនអាចធំជាង 8MB បានទេ។": { 'zh-CN': "每张图片不能超过 8MB。", en: "Each image must be no larger than 8MB." },
+  "អាចដាក់រូបភាពបានអតិបរមា ១០ រូប។": { 'zh-CN': "最多可上传 10 张图片。", en: "You can upload up to 10 images." },
+  "បានដកទីតាំងលំនាំដើមចេញ។": { 'zh-CN': "默认位置已移除。", en: "Default location removed." },
+  "សូមជ្រើសរើសទីតាំងដល់កម្រិតភូមិជាមុនសិន។": { 'zh-CN': "请先选择到村级的位置。", en: "Please select a location down to the village level first." },
+  "បានរក្សាទុកទីតាំងលំនាំដើមជោគជ័យ!": { 'zh-CN': "默认位置保存成功！", en: "Default location saved successfully!" },
+  "បានលុប Variant។": { 'zh-CN': "变体已删除。", en: "Variant deleted." },
+  "បានរក្សាទុក Variant។": { 'zh-CN': "变体已保存。", en: "Variant saved." },
+  "សូមបញ្ចូលឈ្មោះ Variant និងតម្លៃលក់។": { 'zh-CN': "请输入变体名称和售价。", en: "Enter the variant name and selling price." },
+  "បានបន្ថែម Variant។": { 'zh-CN': "变体已添加。", en: "Variant added." },
+  "បានរក្សាទុកព័ត៌មានផលិតផល AURORA។": { 'zh-CN': "AURORA 商品信息已保存。", en: "AURORA product information saved." },
+  "មិនទាន់រកឃើញហាង AURORA Computer។": { 'zh-CN': "尚未找到 AURORA Computer 店铺。", en: "AURORA Computer shop was not found." },
+  "បានរក្សាទុកព័ត៌មាន AURORA Computer។": { 'zh-CN': "AURORA Computer 信息已保存。", en: "AURORA Computer information saved." },
+  "ទំនិញនេះអស់ស្តុកហើយ។": { 'zh-CN': "该商品已售罄。", en: "This product is out of stock." },
+  "សូមចូលគណនី 7inOne ជាមុនសិន។": { 'zh-CN': "请先登录 7inOne 账户。", en: "Please sign in to your 7inOne account first." },
+  "បានចាកចេញពីគណនីរួចរាល់។": { 'zh-CN': "已成功退出账户。", en: "Signed out successfully." },
+  "បានចូលគណនីជោគជ័យ!": { 'zh-CN': "登录成功！", en: "Signed in successfully!" },
+  "បានរក្សាទុកទំនិញជោគជ័យ!": { 'zh-CN': "商品保存成功！", en: "Product saved successfully!" },
+  "បានលុបទំនិញរួចរាល់។": { 'zh-CN': "商品已删除。", en: "Product deleted." },
+  "បានផ្ញើសំណើតម្លៃជោគជ័យ!": { 'zh-CN': "报价请求已发送！", en: "Price request sent successfully!" },
+  "បានដាក់ពាក្យស្នើសុំអ្នកលក់ជោគជ័យ!": { 'zh-CN': "卖家申请已提交！", en: "Seller application submitted successfully!" },
+  "បានរក្សាទុកព័ត៌មាន Profile ជោគជ័យ!": { 'zh-CN': "个人资料保存成功！", en: "Profile saved successfully!" },
+  "បានប្ដូររូបភាព Profile ជោគជ័យ!": { 'zh-CN': "头像更换成功！", en: "Profile photo updated successfully!" },
+  "ព័ត៌មានបន្ថែមមិនត្រឹមត្រូវទេ។": { 'zh-CN': "补充信息无效。", en: "Additional information is invalid." },
+  "បានកែប្រែប្រកាសជោគជ័យ។": { 'zh-CN': "帖子更新成功。", en: "Post updated successfully." },
+  "បានផ្ញើ OTP តាម Telegram។": { 'zh-CN': "验证码已通过 Telegram 发送。", en: "OTP sent via Telegram." },
+  "បានប្ដូរ Password ជោគជ័យ!": { 'zh-CN': "密码修改成功！", en: "Password changed successfully!" },
+  "បានសង្គ្រោះ Password ជោគជ័យ។ សូមចូលគណនីម្ដងទៀត។": { 'zh-CN': "密码重置成功。请重新登录。", en: "Password reset successfully. Please sign in again." },
+  "បានធ្វើបច្ចុប្បន្នភាពសំណើតម្លៃ។": { 'zh-CN': "报价请求已更新。", en: "Price request updated." },
+  "បានធ្វើបច្ចុប្បន្នភាពការបញ្ជាទិញ។": { 'zh-CN': "订单已更新。", en: "Order updated." },
+  "បានរក្សាទុកព័ត៌មានហាង។": { 'zh-CN': "店铺信息已保存。", en: "Shop information saved." },
+  "បានរក្សាទុក Brand ជោគជ័យ!": { 'zh-CN': "品牌保存成功！", en: "Brand saved successfully!" },
+  "បានអនុម័ត និង Upload រូបទៅ Telegram រួចរាល់។": { 'zh-CN': "已批准并将图片上传至 Telegram。", en: "Image approved and uploaded to Telegram." },
+  "បានបដិសេធរូបភាព។": { 'zh-CN': "图片已拒绝。", en: "Image rejected." },
+  "បានបញ្ចប់ Auto Sync។": { 'zh-CN': "自动同步已完成。", en: "Auto Sync completed." },
+  "បានបង្កើតផលិតផល Supplier ជោគជ័យ។": { 'zh-CN': "供应商商品创建成功。", en: "Supplier product created successfully." },
+  "បានធ្វើបច្ចុប្បន្នភាពពាក្យស្នើសុំ។": { 'zh-CN': "申请已更新。", en: "Application updated." },
+  "មិនអាចភ្ជាប់ប្រព័ន្ធបានទេ៖ ": { 'zh-CN': "系统连接失败：", en: "Could not connect to the system: " },
+  "មិនអាចទាញការកំណត់ប្រព័ន្ធបានទេ៖ ": { 'zh-CN': "无法加载系统设置：", en: "Could not load system settings: " },
+  "មិនអាចផ្ទុក Dashboard៖ ": { 'zh-CN': "无法加载控制面板：", en: "Could not load dashboard: " },
+  "មិនអាចផ្ទុក Admin៖ ": { 'zh-CN': "无法加载管理后台：", en: "Could not load Admin: " },
+  "មិនអាចទាញយកការងារបានទេ៖ ": { 'zh-CN': "无法加载职位：", en: "Could not load jobs: " },
+  "មិនអាចទាញយកប្រកាសបានទេ៖ ": { 'zh-CN': "无法加载帖子：", en: "Could not load posts: " },
+  "បោះបង់": { 'zh-CN': "取消", en: "Cancel" },
+  "មូលហេតុ": { 'zh-CN': "原因", en: "Reason" },
+  "យល់ព្រម": { 'zh-CN': "确认", en: "Confirm" },
+  "ផ្ញើរបាយការណ៍": { 'zh-CN': "提交举报", en: "Submit report" },
+  "សរសេរមូលហេតុនៅទីនេះ...": { 'zh-CN': "请在此填写原因...", en: "Write the reason here..." },
+  "បញ្ជាក់សកម្មភាព": { 'zh-CN': "确认操作", en: "Confirm action" },
+  "បិទ": { 'zh-CN': "关闭", en: "Close" },
+  "ទិញឥឡូវនេះ": { 'zh-CN': "立即购买", en: "Buy now" },
+  "មិនបានបញ្ជាក់": { 'zh-CN': "未注明", en: "Not specified" },
+  "រក្សាទុករូបភាព": { 'zh-CN': "保存图片", en: "Save image" },
+  "ពង្រីករូបភាព": { 'zh-CN': "放大图片", en: "Zoom image" },
+  "ចូលគណនី និងទិញទំនិញពីហាងនេះ ដើម្បីអាចវាយតម្លៃអ្នកលក់បាន។": { 'zh-CN': "请登录并购买该店铺的商品后，才能评价卖家。", en: "Sign in and purchase from this shop to review the seller." },
+  "ចូលគណនី": { 'zh-CN': "登录", en: "Sign in" },
+  "ការវាយតម្លៃផ្កាយ": { 'zh-CN': "星级评价", en: "Star rating" },
+  "សរសេរអំពីគុណភាពទំនិញ និងសេវាកម្មរបស់ហាង...": { 'zh-CN': "请描述商品质量和店铺服务...", en: "Describe the product quality and shop service..." },
+  "អ្នកបានវាយតម្លៃការបញ្ជាទិញដែលមានរួចហើយ។": { 'zh-CN': "您已评价过现有订单。", en: "You have already reviewed an existing order." },
+  "អាចវាយតម្លៃបានក្រោយពេលការបញ្ជាទិញពីហាងនេះត្រូវបានបញ្ចប់។": { 'zh-CN': "该店铺订单完成后即可评价。", en: "You can review after an order from this shop is completed." },
+  "ទំនិញ": { 'zh-CN': "商品", en: "Product" },
+  "សំណើតថ្លៃ": { 'zh-CN': "议价请求", en: "Price offer" },
+  "អ្នកលក់": { 'zh-CN': "卖家", en: "Seller" },
+  "អ្នកលក់បានផ្ទៀងផ្ទាត់": { 'zh-CN': "已认证卖家", en: "Verified seller" },
+  "ប្រភេទ": { 'zh-CN': "类别", en: "Category" },
+  "ស្ថានភាព": { 'zh-CN': "状态", en: "Condition" },
+  "កាលបរិច្ឆេទបង្ហោះ": { 'zh-CN': "发布日期", en: "Date posted" },
+  "រូបភាពផលិតផល": { 'zh-CN': "商品图片", en: "Product image" },
+  "ហាងអ្នកលក់": { 'zh-CN': "卖家店铺", en: "Seller shop" },
+  "ទាំងអស់": { 'zh-CN': "全部", en: "All" },
+  "គ្រប់ផ្នែករង": { 'zh-CN': "所有子类别", en: "All subcategories" },
+  "ស្តុក ": { 'zh-CN': "库存 ", en: "In stock " },
+  "អស់ស្តុក": { 'zh-CN': "缺货", en: "Out of stock" },
+  "កែប្រែ": { 'zh-CN': "编辑", en: "Edit" },
+  "រូបថ្មី Upload តាម Telegram ដើម។ រូបចាស់មិនត្រូវបានលុបដោយស្វ័យប្រវត្តិទេ។": { 'zh-CN': "新图片将通过原有 Telegram 流程上传。旧图片不会自动删除。", en: "New images use the existing Telegram upload flow. Old images are not automatically deleted." },
+  "បង្ហាញផលិតផលនៅលើហាង": { 'zh-CN': "在店铺中显示商品", en: "Show product in shop" },
+  "រក្សាទុក": { 'zh-CN': "保存", en: "Save" },
+  "កំពុងផ្ទុកព័ត៌មានហាង": { 'zh-CN': "正在加载店铺信息", en: "Loading shop information" },
+  "មិនទាន់មានពិន្ទុ": { 'zh-CN': "暂无评分", en: "Not rated yet" },
+  "មុខទំនិញ": { 'zh-CN': "件商品", en: "products" },
+  "ពិនិត្យ": { 'zh-CN': "条评价", en: "reviews" },
+  "ស្វែងរកទំនិញក្នុងហាង": { 'zh-CN': "搜索店铺商品", en: "Search shop products" },
+  "ស្វែងរកក្នុងហាងនេះ...": { 'zh-CN': "搜索此店铺...", en: "Search this shop..." },
+  "មិនអាចផ្ទុកទំនិញបន្ថែមបានទេ។ សូមព្យាយាមម្តងទៀត។": { 'zh-CN': "无法加载更多商品。请重试。", en: "Could not load more products. Please try again." },
+  "អ្នកមិនទាន់រក្សាទុកទំនិញណាមួយទេ។": { 'zh-CN': "您尚未收藏任何商品。", en: "You haven't saved any products yet." },
+  "មិនទាន់មានការបញ្ជាទិញ។": { 'zh-CN': "暂无订单。", en: "No orders yet." },
+  "មិនទាន់មានសំណើតម្លៃ។": { 'zh-CN': "暂无报价请求。", en: "No price offers yet." },
+  "ស្វែងរកប្រកាស...": { 'zh-CN': "搜索帖子...", en: "Search posts..." },
+  "មុខតំណែង / Job Title": { 'zh-CN': "职位名称", en: "Job title" },
+  "ចំណងជើងអចលនទ្រព្យ": { 'zh-CN': "房产标题", en: "Property title" },
+  "ចំនួនត្រូវជ្រើសរើស": { 'zh-CN': "招聘人数", en: "Number of vacancies" },
+  "ប្រភេទការងារ": { 'zh-CN': "工作类型", en: "Employment type" },
+  "ប្រាក់ខែចាប់ពី (USD)": { 'zh-CN': "最低薪资 (USD)", en: "Salary from (USD)" },
+  "ប្រាក់ខែដល់ (USD)": { 'zh-CN': "最高薪资 (USD)", en: "Salary up to (USD)" },
+  "ជំនាញ (បំបែកដោយក្បៀស)": { 'zh-CN': "技能（用逗号分隔）", en: "Skills (comma-separated)" },
+  "ភាសា (បំបែកដោយក្បៀស)": { 'zh-CN': "语言（用逗号分隔）", en: "Languages (comma-separated)" },
+  "អត្ថប្រយោជន៍ (បំបែកដោយក្បៀស)": { 'zh-CN': "福利（用逗号分隔）", en: "Benefits (comma-separated)" },
+  "មិនទាន់មានរូបភាព": { 'zh-CN': "暂无图片", en: "No images yet" },
+  "រក្សារូបនេះ": { 'zh-CN': "保留此图片", en: "Keep this image" },
+  "ជ្រើសរើសរូបថ្មី (JPG / PNG / WEBP · 8MB)": { 'zh-CN': "选择新图片（JPG / PNG / WEBP · 8MB）", en: "Choose new image (JPG / PNG / WEBP · 8MB)" },
+  "ប្រចាំថ្ងៃ": { 'zh-CN': "每日", en: "Daily" },
+  "ប្រចាំឆ្នាំ": { 'zh-CN': "每年", en: "Yearly" },
+  "ប្រភេទអចលនទ្រព្យលម្អិត": { 'zh-CN': "详细房产类型", en: "Detailed property type" },
+  "កុំព្យូទ័រ (Computers)": { 'zh-CN': "电脑", en: "Computers" },
+  "គ្រឿងបន្លាស់កុំព្យូទ័រ (Accessories)": { 'zh-CN': "电脑配件", en: "Computer accessories" },
+  "ទូរស័ព្ទ & អេឡិចត្រូនិក": { 'zh-CN': "手机与电子产品", en: "Phones & electronics" },
+  "រថយន្ត & ម៉ូតូ": { 'zh-CN': "汽车与摩托车", en: "Cars & motorbikes" },
+  "អចលនទ្រព្យ": { 'zh-CN': "房地产", en: "Real estate" },
+  "សម្លៀកបំពាក់": { 'zh-CN': "服装", en: "Fashion" },
+  "គ្រឿងសង្ហារិម": { 'zh-CN': "家具", en: "Furniture" },
+  "ភ្នំពេញ": { 'zh-CN': "金边", en: "Phnom Penh" },
+  "សមាជិក 7inOne": { 'zh-CN': "7inOne 会员", en: "7inOne member" },
+  "អ្នកគ្រប់គ្រង": { 'zh-CN': "管理员", en: "Administrator" },
+  "អ្នកលក់ទូទៅ": { 'zh-CN': "普通卖家", en: "Regular seller" },
+  "មើលស្ថានភាពហាង": { 'zh-CN': "查看店铺状态", en: "View shop status" },
+  "បើកហាងលក់នៅ 7inOne": { 'zh-CN': "在 7inOne 开设店铺", en: "Open a shop on 7inOne" },
+  "មិនទាន់មានសំណើតថ្លៃទេ": { 'zh-CN': "暂无议价请求", en: "No price offers yet" },
+  "មិនទាន់មានការបញ្ជាទិញទេ": { 'zh-CN': "暂无订单", en: "No orders yet" },
+  "ទទួលយក": { 'zh-CN': "接受", en: "Accept" },
+  "បដិសេធ": { 'zh-CN': "拒绝", en: "Reject" },
+  "ដឹកជញ្ជូន": { 'zh-CN': "发货", en: "Ship" },
+  "បញ្ចប់": { 'zh-CN': "完成", en: "Complete" },
+  "អ្នកទិញ": { 'zh-CN': "买家", en: "Buyer" },
+  "ប្រវត្តិការបញ្ជាទិញ": { 'zh-CN': "订单历史", en: "Order history" },
+  "ប្រវត្តិសំណើតថ្លៃ": { 'zh-CN': "报价请求历史", en: "Price offer history" },
+  "មើលបន្ថែម": { 'zh-CN': "View more", en: "View more" },
+  "ស្នើ": { 'zh-CN': "报价", en: "Offer" },
+  "មុខ": { 'zh-CN': "件", en: "items" },
+  "ការបញ្ជាទិញ": { 'zh-CN': "订单", en: "Orders" },
+  "សំណើ": { 'zh-CN': "请求", en: "Offers" },
+  "មើលស្ថានភាព": { 'zh-CN': "查看状态", en: "View status" },
+  "កំពុងផ្ទុកព័ត៌មាន": { 'zh-CN': "正在加载信息", en: "Loading information" },
+  "មិនទាន់មានទំនិញទេ": { 'zh-CN': "暂无商品", en: "No products yet" },
+  "មិនមានទិន្នន័យទេ": { 'zh-CN': "暂无数据", en: "No data available" },
+  "ព្យាយាមម្តងទៀត": { 'zh-CN': "请重试", en: "Try again" },
+  "ផ្ទុកបន្ថែម": { 'zh-CN': "加载更多", en: "Load more" },
+  "សូមជ្រើសរើសទីតាំងរហូតដល់កម្រិតភូមិ។": { 'zh-CN': "请选择到村级的位置。", en: "Please select a location down to the village level." },
+  "សូមជ្រើសរើសទីតាំងដល់កម្រិតភូមិ។": { 'zh-CN': "请选择到村级的位置。", en: "Please select a location down to the village level." },
+  "បានទាញ និងរក្សាទុករូប ": { 'zh-CN': "已下载并保存图片 ", en: "Downloaded and saved image " },
+  "មិនអាចកំណត់ទំនិញសម្រាប់សំណើតម្លៃបានទេ។": { 'zh-CN': "无法为报价请求指定商品。", en: "Could not select a product for the price offer." },
+  "សូមជ្រើសរើសឯកសាររូបភាព។": { 'zh-CN': "请选择图片文件。", en: "Please select an image file." },
+  "បានបង្កើតគណនី។ សូមពិនិត្យ Email ឬ SMS ដើម្បីផ្ទៀងផ្ទាត់ មុនចូលប្រើ។": { 'zh-CN': "账户创建成功。请先检查电子邮件或短信并完成验证，然后再登录。", en: "Account created. Check your email or SMS and verify before signing in." },
+  "បានចូលគណនី ប៉ុន្តែព័ត៌មាន Profile មិនទាន់អាចទាញបានទេ។": { 'zh-CN': "登录成功，但暂时无法加载个人资料。", en: "Signed in, but profile information could not be loaded yet." },
+  "រូបភាពនីមួយៗមិនអាចធំជាង ២០MB បានទេ។": { 'zh-CN': "每张图片不能超过 20MB。", en: "Each image must not exceed 20MB." },
+  "អាចដាក់រូបភាពបានអតិបរមា ១០ រូបប៉ុណ្ណោះ។": { 'zh-CN': "最多只能上传 10 张图片。", en: "You can upload a maximum of 10 images." },
+  "សូមប្រើ JPG / PNG / WEBP ហើយរូបនីមួយៗមិនលើស ២០MB។": { 'zh-CN': "请使用 JPG、PNG 或 WEBP 格式，每张图片不超过 20MB。", en: "Use JPG, PNG, or WEBP images up to 20MB each." },
+  "បានភ្ជាប់ Telegram Login ជាមួយគណនីនេះរួចរាល់។": { 'zh-CN': "Telegram 登录已成功关联到此账户。", en: "Telegram Login is now linked to this account." },
+  "YouTube Video Link មិនត្រឹមត្រូវទេ។": { 'zh-CN': "YouTube 视频链接无效。", en: "The YouTube video link is invalid." },
+  "បានបង្កើតតំណភ្ជាប់ Telegram។": { 'zh-CN': "Telegram 链接已创建。", en: "Telegram link created." },
+  "បានស្នើសុំ OTP សង្គ្រោះតាម Telegram។": { 'zh-CN': "已通过 Telegram 请求恢复验证码。", en: "Recovery OTP requested via Telegram." },
+  "កំពុងផ្ទុកទំនិញ...": { 'zh-CN': "正在加载商品...", en: "Loading products..." },
+  "សូមចុះឈ្មោះបង្កើតហាងជាមុនសិន។": { 'zh-CN': "请先注册并创建店铺。", en: "Please register and create a shop first." },
+  "មិនអាចផុស Story បានទេ។": { 'zh-CN': "无法发布动态。", en: "Could not post the Story." },
+  "មិនអាចផុសរូបភាពបានទេ។": { 'zh-CN': "无法发布图片。", en: "Could not post the image." },
+  "មិនអាច Like បានទេ។": { 'zh-CN': "无法点赞。", en: "Could not like this." },
+  "មិនអាចផ្ទុកមតិយោបល់បានទេ។": { 'zh-CN': "无法加载评论。", en: "Could not load comments." },
+  "មិនអាចផ្ញើមតិយោបល់បានទេ។": { 'zh-CN': "无法发送评论。", en: "Could not post the comment." },
+  "មិនអាចបើកព័ត៌មានប្រកាសបានទេ។": { 'zh-CN': "无法打开帖子详情。", en: "Could not open listing details." },
+  "បានរក្សាទុក": { 'zh-CN': "已收藏", en: "Saved" },
+  "មិនអាចរក្សាទុកបានទេ។": { 'zh-CN': "无法收藏。", en: "Could not save." },
+  "រាយការណ៍ប្រកាស": { 'zh-CN': "举报帖子", en: "Report post" },
+  "សូមបញ្ជាក់មូលហេតុដែលអ្នកចង់រាយការណ៍ ដើម្បីឱ្យ Admin អាចពិនិត្យបានត្រឹមត្រូវ។": { 'zh-CN': "请说明举报原因，以便管理员准确审核。", en: "Explain why you are reporting this so Admin can review it properly." },
+  "ឧ. ព័ត៌មានមិនត្រឹមត្រូវ ឬសង្ស័យថាបោកប្រាស់...": { 'zh-CN': "例如：信息不实或疑似诈骗...", en: "E.g. incorrect information or suspected fraud..." },
+  "មិនអាចរាយការណ៍បានទេ។": { 'zh-CN': "无法提交举报。", en: "Could not submit the report." },
+  "មិនអាចផ្ញើការវាយតម្លៃបានទេ។": { 'zh-CN': "无法提交评价。", en: "Could not submit the review." },
+  "មិនអាចរក្សាទុកផលិតផលបានទេ។": { 'zh-CN': "无法保存商品。", en: "Could not save the product." },
+  "មិនអាចដកទីតាំងលំនាំដើមបានទេ។": { 'zh-CN': "无法移除默认位置。", en: "Could not remove the default location." },
+  "មិនអាចរក្សាទុកទីតាំងលំនាំដើមបានទេ។": { 'zh-CN': "无法保存默认位置。", en: "Could not save the default location." },
+  "មិនអាចផ្ទុកទីតាំងកម្ពុជាបានទេ។": { 'zh-CN': "无法加载柬埔寨地区位置。", en: "Could not load Cambodia locations." },
+  "បានបង្ហោះប្រកាសការងារជោគជ័យ!": { 'zh-CN': "职位发布成功！", en: "Job listing published successfully!" },
+  "បានបង្ហោះអចលនទ្រព្យជោគជ័យ!": { 'zh-CN': "房产信息发布成功！", en: "Property listing published successfully!" },
+  "មិនអាចបង្ហោះប្រកាសបានទេ។": { 'zh-CN': "无法发布帖子。", en: "Could not publish the listing." },
+  "មិនអាចផ្ទុកផលិតផលបានទេ។": { 'zh-CN': "无法加载商品。", en: "Could not load products." },
+  " រូបក្នុង Telegram។": { 'zh-CN': " 张图片已上传至 Telegram。", en: " images uploaded to Telegram." },
+  "មិនអាចទាញរូបពី Supplier បានទេ។": { 'zh-CN': "无法从供应商获取图片。", en: "Could not fetch images from the supplier." },
+  "ទាញរូបពី CC COMPUTER → Telegram": { 'zh-CN': "从 CC COMPUTER 获取图片 → Telegram", en: "Fetch images from CC COMPUTER → Telegram" },
+  "មិនអាចលុប Variant បានទេ។": { 'zh-CN': "无法删除变体。", en: "Could not delete the variant." },
+  "មិនអាចរក្សាទុក Variant បានទេ។": { 'zh-CN': "无法保存变体。", en: "Could not save the variant." },
+  "មិនអាចបន្ថែម Variant បានទេ។": { 'zh-CN': "无法添加变体。", en: "Could not add the variant." },
+  "រក្សាទុកផលិតផល": { 'zh-CN': "保存商品", en: "Save product" },
+  "មិនអាចរក្សាទុកព័ត៌មានហាងបានទេ។": { 'zh-CN': "无法保存店铺信息。", en: "Could not save shop information." },
+  "មិនអាចឆាតជាមួយអ្នកផុសបានទេ។": { 'zh-CN': "无法与发布者聊天。", en: "Could not chat with the poster." },
+  "មិនអាចឆាតជាមួយហាងបានទេ។": { 'zh-CN': "无法与店铺聊天。", en: "Could not chat with the shop." },
+  "បានទទួលការបញ្ជាទិញ។ ស្ថានភាពទូទាត់កំពុងរង់ចាំការផ្ទៀងផ្ទាត់។": { 'zh-CN': "订单已收到。付款状态正在等待确认。", en: "Order received. Payment status is pending verification." },
+  "បានបញ្ជាទិញជោគជ័យ!": { 'zh-CN': "下单成功！", en: "Order placed successfully!" },
+  "មិនអាចចូលតាម Telegram បានទេ។": { 'zh-CN': "无法通过 Telegram 登录。", en: "Could not sign in with Telegram." },
+  "មិនអាចភ្ជាប់ Telegram បានទេ។": { 'zh-CN': "无法连接 Telegram。", en: "Could not connect to Telegram." },
+  "មិនអាចចូលគណនីបានទេ។": { 'zh-CN': "无法登录账户。", en: "Could not sign in." },
+  "មិនអាចរក្សាទុកទំនិញបានទេ។": { 'zh-CN': "无法保存商品。", en: "Could not save the item." },
+  "លុបទំនិញ": { 'zh-CN': "删除商品", en: "Delete product" },
+  "តើអ្នកពិតជាចង់លុបទំនិញនេះមែនទេ? សកម្មភាពនេះមិនអាចត្រឡប់ក្រោយបានទេ។": { 'zh-CN': "确定要删除此商品吗？此操作无法撤销。", en: "Are you sure you want to delete this product? This action cannot be undone." },
+  "មិនអាចផ្ញើសំណើតម្លៃបានទេ។": { 'zh-CN': "无法发送报价请求。", en: "Could not send the price offer." },
+  "មិនអាចដាក់ពាក្យបានទេ។": { 'zh-CN': "无法提交申请。", en: "Could not submit the application." },
+  "មិនអាចរក្សាទុក Profile បានទេ។": { 'zh-CN': "无法保存个人资料。", en: "Could not save the profile." },
+  "មិនអាច Upload រូបភាពបានទេ។": { 'zh-CN': "无法上传图片。", en: "Could not upload the image." },
+  "លុបប្រកាស": { 'zh-CN': "删除帖子", en: "Delete listing" },
+  "បន្តសុពលភាពប្រកាស": { 'zh-CN': "续期帖子", en: "Renew listing" },
+  "បញ្ចប់សុពលភាពប្រកាស": { 'zh-CN': "结束帖子有效期", en: "End listing" },
+  "តើអ្នកចង់បន្តសកម្មភាពនេះមែនទេ?": { 'zh-CN': "确定要继续此操作吗？", en: "Do you want to continue this action?" },
+  "បញ្ជាក់": { 'zh-CN': "确认", en: "Confirm" },
+  "ប្រកាសនេះមានប្រវត្តិលក់ ដូច្នេះបានដាក់ Archive។": { 'zh-CN': "此帖子有销售记录，因此已归档。", en: "This listing has sales history, so it was archived." },
+  "បានលុបប្រកាសរួចរាល់។": { 'zh-CN': "帖子已删除。", en: "Listing deleted." },
+  "បាន Renew ប្រកាសជោគជ័យ។": { 'zh-CN': "帖子续期成功。", en: "Listing renewed successfully." },
+  "បានបញ្ចប់សុពលភាពប្រកាស។": { 'zh-CN': "帖子有效期已结束。", en: "Listing has expired." },
+  "មិនអាចធ្វើសកម្មភាពបានទេ។": { 'zh-CN': "无法执行此操作。", en: "Could not complete the action." },
+  "មិនអាចកែប្រែប្រកាសបានទេ។": { 'zh-CN': "无法编辑帖子。", en: "Could not edit the listing." },
+  "មិនអាចផ្ញើ OTP បានទេ។": { 'zh-CN': "无法发送验证码。", en: "Could not send the OTP." },
+  "មិនអាចកែស្ថានភាពសំណើបានទេ។": { 'zh-CN': "无法更新请求状态。", en: "Could not update the request status." },
+  "មិនអាចកែស្ថានភាពការបញ្ជាទិញបានទេ។": { 'zh-CN': "无法更新订单状态。", en: "Could not update the order status." },
+  "ស្ថានភាពបច្ចុប្បន្ន៖ Maintenance": { 'zh-CN': "当前状态：维护中", en: "Current status: Maintenance" },
+  "ស្ថានភាពបច្ចុប្បន្ន៖ កំពុងដំណើរការ": { 'zh-CN': "当前状态：运行中", en: "Current status: Operational" },
+  "បានរក្សាទុក Maintenance Settings។": { 'zh-CN': "维护设置已保存。", en: "Maintenance settings saved." },
+  "មិនអាចរក្សាទុក Maintenance Settings បានទេ។": { 'zh-CN': "无法保存维护设置。", en: "Could not save maintenance settings." },
+  "មិនអាចនាំចូលផលិតផលបានទេ។": { 'zh-CN': "无法导入商品。", en: "Could not import products." },
+  "មិនអាចស្វែងរករូបបានទេ។": { 'zh-CN': "无法搜索图片。", en: "Could not search for images." },
+  "មិនអាចរក្សាទុកការសម្រេចបានទេ។": { 'zh-CN': "无法保存审核决定。", en: "Could not save the decision." },
+  "Auto Sync បរាជ័យ។": { 'zh-CN': "自动同步失败。", en: "Auto Sync failed." },
+  "បានអនុម័តការផ្លាស់ប្តូរ។": { 'zh-CN': "更改已获批准。", en: "Changes approved." },
+  "បានបដិសេធការផ្លាស់ប្តូរ។": { 'zh-CN': "更改已被拒绝。", en: "Changes rejected." },
+  "មិនអាចបង្កើតផលិតផលបានទេ។": { 'zh-CN': "无法创建商品。", en: "Could not create the product." },
+  "ផលិតផលមានប្រវត្តិបញ្ជាទិញ ដូច្នេះបានលាក់ជំនួសការលុប។": { 'zh-CN': "该商品有订单记录，因此已隐藏而非删除。", en: "This product has order history, so it was hidden instead of deleted." },
+  "បានលុបផលិតផលរួចរាល់។": { 'zh-CN': "商品已删除。", en: "Product deleted." },
+  "មិនអាចលុបផលិតផលបានទេ។": { 'zh-CN': "无法删除商品。", en: "Could not delete the product." },
+  "មិនអាចពិនិត្យពាក្យស្នើសុំបានទេ។": { 'zh-CN': "无法审核申请。", en: "Could not review the application." },
+  "ទំនិញដែលបានរក្សាទុក": { 'zh-CN': "已收藏商品", en: "Saved items" },
+  "តម្រងទំនិញ": { 'zh-CN': "商品筛选", en: "Product filters" },
+  "ការងារទាំងអស់": { 'zh-CN': "所有职位", en: "All jobs" },
+  "ការិយាល័យ និង រដ្ឋបាល": { 'zh-CN': "办公室与行政", en: "Office & Administration" },
+  "លក់ និង ទីផ្សារ": { 'zh-CN': "销售与市场营销", en: "Sales & Marketing" },
+  "ភោជនីយដ្ឋាន និង សណ្ឋាគារ": { 'zh-CN': "餐饮与酒店", en: "Restaurant & Hotel" },
+  "សំណង់ និង វិស្វកម្ម": { 'zh-CN': "建筑与工程", en: "Construction & Engineering" },
+  "អប់រំ": { 'zh-CN': "教育", en: "Education" },
+  "សុខាភិបាល": { 'zh-CN': "医疗保健", en: "Healthcare" },
+  "រោងចក្រ និង ផលិតកម្ម": { 'zh-CN': "工厂与制造", en: "Factory & Manufacturing" },
+  "កសិកម្ម": { 'zh-CN': "农业", en: "Agriculture" },
+  "សម្រស់ និង សេវាកម្ម": { 'zh-CN': "美容与服务", en: "Beauty & Services" },
+  "ការងារផ្សេងៗ": { 'zh-CN': "其他职位", en: "Other jobs" },
+  "ប្រភេទអចលនទ្រព្យ": { 'zh-CN': "房产类别", en: "Property types" },
+  "អចលនទ្រព្យទាំងអស់": { 'zh-CN': "所有房产", en: "All properties" },
+  "ផ្ទះលក់": { 'zh-CN': "待售房屋", en: "Houses for sale" },
+  "ផ្ទះជួល": { 'zh-CN': "出租房屋", en: "Houses for rent" },
+  "ខុនដូសម្រាប់លក់": { 'zh-CN': "待售公寓", en: "Condos for sale" },
+  "អាផាតមិនសម្រាប់ជួល": { 'zh-CN': "出租公寓", en: "Apartments for rent" },
+  "ដីលក់": { 'zh-CN': "待售土地", en: "Land for sale" },
+  "ដីសម្រាប់ជួល": { 'zh-CN': "出租土地", en: "Land for rent" },
+  "អចលនទ្រព្យពាណិជ្ជកម្មសម្រាប់លក់": { 'zh-CN': "待售商业地产", en: "Commercial property for sale" },
+  "អចលនទ្រព្យពាណិជ្ជកម្មសម្រាប់ជួល": { 'zh-CN': "出租商业地产", en: "Commercial property for rent" },
+  "បន្ទប់ជួល": { 'zh-CN': "出租房间", en: "Rooms for rent" },
+  "ត្រូវការអចលនទ្រព្យ": { 'zh-CN': "求购房产", en: "Property wanted" },
+  "សេវាកម្មភ្នាក់ងារ": { 'zh-CN': "中介服务", en: "Agent services" },
+  "ផ្សេងទៀត": { 'zh-CN': "其他", en: "Other" },
+  "មួយទឹក / ប្រើរួច": { 'zh-CN': "二手", en: "Used" },
+  "ថ្មី": { 'zh-CN': "全新", en: "New" },
+  "តម្រងលក្ខណៈបច្ចេកទេស": { 'zh-CN': "规格筛选", en: "Specification filters" },
+  "តម្រៀបតម្លៃ": { 'zh-CN': "价格排序", en: "Sort by price" },
+  "តម្លៃទាបទៅខ្ពស់": { 'zh-CN': "价格从低到高", en: "Price: low to high" },
+  "តម្លៃខ្ពស់ទៅទាប": { 'zh-CN': "价格从高到低", en: "Price: high to low" },
+  "បង្ហោះថ្មីៗ": { 'zh-CN': "最新发布", en: "Newest first" },
+  "រកមិនឃើញទំនិញទេ": { 'zh-CN': "未找到商品", en: "No products found" },
+  "សាកល្បងពាក្យស្វែងរក ឬប្រភេទផ្សេងទៀត។": { 'zh-CN': "请尝试其他搜索词或类别。", en: "Try another search term or category." },
+  "បង្ហាញទំនិញទាំងអស់": { 'zh-CN': "显示所有商品", en: "Show all products" },
+  "ស្វែងរកឱកាសការងារនៅកម្ពុជា": { 'zh-CN': "在柬埔寨寻找工作机会", en: "Find job opportunities in Cambodia" },
+  "ស្វែងរកការងារ ឬក្រុមហ៊ុន...": { 'zh-CN': "搜索职位或公司...", en: "Search jobs or companies..." },
+  "តម្រៀបការងារ": { 'zh-CN': "职位排序", en: "Sort jobs" },
+  "មិនទាន់មានការងារបង្ហោះទេ": { 'zh-CN': "暂无职位发布", en: "No jobs posted yet" },
+  "ការងារថ្មីៗនឹងបង្ហាញនៅទីនេះ នៅពេលនិយោជកចាប់ផ្តើមប្រកាសជ្រើសរើសបុគ្គលិក។": { 'zh-CN': "雇主开始招聘后，最新职位将在此显示。", en: "New jobs will appear here when employers start posting openings." },
+  "ទំព័រដើម": { 'zh-CN': "首页", en: "Home" },
+  "ព័ត៌មានលម្អិត": { 'zh-CN': "详情", en: "Details" },
+  "ហាង": { 'zh-CN': "店铺", en: "Shop" },
+  "កែរូប Cover": { 'zh-CN': "编辑封面图片", en: "Edit cover photo" },
+  "គណនីអ្នកប្រើប្រាស់": { 'zh-CN': "用户账户", en: "User account" },
+  "ចុះឈ្មោះក្លាយជាអ្នកលក់": { 'zh-CN': "注册成为卖家", en: "Register as a seller" },
+  "ផលិតផលដែលអ្នកចាប់អារម្មណ៍": { 'zh-CN': "您感兴趣的商品", en: "Products you're interested in" },
+  "ការទិញ និងសំណើតថ្លៃ": { 'zh-CN': "购买与议价请求", en: "Purchases & price offers" },
+  "តាមដានប្រតិបត្តិការរបស់អ្នក": { 'zh-CN': "跟踪您的交易", en: "Track your transactions" },
+  "ស្ថានភាពហាង": { 'zh-CN': "店铺状态", en: "Shop status" },
+  "គ្រប់គ្រងការផ្ទៀងផ្ទាត់អ្នកលក់": { 'zh-CN': "管理卖家验证", en: "Manage seller verification" },
+  "ការកំណត់គណនី": { 'zh-CN': "账户设置", en: "Account settings" },
+  "ជ្រើសរើសផ្នែកដែលអ្នកចង់កែប្រែ។": { 'zh-CN': "选择您要编辑的部分。", en: "Choose the section you want to edit." },
+  "ព័ត៌មានផ្ទាល់ខ្លួន": { 'zh-CN': "个人资料", en: "Personal information" },
+  "កែឈ្មោះ លេខទូរស័ព្ទ ទីតាំង និងអំពីខ្ញុំ": { 'zh-CN': "编辑姓名、电话号码、位置和个人简介", en: "Edit name, phone, location and about me" },
+  "សុវត្ថិភាពគណនី": { 'zh-CN': "账户安全", en: "Account security" },
+  "ភ្ជាប់ Telegram, ទទួល OTP និងប្ដូរ Password": { 'zh-CN': "关联 Telegram、接收验证码并更改密码", en: "Connect Telegram, receive OTP and change password" },
+  "កែប្រែបាន": { 'zh-CN': "可编辑", en: "Editable" },
+  "ឈ្មោះពេញ": { 'zh-CN': "姓名", en: "Full name" },
+  "លេខទូរស័ព្ទ": { 'zh-CN': "电话号码", en: "Phone number" },
+  "PERSONAL INFORMATION": { 'zh-CN': "个人资料", en: "PERSONAL INFORMATION" },
+  "ACCOUNT SECURITY": { 'zh-CN': "账户安全", en: "ACCOUNT SECURITY" },
+  "ACCOUNT ACTIVITY": { 'zh-CN': "账户活动", en: "ACCOUNT ACTIVITY" },
+  "SELLER CENTER": { 'zh-CN': "卖家中心", en: "SELLER CENTER" },
+  "ADMIN CONTROL CENTER": { 'zh-CN': "管理控制中心", en: "ADMIN CONTROL CENTER" },
+  "AURORA COMPUTER · PRODUCT MANAGEMENT": { 'zh-CN': "AURORA COMPUTER · 商品管理", en: "AURORA COMPUTER · PRODUCT MANAGEMENT" },
+  "SMART PRODUCT GALLERY": { 'zh-CN': "智能商品图库", en: "SMART PRODUCT GALLERY" },
+  "OFFICIAL SHOP MANAGEMENT": { 'zh-CN': "官方店铺管理", en: "OFFICIAL SHOP MANAGEMENT" },
+  "SELLER REGISTRATION": { 'zh-CN': "卖家注册", en: "SELLER REGISTRATION" },
+  "SELLER STUDIO": { 'zh-CN': "卖家工作室", en: "SELLER STUDIO" },
+  "ភ្ជាប់ Telegram និងប្ដូរ Password": { 'zh-CN': "关联 Telegram 并更改密码", en: "Connect Telegram & change password" },
+  "Telegram Login មិនទាន់ភ្ជាប់": { 'zh-CN': "Telegram 登录尚未关联", en: "Telegram Login not connected" },
+  "ភ្ជាប់ Telegram ID ដើម្បីចូលគណនី 7inOne នៅពេលក្រោយ។": { 'zh-CN': "关联 Telegram ID，以便日后登录 7inOne 账户。", en: "Connect your Telegram ID to sign in to 7inOne later." },
+  "Telegram Bot មិនទាន់ភ្ជាប់": { 'zh-CN': "Telegram 机器人尚未连接", en: "Telegram Bot not connected" },
+  "ភ្ជាប់ Bot Chat ដើម្បីទទួល OTP និងសារសុវត្ថិភាព។": { 'zh-CN': "连接机器人聊天以接收验证码和安全通知。", en: "Connect the Bot chat to receive OTPs and security messages." },
+  "បើក Telegram Bot ដើម្បីចុច Start": { 'zh-CN': "打开 Telegram Bot 并点击 Start", en: "Open the Telegram Bot and press Start" },
+  "ពិនិត្យស្ថានភាពឡើងវិញ": { 'zh-CN': "重新检查状态", en: "Refresh status" },
+  "ផ្ញើ OTP តាម Telegram": { 'zh-CN': "通过 Telegram 发送验证码", en: "Send OTP via Telegram" },
+  "OTP ៦ ខ្ទង់": { 'zh-CN': "6 位验证码", en: "6-digit OTP" },
+  "បញ្ចូលលេខកូដពី Telegram": { 'zh-CN': "输入 Telegram 中的验证码", en: "Enter the code from Telegram" },
+  "Password ថ្មី": { 'zh-CN': "新密码", en: "New password" },
+  "យ៉ាងតិច ៨ តួអក្សរ": { 'zh-CN': "至少 8 个字符", en: "At least 8 characters" },
+  "ផ្ទៀងផ្ទាត់ និងប្ដូរ Password": { 'zh-CN': "验证并更改密码", en: "Verify & change password" },
+  "សកម្មភាព និងការគ្រប់គ្រង": { 'zh-CN': "活动与管理", en: "Activity & management" },
+  "ប្រវត្តិទិញ/តថ្លៃ": { 'zh-CN': "购买/议价记录", en: "Purchase/offer history" },
+  "ប្រកាសរបស់ខ្ញុំ": { 'zh-CN': "我的帖子", en: "My listings" },
+  "ហាងរបស់ខ្ញុំ": { 'zh-CN': "我的店铺", en: "My shop" },
+  "គ្រប់គ្រងហាង & ទំនិញ": { 'zh-CN': "管理店铺和商品", en: "Manage shop & products" },
+  "គ្រប់គ្រងការផ្សាយ និងតាមដានលទ្ធផលហាងរបស់អ្នក": { 'zh-CN': "管理商品发布并跟踪店铺表现", en: "Manage listings and track your shop performance" },
+  "មើលផ្សារ": { 'zh-CN': "查看商城", en: "View marketplace" },
+  "ហាងរបស់អ្នកមិនទាន់បានផ្ទៀងផ្ទាត់ទេ": { 'zh-CN': "您的店铺尚未通过验证", en: "Your shop is not verified yet" },
+  "សូមដាក់ពាក្យស្នើសុំ ហើយរង់ចាំ Admin ពិនិត្យឯកសារ។": { 'zh-CN': "请提交申请并等待管理员审核文件。", en: "Please submit an application and wait for Admin to review your documents." },
+  "ចុះឈ្មោះអ្នកលក់": { 'zh-CN': "注册卖家", en: "Register as seller" },
+  "ហាងរបស់អ្នកមិនទាន់បានផ្ទៀងផ្ទាត់": { 'zh-CN': "您的店铺尚未验证", en: "Your shop is not verified" },
+  "អ្នកអាចបន្តដាក់លក់បានធម្មតា។ ផ្ទៀងផ្ទាត់ដោយស្ម័គ្រចិត្ត ដើម្បីបង្កើនទំនុកចិត្ត។": { 'zh-CN': "您可以继续正常销售。自愿完成验证可提升买家信任。", en: "You can continue selling as usual. Voluntary verification can increase buyer trust." },
+  "ស្នើសុំផ្ទៀងផ្ទាត់": { 'zh-CN': "申请验证", en: "Request verification" },
+  "ទំនិញកំពុងលក់": { 'zh-CN': "在售商品", en: "Active listings" },
+  "ចំនួនអ្នកមើល": { 'zh-CN': "浏览量", en: "Views" },
+  "ពិន្ទុផ្កាយមធ្យម": { 'zh-CN': "平均星级", en: "Average rating" },
+  "លក់បានជោគជ័យ": { 'zh-CN': "成功销售", en: "Successful sales" },
+  "ផលិតផលរបស់ខ្ញុំ": { 'zh-CN': "我的商品", en: "My products" },
+  "ព័ត៌មានហាង": { 'zh-CN': "店铺信息", en: "Shop information" },
+  "ស្វែងរកតាមឈ្មោះទំនិញ...": { 'zh-CN': "按商品名称搜索...", en: "Search by product name..." },
+  "កំពុងលក់": { 'zh-CN': "在售", en: "Active" },
+  "ត្រូវការ Renew": { 'zh-CN': "需要续期", en: "Needs renewal" },
+  "លក់រួច": { 'zh-CN': "已售出", en: "Sold" },
+  "បន្ថែមទំនិញ": { 'zh-CN': "添加商品", en: "Add product" },
+  "តម្លៃ": { 'zh-CN': "价格", en: "Price" },
+  "ស្តុក & អ្នកមើល": { 'zh-CN': "库存和浏览量", en: "Stock & views" },
+  "ស្ថានភាព & សុពលភាព": { 'zh-CN': "状态和有效期", en: "Status & validity" },
+  "សកម្មភាព": { 'zh-CN': "操作", en: "Actions" },
+  "ការបញ្ជាទិញ និងការដឹកជញ្ជូន": { 'zh-CN': "订单与配送", en: "Orders & delivery" },
+  "សំណើតថ្លៃពីអ្នកទិញ": { 'zh-CN': "买家的议价请求", en: "Offers from buyers" },
+  "រូប Cover ហាង": { 'zh-CN': "店铺封面", en: "Shop cover" },
+  "រូប Cover ហាង (JPG / PNG / WEBP)": { 'zh-CN': "店铺封面图片（JPG / PNG / WEBP）", en: "Shop cover image (JPG / PNG / WEBP)" },
+  "Logo ហាង (JPG / PNG / WEBP)": { 'zh-CN': "店铺 Logo（JPG / PNG / WEBP）", en: "Shop logo (JPG / PNG / WEBP)" },
+  "ឈ្មោះហាង *": { 'zh-CN': "店铺名称 *", en: "Shop name *" },
+  "ទីតាំងហាង": { 'zh-CN': "店铺位置", en: "Shop location" },
+  "ឧ. បឹងកេងកង ភ្នំពេញ": { 'zh-CN': "例如：金边 BKK 区", en: "e.g. BKK, Phnom Penh" },
+  "Bio ហាង / ណែនាំអំពីហាង": { 'zh-CN': "店铺简介 / 店铺介绍", en: "Shop bio / About the shop" },
+  "សរសេរអំពីហាងរបស់អ្នក ទំនិញដែលមានលក់ សេវាកម្ម និងអ្វីដែលអតិថិជនគួរដឹង...": { 'zh-CN': "介绍您的店铺、在售商品、服务以及客户需要了解的信息...", en: "Describe your shop, products, services, and what customers should know..." },
+  "Bio នេះនឹងបង្ហាញជាសាធារណៈនៅលើទំព័រហាងរបស់អ្នក (អតិបរមា 1,000 តួអក្សរ)។": { 'zh-CN': "此简介将公开显示在您的店铺页面（最多 1,000 个字符）。", en: "This bio will be public on your shop page (maximum 1,000 characters)." },
+  "រក្សាទុកព័ត៌មានហាង": { 'zh-CN': "保存店铺信息", en: "Save shop information" },
+  "ផ្ទាំងគ្រប់គ្រងប្រព័ន្ធ & អ្នកលក់": { 'zh-CN': "系统与卖家管理面板", en: "System & seller dashboard" },
+  "សិទ្ធិអ្នកគ្រប់គ្រង": { 'zh-CN': "管理员权限", en: "Administrator access" },
+  "ស្ថានភាពប្រព័ន្ធ (Maintenance Mode)": { 'zh-CN': "系统状态（维护模式）", en: "System status (Maintenance Mode)" },
+  "បើកមុខងារកំពុងអភិវឌ្ឍន៍": { 'zh-CN': "启用维护模式", en: "Enable maintenance mode" },
+  "ពេលបើក អ្នកទិញ និងអ្នកលក់មិនអាចប្រើ Marketplace បានទេ។": { 'zh-CN': "启用后，买家和卖家将无法使用 Marketplace。", en: "When enabled, buyers and sellers cannot use the Marketplace." },
+  "សារជូនដំណឹង": { 'zh-CN': "通知消息", en: "Notice message" },
+  "រក្សាទុកស្ថានភាព": { 'zh-CN': "保存状态", en: "Save status" },
+  "ការកំណត់ Brand & Hero Banner": { 'zh-CN': "品牌与主视觉横幅设置", en: "Brand & Hero Banner settings" },
+  "ផ្សារអនឡាញ": { 'zh-CN': "网上商城", en: "Online marketplace" },
+  "ទិញលក់ងាយៗ នៅជិតអ្នក": { 'zh-CN': "轻松买卖，就在您身边", en: "Easy buying and selling near you" },
+  "ស្វែងរកទំនិញ...": { 'zh-CN': "搜索商品...", en: "Find products..." },
+  "Hero Images (1-3 រូប)": { 'zh-CN': "主视觉图片（1-3 张）", en: "Hero images (1–3 images)" },
+  "ចំណងជើង Banner": { 'zh-CN': "横幅标题", en: "Banner title" },
+  "អត្ថបទពិពណ៌នា Banner": { 'zh-CN': "横幅描述", en: "Banner description" },
+  "លុបរូប Banner ចាស់ទាំងអស់": { 'zh-CN': "删除所有旧横幅图片", en: "Remove all previous banner images" },
+  "គ្រប់គ្រង Poster ខាងស្ដាំ": { 'zh-CN': "管理右侧海报", en: "Manage right-side posters" },
+  "Poster ផ្ដេក ១": { 'zh-CN': "横向海报 1", en: "Horizontal poster 1" },
+  "Poster ផ្ដេក ២": { 'zh-CN': "横向海报 2", en: "Horizontal poster 2" },
+  "Poster បញ្ឈរ": { 'zh-CN': "竖版海报", en: "Vertical poster" },
+  "Link ពេលចុច https://...": { 'zh-CN': "点击时打开的链接 https://...", en: "Link to open when clicked https://..." },
+  "បង្ហាញ Poster": { 'zh-CN': "显示海报", en: "Show poster" },
+  "លុប Poster": { 'zh-CN': "删除海报", en: "Remove poster" },
+  "រក្សាទុកការកំណត់ Brand & Banner": { 'zh-CN': "保存品牌和横幅设置", en: "Save brand & banner settings" },
+  "ស្ថានភាព Telegram Bot": { 'zh-CN': "Telegram Bot 状态", en: "Telegram Bot status" },
+  "ពិនិត្យ Bot, Channel និងសិទ្ធិផ្ទុករូបភាព។": { 'zh-CN': "检查 Bot、频道和图片上传权限。", en: "Check the Bot, channel, and image upload permissions." },
+  "ពិនិត្យស្ថានភាព": { 'zh-CN': "检查状态", en: "Check status" },
+  "ចុច «ពិនិត្យស្ថានភាព» ដើម្បីពិនិត្យការភ្ជាប់ Telegram។": { 'zh-CN': "点击“检查状态”以检查 Telegram 连接。", en: "Click “Check status” to test the Telegram connection." },
+  "គ្រប់គ្រងផលិតផល AURORA Computer": { 'zh-CN': "管理 AURORA Computer 商品", en: "Manage AURORA Computer products" },
+  "បញ្ជីផលិតផល ASUS ទាំងអស់រៀបជា List។ ចុចលើផលិតផលដើម្បីបើក Popup កែប្រែ។ ព័ត៌មាន Supplier បង្ហាញតែ Admin។": { 'zh-CN': "所有 ASUS 商品以列表显示。点击商品打开编辑弹窗。供应商信息仅管理员可见。", en: "All ASUS products are listed. Select a product to open the edit popup. Supplier details are Admin-only." },
+  "ផ្ទុកឡើងវិញ": { 'zh-CN': "刷新", en: "Refresh" },
+  "នាំចូលផលិតផលពី Supplier តាម URL": { 'zh-CN': "通过 URL 从供应商导入商品", en: "Import products from supplier URL" },
+  "ស្កេនផលិតផល": { 'zh-CN': "扫描商品", en: "Scan products" },
+  "ស្កេនឥឡូវនេះ": { 'zh-CN': "立即扫描", en: "Scan now" },
+  "ការផ្លាស់ប្តូរដែលត្រូវការ Admin ពិនិត្យ": { 'zh-CN': "需要管理员审核的变更", en: "Changes requiring Admin review" },
+  "កំពុងផ្ទុក...": { 'zh-CN': "加载中...", en: "Loading..." },
+  "＋ បន្ថែមផលិតផលថ្មី": { 'zh-CN': "＋ 添加新商品", en: "＋ Add new product" },
+  "បង្កើតផលិតផលថ្មី": { 'zh-CN': "创建新商品", en: "Create new product" },
+  "ឈ្មោះផលិតផល *": { 'zh-CN': "商品名称 *", en: "Product name *" },
+  "តម្លៃលក់ដំបូង ($) *": { 'zh-CN': "初始售价 ($) *", en: "Initial sale price ($) *" },
+  "ស្តុកដំបូង": { 'zh-CN': "初始库存", en: "Initial stock" },
+  "ពិពណ៌នា": { 'zh-CN': "描述", en: "Description" },
+  "ឈ្មោះ Supplier": { 'zh-CN': "供应商名称", en: "Supplier name" },
+  "បង្កើតផលិតផល": { 'zh-CN': "创建商品", en: "Create product" },
+  "ស្វែងរកផលិតផល": { 'zh-CN': "搜索商品", en: "Search products" },
+  "ស្វែងរកតាមឈ្មោះ ឬ Category...": { 'zh-CN': "按名称或类别搜索...", en: "Search by name or category..." },
+  "ស្វែងរករូបផលិតផលបន្ថែម": { 'zh-CN': "搜索更多商品图片", en: "Find more product images" },
+  "ស្វែងរកតាមឈ្មោះផលិតផល រួចពិនិត្យម៉ូដែល និងរូបភាពមុនអនុម័ត។ រូបដែលអនុម័តនឹង Upload ទៅ Telegram មុនបង្ហាញក្នុង Gallery។": { 'zh-CN': "按商品名称搜索，然后在批准前核对型号和图片。获批图片会先上传到 Telegram，再显示在图库中。", en: "Search by product name, then verify the model and image before approval. Approved images are uploaded to Telegram before appearing in the gallery." },
+  "ស្វែងរកឈ្មោះផលិតផល...": { 'zh-CN': "搜索商品名称...", en: "Search product name..." },
+  "វាយឈ្មោះផលិតផលដើម្បីចាប់ផ្តើម។": { 'zh-CN': "输入商品名称以开始。", en: "Enter a product name to begin." },
+  "រូបភាពរង់ចាំ Admin អនុម័ត": { 'zh-CN': "等待管理员批准的图片", en: "Images awaiting Admin approval" },
+  "គ្រប់គ្រងហាងផ្លូវការ": { 'zh-CN': "管理官方店铺", en: "Manage official shop" },
+  "គ្រប់គ្រង AURORA Computer ដាច់ដោយឡែកពីហាងអ្នកលក់ធម្មតា។": { 'zh-CN': "将 AURORA Computer 与普通卖家店铺分开管理。", en: "Manage AURORA Computer separately from regular seller shops." },
+  "មើលទំព័រហាង": { 'zh-CN': "查看店铺页面", en: "View shop page" },
+  "កំពុងផ្ទុកព័ត៌មានហាង...": { 'zh-CN': "正在加载店铺信息...", en: "Loading shop information..." },
+  "ការពិពណ៌នាហាង": { 'zh-CN': "店铺描述", en: "Shop description" },
+  "មិនទាន់មាន Logo": { 'zh-CN': "尚无 Logo", en: "No logo yet" },
+  "មិនទាន់មាន Cover": { 'zh-CN': "尚无封面", en: "No cover yet" },
+  "កំពុងរង់ចាំ": { 'zh-CN': "待处理", en: "Pending" },
+  "បានអនុម័ត": { 'zh-CN': "已批准", en: "Approved" },
+  "បានបដិសេធ": { 'zh-CN': "已拒绝", en: "Rejected" },
+  "ពាក្យស្នើសុំអ្នកលក់": { 'zh-CN': "卖家申请", en: "Seller applications" },
+  "សូមស្វាគមន៍មកកាន់ 7inOne": { 'zh-CN': "欢迎来到 7inOne", en: "Welcome to 7inOne" },
+  "បង្កើតគណនី": { 'zh-CN': "创建账户", en: "Create account" },
+  "ឈ្មោះរបស់អ្នក": { 'zh-CN': "您的姓名", en: "Your name" },
+  "លេខទូរស័ព្ទ ឬ អ៊ីមែល": { 'zh-CN': "电话号码或电子邮件", en: "Phone number or email" },
+  "ពាក្យសម្ងាត់": { 'zh-CN': "密码", en: "Password" },
+  "បញ្ចូលពាក្យសម្ងាត់": { 'zh-CN': "输入密码", en: "Enter password" },
+  "លេខកូដផ្ទៀងផ្ទាត់ SMS": { 'zh-CN': "短信验证码", en: "SMS verification code" },
+  "បញ្ចូលលេខកូដ SMS": { 'zh-CN': "输入短信验证码", en: "Enter SMS code" },
+  "ឬ ចូលគណនីតាម Telegram": { 'zh-CN': "或使用 Telegram 登录", en: "Or sign in with Telegram" },
+  "ប្រើលេខទូរស័ព្ទ ឬអ៊ីមែលដែលភ្ជាប់ជាមួយគណនី 7inOne របស់អ្នក។": { 'zh-CN': "使用与您的 7inOne 账户关联的电话号码或电子邮件。", en: "Use the phone number or email linked to your 7inOne account." },
+  "ភ្លេច Password? សង្គ្រោះតាម Telegram": { 'zh-CN': "忘记密码？通过 Telegram 找回", en: "Forgot password? Recover via Telegram" },
+  "Email គណនី 7inOne": { 'zh-CN': "7inOne 账户邮箱", en: "7inOne account email" },
+  "Admin មិនទាន់ភ្ជាប់ Telegram?": { 'zh-CN': "管理员尚未连接 Telegram？", en: "Admin Telegram not connected yet?" },
+  "Admin Recovery Key": { 'zh-CN': "管理员恢复密钥", en: "Admin recovery key" },
+  "ភ្ជាប់ Telegram ទៅ Admin": { 'zh-CN': "将 Telegram 连接到管理员", en: "Connect Telegram to Admin" },
+  "បើក Telegram Bot ហើយចុច Start": { 'zh-CN': "打开 Telegram Bot 并点击 Start", en: "Open Telegram Bot and press Start" },
+  "ផ្ញើ OTP ទៅ Telegram": { 'zh-CN': "将验证码发送到 Telegram", en: "Send OTP to Telegram" },
+  "បញ្ចូលលេខកូដ Telegram": { 'zh-CN': "输入 Telegram 验证码", en: "Enter Telegram code" },
+  "ផ្ទៀងផ្ទាត់ និងសង្គ្រោះគណនី": { 'zh-CN': "验证并恢复账户", en: "Verify & recover account" },
+  "ត្រឡប់ទៅចូលគណនី": { 'zh-CN': "返回登录", en: "Back to sign in" },
+  "លេខទូរស័ព្ទ / Telegram *": { 'zh-CN': "电话号码 / Telegram *", en: "Phone number / Telegram *" },
+  "អាសយដ្ឋានហាង *": { 'zh-CN': "店铺地址 *", en: "Shop address *" },
+  "ឯកសារផ្ទៀងផ្ទាត់ (ជាជម្រើសសម្រាប់អ្នកចុះឈ្មោះថ្មី)": { 'zh-CN': "验证文件（新注册用户可选）", en: "Verification document (optional for new sellers)" },
+  "ចុចដើម្បី Upload ឯកសារ": { 'zh-CN': "点击上传文件", en: "Click to upload document" },
+  "បង្កើតហាង / ដាក់ស្នើផ្ទៀងផ្ទាត់": { 'zh-CN': "创建店铺 / 提交验证", en: "Create shop / submit verification" },
+  "បន្ថែមទំនិញថ្មី": { 'zh-CN': "添加新商品", en: "Add new product" },
+  "ឈ្មោះទំនិញ *": { 'zh-CN': "商品名称 *", en: "Product name *" },
+  "តម្លៃ (USD) *": { 'zh-CN': "价格 (USD) *", en: "Price (USD) *" },
+  "ប្រភេទ *": { 'zh-CN': "类别 *", en: "Category *" },
+  "ជ្រើសរើសប្រភេទ": { 'zh-CN': "选择类别", en: "Select category" },
+  "ផ្នែករង / Subcategory": { 'zh-CN': "子类别 / Subcategory", en: "Subcategory" },
+  "ជ្រើសរើសផ្នែករង": { 'zh-CN': "选择子类别", en: "Select subcategory" },
+  "ប្រភេទលម្អិត / Detailed Type": { 'zh-CN': "详细类型 / Detailed Type", en: "Detailed type" },
+  "ជ្រើសរើសប្រភេទលម្អិត": { 'zh-CN': "选择详细类型", en: "Select detailed type" },
+  "ទីតាំងផលិតផល * (ជ្រើសរើសដល់កម្រិតភូមិ)": { 'zh-CN': "商品位置 *（请选择到村级）", en: "Product location * (select down to village level)" },
+  "ជ្រើសរើសរាជធានី/ខេត្ត": { 'zh-CN': "选择首都/省", en: "Select province" },
+  "ជ្រើសរើសស្រុក/ខណ្ឌ": { 'zh-CN': "选择县/区", en: "Select district" },
+  "ជ្រើសរើសឃុំ/សង្កាត់": { 'zh-CN': "选择乡/分区", en: "Select commune" },
+  "ជ្រើសរើសភូមិ": { 'zh-CN': "选择村", en: "Select village" },
+  "កំណត់ទីតាំងនេះជាលំនាំដើម": { 'zh-CN': "将此位置设为默认位置", en: "Set this as the default location" },
+  "Google Maps Link (មិនបាច់បំពេញក៏បាន)": { 'zh-CN': "Google Maps 链接（选填）", en: "Google Maps link (optional)" },
+  "YouTube Video Link (មិនបាច់បំពេញក៏បាន)": { 'zh-CN': "YouTube 视频链接（选填）", en: "YouTube video link (optional)" },
+  "ភ្ជាប់វីដេអូ ១ ក្នុង Gallery · គាំទ្រ YouTube Video និង Shorts": { 'zh-CN': "在图库中添加 1 个视频 · 支持 YouTube 视频和 Shorts", en: "Add 1 video to the gallery · YouTube videos and Shorts supported" },
+  "ប្រើរួចស្អាត": { 'zh-CN': "二手，状态良好", en: "Used, in good condition" },
+  "ថ្មី ១០០%": { 'zh-CN': "全新 100%", en: "Brand new" },
+  "ល្អដូចថ្មី": { 'zh-CN': "近乎全新", en: "Like new" },
+  "ការពិពណ៌នាសង្ខេប (បង្ហាញលើកាតទំនិញ) *": { 'zh-CN': "简短描述（显示在商品卡片上）*", en: "Short description (shown on product card) *" },
+  "សរសេរមួយបន្ទាត់ម្តងៗ (អតិបរមា ៣ បន្ទាត់)...": { 'zh-CN': "每行填写一条（最多 3 行）...", en: "Write one item per line (maximum 3 lines)..." },
+  "ការពិពណ៌នាលម្អិត": { 'zh-CN': "详细描述", en: "Detailed description" },
+  "សរសេរព័ត៌មានលម្អិតពេញលេញអំពីទំនិញ...": { 'zh-CN': "填写商品的完整详细信息...", en: "Write full details about the product..." },
+  "រូបភាពទំនិញ (អតិបរមា ១០ រូប)": { 'zh-CN': "商品图片（最多 10 张）", en: "Product images (up to 10)" },
+  "ជ្រើសរើសរូបភាពផលិតផល": { 'zh-CN': "选择商品图片", en: "Choose product images" },
+  "JPG / PNG / WEBP · រូបនីមួយៗមិនលើស ២០MB": { 'zh-CN': "JPG / PNG / WEBP · 每张图片不超过 20MB", en: "JPG / PNG / WEBP · Each image up to 20MB" },
+  "បន្ថែមរូប": { 'zh-CN': "添加图片", en: "Add image" },
+  "កំពុង Upload រូបភាព...": { 'zh-CN': "正在上传图片...", en: "Uploading images..." },
+  "ចុច «កំណត់ជារូបមេ» លើរូបដែលអ្នកចង់ឲ្យបង្ហាញមុនគេ។ អាចដាក់បានអតិបរមា ១០ រូប។": { 'zh-CN': "点击“设为主图”以选择首先显示的图片。最多可上传 10 张。", en: "Click “Set as main image” to choose the first image shown. Up to 10 images allowed." },
+  "រក្សាទុកទំនិញ": { 'zh-CN': "保存商品", en: "Save product" },
+  "តើអ្នកចង់បង្ហោះអ្វី?": { 'zh-CN': "您想发布什么？", en: "What would you like to post?" },
+  "ជ្រើសរើសប្រភេទប្រកាស ដើម្បីបន្ត": { 'zh-CN': "选择帖子类型以继续", en: "Choose a listing type to continue" },
+  "ផលិតផល": { 'zh-CN': "商品", en: "Product" },
+  "ទំនិញថ្មី និងមួយទឹក": { 'zh-CN': "全新和二手商品", en: "New and used items" },
+  "ការងារ": { 'zh-CN': "职位", en: "Jobs" },
+  "ជ្រើសរើសបុគ្គលិក និងប្រកាសការងារ": { 'zh-CN': "招聘员工和发布职位", en: "Recruitment and job listings" },
+  "ផ្ទះ ដី ខុនដូ និងអចលនទ្រព្យផ្សេងៗ": { 'zh-CN': "房屋、土地、公寓及其他房产", en: "Houses, land, condos and other properties" },
+  "បង្ហោះប្រកាសការងារ": { 'zh-CN': "发布招聘信息", en: "Post a job" },
+  "បំពេញព័ត៌មានការងារ និងលក្ខខណ្ឌជ្រើសរើស": { 'zh-CN': "填写职位信息和招聘要求", en: "Enter job details and requirements" },
+  "មុខតំណែង / Job Title *": { 'zh-CN': "职位名称 / Job Title *", en: "Job title *" },
+  "ក្រុមហ៊ុន / អ្នកជ្រើសរើស": { 'zh-CN': "公司 / 招聘方", en: "Company / Recruiter" },
+  "ឈ្មោះក្រុមហ៊ុន": { 'zh-CN': "公司名称", en: "Company name" },
+  "ទីតាំងការងារ * (ជ្រើសរើសដល់កម្រិតភូមិ)": { 'zh-CN': "工作地点 *（请选择到村级）", en: "Job location * (select down to village level)" },
+  "ផ្នែករង": { 'zh-CN': "子类别", en: "Subcategory" },
+  "ជ្រើសរើសមុខតំណែង": { 'zh-CN': "选择职位", en: "Select position" },
+  "ពេញម៉ោង": { 'zh-CN': "全职", en: "Full-time" },
+  "ក្រៅម៉ោង": { 'zh-CN': "兼职", en: "Part-time" },
+  "កិច្ចសន្យា": { 'zh-CN': "合同制", en: "Contract" },
+  "ហាត់ការ": { 'zh-CN': "实习", en: "Internship" },
+  "ម៉ោងធ្វើការ": { 'zh-CN': "工作时间", en: "Work schedule" },
+  "ឧ. 8:00 ព្រឹក - 5:00 ល្ងាច": { 'zh-CN': "例如：上午 8:00 - 下午 5:00", en: "e.g. 8:00 AM - 5:00 PM" },
+  "ប្រាក់ខែអប្បបរមា (USD)": { 'zh-CN': "最低薪资 (USD)", en: "Minimum salary (USD)" },
+  "ប្រាក់ខែអតិបរមា (USD)": { 'zh-CN': "最高薪资 (USD)", en: "Maximum salary (USD)" },
+  "របៀបបង្ហាញប្រាក់ខែ": { 'zh-CN': "薪资周期", en: "Salary period" },
+  "ប្រចាំខែ": { 'zh-CN': "每月", en: "Monthly" },
+  "ប្រចាំម៉ោង": { 'zh-CN': "每小时", en: "Hourly" },
+  "ចរចា": { 'zh-CN': "面议", en: "Negotiable" },
+  "បទពិសោធន៍": { 'zh-CN': "工作经验", en: "Experience" },
+  "កម្រិតសិក្សា": { 'zh-CN': "学历要求", en: "Education level" },
+  "ឧ. 1-2 ឆ្នាំ / មិនទាមទារ": { 'zh-CN': "例如：1-2 年 / 不限", en: "e.g. 1–2 years / Not required" },
+  "ឧ. បរិញ្ញាបត្រ / មិនកំណត់": { 'zh-CN': "例如：学士 / 不限", en: "e.g. Bachelor's degree / Not specified" },
+  "ភ្ជាប់វីដេអូណែនាំការងារ (16:9)": { 'zh-CN': "添加职位介绍视频 (16:9)", en: "Attach a job introduction video (16:9)" },
+  "ព័ត៌មានលម្អិត និងតួនាទីការងារ *": { 'zh-CN': "职位详情和工作职责 *", en: "Job details and responsibilities *" },
+  "ពិពណ៌នាអំពីតួនាទី ភារកិច្ច និងលក្ខខណ្ឌ...": { 'zh-CN': "描述职位、职责和要求...", en: "Describe the role, responsibilities and requirements..." },
+  "ជំនាញដែលត្រូវការ (បំបែកដោយសញ្ញាក្បៀស)": { 'zh-CN': "所需技能（用逗号分隔）", en: "Required skills (comma-separated)" },
+  "អត្ថប្រយោជន៍ (បំបែកដោយសញ្ញាក្បៀស)": { 'zh-CN': "福利待遇（用逗号分隔）", en: "Benefits (comma-separated)" },
+  "រូបភាពការងារ / Logo (JPG/PNG/WEBP · អតិបរមា ១០ រូប · 8MB/រូប)": { 'zh-CN': "职位图片 / Logo（JPG/PNG/WEBP · 最多 10 张 · 每张 8MB）", en: "Job images / Logo (JPG/PNG/WEBP · up to 10 · 8MB each)" },
+  "ជ្រើសរើសរូបភាពច្រើន": { 'zh-CN': "选择多张图片", en: "Select multiple images" },
+  "0 / ១០ រូបបានជ្រើសរើស": { 'zh-CN': "已选择 0 / 10 张图片", en: "0 / 10 images selected" },
+  "មិនទាន់មានរូបភាពទេ": { 'zh-CN': "暂无图片", en: "No images yet" },
+  "ជ្រើសរើសរូបភាពរហូតដល់ ១០ រូប": { 'zh-CN': "最多选择 10 张图片", en: "Select up to 10 images" },
+  "រូបទី១ ជារូបមេ · អាចប្តូររូបមេ លុបរូប និងរៀបលំដាប់បាន": { 'zh-CN': "第 1 张为主图 · 可更换主图、删除图片和调整顺序", en: "Image 1 is the main image · Change the main image, delete and reorder images" },
+  "បង្ហោះការងារ": { 'zh-CN': "发布职位", en: "Post job" },
+  "បង្ហោះអចលនទ្រព្យ": { 'zh-CN': "发布房产", en: "Post property" },
+  "ព័ត៌មានលក់ ជួល និងលក្ខណៈសម្បត្តិអចលនទ្រព្យ": { 'zh-CN': "填写出售、出租和房产属性信息", en: "Sale, rental and property details" },
+  "ប្រភេទអចលនទ្រព្យ *": { 'zh-CN': "房产类别 *", en: "Property type *" },
+  "ចំណងជើងប្រកាស *": { 'zh-CN': "帖子标题 *", en: "Listing title *" },
+  "តម្លៃ (USD)": { 'zh-CN': "价格 (USD)", en: "Price (USD)" },
+  "រយៈពេល / ប្រភេទតម្លៃ": { 'zh-CN': "价格周期 / 类型", en: "Price period / type" },
+  "តម្លៃសរុប": { 'zh-CN': "总价", en: "Total price" },
+  "ទំហំ (m²)": { 'zh-CN': "面积 (m²)", en: "Area (m²)" },
+  "បន្ទប់គេង": { 'zh-CN': "卧室", en: "Bedrooms" },
+  "បន្ទប់ទឹក": { 'zh-CN': "浴室", en: "Bathrooms" },
+  "ទីតាំងអចលនទ្រព្យ * (ជ្រើសរើសដល់កម្រិតភូមិ)": { 'zh-CN': "房产位置 *（请选择到村级）", en: "Property location * (select down to village level)" },
+  "បង្ហាញត្រឹមភូមិ": { 'zh-CN': "显示到村级", en: "Shown down to village level" },
+  "ភ្ជាប់វីដេអូណែនាំអចលនទ្រព្យ (16:9)": { 'zh-CN': "添加房产介绍视频 (16:9)", en: "Attach a property introduction video (16:9)" },
+  "ការពិពណ៌នាលម្អិត *": { 'zh-CN': "详细描述 *", en: "Detailed description *" },
+  "ពិពណ៌នាព័ត៌មានលម្អិត...": { 'zh-CN': "填写详细信息...", en: "Describe the details..." },
+  "រូបភាពអចលនទ្រព្យ (JPG/PNG/WEBP · អតិបរមា ១០ រូប · 8MB/រូប)": { 'zh-CN': "房产图片（JPG/PNG/WEBP · 最多 10 张 · 每张 8MB）", en: "Property images (JPG/PNG/WEBP · up to 10 · 8MB each)" },
+  "ស្នើសុំតម្លៃរបស់អ្នក": { 'zh-CN': "提交您的报价", en: "Make your offer" },
+  "តម្លៃដែលអ្នកចង់ទិញ (USD)": { 'zh-CN': "您的购买报价 (USD)", en: "Your offer price (USD)" },
+  "សារជូនអ្នកលក់": { 'zh-CN': "给卖家的留言", en: "Message to seller" },
+  "សួស្តី ខ្ញុំចាប់អារម្មណ៍លើទំនិញនេះ...": { 'zh-CN': "您好，我对这件商品感兴趣...", en: "Hello, I'm interested in this item..." },
+  "ផ្ញើសំណើតម្លៃ": { 'zh-CN': "发送报价", en: "Send offer" },
+  "ឆាតអ្នកទិញ និងអ្នកលក់": { 'zh-CN': "买家与卖家聊天", en: "Buyer & seller chat" },
+  "សន្ទនាផ្ទាល់ជាមួយអ្នកលក់ និងអ្នកទិញ": { 'zh-CN': "与卖家和买家直接对话", en: "Chat directly with sellers and buyers" },
+  "ត្រឡប់ទៅឆាតទាំងអស់": { 'zh-CN': "返回所有聊天", en: "Back to all chats" },
+  "បិទសំឡេង": { 'zh-CN': "静音", en: "Mute" },
+  "បង្រួមឆាត": { 'zh-CN': "收起聊天", en: "Minimize chat" },
+  "ប្រអប់សារ": { 'zh-CN': "收件箱", en: "Inbox" },
+  "ធ្វើបច្ចុប្បន្នភាព": { 'zh-CN': "刷新", en: "Refresh" },
+  "កំពុងផ្ទុកសារ": { 'zh-CN': "正在加载消息", en: "Loading messages" },
+  "ត្រឡប់ទៅប្រអប់សារ": { 'zh-CN': "返回收件箱", en: "Back to inbox" },
+  "ជ្រើសរើសសន្ទនា": { 'zh-CN': "选择对话", en: "Select a conversation" },
+  "ព័ត៌មានផលិតផលនឹងបង្ហាញនៅទីនេះ": { 'zh-CN': "商品信息将在此显示", en: "Product information will appear here" },
+  "ជ្រើសរើសសន្ទនាមួយ ដើម្បីចាប់ផ្ដើម។": { 'zh-CN': "选择一个对话以开始。", en: "Select a conversation to start." },
+  "ផ្ញើរូបភាព": { 'zh-CN': "发送图片", en: "Send image" },
+  "សរសេរសារ…": { 'zh-CN': "输入消息...", en: "Write a message..." },
+  "ផ្ញើសារ": { 'zh-CN': "发送消息", en: "Send message" },
+  "មើលវីដេអូ YouTube": { 'zh-CN': "观看 YouTube 视频", en: "Watch YouTube video" },
+  "វីដេអូប្រកាស": { 'zh-CN': "帖子视频", en: "Listing video" },
+  "បិទវីដេអូ": { 'zh-CN': "关闭视频", en: "Close video" },
+  "បិទរូបភាព": { 'zh-CN': "关闭图片", en: "Close image" },
+  "រូបមុន": { 'zh-CN': "上一张", en: "Previous image" },
+  "រូបបន្ទាប់": { 'zh-CN': "下一张", en: "Next image" },
+  "រូបភាពទំនិញពង្រីក": { 'zh-CN': "放大的商品图片", en: "Enlarged product image" },
+  "ប្រព័ន្ធកំពុងអភិវឌ្ឍន៍": { 'zh-CN': "系统正在维护", en: "System under maintenance" },
+  "ទម្រង់អភិវឌ្ឍន៍ (Admin Preview)": { 'zh-CN': "维护模式（管理员预览）", en: "Maintenance mode (Admin preview)" },
+  "ម៉ាក / Brand": { 'zh-CN': "品牌", en: "Brand" },
+  "ពណ៌": { 'zh-CN': "颜色", en: "Color" },
+  "ម៉ូដែល / Model": { 'zh-CN': "型号", en: "Model" },
+  "ផ្ទះល្វែង": { 'zh-CN': "公寓", en: "Apartment" },
+  "ផ្ទះអាជីវកម្ម": { 'zh-CN': "商业房屋", en: "Commercial property" },
+  "ដីពាណិជ្ជកម្ម": { 'zh-CN': "商业用地", en: "Commercial land" },
+  "ចំនួនជាន់": { 'zh-CN': "楼层数", en: "Number of floors" },
+  "ចរចាប្រាក់ខែ": { 'zh-CN': "薪资面议", en: "Salary negotiable" },
+  "ការិយាល័យ": { 'zh-CN': "办公室", en: "Office" },
+  "ឃ្លាំង": { 'zh-CN': "仓库", en: "Warehouse" },
+  "វីឡា": { 'zh-CN': "别墅", en: "Villa" },
+  "ជំនាញបច្ចេកទេស": { 'zh-CN': "技术技能", en: "Technical skills" },
+  "ភាសា": { 'zh-CN': "语言", en: "Language" },
+  "វេនការងារ": { 'zh-CN': "工作班次", en: "Work shift" },
+  "ប្លង់កម្មសិទ្ធិ": { 'zh-CN': "产权证", en: "Ownership title" },
+  "ប្រាក់កក់": { 'zh-CN': "押金", en: "Deposit" },
+  "ជាន់ទី": { 'zh-CN': "楼层", en: "Floor" },
+  "ទាក់ទងសួរតម្លៃ": { 'zh-CN': "请联系询价", en: "Contact for price" },
+  "មិនទាមទារ": { 'zh-CN': "不要求", en: "Not required" },
+  "មិនទាមទារបទពិសោធន៍": { 'zh-CN': "无需经验", en: "No experience required" },
+  "ប្រភេទរង": { 'zh-CN': "子类别", en: "Subcategory" },
+  "ទំហំ": { 'zh-CN': "尺寸", en: "Size" },
+  "មិនទាន់មានការពិពណ៌នាលម្អិតទេ។": { 'zh-CN': "暂无详细说明。", en: "No detailed description yet." },
+  "ចម្លង Product ID": { 'zh-CN': "复制商品 ID", en: "Copy Product ID" },
+  "ផ្សេងៗ": { 'zh-CN': "其他", en: "Other" },
+  "កំពុងរក្សាទុក...": { 'zh-CN': "正在保存...", en: "Saving..." },
+  "ផ្ទះ": { 'zh-CN': "房屋", en: "House" },
+  "ដី": { 'zh-CN': "土地", en: "Land" },
+  "ខុនដូ": { 'zh-CN': "公寓楼", en: "Condominium" },
+  "ទំហំដី (m²)": { 'zh-CN': "土地面积 (m²)", en: "Land area (m²)" },
+  "ទំហំសំណង់ (m²)": { 'zh-CN': "建筑面积 (m²)", en: "Building area (m²)" },
+  "ប្រភេទប្លង់": { 'zh-CN': "产权类型", en: "Title type" },
+  "សម្ភារៈ": { 'zh-CN': "家具", en: "Furnishing" },
+  "ដីកសិកម្ម": { 'zh-CN': "农业用地", en: "Agricultural land" },
+  "ដីឧស្សាហកម្ម": { 'zh-CN': "工业用地", en: "Industrial land" },
+  "ដីចម្ការ": { 'zh-CN': "种植园土地", en: "Plantation land" },
+  "វិញ្ញាបនបត្រ": { 'zh-CN': "证书", en: "Certificate" },
+  "ប្រភេទផ្ទះ": { 'zh-CN': "房屋类型", en: "House type" },
+  "ចំណតរថយន្ត": { 'zh-CN': "停车位", en: "Parking space" },
+  "ទំហំមុខដី": { 'zh-CN': "土地临街宽度", en: "Land frontage" },
+  "ទំហំបណ្តោយ": { 'zh-CN': "土地长度", en: "Land length" },
+  "ផ្លូវចូល": { 'zh-CN': "通道", en: "Access road" },
+  "ប្រភេទអាជីវកម្ម": { 'zh-CN': "业务类型", en: "Business type" },
+  "ទំហំសំណង់": { 'zh-CN': "建筑面积", en: "Building size" },
+  "ចំណត": { 'zh-CN': "停车位", en: "Parking" },
+  "មិនអាចបើកសន្ទនាបានទេ។": { 'zh-CN': "无法打开聊天。", en: "Could not open the chat." },
+  "ផលិតផលស្រដៀង": { 'zh-CN': "相似商品", en: "Similar products" },
+  "ការតភ្ជាប់ Upload ត្រូវបានផ្អាក។": { 'zh-CN': "上传连接已暂停。", en: "The upload connection has been paused." },
+  "ការបញ្ចូលរូបភាពត្រូវបានបោះបង់។": { 'zh-CN': "图片上传已取消。", en: "Image upload was cancelled." },
+  "Cover របស់គណនី": { 'zh-CN': "账户封面", en: "Account cover" },
+  "អ្នកលក់ផ្ទៀងផ្ទាត់": { 'zh-CN': "已认证卖家", en: "Verified seller" },
+  "អ្នកលក់ទូទៅ · អាចផ្ទៀងផ្ទាត់ដោយស្ម័គ្រចិត្ត": { 'zh-CN': "普通卖家 · 可自愿申请认证", en: "Regular seller · Verification is optional" },
+  "មិនទាន់មានការផុសទេ។ ចាប់ផ្ដើមចែករំលែកមុនគេ!": { 'zh-CN': "还没有帖子。来分享第一条吧！", en: "No posts yet. Be the first to share!" },
+  "រូបភាពដែលបានផុស": { 'zh-CN': "已发布的图片", en: "Posted images" },
+  "ផុស Story": { 'zh-CN': "发布动态", en: "Post a Story" },
+  "ផុសរូបភាព": { 'zh-CN': "发布图片", en: "Post an image" },
+  "ប្រើរួច": { 'zh-CN': "二手", en: "Used" },
+  "ប្រកាសថ្មីៗទាំងអស់": { 'zh-CN': "所有最新帖子", en: "All recent posts" },
+});
+// Register the full Marketplace runtime dictionary with the shared locale gate.
+// This ensures setLanguage() cannot switch to a partially translated locale.
+(function registerMarketplaceRuntimeCatalogs() {
+  const catalogs = { km: Object.create(null), 'zh-CN': Object.create(null), en: Object.create(null) };
+  Object.entries(MARKETPLACE_UI_MESSAGES).forEach(([source, translations]) => {
+    catalogs.km[source] = source;
+    catalogs['zh-CN'][source] = translations['zh-CN'] || '';
+    catalogs.en[source] = translations.en || '';
+  });
+  if (window.SiteI18n) {
+    Object.entries(catalogs).forEach(([locale, catalog]) => window.SiteI18n.registerCatalog(locale, catalog));
+    window.SiteI18n.registerRequiredKeys(Object.keys(MARKETPLACE_UI_MESSAGES));
+  }
+})();
+
+function marketplaceUiText(value) {
+  const source = String(value ?? '');
+  const locale = window.SiteI18n?.locale || 'km';
+  if (locale === 'km') return source;
+  if (MARKETPLACE_UI_MESSAGES[source]?.[locale]) return MARKETPLACE_UI_MESSAGES[source][locale];
+  const prefix = Object.keys(MARKETPLACE_UI_MESSAGES).find(key => key.endsWith('： ') && source.startsWith(key));
+  return prefix ? MARKETPLACE_UI_MESSAGES[prefix][locale] + source.slice(prefix.length) : source;
+}
+
 /* --------------------------------------------------------------------------
    2. Application State
    -------------------------------------------------------------------------- */
@@ -303,7 +964,88 @@ function formatViews(value) {
   return num >= 1000 ? (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K' : String(num);
 }
 
+
+// Translate exact UI-owned text and accessible labels after dynamic views render.
+// User-entered product, shop, profile, and chat content is intentionally excluded.
+// Preserve each UI node's original source so locale changes can move in both directions.
+const marketplaceOriginalText = new WeakMap();
+const marketplaceOriginalAttributes = new WeakMap();
+const MARKETPLACE_USER_CONTENT_SELECTOR = '[data-user-content], [contenteditable="true"], .product-title, .product-description, .storefront-title, .profile-display-name, .chat-message, .post-user-content, .user-generated';
+
+function applyMarketplaceDynamicTranslations(root = document) {
+  const locale = window.SiteI18n?.locale || 'km';
+  if (!root) return;
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  const nodes = [];
+  while (walker.nextNode()) nodes.push(walker.currentNode);
+  nodes.forEach(node => {
+    if (node.parentElement?.closest(MARKETPLACE_USER_CONTENT_SELECTOR)) return;
+    if (!marketplaceOriginalText.has(node)) marketplaceOriginalText.set(node, node.nodeValue || '');
+    const original = marketplaceOriginalText.get(node);
+    const trimmed = original.trim();
+    if (!trimmed) return;
+    const translated = locale === 'km' ? trimmed : marketplaceUiTextForLocale(trimmed, locale);
+    node.nodeValue = original.replace(trimmed, translated);
+  });
+
+  const attributeSelector = '[placeholder], [title], [aria-label]';
+  const elements = [];
+  if (root.nodeType === Node.ELEMENT_NODE && root.matches(attributeSelector)) elements.push(root);
+  root.querySelectorAll?.(attributeSelector).forEach(el => elements.push(el));
+  elements.forEach(el => {
+    if (el.closest(MARKETPLACE_USER_CONTENT_SELECTOR)) return;
+    let originals = marketplaceOriginalAttributes.get(el);
+    if (!originals) {
+      originals = Object.create(null);
+      marketplaceOriginalAttributes.set(el, originals);
+    }
+    ['placeholder', 'title', 'aria-label'].forEach(attr => {
+      const current = el.getAttribute(attr);
+      if (current === null) return;
+      if (!Object.prototype.hasOwnProperty.call(originals, attr)) originals[attr] = current;
+      const original = originals[attr];
+      const translated = locale === 'km' ? original : marketplaceUiTextForLocale(original, locale);
+      if (translated !== current) el.setAttribute(attr, translated);
+    });
+  });
+}
+
+function marketplaceUiTextForLocale(value, locale) {
+  const source = String(value ?? '');
+  if (MARKETPLACE_UI_MESSAGES[source]?.[locale]) return MARKETPLACE_UI_MESSAGES[source][locale];
+  const prefix = Object.keys(MARKETPLACE_UI_MESSAGES).find(key => key.endsWith('៖ ') && source.startsWith(key));
+  return prefix ? MARKETPLACE_UI_MESSAGES[prefix][locale] + source.slice(prefix.length) : source;
+}
+
+function installMarketplaceDynamicTranslations() {
+  const run = () => {
+    applyMarketplaceDynamicTranslations(document.body);
+    if (window.__7inoneLocaleObserver) window.__7inoneLocaleObserver.disconnect();
+    window.__7inoneLocaleObserver = new MutationObserver(records => {
+      records.forEach(record => {
+        record.addedNodes.forEach(node => {
+          if (node.nodeType === Node.ELEMENT_NODE) applyMarketplaceDynamicTranslations(node);
+          else if (node.nodeType === Node.TEXT_NODE && !node.parentElement?.closest('[data-user-content], [contenteditable="true"], .product-title, .product-description, .storefront-title, .profile-display-name, .chat-message, .post-user-content, .user-generated')) {
+            if (!marketplaceOriginalText.has(node)) marketplaceOriginalText.set(node, node.nodeValue || '');
+            const original = marketplaceOriginalText.get(node);
+            const trimmed = original.trim();
+            const locale = window.SiteI18n?.locale || 'km';
+            const translated = locale === 'km' ? trimmed : marketplaceUiTextForLocale(trimmed, locale);
+            if (trimmed) node.nodeValue = original.replace(trimmed, translated);
+          }
+        });
+      });
+    });
+    window.__7inoneLocaleObserver.observe(document.body, { childList: true, subtree: true });
+  };
+  if (document.body) run();
+  else document.addEventListener('DOMContentLoaded', run, { once: true });
+}
+window.addEventListener('7inone:locale-change', () => applyMarketplaceDynamicTranslations(document.body));
+installMarketplaceDynamicTranslations();
+
 function toast(message, type = 'success') {
+  message = marketplaceUiText(message);
   const area = $('toastArea');
   if (!area) return;
   area.innerHTML = '';
@@ -315,7 +1057,7 @@ function toast(message, type = 'success') {
       : 'border-slate-800 bg-slate-900 text-white';
 
   el.className = `toast pointer-events-auto flex items-center gap-3 rounded-2xl border px-4 py-3 text-[11px] font-semibold ${styleClass}`;
-  el.innerHTML = `<span class="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-white/10">${ic(type === 'error' ? 'x' : 'check', 15)}</span><span class="flex-1">${esc(message)}</span><button aria-label="បិទ">${ic('x', 14)}</button>`;
+  el.innerHTML = `<span class="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-white/10">${ic(type === 'error' ? 'x' : 'check', 15)}</span><span class="flex-1">${esc(message)}</span><button aria-label="${esc(marketplaceUiText('បិទ'))}">${ic('x', 14)}</button>`;
   el.querySelector('button').onclick = () => el.remove();
   area.appendChild(el);
   setTimeout(() => el.remove(), 3200);
@@ -340,6 +1082,10 @@ function closeModal(id) {
 }
 
 function appDialog({ mode = 'confirm', title = 'បញ្ជាក់សកម្មភាព', message = '', placeholder = 'សរសេរមូលហេតុនៅទីនេះ...', confirmLabel, danger = false } = {}) {
+  title = marketplaceUiText(title);
+  message = marketplaceUiText(message);
+  placeholder = marketplaceUiText(placeholder);
+  confirmLabel = confirmLabel ? marketplaceUiText(confirmLabel) : confirmLabel;
   return new Promise(resolve => {
     const id = 'appDialogModal';
     const previous = $(id);
@@ -350,14 +1096,14 @@ function appDialog({ mode = 'confirm', title = 'បញ្ជាក់សកម�
     wrap.setAttribute('aria-hidden', 'true');
     const isPrompt = mode === 'prompt';
     const field = isPrompt
-      ? `<label class="app-dialog-field"><span>មូលហេតុ</span><textarea id="appDialogInput" class="field" rows="4" maxlength="1200" placeholder="${esc(placeholder)}"></textarea></label>`
+      ? `<label class="app-dialog-field"><span>${esc(marketplaceUiText('មូលហេតុ'))}</span><textarea id="appDialogInput" class="field" rows="4" maxlength="1200" placeholder="${esc(placeholder)}"></textarea></label>`
       : '';
     wrap.innerHTML = `<section class="modal-box app-dialog-box" role="dialog" aria-modal="true" aria-labelledby="appDialogTitle" aria-describedby="appDialogMessage">
       <div class="app-dialog-heading"><span class="app-dialog-icon">${ic(isPrompt ? 'flag' : 'alert', 19)}</span><div><h2 id="appDialogTitle">${esc(title)}</h2><p id="appDialogMessage">${esc(message)}</p></div></div>
       <form id="appDialogForm" class="app-dialog-form" novalidate>${field}
         <div class="app-dialog-actions">
-          <button type="button" class="app-dialog-cancel" id="appDialogCancel">បោះបង់</button>
-          <button type="submit" class="app-dialog-submit ${danger ? 'is-danger' : ''}">${esc(confirmLabel || (isPrompt ? 'ផ្ញើរបាយការណ៍' : 'យល់ព្រម'))}</button>
+          <button type="button" class="app-dialog-cancel" id="appDialogCancel">${esc(marketplaceUiText('បោះបង់'))}</button>
+          <button type="submit" class="app-dialog-submit ${danger ? 'is-danger' : ''}">${esc(confirmLabel || marketplaceUiText(isPrompt ? 'ផ្ញើរបាយការណ៍' : 'យល់ព្រម'))}</button>
         </div>
       </form>
     </section>`;
