@@ -890,37 +890,38 @@ function normalizedProductSpecs(product = {}) {
   for (const [key, legacy] of Object.entries(legacyKeys)) if (specs[key] == null && specs[legacy] != null) specs[key] = specs[legacy];
   return specs;
 }
-function auroraCaptionSpecs(product = {}) {
-  const isAurora = String(product.vendors?.store_name || '').trim().toLowerCase() === 'aurora computer';
-  if (!isAurora) return {};
-
+function supplierCaptionSpecs(product = {}) {
   const caption = productCardShortCaption(product);
   const aliases = {
-    cpu: 'cpu', processor: 'cpu', cpumodel: 'cpu', processormodel: 'cpu',
-    ram: 'ram', memory: 'ram', memoryram: 'ram', ramtypecapacity: 'ram',
-    ssd: 'storage', storage: 'storage', harddrive: 'storage', hdd: 'storage', storagetypecapacity: 'storage',
-    display: 'display', displaysize: 'display', screen: 'display', screensize: 'display',
-    resolution: 'resolution', displayresolution: 'resolution',
-    gpu: 'gpu', graphics: 'gpu', graphicscard: 'gpu', graphicsprocessor: 'gpu', gpumodelvram: 'gpu',
-    brand: 'brand', manufacturer: 'brand', model: 'model',
-    color: 'color', colour: 'color', battery: 'battery', batterycapacity: 'battery',
-    batterylife: 'battery_life', weight: 'weight', dimensions: 'dimensions',
-    os: 'os', operatingsystem: 'os', warranty: 'warranty', connectivity: 'connectivity',
-    capacity: 'capacity', power: 'power', size: 'size', material: 'material'
+    brand:'brand',manufacturer:'brand',make:'brand',model:'model',productmodel:'model',series:'series',
+    cpu:'cpu',processor:'cpu',cpumodel:'cpu',processormodel:'cpu',
+    ram:'ram',memory:'ram',memoryram:'ram',ramtypecapacity:'ram',
+    ssd:'storage',storage:'storage',harddrive:'storage',hdd:'storage',storagetypecapacity:'storage',
+    display:'display',displaysize:'display',screen:'display',screensize:'display',
+    resolution:'resolution',displayresolution:'resolution',
+    gpu:'gpu',graphics:'gpu',graphicscard:'gpu',graphicsprocessor:'gpu',gpumodelvram:'gpu',
+    color:'color',colour:'color',battery:'battery',batterycapacity:'battery',
+    batterylife:'battery_life',batteryhealth:'battery_health',weight:'weight',dimensions:'dimensions',size:'size',
+    os:'os',operatingsystem:'os',warranty:'warranty',connectivity:'connectivity',
+    capacity:'capacity',power:'power',material:'material',condition:'condition',
+    voltage:'voltage',frequency:'frequency',speed:'speed',torque:'torque',mileage:'mileage',
+    fueltype:'fuel_type',transmission:'transmission',engine:'engine',year:'year',
+    gender:'gender',style:'style',fit:'fit',fabric:'material',
+    storagecapacity:'storage_capacity',camera:'camera',cameras:'camera',
+    waterresistance:'water_resistance',compatibility:'compatibility',warrantyperiod:'warranty'
   };
   const parsed = {};
   const add = (rawLabel, rawValue) => {
     const key = String(rawLabel || '').toLowerCase().replace(/[^a-z0-9]/g, '');
     const canonical = aliases[key];
-    const value = String(rawValue || '').replace(/^[\s:：-]+|[\s,;]+$/g, '').trim();
+    const value = String(rawValue || '').replace(/^[\s:：=-]+|[\s,;]+$/g, '').trim();
     if (canonical && value && !parsed[canonical]) parsed[canonical] = value;
   };
-
   for (const rawLine of caption.split(/\r?\n/)) {
     const line = rawLine.replace(/^\s*[-•*]\s*/, '').trim();
     if (!line) continue;
     for (const part of line.split(/\s*[|｜]\s*/)) {
-      const match = part.match(/^([^:：]+)\s*[:：]\s*(.+)$/);
+      const match = part.match(/^([^:：=]+)\s*[:：=]\s*(.+)$/);
       if (match) add(match[1], match[2]);
     }
   }
@@ -928,7 +929,7 @@ function auroraCaptionSpecs(product = {}) {
 }
 
 function productCardSpecs(product = {}) {
-  const specs = { ...auroraCaptionSpecs(product), ...normalizedProductSpecs(product) };
+  const specs = { ...supplierCaptionSpecs(product), ...normalizedProductSpecs(product) };
   const entries = Object.entries(specs).filter(([key, value]) => {
     const normalizedKey = String(key).toLowerCase().replace(/[^a-z0-9]/g, '');
     return value !== undefined && value !== null && typeof value !== 'object' && String(value).trim() &&
