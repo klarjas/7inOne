@@ -3779,9 +3779,9 @@ async function runCcComputerAutoSync() {
     const scanSources = (configuredScanSources || []).filter(config => {
       try {
         const url = new URL(config.source_url);
-        const host = url.hostname.toLowerCase().replace(/^www\\./, '');
+        const host = url.hostname.toLowerCase().replace(/^www\./, '');
         const isKnownExampleAnchor = host === 'cccomputerkh.com'
-          && /\\/index\\.html?$/i.test(url.pathname)
+          && /\/index\.html?$/i.test(url.pathname)
           && placeholderAnchors.has(url.hash.toLowerCase());
         return !isKnownExampleAnchor;
       } catch {
