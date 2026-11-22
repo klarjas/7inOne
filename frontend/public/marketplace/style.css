@@ -8989,3 +8989,29 @@ body>footer{background:#16202D!important;color:#C7D5E0!important;border-color:#2
   object-fit:contain;
 }
 img{content-visibility:auto}
+
+
+/* Header chat launcher: inline beside notifications, not a floating page button. */
+#supportChatLauncher{position:relative!important;inset:auto!important;display:inline-grid;place-items:center;width:40px;height:40px;border-radius:999px;background:transparent!important;color:#C7D5E0!important;box-shadow:none!important;font-size:18px;flex:0 0 40px}
+#supportChatLauncher:hover{background:#203244!important;color:#66C0F4!important;transform:none!important;box-shadow:none!important}
+#supportChatLauncher.hidden{display:none!important}
+@media(min-width:641px){
+ #sellerChatModal{position:fixed!important;inset:68px 24px auto auto!important;width:min(940px,calc(100vw - 48px))!important;height:auto!important;max-height:calc(100dvh - 88px)!important;display:none;align-items:flex-start!important;justify-content:flex-end!important;padding:0!important;background:transparent!important;pointer-events:none}
+ #sellerChatModal.open{display:flex!important}
+ #sellerChatModal .seller-chat-shell{width:min(940px,calc(100vw - 48px))!important;height:min(88vh,760px)!important;max-height:calc(100dvh - 88px)!important;pointer-events:auto;box-shadow:0 20px 60px rgba(0,0,0,.48)!important}
+}
+@media(max-width:640px){
+ #sellerChatModal{position:fixed!important;inset:0!important;width:100vw!important;height:100dvh!important;padding:0!important}
+ #sellerChatModal.open{display:flex!important}
+ #sellerChatModal .seller-chat-shell{width:100vw!important;height:100dvh!important;max-width:none!important;max-height:none!important;border-radius:0!important}
+}
+.inspector-floating-actions{position:sticky;bottom:0;left:0;right:0;z-index:30;display:grid;grid-template-columns:1.35fr 1fr auto;gap:8px;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:rgba(23,26,33,.94);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border-top:1px solid #2A475E;box-shadow:0 -8px 24px rgba(0,0,0,.35)}
+.inspector-floating-actions.hidden{display:none!important}
+.inspector-floating-actions button{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-width:0;min-height:44px;padding:0 12px;border-radius:12px;font-size:12px;white-space:nowrap;transition:filter .16s ease,transform .16s ease,border-color .16s ease,background .16s ease}
+.inspector-floating-actions button:active{transform:scale(.98)}
+.inspector-floating-actions [data-float-action="buy"]{background:linear-gradient(135deg,#2B74B8,#66C0F4);color:#fff;font-weight:700;border-radius:12px;min-height:44px}
+.inspector-floating-actions [data-float-action="chat"]{background:#203244;border:1px solid #3D6687;color:#E5F3FC;font-weight:600;border-radius:12px;min-height:44px}
+.inspector-floating-actions [data-float-action="save"]{background:#16202D;border:1px solid #2A475E;color:#C7D5E0;border-radius:12px;min-height:44px;padding:0 12px}
+.inspector-floating-actions [data-float-action="save"].is-saved{border-color:#66C0F4;color:#66C0F4;background:#203244}
+#homeDetailInspector .product-primary-actions,#homeDetailInspector .product-utility-actions,#homeDetailInspector .product-mobile-actions{display:none!important}
+@media(max-width:480px){.inspector-floating-actions{grid-template-columns:1.2fr 1fr auto;gap:6px;padding-left:8px;padding-right:8px}.inspector-floating-actions button{gap:5px;padding-left:9px;padding-right:9px;font-size:11px}}

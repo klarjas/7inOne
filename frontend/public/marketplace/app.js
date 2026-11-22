@@ -1072,7 +1072,6 @@ function openModal(id) {
   modal.classList.add('open');
   modal.setAttribute('aria-hidden', 'false');
   if (id !== 'sellerChatModal') document.body.classList.add('overflow-hidden');
-  if (id === 'sellerChatModal') $('supportChatLauncher')?.classList.remove('hidden');
 }
 
 function closeModal(id) {
@@ -2225,6 +2224,8 @@ function closeHomeDetailInspector() {
   const mount = $('productDetailPageMount');
   ++state.detailRequestId;
   state.detailHydratedKey = null;
+  const floatingActions = $('inspectorFloatingActions');
+  if (floatingActions) { floatingActions.classList.add('hidden'); floatingActions.innerHTML = ''; floatingActions.onclick = null; }
   $('steamDiscoveryHub')?.classList.remove('hidden');
   state.currentProduct = null;
   state.currentVendor = null;
@@ -2767,6 +2768,27 @@ function renderMarketplaceListingInProductDetail(item, options = {}) {
         </div>
       </section>
     </div>`, options);
+  const dock = $('inspectorFloatingActions');
+  if (dock && $('homeDetailInspector')?.contains(root)) {
+    dock.innerHTML = `<button type="button" data-float-action="chat">${ic('chat',17)} <span>ឆាតជាមួយអ្នកផុស</span></button>
+      <button type="button" data-float-action="save" class="listing-save-action">${ic('bookmark',17)} <span>រក្សាទុក</span></button>`;
+    dock.classList.remove('hidden');
+    dock.onclick = async event => {
+      const button = event.target.closest('[data-float-action]');
+      if (!button) return;
+      if (button.dataset.floatAction === 'chat') { void startListingPosterChat(item); return; }
+      if (button.dataset.floatAction === 'save') {
+        if (!requireLogin()) return;
+        button.disabled = true;
+        try {
+          const result = await api('/api/listing-saves', {method:'POST',body:JSON.stringify({listing_type:item.listing_type,id:item.id})});
+          if (result.data?.saved) { button.classList.add('is-saved'); const label=button.querySelector('span'); if(label) label.textContent='បានរក្សាទុក'; toast('បានរក្សាទុកប្រកាស!'); }
+          else { button.classList.remove('is-saved'); const label=button.querySelector('span'); if(label) label.textContent='រក្សាទុក'; }
+        } catch (error) { toast(error.message || 'មិនអាចរក្សាទុកបានទេ។','error'); }
+        finally { button.disabled = false; }
+      }
+    };
+  } else if (dock) { dock.classList.add('hidden'); dock.innerHTML = ''; }
   bindListingDetailActions(root, item);
   root.querySelector('[data-listing-chat]')?.addEventListener('click', () => { void startListingPosterChat(item); });
   root.querySelectorAll('[data-shared-listing-image]').forEach(button => button.addEventListener('click', () => {
@@ -2779,6 +2801,7 @@ function renderMarketplaceListingInProductDetail(item, options = {}) {
 }
 
 function renderProductDetail(options = {}) {
+  const root = $('productDetail');
   const p = state.currentProduct;
   const v = state.currentVendor;
   if (!p) return;
@@ -3038,6 +3061,28 @@ function renderProductDetail(options = {}) {
   const initialZoomImage = $('productDetail').querySelector('[data-gallery-zoom]');
   if (initialZoomImage) initialZoomImage.onclick = openProductLightbox;
   $('productDetail').querySelector('[data-gallery-zoom-button]')?.addEventListener('click', openProductLightbox);
+
+  const dock = $('inspectorFloatingActions');
+  if (dock && $('homeDetailInspector')?.contains(root)) {
+    dock.innerHTML = `<button type="button" data-float-action="buy">${ic('bag',17)} <span>ទិញឥឡូវនេះ</span></button>
+      <button type="button" data-float-action="chat">${ic('chat',17)} <span>ឆាត</span></button>
+      <button type="button" data-float-action="save" class="${saved ? 'is-saved' : ''}" aria-pressed="${saved}">${ic('bookmark',17)} <span>${saved ? 'បានរក្សាទុក' : 'រក្សាទុក'}</span></button>`;
+    dock.classList.remove('hidden');
+    dock.onclick = event => {
+      const button = event.target.closest('[data-float-action]');
+      if (!button) return;
+      const action = button.dataset.floatAction;
+      if (action === 'buy') openCheckout(p);
+      if (action === 'chat') void startBuyerSellerChat(p.id);
+      if (action === 'save') Promise.resolve(saveAction(p.id, button)).then(() => {
+        const isSaved = state.savedIds.has(p.id);
+        button.classList.toggle('is-saved', isSaved);
+        button.setAttribute('aria-pressed', String(isSaved));
+        const label = button.querySelector('span');
+        if (label) label.textContent = isSaved ? 'បានរក្សាទុក' : 'រក្សាទុក';
+      }).finally(renderSteamDiscoveryHub);
+    };
+  } else if (dock) { dock.classList.add('hidden'); dock.innerHTML = ''; }
 
   $('productDetail').querySelectorAll('[data-product-action]').forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -3446,6 +3491,42 @@ function handleStorefrontAction(event) {
 /* --------------------------------------------------------------------------
    10. Profile, Orders & Saved Items
    -------------------------------------------------------------------------- */
+
+async function saveAction(productId, button) {
+  const id = String(productId || '').trim();
+  if (!id || !requireLogin()) return false;
+  const wasSaved = [...state.savedIds].some(value => String(value) === id);
+  if (button) button.disabled = true;
+  try {
+    if (wasSaved) {
+      await api('/api/saved/' + encodeURIComponent(id), { method: 'DELETE' });
+      state.savedIds = new Set([...state.savedIds].filter(value => String(value) !== id));
+      if (button) {
+        button.classList.remove('is-saved');
+        button.setAttribute('aria-pressed', 'false');
+        const label = button.querySelector('span');
+        if (label) label.textContent = 'រក្សាទុក';
+      }
+      toast('បានដកចេញពីទំនិញដែលបានរក្សាទុក។');
+      return false;
+    }
+    await api('/api/saved/' + encodeURIComponent(id), { method: 'POST' });
+    state.savedIds.add(id);
+    if (button) {
+      button.classList.add('is-saved');
+      button.setAttribute('aria-pressed', 'true');
+      const label = button.querySelector('span');
+      if (label) label.textContent = 'បានរក្សាទុក';
+    }
+    toast('បានរក្សាទុកទំនិញ!');
+    return true;
+  } catch (error) {
+    toast(error.message || 'មិនអាចរក្សាទុកទំនិញបានទេ។', 'error');
+    throw error;
+  } finally {
+    if (button) button.disabled = false;
+  }
+}
 async function loadSaved() {
   const r = await api('/api/saved');
   state.savedIds = new Set((r.data || []).map((x) => x.products?.id).filter(Boolean));
@@ -5044,7 +5125,6 @@ async function startBuyerSellerChat(productId) {
 
 function minimizeSellerChatPanel() {
   closeModal('sellerChatModal');
-  $('supportChatLauncher')?.classList.remove('hidden');
 }
 
 function toggleSellerChatPanel() {
