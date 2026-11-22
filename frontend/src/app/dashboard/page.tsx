@@ -4,12 +4,14 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { getSupabaseBrowserClient } from '../../lib/supabase';
+import { useSiteLocale } from '../../lib/site-locale';
 import { ArrowLeft, Store, Package, ClipboardList, ShieldCheck, Plus, RefreshCw, LogOut, Check, X, Upload, Ban, Search, Database } from 'lucide-react';
 
 type AnyRow = Record<string, any>;
 type Tab = 'overview' | 'products' | 'supplier-products' | 'orders' | 'vendors' | 'moderation' | 'shop';
 export default function DashboardPage() {
   const router = useRouter();
+  useSiteLocale();
   const [token, setToken] = useState('');
   const [email, setEmail] = useState('');
   const [role, setRole] = useState('customer');

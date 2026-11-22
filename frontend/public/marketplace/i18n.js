@@ -123,6 +123,18 @@
     return currentLocale;
   }
 
+  // Keep the selected locale synchronized when another tab changes it.
+  global.addEventListener('storage', (event) => {
+    if (event.key !== STORAGE_KEY) return;
+    const nextLocale = normalizeLocale(event.newValue) || DEFAULT_LOCALE;
+    if (nextLocale !== DEFAULT_LOCALE && !getCatalogStatus(nextLocale).ready) return;
+    currentLocale = nextLocale;
+    apply();
+    global.dispatchEvent(new CustomEvent('7inone:locale-change', {
+      detail: { locale: currentLocale }
+    }));
+  });
+
   const savedLocale = getSavedLocale();
   if (savedLocale === DEFAULT_LOCALE || getCatalogStatus(savedLocale).ready) {
     currentLocale = savedLocale;
