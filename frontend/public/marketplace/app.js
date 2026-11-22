@@ -3502,7 +3502,7 @@ async function renderAdminGalleryCandidates() {
     target.innerHTML = items.map(item => {
       const evidence = item.match_evidence || {};
       const matches = (evidence.matched_model_tokens || []).join(', ');
-      const sourceDomain = evidence.source_domain || (() => { try { return new URL(item.source_url).hostname.replace(/^www\\./, ''); } catch { return '—'; } })();
+      const sourceDomain = evidence.source_domain || (() => { try { return new URL(item.source_url).hostname.replace(/^www\./, ''); } catch { return '—'; } })();
       const codeVerified = evidence.verification_level === 'code_verified';
       const verificationLabel = codeVerified ? 'Model + Code/SKU មានភស្តុតាង' : 'Model match ប៉ុណ្ណោះ · ត្រូវពិនិត្យបន្ថែម';
       const verificationClass = codeVerified ? 'text-emerald-700 bg-emerald-50' : 'text-amber-700 bg-amber-50';
