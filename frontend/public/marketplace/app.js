@@ -779,6 +779,7 @@ const state = {
   searchTerm: '',
   currentProduct: null,
   currentVendor: null,
+  detailRequestId: 0,
   currentVariantId: null,
   activeSpecFilters: {},
   activeSubcategory: 'all',
@@ -2204,9 +2205,11 @@ function showHomeDetailInspector() {
   const inspector = $('homeDetailInspector');
   const detail = $('productDetail');
   if (!inspector || !detail) return;
+  inspector.classList.remove('is-closing');
   inspector.appendChild(detail);
   $('steamDiscoveryHub')?.classList.add('hidden');
   inspector.classList.remove('hidden');
+  inspector.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function mountProductDetailPage() {
@@ -2219,12 +2222,22 @@ function closeHomeDetailInspector() {
   const inspector = $('homeDetailInspector');
   const detail = $('productDetail');
   const mount = $('productDetailPageMount');
-  if (detail && mount && detail.parentElement !== mount) mount.appendChild(detail);
-  inspector?.classList.add('hidden');
+  ++state.detailRequestId;
   $('steamDiscoveryHub')?.classList.remove('hidden');
   state.currentProduct = null;
   state.currentVendor = null;
   state.currentMarketplaceListing = null;
+  if (!inspector) {
+    if (detail && mount && detail.parentElement !== mount) mount.appendChild(detail);
+    return;
+  }
+  inspector.classList.add('is-closing');
+  window.setTimeout(() => {
+    if (!inspector.classList.contains('is-closing')) return;
+    if (detail && mount && detail.parentElement !== mount) mount.appendChild(detail);
+    inspector.classList.add('hidden');
+    inspector.classList.remove('is-closing');
+  }, 220);
 }
 
 async function loadProducts() {
@@ -2389,103 +2402,158 @@ function renderProductDetailSkeleton() {
 
 async function openMarketplaceListing(type, id, options = {}) {
   if (!id || !['job', 'real_estate'].includes(type)) return false;
-  const isCurrent = () => options.routeSyncNavigationId == null || options.routeSyncNavigationId === state.routeSyncNavigationId;
+  const listingId = String(id);
+  const requestId = ++state.detailRequestId;
+  const isCurrent = () => requestId === state.detailRequestId &&
+    (options.routeSyncNavigationId == null || options.routeSyncNavigationId === state.routeSyncNavigationId) &&
+    (!inlineInspector || String(state.currentProduct?.id || '') === listingId);
   const inlineInspector = options.inlineInspector === true || (
     !options.forceFullPage && options.routeSyncNavigationId == null && $('view-home')?.classList.contains('active')
   );
-  state.currentProduct = { id: String(id), listing_type: type };
-  if (inlineInspector) showHomeDetailInspector();
-  else { mountProductDetailPage(); await showView('product', { preserveScroll: Boolean(options.preserveScroll), deferLoad: true }); }
+  const cachedItem = state.products.find(row => row.listing_type === type && String(row.id) === listingId)
+    || state.jobs.find(row => row.listing_type === type && String(row.id) === listingId);
+
+  state.currentMarketplaceListing = cachedItem ? { ...cachedItem, listing_type: type } : null;
+  state.currentProduct = cachedItem ? { ...cachedItem, listing_type: type } : { id: listingId, listing_type: type };
+  state.currentVendor = null;
+  state.productGalleryIndex = 0;
+  state.productGalleryVideoActive = false;
+
+  if (inlineInspector) {
+    showHomeDetailInspector();
+    if (cachedItem) renderProductDetail();
+    else renderProductDetailSkeleton();
+  } else {
+    mountProductDetailPage();
+    await showView('product', { preserveScroll: Boolean(options.preserveScroll), deferLoad: true });
+    if (!isCurrent()) return false;
+    if (!cachedItem) renderProductDetailSkeleton();
+    else renderProductDetail();
+  }
   if (!isCurrent()) return false;
-  renderProductDetailSkeleton();
+
+  if (!inlineInspector) {
+    try {
+      sessionStorage.setItem('ecomstore.activeView', 'product');
+      sessionStorage.setItem('ecomstore.currentProductId', listingId);
+      sessionStorage.setItem('ecomstore.currentListingType', type);
+      sessionStorage.setItem('ecomstore.currentListingId', listingId);
+    } catch {}
+  }
 
   try {
-    let item = state.products.find(row => row.listing_type === type && String(row.id) === String(id))
-      || state.jobs.find(row => row.listing_type === type && String(row.id) === String(id));
-    if (!item) {
-      const result = await api('/api/marketplace/listings?limit=100&type=' + encodeURIComponent(type));
-      if (!isCurrent()) return false;
-      item = (result.data || []).find(row => String(row.id) === String(id));
-    }
-    if (!item) throw new Error('មិនមានព័ត៌មានប្រកាសនេះទេ។');
-    // Keep the listing type explicit so showView builds the shared detail route
-    // as product/job/<id> instead of treating a job ID as a product ID.
-    item = { ...item, listing_type: type };
+    // Keep the cached preview visible while refreshing the complete listing in the background.
+    const result = await api('/api/marketplace/listings?limit=100&type=' + encodeURIComponent(type));
+    if (!isCurrent()) return false;
+    const freshItem = (result.data || []).find(row => String(row.id) === listingId);
+    if (!freshItem && !cachedItem) throw new Error('មិនមានព័ត៌មានប្រកាសនេះទេ។');
+    const item = { ...(freshItem || cachedItem), listing_type: type };
+    if (!isCurrent()) return false;
+
     state.currentMarketplaceListing = item;
     state.currentProduct = item;
     state.currentVendor = null;
-    state.productGalleryIndex = 0;
-    state.productGalleryVideoActive = false;
-    if (!inlineInspector) {
-      try {
-        sessionStorage.setItem('ecomstore.activeView', 'product');
-        sessionStorage.setItem('ecomstore.currentProductId', String(id));
-        sessionStorage.setItem('ecomstore.currentListingType', type);
-        sessionStorage.setItem('ecomstore.currentListingId', String(id));
-      } catch {}
-      mountProductDetailPage();
-      await showView('product', { preserveScroll: Boolean(options.preserveScroll) });
-    } else {
-      renderProductDetail();
-    }
-    return true;
-  } catch (error) {
-    if (!isCurrent()) return false;
-    toast(error.message || 'មិនអាចបើកព័ត៌មានប្រកាសបានទេ។', 'error');
-    if (inlineInspector) closeHomeDetailInspector();
-    else void showView('home');
-    return false;
-  }
-}
-
-async function openProduct(id, options = {}) {
-  if (!id) { toast('មិនមានលេខសម្គាល់ទំនិញទេ។', 'warning'); return false; }
-  const productId = String(id);
-  const isCurrent = () => options.routeSyncNavigationId == null || options.routeSyncNavigationId === state.routeSyncNavigationId;
-
-  const inlineInspector = options.inlineInspector === true || (
-    !options.forceFullPage && options.routeSyncNavigationId == null && $('view-home')?.classList.contains('active')
-  );
-  state.currentProduct = { id: productId };
-  if (inlineInspector) showHomeDetailInspector();
-  else { mountProductDetailPage(); await showView('product', { preserveScroll: Boolean(options.preserveScroll), deferLoad: true }); }
-  if (!isCurrent()) return false;
-  renderProductDetailSkeleton();
-
-  try {
-    if (!inlineInspector) {
-      try {
-        sessionStorage.setItem('ecomstore.currentProductId', productId);
-        sessionStorage.setItem('ecomstore.activeView', 'product');
-      } catch {}
-    }
-
-    const [result] = await Promise.all([
-      api('/api/products/' + encodeURIComponent(productId)),
-      state.session ? loadOrders().catch(() => {}) : Promise.resolve()
-    ]);
-    if (!isCurrent()) return false;
-
-    const product = result.data;
-    if (!product) throw new Error('មិនមានព័ត៌មានទំនិញនេះទេ។');
-    product.poster = state.products.find(row => row.listing_type === 'product' && String(row.id) === productId)?.poster || product.poster || null;
-
-    const trust = await api('/api/vendors/' + encodeURIComponent(product.vendor_id) + '/ratings');
-    if (!isCurrent()) return false;
-
-    state.currentProduct = product;
-    state.currentVendor = trust.data;
-    state.currentVariantId = product.variants?.[0]?.id || null;
     state.productGalleryIndex = 0;
     state.productGalleryVideoActive = false;
     renderProductDetail();
     return true;
   } catch (error) {
     if (!isCurrent()) return false;
-    toast(error.message, 'error');
-    if (inlineInspector) closeHomeDetailInspector();
-    else void showView('home');
-    return false;
+    if (!cachedItem) {
+      toast(error.message || 'មិនអាចបើកព័ត៌មានប្រកាសបានទេ។', 'error');
+      if (inlineInspector) closeHomeDetailInspector();
+      else void showView('home');
+      return false;
+    }
+    // A cached listing is already usable; retain it if the background refresh fails.
+    return true;
+  }
+}
+
+async function openProduct(id, options = {}) {
+  if (!id) { toast('មិនមានលេខសម្គាល់ទំនិញទេ។', 'warning'); return false; }
+  const productId = String(id);
+  const requestId = ++state.detailRequestId;
+  const isCurrent = () => requestId === state.detailRequestId &&
+    (options.routeSyncNavigationId == null || options.routeSyncNavigationId === state.routeSyncNavigationId) &&
+    (!inlineInspector || String(state.currentProduct?.id || '') === productId);
+
+  const inlineInspector = options.inlineInspector === true || (
+    !options.forceFullPage && options.routeSyncNavigationId == null && $('view-home')?.classList.contains('active')
+  );
+  const cachedItem = state.products.find(row => row.listing_type === 'product' && String(row.id) === productId) || null;
+
+  state.currentProduct = cachedItem ? { ...cachedItem } : { id: productId, listing_type: 'product' };
+  state.currentVendor = cachedItem
+    ? { ...(cachedItem.vendors || {}), id: cachedItem.vendors?.id || cachedItem.vendor_id, reviews: cachedItem.vendors?.reviews || [] }
+    : null;
+  state.currentMarketplaceListing = null;
+  state.currentVariantId = cachedItem?.variants?.[0]?.id || null;
+  state.productGalleryIndex = 0;
+  state.productGalleryVideoActive = false;
+
+  if (inlineInspector) {
+    showHomeDetailInspector();
+    if (cachedItem) renderProductDetail();
+    else renderProductDetailSkeleton();
+  } else {
+    mountProductDetailPage();
+    await showView('product', { preserveScroll: Boolean(options.preserveScroll), deferLoad: true });
+    if (!isCurrent()) return false;
+    if (cachedItem) renderProductDetail();
+    else renderProductDetailSkeleton();
+  }
+  if (!isCurrent()) return false;
+
+  if (!inlineInspector) {
+    try {
+      sessionStorage.setItem('ecomstore.currentProductId', productId);
+      sessionStorage.setItem('ecomstore.activeView', 'product');
+    } catch {}
+  }
+
+  try {
+    const vendorId = cachedItem?.vendor_id || cachedItem?.vendors?.id;
+    const detailRequests = [
+      api('/api/products/' + encodeURIComponent(productId)),
+      state.session ? loadOrders().catch(() => {}) : Promise.resolve()
+    ];
+    if (vendorId) detailRequests.push(api('/api/vendors/' + encodeURIComponent(vendorId) + '/ratings'));
+    const results = await Promise.all(detailRequests);
+    if (!isCurrent()) return false;
+
+    const product = results[0]?.data;
+    if (!product) throw new Error('មិនមានព័ត៌មានទំនិញនេះទេ។');
+    product.poster = cachedItem?.poster || product.poster || null;
+
+    let trust = results[2];
+    if (!trust && product.vendor_id) {
+      trust = await api('/api/vendors/' + encodeURIComponent(product.vendor_id) + '/ratings');
+      if (!isCurrent()) return false;
+    }
+
+    if (!isCurrent()) return false;
+    state.currentProduct = product;
+    state.currentVendor = trust?.data || {
+      ...(product.vendors || cachedItem?.vendors || {}),
+      id: product.vendor_id || cachedItem?.vendor_id || product.vendors?.id,
+      reviews: (product.vendors || cachedItem?.vendors)?.reviews || []
+    };
+    state.currentVariantId = product.variants?.[0]?.id || state.currentVariantId || null;
+    state.productGalleryIndex = 0;
+    state.productGalleryVideoActive = false;
+    renderProductDetail();
+    return true;
+  } catch (error) {
+    if (!isCurrent()) return false;
+    if (!cachedItem) {
+      toast(error.message, 'error');
+      if (inlineInspector) closeHomeDetailInspector();
+      else void showView('home');
+      return false;
+    }
+    // Keep the instant cached detail visible if the background refresh fails.
+    return true;
   }
 }
 
