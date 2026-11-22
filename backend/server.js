@@ -3372,13 +3372,13 @@ function galleryIdentity(product, supplierCode, variants) {
   return { title: String(product.title || ''), code, modelTokens, skuTokens };
 }
 function galleryScorePage(text, identity) {
-  const haystack = ' ' + String(text || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim().replace(/\\s+/g, ' ') + ' ';
-  const normalize = value => String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim().replace(/\\s+/g, ' ');
+  const haystack = ' ' + String(text || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim().replace(/\s+/g, ' ') + ' ';
+  const normalize = value => String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim().replace(/\s+/g, ' ');
   const code = normalize(identity.code);
   const exactCode = Boolean(code && haystack.includes(' ' + code + ' '));
   const matchedModels = identity.modelTokens.filter(token => haystack.includes(' ' + normalize(token) + ' '));
   const matchedSkus = identity.skuTokens.filter(token => haystack.includes(' ' + normalize(token) + ' '));
-  const numericModelMatch = matchedModels.some(token => /\\d/.test(token));
+  const numericModelMatch = matchedModels.some(token => /\d/.test(token));
   const modelPass = identity.modelTokens.length > 0 && numericModelMatch &&
     matchedModels.length >= Math.min(2, identity.modelTokens.length);
   const codePass = exactCode || matchedSkus.length > 0;
@@ -3504,7 +3504,7 @@ async function discoverProductGalleryCandidates(productId) {
       });
       if (!response.ok) continue;
       const searchHtml = await response.text();
-      for (const match of searchHtml.matchAll(/<a[^>]+class=["'][^"']*result__a[^"']*["'][^>]+href=["']([^"']+)["'][^>]*>([\\s\\S]*?)<\\/a>/gi)) {
+      for (const match of searchHtml.matchAll(/<a[^>]+class=["'][^"']*result__a[^"']*["'][^>]+href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi)) {
         try {
           const wrapped = new URL(galleryDecodeHtml(match[1]), 'https://duckduckgo.com');
           const safe = await gallerySafeRemoteUrl(wrapped.searchParams.get('uddg') || wrapped.href);
@@ -3512,7 +3512,7 @@ async function discoverProductGalleryCandidates(productId) {
           seenLinks.add(safe.href);
           links.push({
             url: safe.href,
-            title: galleryDecodeHtml(match[2].replace(/<[^>]+>/g, ' ').replace(/\\s+/g, ' ')).slice(0, 240)
+            title: galleryDecodeHtml(match[2].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ')).slice(0, 240)
           });
         } catch {}
         if (links.length >= 48) break;
@@ -3541,7 +3541,7 @@ async function discoverProductGalleryCandidates(productId) {
         try { imageUrl = (await gallerySafeRemoteUrl(new URL(rawImage, page.finalUrl).href))?.href; } catch {}
         if (!imageUrl || seenImages.has(imageUrl)) continue;
         seenImages.add(imageUrl);
-        const sourceDomain = new URL(page.finalUrl).hostname.toLowerCase().replace(/^www\\./, '');
+        const sourceDomain = new URL(page.finalUrl).hostname.toLowerCase().replace(/^www\./, '');
         candidates.push({
           product_id: product.id,
           image_url: imageUrl,
