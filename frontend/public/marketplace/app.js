@@ -2224,7 +2224,8 @@ function closeHomeDetailInspector() {
   state.currentVendor = null;
   state.currentMarketplaceListing = null;
 }
- {
+
+async function loadProducts() {
   const requestId = ++state.productsRequestId;
   const grid = $('productGrid');
   grid.setAttribute('aria-busy', 'true');
@@ -6097,6 +6098,7 @@ function bindEvents() {
       state.session = null;
       state.me = null;
       state.savedIds.clear();
+      renderSteamDiscoveryHub();
       syncHeader();
       showView('home');
       toast('បានចាកចេញពីគណនីរួចរាល់។');
