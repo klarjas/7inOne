@@ -8795,3 +8795,39 @@ body>footer{background:#16202D!important;color:#C7D5E0!important;border-color:#2
 @media(prefers-reduced-motion:reduce){
   .post-glow{animation:none!important}
 }
+
+
+/* Home desktop proportions: five readable product cards per row and a
+   properly sized discovery/jobs rail. Keep tablet/mobile rules unchanged. */
+@media (min-width: 1101px) {
+  #view-home > .home-layout-shell.amazon-store-body.shell {
+    grid-template-columns: 220px minmax(0, 1fr) 360px !important;
+  }
+
+  #view-home #productGrid:not(.hidden),
+  #view-home #skeletonGrid:not(.hidden) {
+    display: grid !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    gap: 14px !important;
+  }
+
+  #view-home .home-jobs-rail {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  #view-home .steam-discovery-hub {
+    padding: 16px !important;
+  }
+}
+
+@media (min-width: 1101px) and (max-width: 1399px) {
+  #view-home > .home-layout-shell.amazon-store-body.shell {
+    grid-template-columns: 200px minmax(0, 1fr) 330px !important;
+  }
+
+  #view-home #productGrid:not(.hidden),
+  #view-home #skeletonGrid:not(.hidden) {
+    gap: 10px !important;
+  }
+}
