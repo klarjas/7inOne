@@ -8613,3 +8613,17 @@ body > footer {
   .steam-discovery-hub{padding:12px}
   .home-detail-inspector{padding:0 10px 12px}
 }
+
+@media (min-width:1101px){
+  #view-home .home-jobs-rail{display:flex!important}
+  #homeDetailInspector .product-hero-grid{grid-template-columns:minmax(0,1fr)!important;gap:12px!important}
+  #homeDetailInspector .product-detail-gallery,
+  #homeDetailInspector .product-detail-info{width:100%!important;min-width:0!important}
+  #homeDetailInspector .product-gallery-stage{width:100%!important;max-width:100%!important}
+  #homeDetailInspector .product-detail-title{font-size:16px!important;overflow-wrap:anywhere}
+  #homeDetailInspector .product-primary-actions,
+  #homeDetailInspector .product-utility-actions{flex-wrap:wrap!important}
+  #homeDetailInspector .product-primary-actions button,
+  #homeDetailInspector .product-utility-actions button{flex:1 1 100%!important;min-width:0!important}
+  #homeDetailInspector .product-spec-grid{grid-template-columns:minmax(0,1fr)!important}
+}
