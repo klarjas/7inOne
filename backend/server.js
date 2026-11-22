@@ -3293,6 +3293,225 @@ app.patch('/api/admin/vendors/:id', authenticate, requireAdmin, async (req, res)
   res.json({ data });
 });
 
+
+// Smart Product Gallery: discover exact-model image candidates for Admin review.
+// Approved images are copied into Telegram through the existing upload pipeline.
+function gallerySafeRemoteUrl(raw) {
+  try {
+    const url = new URL(raw), host = url.hostname.toLowerCase();
+    if (url.protocol !== 'https:' || !host || host === 'localhost' || host.endsWith('.localhost') ||
+        host.endsWith('.local') || host === '127.0.0.1' || host === '::1' ||
+        /^10\./.test(host) || /^192\.168\./.test(host) || /^172\.(1[6-9]|2\d|3[01])\./.test(host) ||
+        url.username || url.password) return null;
+    return url;
+  } catch { return null; }
+}
+function galleryDecodeHtml(value) {
+  return String(value || '').replace(/&amp;/g, '&').replace(/&quot;/g, '"')
+    .replace(/&#39;|&apos;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&#(\d+);/g, (_m, n) => String.fromCodePoint(Number(n) || 0));
+}
+function galleryHtmlAttr(html, attr) {
+  const key = String(attr).replace(/[^a-z0-9:-]/gi, '');
+  const re = new RegExp('<meta[^>]+(?:property|name)=["\\']' + key + '["\\'][^>]+content=["\\']([^"\\']+)["\\']', 'i');
+  const first = html.match(re);
+  if (first) return galleryDecodeHtml(first[1]);
+  const reversed = new RegExp('<meta[^>]+content=["\\']([^"\\']+)["\\'][^>]+(?:property|name)=["\\']' + key + '["\\']', 'i');
+  return galleryDecodeHtml(html.match(reversed)?.[1] || '');
+}
+function galleryJsonLdImages(html) {
+  const found = [];
+  for (const match of html.matchAll(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)) {
+    try {
+      const parsed = JSON.parse(match[1]);
+      const visit = value => {
+        if (!value || typeof value !== 'object') return;
+        if (Array.isArray(value)) return value.forEach(visit);
+        if (value.image) for (const image of (Array.isArray(value.image) ? value.image : [value.image])) {
+          const url = typeof image === 'string' ? image : image?.url || image?.contentUrl;
+          if (url) found.push(url);
+        }
+        if (value['@graph']) visit(value['@graph']);
+      };
+      visit(parsed);
+    } catch {}
+  }
+  return found;
+}
+function galleryIdentity(product, supplierCode, variants) {
+  const tokens = String(product.title || '').toLowerCase().match(/[a-z0-9][a-z0-9._+-]{2,}/g) || [];
+  const modelTokens = [...new Set(tokens.filter(token => /\d/.test(token) || token.length >= 5))].slice(0, 8);
+  const code = String(supplierCode || '').trim().toLowerCase();
+  const skuTokens = (variants || []).map(row => String(row.sku || '').trim().toLowerCase()).filter(Boolean);
+  return { title: String(product.title || ''), code, modelTokens, skuTokens };
+}
+function galleryScorePage(text, identity) {
+  const haystack = String(text || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ');
+  const exactCode = Boolean(identity.code && haystack.includes(identity.code.replace(/[^a-z0-9]+/g, ' ').trim()));
+  const matchedModels = identity.modelTokens.filter(token => haystack.includes(token));
+  const matchedSkus = identity.skuTokens.filter(token => haystack.includes(token.replace(/[^a-z0-9]+/g, ' ').trim()));
+  const modelPass = identity.modelTokens.length > 0 && matchedModels.length >= Math.min(2, identity.modelTokens.length);
+  const codePass = exactCode || matchedSkus.length > 0;
+  return { score: Math.min(100, (codePass ? 75 : 0) + Math.min(25, matchedModels.length * 12)),
+    exact_product_code: exactCode, matched_model_tokens: matchedModels, matched_skus: matchedSkus,
+    verified_identity: Boolean(codePass || modelPass) };
+}
+async function galleryFetchPage(rawUrl) {
+  let url = gallerySafeRemoteUrl(rawUrl);
+  if (!url) throw new Error('Unsafe source URL.');
+  for (let attempt = 0; attempt <= 3; attempt++) {
+    const response = await fetch(url, { redirect: 'manual', headers: { 'user-agent': 'Mozilla/5.0 (compatible; 7inOneGallery/1.0)', accept: 'text/html,application/xhtml+xml' }, signal: AbortSignal.timeout(12000) });
+    if ([301,302,303,307,308].includes(response.status)) {
+      const location = response.headers.get('location');
+      if (!location || attempt === 3) throw new Error('Too many redirects.');
+      url = gallerySafeRemoteUrl(new URL(location, url).href);
+      if (!url) throw new Error('Unsafe redirected URL.');
+      continue;
+    }
+    if (!response.ok) throw new Error('Source page HTTP ' + response.status);
+    const type = String(response.headers.get('content-type') || '').toLowerCase();
+    if (!type.includes('text/html') && !type.includes('application/xhtml+xml')) throw new Error('Source is not an HTML page.');
+    const length = Number(response.headers.get('content-length') || 0);
+    if (length > 2 * 1024 * 1024) throw new Error('Source page too large.');
+    const html = await response.text();
+    if (Buffer.byteLength(html) > 2 * 1024 * 1024) throw new Error('Source page too large.');
+    return { html, finalUrl: url.href };
+  }
+  throw new Error('Could not fetch source page.');
+}
+async function galleryFetchImage(rawUrl) {
+  let url = gallerySafeRemoteUrl(rawUrl);
+  if (!url) throw new Error('Unsafe image URL.');
+  for (let attempt = 0; attempt <= 3; attempt++) {
+    const response = await fetch(url, { redirect: 'manual', headers: { 'user-agent': '7inOne-ProductGallery/1.0', accept: 'image/jpeg,image/png,image/webp' }, signal: AbortSignal.timeout(15000) });
+    if ([301,302,303,307,308].includes(response.status)) {
+      const location = response.headers.get('location');
+      if (!location || attempt === 3) throw new Error('Too many image redirects.');
+      url = gallerySafeRemoteUrl(new URL(location, url).href);
+      if (!url) throw new Error('Unsafe redirected image URL.');
+      continue;
+    }
+    if (!response.ok) throw new Error('Image source HTTP ' + response.status);
+    const mimeType = String(response.headers.get('content-type') || '').split(';')[0].trim().toLowerCase();
+    if (!['image/jpeg','image/png','image/webp'].includes(mimeType)) throw new Error('Only JPG, PNG or WEBP are accepted.');
+    const length = Number(response.headers.get('content-length') || 0);
+    if (length > 20 * 1024 * 1024) throw new Error('Image is larger than 20MB.');
+    const buffer = Buffer.from(await response.arrayBuffer());
+    if (!buffer.length || buffer.length > 20 * 1024 * 1024) throw new Error('Image size is invalid.');
+    return { buffer, mimeType };
+  }
+  throw new Error('Could not download image.');
+}
+app.post('/api/admin/products/:id/gallery-search', authenticate, requireAdmin, async (req, res) => {
+  const { data: product, error: productError } = await supabase.from('products')
+    .select('id,title,description,category').eq('id', req.params.id).maybeSingle();
+  if (productError || !product) return fail(res, 404, 'Product not found.');
+  const [{ data: source }, { data: variants }] = await Promise.all([
+    supabase.from('product_supplier_sources').select('supplier_product_code').eq('product_id', product.id).maybeSingle(),
+    supabase.from('product_variants').select('sku').eq('product_id', product.id).eq('is_active', true)
+  ]);
+  const identity = galleryIdentity(product, source?.supplier_product_code, variants || []);
+  if (!identity.modelTokens.length && !identity.code && !identity.skuTokens.length) return fail(res, 422, 'Product model or code is required.');
+  const query = [identity.title, identity.code].filter(Boolean).join(' ') + ' product image';
+  let searchHtml;
+  try {
+    const response = await fetch('https://html.duckduckgo.com/html/?q=' + encodeURIComponent(query), {
+      headers: { 'user-agent': 'Mozilla/5.0 (compatible; 7inOneGallery/1.0)', accept: 'text/html' },
+      signal: AbortSignal.timeout(15000)
+    });
+    if (!response.ok) throw new Error('Search provider HTTP ' + response.status);
+    searchHtml = await response.text();
+  } catch (error) { return fail(res, 502, 'External image search failed: ' + clean(error.message, 140)); }
+  const links = [];
+  for (const match of searchHtml.matchAll(/<a[^>]+class=["'][^"']*result__a[^"']*["'][^>]+href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi)) {
+    try {
+      const wrapped = new URL(galleryDecodeHtml(match[1]), 'https://duckduckgo.com');
+      const safe = gallerySafeRemoteUrl(wrapped.searchParams.get('uddg') || wrapped.href);
+      if (safe && !links.some(item => item.url === safe.href)) links.push({ url: safe.href, title: galleryDecodeHtml(match[2].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ')).slice(0, 240) });
+    } catch {}
+    if (links.length >= 12) break;
+  }
+  const candidates = [];
+  for (const link of links) {
+    try {
+      const page = await galleryFetchPage(link.url);
+      const pageTitle = galleryHtmlAttr(page.html, 'og:title') || galleryHtmlAttr(page.html, 'twitter:title') || link.title;
+      const pageDescription = galleryHtmlAttr(page.html, 'og:description') || galleryHtmlAttr(page.html, 'description');
+      const match = galleryScorePage([pageTitle, pageDescription, page.html.slice(0, 160000)].join(' '), identity);
+      if (!match.verified_identity || match.score < 24) continue;
+      const rawImages = [galleryHtmlAttr(page.html, 'og:image'), galleryHtmlAttr(page.html, 'twitter:image'), ...galleryJsonLdImages(page.html)].filter(Boolean);
+      for (const rawImage of rawImages) {
+        let imageUrl = null;
+        try { imageUrl = gallerySafeRemoteUrl(new URL(rawImage, page.finalUrl).href)?.href; } catch {}
+        if (!imageUrl || candidates.some(item => item.image_url === imageUrl)) continue;
+        candidates.push({ product_id: product.id, image_url: imageUrl, source_url: page.finalUrl, source_title: pageTitle, match_score: match.score, match_evidence: match });
+        if (candidates.length >= 10) break;
+      }
+      if (candidates.length >= 10) break;
+    } catch (error) { console.warn('Gallery source skipped:', link.url, clean(error.message, 120)); }
+  }
+  if (!candidates.length) return res.json({ data: [], message: 'No sufficiently matched product images were found. No images were added.' });
+  const { data, error } = await supabase.from('product_gallery_candidates')
+    .upsert(candidates, { onConflict: 'product_id,image_url', ignoreDuplicates: true })
+    .select('id,product_id,image_url,source_url,source_title,match_score,match_evidence,status,created_at');
+  if (error) return fail(res, 500, 'Could not save candidates. Apply the Smart Product Gallery migration first.');
+  return res.json({ data: data || [], found: candidates.length, message: 'Candidates await Admin approval and are not public.' });
+});
+app.get('/api/admin/product-gallery-candidates', authenticate, requireAdmin, async (req, res) => {
+  const status = clean(req.query.status || 'pending', 20);
+  if (!['pending','approved','rejected','failed','all'].includes(status)) return fail(res, 400, 'Invalid candidate status.');
+  let query = supabase.from('product_gallery_candidates').select('id,product_id,image_url,source_url,source_title,match_score,match_evidence,status,created_at,products(title)').order('created_at', { ascending: false }).limit(200);
+  if (status !== 'all') query = query.eq('status', status);
+  const { data, error } = await query;
+  if (error) return fail(res, 500, 'Could not load gallery candidates. Apply the Smart Product Gallery migration first.');
+  return res.json({ data: data || [] });
+});
+app.post('/api/admin/product-gallery-candidates/:id/approve', authenticate, requireAdmin, async (req, res) => {
+  const { data: candidate, error } = await supabase.from('product_gallery_candidates').select('*').eq('id', req.params.id).eq('status', 'pending').maybeSingle();
+  if (error || !candidate) return fail(res, 404, 'Pending image candidate not found.');
+  const { count, error: countError } = await supabase.from('product_images').select('id', { count: 'exact', head: true }).eq('product_id', candidate.product_id);
+  if (countError) return fail(res, 500, 'Could not check product image count.');
+  if ((count || 0) >= 10) return fail(res, 409, 'Maximum 10 product images reached.');
+  let uploaded = null;
+  try {
+    const remote = await galleryFetchImage(candidate.image_url);
+    const extension = remote.mimeType === 'image/png' ? 'png' : remote.mimeType === 'image/webp' ? 'webp' : 'jpg';
+    const file = { buffer: remote.buffer, mimetype: remote.mimeType, size: remote.buffer.length, originalname: 'gallery-' + candidate.id + '.' + extension };
+    const invalid = imageUploadError(file, 20 * 1024 * 1024);
+    if (invalid) return fail(res, 400, invalid);
+    uploaded = await uploadToTelegram(file, 20 * 1024 * 1024);
+    const { data: lastImage } = await supabase.from('product_images').select('sort_order').eq('product_id', candidate.product_id).order('sort_order', { ascending: false }).limit(1).maybeSingle();
+    const { data: image, error: imageError } = await supabase.from('product_images').insert({
+      product_id: candidate.product_id, telegram_message_id: uploaded.messageId, file_id: uploaded.fileId,
+      image_url: mediaProxyUrl(uploaded.fileId), sort_order: Number(lastImage?.sort_order ?? -1) + 1
+    }).select('id,product_id,file_id,telegram_message_id,image_url,sort_order').single();
+    if (imageError) throw new Error('Telegram upload succeeded but gallery record could not be saved.');
+    const { error: reviewError } = await supabase.from('product_gallery_candidates').update({
+      status: 'approved', telegram_message_id: uploaded.messageId, telegram_file_id: uploaded.fileId,
+      reviewed_by: req.user.id, reviewed_at: new Date().toISOString(), updated_at: new Date().toISOString()
+    }).eq('id', candidate.id).eq('status', 'pending');
+    if (reviewError) {
+      await supabase.from('product_images').delete().eq('id', image.id);
+      throw new Error('Could not finalize candidate approval.');
+    }
+    return res.json({ data: { ...image, image_url: mediaProxyUrl(image.file_id) }, status: 'approved' });
+  } catch (error) {
+    if (uploaded?.messageId) await deleteTelegramMessage(uploaded.messageId);
+    console.error('Smart Product Gallery approval failed:', error.message);
+    await supabase.from('product_gallery_candidates').update({ status: 'failed', reviewed_by: req.user.id, reviewed_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq('id', candidate.id).eq('status', 'pending');
+    return fail(res, 502, 'Could not add image to Telegram gallery: ' + clean(error.message, 160));
+  }
+});
+app.patch('/api/admin/product-gallery-candidates/:id', authenticate, requireAdmin, async (req, res) => {
+  if (clean(req.body.status, 20) !== 'rejected') return fail(res, 400, 'Only rejection is supported.');
+  const { data, error } = await supabase.from('product_gallery_candidates').update({
+    status: 'rejected', reviewed_by: req.user.id, reviewed_at: new Date().toISOString(), updated_at: new Date().toISOString()
+  }).eq('id', req.params.id).eq('status', 'pending').select().maybeSingle();
+  if (error) return fail(res, 500, 'Could not reject candidate.');
+  if (!data) return fail(res, 404, 'Pending candidate not found.');
+  return res.json({ data });
+});
+
 app.get('/api/admin/supplier-update-reviews', authenticate, requireAdmin, async (req, res) => {
   const status = clean(req.query.status || 'pending', 20);
   if (!['pending','approved','rejected','applied','failed','all'].includes(status)) return fail(res, 400, 'Invalid review status.');
