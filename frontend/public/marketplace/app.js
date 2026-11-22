@@ -2219,6 +2219,7 @@ function mountProductDetailPage() {
 }
 
 function closeHomeDetailInspector() {
+  closeDetailsPopover();
   const inspector = $('homeDetailInspector');
   const detail = $('productDetail');
   const mount = $('productDetailPageMount');
