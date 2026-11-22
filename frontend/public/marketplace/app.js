@@ -304,6 +304,7 @@ function formatViews(value) {
 }
 
 function toast(message, type = 'success') {
+  message = marketplaceUiText(message);
   const area = $('toastArea');
   if (!area) return;
   area.innerHTML = '';
@@ -340,6 +341,10 @@ function closeModal(id) {
 }
 
 function appDialog({ mode = 'confirm', title = 'បញ្ជាក់សកម្មភាព', message = '', placeholder = 'សរសេរមូលហេតុនៅទីនេះ...', confirmLabel, danger = false } = {}) {
+  title = marketplaceUiText(title);
+  message = marketplaceUiText(message);
+  placeholder = marketplaceUiText(placeholder);
+  confirmLabel = confirmLabel ? marketplaceUiText(confirmLabel) : confirmLabel;
   return new Promise(resolve => {
     const id = 'appDialogModal';
     const previous = $(id);
