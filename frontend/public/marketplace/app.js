@@ -841,13 +841,18 @@ function productCardShortCaption(product = {}) {
   if (!caption || !title) return caption;
 
   const normalize = value => String(value || '').normalize('NFKC').toLowerCase()
-    .replace(/[\\s\\p{P}\\p{S}]+/gu, ' ').trim();
+    .replace(/[\s\p{P}\p{S}]+/gu, ' ').trim();
   const normalizedTitle = normalize(title);
+  const leadingText = caption.slice(0, title.length);
+  const afterTitle = caption.slice(title.length);
 
-  caption = caption.split(/\\r?\\n/).filter(line => normalize(line) !== normalizedTitle).join('\\n').trim();
-  const escapedTitle = title.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\function productDescriptionParts(product = {}) {');
-  caption = caption.replace(new RegExp('^\\\\s*' + escapedTitle + '(?:\\\\s*[-–—:|•]\\\\s*|\\\\s*\\\\r?\\\\n)', 'i'), '').trim();
-  return caption;
+  if (normalize(leadingText) === normalizedTitle && (!afterTitle || /^[\s\-–—:|•]/u.test(afterTitle))) {
+    caption = afterTitle.replace(/^\s*(?:[-–—:|•]\s*)?/, '').trim();
+  }
+
+  return caption.split(/\r?\n/)
+    .filter(line => normalize(line) !== normalizedTitle)
+    .join('\n').trim();
 }
 
 function productDescriptionParts(product = {}) {
