@@ -3372,15 +3372,26 @@ function galleryIdentity(product, supplierCode, variants) {
   return { title: String(product.title || ''), code, modelTokens, skuTokens };
 }
 function galleryScorePage(text, identity) {
-  const haystack = String(text || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ');
-  const exactCode = Boolean(identity.code && haystack.includes(identity.code.replace(/[^a-z0-9]+/g, ' ').trim()));
-  const matchedModels = identity.modelTokens.filter(token => haystack.includes(token));
-  const matchedSkus = identity.skuTokens.filter(token => haystack.includes(token.replace(/[^a-z0-9]+/g, ' ').trim()));
-  const modelPass = identity.modelTokens.length > 0 && matchedModels.length >= Math.min(2, identity.modelTokens.length);
+  const haystack = ' ' + String(text || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim().replace(/\\s+/g, ' ') + ' ';
+  const normalize = value => String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim().replace(/\\s+/g, ' ');
+  const code = normalize(identity.code);
+  const exactCode = Boolean(code && haystack.includes(' ' + code + ' '));
+  const matchedModels = identity.modelTokens.filter(token => haystack.includes(' ' + normalize(token) + ' '));
+  const matchedSkus = identity.skuTokens.filter(token => haystack.includes(' ' + normalize(token) + ' '));
+  const numericModelMatch = matchedModels.some(token => /\\d/.test(token));
+  const modelPass = identity.modelTokens.length > 0 && numericModelMatch &&
+    matchedModels.length >= Math.min(2, identity.modelTokens.length);
   const codePass = exactCode || matchedSkus.length > 0;
-  return { score: Math.min(100, (codePass ? 75 : 0) + Math.min(25, matchedModels.length * 12)),
-    exact_product_code: exactCode, matched_model_tokens: matchedModels, matched_skus: matchedSkus,
-    verified_identity: Boolean(codePass || modelPass) };
+  const verificationLevel = codePass ? 'code_verified' : modelPass ? 'model_review_required' : 'unverified';
+  return {
+    score: Math.min(100, (codePass ? 75 : 0) + Math.min(25, matchedModels.length * 12)),
+    exact_product_code: exactCode,
+    matched_model_tokens: matchedModels,
+    matched_skus: matchedSkus,
+    numeric_model_match: numericModelMatch,
+    verification_level: verificationLevel,
+    verified_identity: Boolean(codePass || modelPass)
+  };
 }
 async function galleryFetchPage(rawUrl) {
   let url = await gallerySafeRemoteUrl(rawUrl);
@@ -3472,47 +3483,104 @@ async function discoverProductGalleryCandidates(productId) {
   if (!identity.modelTokens.length && !identity.code && !identity.skuTokens.length) {
     return { data: [], found: 0, skipped: true, reason: 'missing_product_model_or_code' };
   }
-  const query = [identity.title, identity.code].filter(Boolean).join(' ') + ' product image';
-  const response = await fetch('https://html.duckduckgo.com/html/?q=' + encodeURIComponent(query), {
-    headers: { 'user-agent': 'Mozilla/5.0 (compatible; 7inOneGallery/1.0)', accept: 'text/html' },
-    signal: AbortSignal.timeout(15000)
-  });
-  if (!response.ok) throw new Error('Search provider HTTP ' + response.status);
-  const searchHtml = await response.text();
+
+  // Search several query patterns so discovery is not limited to one exact phrase.
+  // The search engine indexes a broad range of public websites; it cannot guarantee every site on the internet.
+  const modelQuery = identity.modelTokens.join(' ');
+  const queries = [...new Set([
+    [identity.title, identity.code].filter(Boolean).join(' ') + ' product images',
+    [identity.title, ...identity.skuTokens].filter(Boolean).join(' ') + ' official product',
+    '"' + identity.title + '" specifications images',
+    [modelQuery, identity.code].filter(Boolean).join(' ') + ' product gallery'
+  ].map(value => value.trim()).filter(Boolean))];
+
   const links = [];
-  for (const match of searchHtml.matchAll(/<a[^>]+class=["'][^"']*result__a[^"']*["'][^>]+href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi)) {
+  const seenLinks = new Set();
+  for (const query of queries) {
     try {
-      const wrapped = new URL(galleryDecodeHtml(match[1]), 'https://duckduckgo.com');
-      const safe = await gallerySafeRemoteUrl(wrapped.searchParams.get('uddg') || wrapped.href);
-      if (safe && !links.some(item => item.url === safe.href)) links.push({ url: safe.href, title: galleryDecodeHtml(match[2].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ')).slice(0, 240) });
-    } catch {}
-    if (links.length >= 12) break;
+      const response = await fetch('https://html.duckduckgo.com/html/?q=' + encodeURIComponent(query), {
+        headers: { 'user-agent': 'Mozilla/5.0 (compatible; 7inOneGallery/1.0)', accept: 'text/html' },
+        signal: AbortSignal.timeout(15000)
+      });
+      if (!response.ok) continue;
+      const searchHtml = await response.text();
+      for (const match of searchHtml.matchAll(/<a[^>]+class=["'][^"']*result__a[^"']*["'][^>]+href=["']([^"']+)["'][^>]*>([\\s\\S]*?)<\\/a>/gi)) {
+        try {
+          const wrapped = new URL(galleryDecodeHtml(match[1]), 'https://duckduckgo.com');
+          const safe = await gallerySafeRemoteUrl(wrapped.searchParams.get('uddg') || wrapped.href);
+          if (!safe || seenLinks.has(safe.href)) continue;
+          seenLinks.add(safe.href);
+          links.push({
+            url: safe.href,
+            title: galleryDecodeHtml(match[2].replace(/<[^>]+>/g, ' ').replace(/\\s+/g, ' ')).slice(0, 240)
+          });
+        } catch {}
+        if (links.length >= 48) break;
+      }
+    } catch (error) {
+      console.warn('Gallery search query skipped:', clean(error.message, 120));
+    }
+    if (links.length >= 48) break;
   }
+
   const candidates = [];
+  const seenImages = new Set();
+  let inspectedPages = 0;
   for (const link of links) {
+    if (inspectedPages >= 30 || candidates.length >= 20) break;
+    inspectedPages++;
     try {
       const page = await galleryFetchPage(link.url);
       const pageTitle = galleryHtmlAttr(page.html, 'og:title') || galleryHtmlAttr(page.html, 'twitter:title') || link.title;
       const pageDescription = galleryHtmlAttr(page.html, 'og:description') || galleryHtmlAttr(page.html, 'description');
       const match = galleryScorePage([pageTitle, pageDescription, page.html.slice(0, 160000)].join(' '), identity);
-      if (!match.verified_identity || match.score < 24) continue;
+      if (!match.verified_identity) continue;
       const rawImages = [galleryHtmlAttr(page.html, 'og:image'), galleryHtmlAttr(page.html, 'twitter:image'), ...galleryJsonLdImages(page.html)].filter(Boolean);
       for (const rawImage of rawImages) {
         let imageUrl = null;
         try { imageUrl = (await gallerySafeRemoteUrl(new URL(rawImage, page.finalUrl).href))?.href; } catch {}
-        if (!imageUrl || candidates.some(item => item.image_url === imageUrl)) continue;
-        candidates.push({ product_id: product.id, image_url: imageUrl, source_url: page.finalUrl, source_title: pageTitle, match_score: match.score, match_evidence: match });
-        if (candidates.length >= 10) break;
+        if (!imageUrl || seenImages.has(imageUrl)) continue;
+        seenImages.add(imageUrl);
+        const sourceDomain = new URL(page.finalUrl).hostname.toLowerCase().replace(/^www\\./, '');
+        candidates.push({
+          product_id: product.id,
+          image_url: imageUrl,
+          source_url: page.finalUrl,
+          source_title: pageTitle,
+          match_score: match.score,
+          match_evidence: {
+            ...match,
+            source_domain: sourceDomain,
+            source_title: pageTitle,
+            source_page_url: page.finalUrl,
+            supplier_product_code: identity.code || null,
+            expected_skus: identity.skuTokens,
+            review_note: match.verification_level === 'model_review_required'
+              ? 'Model evidence found, but product code/SKU was not verified. Admin must inspect manually.'
+              : 'Product code/SKU and model evidence found. Admin approval is still required.'
+          }
+        });
+        if (candidates.length >= 20) break;
       }
-      if (candidates.length >= 10) break;
-    } catch (error) { console.warn('Gallery source skipped:', link.url, clean(error.message, 120)); }
+    } catch (error) {
+      console.warn('Gallery source skipped:', link.url, clean(error.message, 120));
+    }
   }
-  if (!candidates.length) return { data: [], found: 0, message: 'No sufficiently matched product images were found.' };
+  if (!candidates.length) return {
+    data: [], found: 0, searched_queries: queries.length, inspected_pages: inspectedPages,
+    message: 'No sufficiently matched product images were found across the searched public websites.'
+  };
   const { data, error } = await supabase.from('product_gallery_candidates')
     .upsert(candidates, { onConflict: 'product_id,image_url', ignoreDuplicates: true })
     .select('id,product_id,image_url,source_url,source_title,match_score,match_evidence,status,created_at');
   if (error) throw new Error('Could not save candidates. Apply the Smart Product Gallery migration first.');
-  return { data: data || [], found: candidates.length, message: 'Candidates await Admin approval and are not public.' };
+  return {
+    data: data || [],
+    found: candidates.length,
+    searched_queries: queries.length,
+    inspected_pages: inspectedPages,
+    message: 'Searched multiple public-web query patterns. Candidates remain private and await Admin review; model-only matches are clearly flagged for extra checking.'
+  };
 }
 app.post('/api/admin/products/:id/gallery-search', authenticate, requireAdmin, async (req, res) => {
   try {
