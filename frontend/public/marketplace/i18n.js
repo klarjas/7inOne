@@ -42,7 +42,7 @@
     if (!catalog || typeof catalog !== 'object' || Array.isArray(catalog)) {
       throw new TypeError('A locale catalog must be a plain object.');
     }
-    catalogs[normalized] = Object.freeze({ ...catalog });
+    catalogs[normalized] = Object.freeze({ ...(catalogs[normalized] || {}), ...catalog });
     return getCatalogStatus(normalized);
   }
 

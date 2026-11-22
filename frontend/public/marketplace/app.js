@@ -657,6 +657,21 @@ const MARKETPLACE_UI_MESSAGES = Object.freeze({
   "ប្រព័ន្ធកំពុងអភិវឌ្ឍន៍": { 'zh-CN': "系统正在维护", en: "System under maintenance" },
   "ទម្រង់អភិវឌ្ឍន៍ (Admin Preview)": { 'zh-CN': "维护模式（管理员预览）", en: "Maintenance mode (Admin preview)" },
 });
+// Register the full Marketplace runtime dictionary with the shared locale gate.
+// This ensures setLanguage() cannot switch to a partially translated locale.
+(function registerMarketplaceRuntimeCatalogs() {
+  const catalogs = { km: Object.create(null), 'zh-CN': Object.create(null), en: Object.create(null) };
+  Object.entries(MARKETPLACE_UI_MESSAGES).forEach(([source, translations]) => {
+    catalogs.km[source] = source;
+    catalogs['zh-CN'][source] = translations['zh-CN'] || '';
+    catalogs.en[source] = translations.en || '';
+  });
+  if (window.SiteI18n) {
+    Object.entries(catalogs).forEach(([locale, catalog]) => window.SiteI18n.registerCatalog(locale, catalog));
+    window.SiteI18n.registerRequiredKeys(Object.keys(MARKETPLACE_UI_MESSAGES));
+  }
+})();
+
 function marketplaceUiText(value) {
   const source = String(value ?? '');
   const locale = window.SiteI18n?.locale || 'km';
