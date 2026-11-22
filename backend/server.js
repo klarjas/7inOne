@@ -2896,6 +2896,11 @@ app.post('/api/products/:id/images', authenticate, upload.array('images', 10), a
     }));
     const { data, error } = await supabase.from('product_images').insert(rows).select('id,product_id,file_id,telegram_message_id,image_url,sort_order');
     if (error) throw new Error('Image uploads succeeded, but the product image records could not be saved. Please contact support.');
+    if ((count || 0) + files.length === 1) {
+      void discoverProductGalleryCandidates(product.id).then(result => {
+        console.info('Smart Product Gallery first-image discovery:', { productId: product.id, candidates: result.found || 0, skipped: Boolean(result.skipped) });
+      }).catch(error => console.warn('Smart Product Gallery first-image discovery failed:', product.id, clean(error.message, 180)));
+    }
     return res.status(201).json({ data: (data || []).map(image => ({
       id: image.id, product_id: image.product_id, sort_order: image.sort_order,
       image_url: image.file_id ? mediaProxyUrl(image.file_id) : normalizeMediaUrl(image.image_url)
