@@ -8600,7 +8600,7 @@ body > footer {
 .hub-careers-toggle>summary [data-icon]{display:inline-flex;color:#66C0F4}
 .hub-careers-summary-note{margin-left:auto;color:#8F98A0;font-size:8px;letter-spacing:.08em}
 .hub-careers-toggle[open]>summary{border-bottom:1px solid #2A475E;background:#16202D}
-.hub-careers-toggle .jobs-panel{border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
+.hub-careers-toggle .jobs-panel{min-height:0!important;height:auto!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
 .home-detail-inspector{padding:0 12px 14px;color:#C7D5E0}
 .home-detail-inspector-heading{position:sticky;top:0;z-index:3;display:flex;align-items:center;justify-content:space-between;padding:10px 0;background:#171A21;color:#E5EAF0;font-size:12px;font-weight:800}
 .home-detail-inspector-heading button{display:grid;place-items:center;width:30px;height:30px;border:1px solid #2A475E;border-radius:8px;background:#1B2838;color:#C7D5E0;font-size:21px;line-height:1}
