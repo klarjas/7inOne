@@ -3772,10 +3772,29 @@ async function runCcComputerAutoSync() {
   if (ccSupplierSyncPromise) return ccSupplierSyncPromise;
   ccSupplierSyncPromise = (async () => {
     const startedAt = new Date().toISOString();
-    const { data: scanSources, error: sourceConfigError } = await supabase.from('supplier_scan_sources')
+    const { data: configuredScanSources, error: sourceConfigError } = await supabase.from('supplier_scan_sources')
       .select('*').eq('supplier_name', 'CC COMPUTER').eq('is_active', true).order('brand_key');
     if (sourceConfigError) throw sourceConfigError;
-    if (!scanSources?.length) return { skipped: true, reason: 'no_active_scan_sources' };
+    const placeholderAnchors = new Set(['#msi', '#dell', '#lenovo']);
+    const scanSources = (configuredScanSources || []).filter(config => {
+      try {
+        const url = new URL(config.source_url);
+        const host = url.hostname.toLowerCase().replace(/^www\\./, '');
+        const isKnownExampleAnchor = host === 'cccomputerkh.com'
+          && /\\/index\\.html?$/i.test(url.pathname)
+          && placeholderAnchors.has(url.hash.toLowerCase());
+        return !isKnownExampleAnchor;
+      } catch {
+        return false;
+      }
+    });
+    if (!scanSources.length) {
+      return {
+        skipped: true,
+        reason: configuredScanSources?.length ? 'awaiting_verified_supplier_urls' : 'no_active_scan_sources',
+        blocked_placeholder_count: (configuredScanSources || []).length - scanSources.length
+      };
+    }
 
     const { data: vendor, error: vendorError } = await supabase.from('vendors')
       .select('id').ilike('store_name', 'AURORA Computer').maybeSingle();
