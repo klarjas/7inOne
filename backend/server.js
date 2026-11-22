@@ -3397,15 +3397,41 @@ async function galleryFetchPage(rawUrl) {
   }
   throw new Error('Could not fetch source page.');
 }
+function galleryImageDimensions(buffer, mimeType) {
+  try {
+    if (mimeType === 'image/png' && buffer.length >= 24 && buffer.subarray(0, 8).equals(Buffer.from([137,80,78,71,13,10,26,10]))) {
+      return { width: buffer.readUInt32BE(16), height: buffer.readUInt32BE(20) };
+    }
+    if (mimeType === 'image/webp' && buffer.length >= 30 && buffer.toString('ascii', 0, 4) === 'RIFF' && buffer.toString('ascii', 8, 12) === 'WEBP') {
+      const kind = buffer.toString('ascii', 12, 16);
+      if (kind === 'VP8X') return { width: 1 + buffer.readUIntLE(24, 3), height: 1 + buffer.readUIntLE(27, 3) };
+      if (kind === 'VP8 ' && buffer.length >= 30) return { width: buffer.readUInt16LE(26) & 0x3fff, height: buffer.readUInt16LE(28) & 0x3fff };
+      if (kind === 'VP8L' && buffer[20] === 0x2f) return { width: 1 + buffer[21] + ((buffer[22] & 0x3f) << 8), height: 1 + (buffer[22] >> 6) + (buffer[23] << 2) + ((buffer[24] & 0x0f) << 10) };
+    }
+    if (mimeType === 'image/jpeg' && buffer.length > 4 && buffer[0] === 0xff && buffer[1] === 0xd8) {
+      let offset = 2;
+      while (offset + 9 < buffer.length) {
+        if (buffer[offset] !== 0xff) { offset++; continue; }
+        const marker = buffer[offset + 1], size = buffer.readUInt16BE(offset + 2);
+        if ([0xc0,0xc1,0xc2,0xc3,0xc5,0xc6,0xc7,0xc9,0xca,0xcb,0xcd,0xce,0xcf].includes(marker)) {
+          return { height: buffer.readUInt16BE(offset + 5), width: buffer.readUInt16BE(offset + 7) };
+        }
+        if (size < 2) break;
+        offset += size + 2;
+      }
+    }
+  } catch {}
+  return null;
+}
 async function galleryFetchImage(rawUrl) {
-  let url = gallerySafeRemoteUrl(rawUrl);
+  let url = await gallerySafeRemoteUrl(rawUrl);
   if (!url) throw new Error('Unsafe image URL.');
   for (let attempt = 0; attempt <= 3; attempt++) {
     const response = await fetch(url, { redirect: 'manual', headers: { 'user-agent': '7inOne-ProductGallery/1.0', accept: 'image/jpeg,image/png,image/webp' }, signal: AbortSignal.timeout(15000) });
     if ([301,302,303,307,308].includes(response.status)) {
       const location = response.headers.get('location');
       if (!location || attempt === 3) throw new Error('Too many image redirects.');
-      url = gallerySafeRemoteUrl(new URL(location, url).href);
+      url = await gallerySafeRemoteUrl(new URL(location, url).href);
       if (!url) throw new Error('Unsafe redirected image URL.');
       continue;
     }
@@ -3416,7 +3442,13 @@ async function galleryFetchImage(rawUrl) {
     if (length > 20 * 1024 * 1024) throw new Error('Image is larger than 20MB.');
     const buffer = Buffer.from(await response.arrayBuffer());
     if (!buffer.length || buffer.length > 20 * 1024 * 1024) throw new Error('Image size is invalid.');
-    return { buffer, mimeType };
+    const signatureOk = mimeType === 'image/jpeg' ? buffer[0] === 0xff && buffer[1] === 0xd8
+      : mimeType === 'image/png' ? buffer.subarray(0, 8).equals(Buffer.from([137,80,78,71,13,10,26,10]))
+      : buffer.toString('ascii', 0, 4) === 'RIFF' && buffer.toString('ascii', 8, 12) === 'WEBP';
+    if (!signatureOk) throw new Error('Image file signature does not match its content type.');
+    const dimensions = galleryImageDimensions(buffer, mimeType);
+    if (!dimensions || dimensions.width < 600 || dimensions.height < 400) throw new Error('Image resolution is too small or could not be verified (minimum 600 × 400).');
+    return { buffer, mimeType, dimensions };
   }
   throw new Error('Could not download image.');
 }
