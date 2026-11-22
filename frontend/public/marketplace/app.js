@@ -237,6 +237,21 @@ const MARKETPLACE_UI_MESSAGES = Object.freeze({
   "មិនមានទិន្នន័យទេ": { 'zh-CN': "暂无数据", en: "No data available" },
   "ព្យាយាមម្តងទៀត": { 'zh-CN': "请重试", en: "Try again" },
   "ផ្ទុកបន្ថែម": { 'zh-CN': "加载更多", en: "Load more" },
+  "សូមជ្រើសរើសទីតាំងរហូតដល់កម្រិតភូមិ។": { 'zh-CN': "请选择到村级的位置。", en: "Please select a location down to the village level." },
+  "សូមជ្រើសរើសទីតាំងដល់កម្រិតភូមិ។": { 'zh-CN': "请选择到村级的位置。", en: "Please select a location down to the village level." },
+  "បានទាញ និងរក្សាទុករូប ": { 'zh-CN': "已下载并保存图片 ", en: "Downloaded and saved image " },
+  "មិនអាចកំណត់ទំនិញសម្រាប់សំណើតម្លៃបានទេ។": { 'zh-CN': "无法为报价请求指定商品。", en: "Could not select a product for the price offer." },
+  "សូមជ្រើសរើសឯកសាររូបភាព។": { 'zh-CN': "请选择图片文件。", en: "Please select an image file." },
+  "បានបង្កើតគណនី។ សូមពិនិត្យ Email ឬ SMS ដើម្បីផ្ទៀងផ្ទាត់ មុនចូលប្រើ។": { 'zh-CN': "账户创建成功。请先检查电子邮件或短信并完成验证，然后再登录。", en: "Account created. Check your email or SMS and verify before signing in." },
+  "បានចូលគណនី ប៉ុន្តែព័ត៌មាន Profile មិនទាន់អាចទាញបានទេ។": { 'zh-CN': "登录成功，但暂时无法加载个人资料。", en: "Signed in, but profile information could not be loaded yet." },
+  "រូបភាពនីមួយៗមិនអាចធំជាង ២០MB បានទេ។": { 'zh-CN': "每张图片不能超过 20MB。", en: "Each image must not exceed 20MB." },
+  "អាចដាក់រូបភាពបានអតិបរមា ១០ រូបប៉ុណ្ណោះ។": { 'zh-CN': "最多只能上传 10 张图片。", en: "You can upload a maximum of 10 images." },
+  "សូមប្រើ JPG / PNG / WEBP ហើយរូបនីមួយៗមិនលើស ២០MB។": { 'zh-CN': "请使用 JPG、PNG 或 WEBP 格式，每张图片不超过 20MB。", en: "Use JPG, PNG, or WEBP images up to 20MB each." },
+  "បានភ្ជាប់ Telegram Login ជាមួយគណនីនេះរួចរាល់។": { 'zh-CN': "Telegram 登录已成功关联到此账户。", en: "Telegram Login is now linked to this account." },
+  "YouTube Video Link មិនត្រឹមត្រូវទេ។": { 'zh-CN': "YouTube 视频链接无效。", en: "The YouTube video link is invalid." },
+  "បានបង្កើតតំណភ្ជាប់ Telegram។": { 'zh-CN': "Telegram 链接已创建。", en: "Telegram link created." },
+  "បានស្នើសុំ OTP សង្គ្រោះតាម Telegram។": { 'zh-CN': "已通过 Telegram 请求恢复验证码。", en: "Recovery OTP requested via Telegram." },
+  "កំពុងផ្ទុកទំនិញ...": { 'zh-CN': "正在加载商品...", en: "Loading products..." },
 });
 function marketplaceUiText(value) {
   const source = String(value ?? '');
