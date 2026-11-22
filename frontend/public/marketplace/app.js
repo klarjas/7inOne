@@ -3349,7 +3349,13 @@ function renderSupplierImportResults(result, catalogUrl) {
   const summary = result.summary || {};
   const page = result.pagination || {};
   const importable = Number(summary.ready || 0) + Number(summary.update_existing || 0);
-  target.innerHTML = '<div class="mb-3 rounded-xl bg-slate-100 p-3 text-[11px]">រកឃើញសរុប '+Number(summary.total||0)+' ម៉ូដែល · បង្ហាញ '+Number(summary.batch||items.length)+' ម៉ូដែល · អាចនាំចូល/បន្ថែម '+importable+' · ស្ទួន '+Number(summary.duplicate||0)+' · ត្រូវពិនិត្យ '+Number(summary.needs_review||0)+'</div>' +
+  const scan = result.scan || {};
+  const scanSummary = scan.pages_scanned
+    ? '<div class="mt-2 text-slate-500">ស្កេនបាន '+Number(scan.pages_scanned)+' ទំព័រ · រកឃើញ/ដាក់ជួរ '+Number(scan.pages_discovered||0)+' ទំព័រ · ផលិតផលសរុប '+Number(summary.total||0)+'</div>'
+      + (scan.page_limit_reached || scan.time_limit_reached || scan.pages_remaining ? '<div class="mt-1 font-semibold text-amber-700">ការស្កេនមិនទាន់ចប់ទាំងស្រុងទេ។ នៅសល់ '+Number(scan.pages_remaining||0)+' ទំព័រ។ សូមស្កេនម្ដងទៀត ឬបន្តការស្កេន។</div>' : '')
+      + (scan.failed_pages ? '<div class="mt-1 text-amber-700">ទំព័រដែលមិនអាចអានបាន '+Number(scan.failed_pages)+'</div>' : '')
+    : '';
+  target.innerHTML = '<div class="mb-3 rounded-xl bg-slate-100 p-3 text-[11px]">រកឃើញសរុប '+Number(summary.total||0)+' ម៉ូដែល · បង្ហាញ '+Number(summary.batch||items.length)+' ម៉ូដែល · អាចនាំចូល/បន្ថែម '+importable+' · ស្ទួន '+Number(summary.duplicate||0)+' · ត្រូវពិនិត្យ '+Number(summary.needs_review||0)+scanSummary+'</div>' +
     (items.length ? '<div class="space-y-2">'+items.map(item => {
       const statusLabels = {ready:'ផលិតផលថ្មី · អាចនាំចូល',update_existing:'មានផលិតផលមេរួច · អាចបន្ថែម Variant',duplicate:'ផលិតផល និង Variants មានរួចហើយ',needs_review:'ត្រូវឱ្យ Admin ពិនិត្យ'};
       const statusClasses = {ready:'text-emerald-700',update_existing:'text-blue-700',duplicate:'text-amber-700',needs_review:'text-rose-700'};
