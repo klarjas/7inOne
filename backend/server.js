@@ -3357,8 +3357,11 @@ function galleryJsonLdImages(html) {
   return found;
 }
 function galleryIdentity(product, supplierCode, variants) {
-  const tokens = String(product.title || '').toLowerCase().match(/[a-z0-9][a-z0-9._+-]{2,}/g) || [];
-  const modelTokens = [...new Set(tokens.filter(token => /\d/.test(token) || token.length >= 5))].slice(0, 8);
+  const tokens = String(product.title || '').toLowerCase().match(/[a-z0-9][a-z0-9._+-]{1,}/g) || [];
+  const generic = new Set(['laptop','desktop','computer','notebook','monitor','phone','smartphone','wireless','gaming','original','official','product','series','brand','new']);
+  const brandToken = tokens[0] || '';
+  const modelTokens = [...new Set([brandToken, ...tokens.filter(token => /\d/.test(token) || token.length >= 5)])]
+    .filter(token => token.length >= 2 && !generic.has(token)).slice(0, 8);
   const code = String(supplierCode || '').trim().toLowerCase();
   const skuTokens = (variants || []).map(row => String(row.sku || '').trim().toLowerCase()).filter(Boolean);
   return { title: String(product.title || ''), code, modelTokens, skuTokens };
