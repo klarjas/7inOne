@@ -3502,14 +3502,21 @@ async function renderAdminGalleryCandidates() {
     target.innerHTML = items.map(item => {
       const evidence = item.match_evidence || {};
       const matches = (evidence.matched_model_tokens || []).join(', ');
+      const sourceDomain = evidence.source_domain || (() => { try { return new URL(item.source_url).hostname.replace(/^www\\./, ''); } catch { return '—'; } })();
+      const codeVerified = evidence.verification_level === 'code_verified';
+      const verificationLabel = codeVerified ? 'Model + Code/SKU មានភស្តុតាង' : 'Model match ប៉ុណ្ណោះ · ត្រូវពិនិត្យបន្ថែម';
+      const verificationClass = codeVerified ? 'text-emerald-700 bg-emerald-50' : 'text-amber-700 bg-amber-50';
       return '<article class="rounded-xl border border-slate-200 bg-white p-3">' +
         '<div class="grid grid-cols-[88px_minmax(0,1fr)] gap-3">' +
           '<a href="' + esc(item.image_url) + '" target="_blank" rel="noopener noreferrer"><img src="' + esc(item.image_url) + '" alt="" loading="lazy" class="h-24 w-full rounded-lg object-contain bg-slate-50"></a>' +
           '<div class="min-w-0"><b class="block text-[11px]">' + esc(item.products?.title || item.source_title || 'ផលិតផល') + '</b>' +
-            '<p class="mt-1 text-[10px] text-slate-500">Match score: ' + Number(item.match_score || 0) + '/100</p>' +
+            '<p class="mt-1 text-[10px] text-slate-500">Website: ' + esc(sourceDomain) + ' · Match score: ' + Number(item.match_score || 0) + '/100</p>' +
             '<p class="mt-1 text-[10px] text-slate-500">Model ដែលត្រូវគ្នា: ' + esc(matches || '—') + '</p>' +
+            '<p class="mt-1 text-[10px] text-slate-500">Product Code/SKU: ' + esc(evidence.exact_product_code ? 'ត្រូវគ្នា' : (evidence.matched_skus || []).length ? 'SKU ត្រូវគ្នា' : 'មិនទាន់ផ្ទៀងផ្ទាត់') + '</p>' +
+            '<span class="mt-1 inline-block rounded-full px-2 py-1 text-[9px] font-bold ' + verificationClass + '">' + verificationLabel + '</span>' +
             '<a class="mt-1 inline-block text-[10px] font-semibold text-violet-700 underline" href="' + esc(item.source_url) + '" target="_blank" rel="noopener noreferrer">មើល Website ប្រភព</a>' +
           '</div></div>' +
+        '<p class="mt-2 text-[10px] text-slate-500">' + esc(evidence.review_note || 'Admin ត្រូវពិនិត្យរូបភាព និងម៉ូដែលជាក់ស្តែង មុនអនុម័ត។') + '</p>' +
         '<div class="mt-3 flex gap-2"><button type="button" class="rounded-full bg-emerald-600 px-3 py-1.5 text-[10px] font-bold text-white" data-gallery-approve="' + esc(item.id) + '">អនុម័ត និង Upload Telegram</button>' +
         '<button type="button" class="rounded-full border border-slate-200 px-3 py-1.5 text-[10px] font-bold" data-gallery-reject="' + esc(item.id) + '">បដិសេធ</button></div></article>';
     }).join('');
