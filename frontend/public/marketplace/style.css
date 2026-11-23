@@ -9055,3 +9055,101 @@ body.admin-management-popup-open{overflow:hidden}
   #view-admin .admin-management-popup>*:not(.admin-management-popup-close){max-height:calc(92vh - 20px)}
 }
 @media(prefers-reduced-motion:reduce){#view-admin .admin-management-launcher{transition:none}}
+
+
+/* Admin popup layout correction: separate viewport backdrop from dialog content. */
+#view-admin .admin-management-popup{
+  position:fixed!important;
+  inset:0!important;
+  z-index:10040!important;
+  display:none!important;
+  box-sizing:border-box!important;
+  width:100vw!important;
+  height:100dvh!important;
+  max-width:none!important;
+  max-height:none!important;
+  margin:0!important;
+  padding:24px!important;
+  align-items:center!important;
+  justify-content:center!important;
+  overflow:hidden!important;
+  border:0!important;
+  border-radius:0!important;
+  background:rgba(3,8,14,.78)!important;
+  box-shadow:none!important;
+}
+#view-admin .admin-management-popup.is-open{display:flex!important}
+#view-admin .admin-management-popup>.admin-management-dialog{
+  position:relative;
+  display:block;
+  box-sizing:border-box;
+  flex:0 1 auto;
+  width:min(980px,100%);
+  max-width:100%;
+  max-height:calc(100dvh - 48px)!important;
+  margin:auto;
+  padding:20px;
+  overflow-x:hidden;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  border:1px solid rgba(102,192,244,.24);
+  border-radius:18px;
+  background:#16202D;
+  color:#E5EDF6;
+  box-shadow:0 24px 70px rgba(0,0,0,.48);
+}
+#view-admin .admin-management-popup>.admin-shop-dialog,
+#view-admin .admin-management-popup>.admin-verification-dialog{width:min(760px,100%)}
+#view-admin .admin-management-popup>.admin-shop-dialog{padding:12px}
+#view-admin .admin-management-popup>.admin-verification-dialog{
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  padding:20px;
+  border-color:rgba(190,238,17,.18);
+}
+#view-admin .admin-management-popup .admin-management-popup-close{
+  position:sticky;
+  top:0;
+  z-index:12;
+  display:grid;
+  width:34px;
+  height:34px;
+  flex:0 0 34px;
+  margin:0 0 10px auto;
+  place-items:center;
+  border:1px solid rgba(148,163,184,.2);
+  border-radius:9px;
+  background:#1B2838;
+  color:#DCE8F2;
+  cursor:pointer;
+}
+#view-admin .admin-management-popup .admin-management-popup-close:hover{
+  border-color:#66C0F4;
+  color:#fff;
+}
+#view-admin .admin-management-popup .admin-applications-list{
+  max-height:min(52vh,520px);
+  overflow:auto;
+  overscroll-behavior:contain;
+}
+@media(max-width:760px){
+  #view-admin .admin-management-popup{
+    align-items:flex-end!important;
+    padding:12px 0 0!important;
+  }
+  #view-admin .admin-management-popup>.admin-management-dialog{
+    width:100%!important;
+    max-width:100%!important;
+    max-height:92dvh!important;
+    margin:0;
+    padding:16px;
+    border-radius:17px 17px 0 0;
+  }
+  #view-admin .admin-management-popup>.admin-shop-dialog{padding:10px}
+  #view-admin .admin-management-popup>.admin-verification-dialog{padding:16px}
+  #view-admin .admin-management-popup .admin-applications-list{
+    max-height:42dvh;
+    overflow:auto;
+  }
+}
