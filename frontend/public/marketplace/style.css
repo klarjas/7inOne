@@ -8626,28 +8626,75 @@ body > footer {
 @media(max-width:560px){#view-product .product-spec-layout{gap:14px}#view-product .product-spec-primary,#view-product .product-upgrade-panel{padding:2px 0}#view-product .upgrade-detail-card dl>div{grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr)}}
 
 
-/* Product gift gallery — representative visuals with Admin-controlled Telegram photos. */
-#view-product .product-detail-page:has(.product-primary-actions) .product-short-gift-card {
-  grid-column: 1 / -1; min-width: 0; margin-top: 16px; padding: 14px;
-  border: 1px solid rgba(190,238,17,.24); border-radius: 16px;
-  background: linear-gradient(145deg,rgba(190,238,17,.075),rgba(22,32,45,.82)); color: #D7EBA0;
+/* Compact inline product gifts: product icon + name, separated by plus signs. */
+#view-product .product-short-gift-card {
+  grid-column: 1 / -1;
+  min-width: 0;
+  margin-top: 14px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #D7EBA0;
 }
-#view-product .product-short-gift-card h3 { display:flex; align-items:center; gap:8px; margin:0 0 12px; color:#DDF49A; font-size:13px; font-weight:800; }
-#view-product .product-short-gift-card h3 svg { color:#BEEE11; flex:none; }
-#view-product .product-gift-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(104px,1fr)); gap:10px; }
-#view-product .product-gift-item { display:flex; min-width:0; flex-direction:column; align-items:center; gap:6px; padding:10px 7px; border:1px solid rgba(102,192,244,.16); border-radius:12px; background:rgba(13,23,34,.62); text-align:center; }
-#view-product .product-gift-visual { display:grid; width:74px; height:68px; place-items:center; overflow:hidden; border-radius:10px; background:linear-gradient(145deg,#24394D,#111D2A); }
-#view-product .product-gift-visual img { width:100%; height:100%; object-fit:contain; padding:5px; }
-#view-product .product-gift-placeholder { display:grid; place-items:center; color:#66C0F4; }
-#view-product .product-gift-name { color:#E4EDF5; font-size:11px; line-height:1.45; overflow-wrap:anywhere; }
-#view-product .product-gift-kind { color:#8FA8BC; font-size:10px; }
-#view-product .product-gift-admin-actions { display:flex; flex-wrap:wrap; justify-content:center; gap:5px; margin-top:3px; }
-#view-product .product-gift-upload, #view-product [data-gift-image-reset] { display:inline-flex; align-items:center; justify-content:center; min-height:25px; padding:4px 7px; border:1px solid #2A475E; border-radius:7px; background:#16202D; color:#66C0F4; font-size:10px; font-weight:700; cursor:pointer; }
-#view-product .product-gift-upload input { position:absolute; width:1px; height:1px; opacity:0; pointer-events:none; }
-#view-product [data-gift-image-reset] { color:#BEEE11; }
-@media(max-width:639px) {
-  #view-product .product-short-gift-card { margin-top:12px; padding:11px; }
-  #view-product .product-gift-grid { grid-template-columns:repeat(auto-fit,minmax(90px,1fr)); gap:7px; }
-  #view-product .product-gift-item { padding:8px 4px; }
-  #view-product .product-gift-visual { width:60px; height:56px; }
+#view-product .product-short-gift-card h3 {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 0 9px;
+  color: #DDF49A;
+  font-size: 12px;
+  font-weight: 750;
+}
+#view-product .product-short-gift-card h3 svg {
+  flex: 0 0 auto;
+  color: #BEEE11;
+}
+#view-product .product-gift-flow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 9px;
+  row-gap: 8px;
+  min-width: 0;
+}
+#view-product .product-gift-entry {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  color: #E4EDF5;
+  white-space: nowrap;
+}
+#view-product .product-gift-icon {
+  display: block;
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  color: #66C0F4;
+}
+#view-product .product-gift-name {
+  color: #DCE7F1;
+  font-size: 13px;
+  font-weight: 550;
+  line-height: 1.4;
+}
+#view-product .product-gift-plus {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  color: #66C0F4;
+}
+#view-product .product-gift-plus svg {
+  display: block;
+  width: 13px;
+  height: 13px;
+}
+@media (max-width: 639px) {
+  #view-product .product-short-gift-card { margin-top: 12px; }
+  #view-product .product-gift-flow { column-gap: 7px; row-gap: 7px; }
+  #view-product .product-gift-name { font-size: 12px; }
+  #view-product .product-gift-icon { width: 19px; height: 19px; }
 }
