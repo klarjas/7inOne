@@ -6982,8 +6982,27 @@ body > footer {
 }
 
 #view-product .product-detail-page:has(.product-primary-actions) .product-primary-actions {
-  grid-template-columns: minmax(0, 1fr) 50px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
+}
+
+#view-product .product-detail-page:has(.product-primary-actions) .product-chat-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 50px;
+  padding: 0 12px;
+  border: 1px solid #2A475E;
+  border-radius: 12px;
+  background: #16202D;
+  color: #C7D5E0;
+  font-weight: 700;
+}
+#view-product .product-detail-page:has(.product-primary-actions) .product-chat-primary:hover {
+  border-color: #66C0F4;
+  color: #66C0F4;
 }
 
 #view-product .product-detail-page:has(.product-primary-actions) .product-buy-primary {
@@ -6998,53 +7017,6 @@ body > footer {
 #view-product .product-detail-page:has(.product-primary-actions) .product-buy-primary:hover {
   background: linear-gradient(135deg, #0369A1, #0EA5E9);
   box-shadow: 0 12px 25px rgba(2, 132, 199, .3);
-}
-
-#view-product .product-detail-page:has(.product-primary-actions) .product-save-primary {
-  display: grid;
-  width: 50px;
-  min-width: 50px;
-  height: 50px;
-  min-height: 50px;
-  place-items: center;
-  gap: 0;
-  padding: 0;
-  border: 1px solid #2A475E;
-  border-radius: 12px;
-  background: #16202D;
-  color: #C7D5E0;
-  font-size: 0;
-}
-
-#view-product .product-detail-page:has(.product-primary-actions) .product-save-primary svg {
-  width: 19px;
-  height: 19px;
-}
-
-#view-product .product-detail-page:has(.product-primary-actions) .product-save-primary[aria-pressed="true"],
-#view-product .product-detail-page:has(.product-primary-actions) .product-save-primary.saved {
-  border-color: #66C0F4;
-  color: #66C0F4;
-}
-
-#view-product .product-detail-page:has(.product-primary-actions) .product-utility-actions {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-  margin-top: 10px;
-}
-
-#view-product .product-detail-page:has(.product-primary-actions) .product-utility-actions button {
-  min-height: 44px;
-  border: 1px solid #2A475E;
-  border-radius: 10px;
-  background: #16202D;
-  color: #C7D5E0;
-}
-
-#view-product .product-detail-page:has(.product-primary-actions) .product-utility-actions button:hover {
-  border-color: #66C0F4;
-  background: #203244;
-  color: #66C0F4;
 }
 
 #view-product .product-detail-page:has(.product-primary-actions) .product-seller-card,
