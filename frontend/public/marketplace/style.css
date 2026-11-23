@@ -8997,7 +8997,7 @@ body.admin-official-shop-modal-open{overflow:hidden}
   width:100%!important;height:100%!important;max-width:none!important;margin:0!important;
   padding:24px!important;align-items:center!important;justify-content:center!important;
   overflow:auto!important;background:rgba(3,8,14,.78)!important;
-  backdrop-filter:blur(7px);
+  backdrop-filter:none;
 }
 #view-admin .admin-management-popup.is-open{display:flex!important}
 #view-admin .admin-management-popup>*:not(.admin-management-popup-close){
