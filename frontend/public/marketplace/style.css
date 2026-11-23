@@ -6949,6 +6949,38 @@ body > footer {
   line-height: 1.8;
 }
 
+#view-product .product-detail-page:has(.product-primary-actions) .product-short-caption-offers {
+  display: grid;
+  gap: 6px;
+  margin-top: 10px;
+}
+#view-product .product-detail-page:has(.product-primary-actions) .product-short-offer,
+#view-product .product-detail-page:has(.product-primary-actions) .product-short-gift {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 8px 10px;
+  border-radius: 9px;
+  font-size: 12px;
+  line-height: 1.65;
+}
+#view-product .product-detail-page:has(.product-primary-actions) .product-short-offer {
+  background: rgba(102, 192, 244, .08);
+  color: #B9DDF2;
+}
+#view-product .product-detail-page:has(.product-primary-actions) .product-short-gift {
+  background: rgba(190, 238, 17, .08);
+  color: #D7EBA0;
+}
+#view-product .product-detail-page:has(.product-primary-actions) .product-short-offer-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 auto;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
 #view-product .product-detail-page:has(.product-primary-actions) .product-primary-actions {
   grid-template-columns: minmax(0, 1fr) 50px;
   gap: 10px;
