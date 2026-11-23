@@ -1659,60 +1659,86 @@ function supplierCaptionSpecs(product = {}) {
 }
 
 function productDetailSpecEntries(product = {}) {
-  const raw = { ...supplierCaptionSpecs(product), ...normalizedProductSpecs(product) };
+  const raw = {
+    ...supplierCaptionSpecs(product),
+    ...normalizedProductSpecs(product),
+    ...(product.listing_details?.specifications || {}),
+    ...(product.specifications || {})
+  };
   const aliases = {
-    cpumodel:'cpu', processormodel:'cpu', cpu:'cpu', processor:'cpu',
-    ramtypecapacity:'ram', memoryram:'ram', ram:'ram', memory:'ram',
-    storagetypecapacity:'storage', storage:'storage', ssd:'storage', hdd:'storage',
-    screensize:'display', displaysize:'display', display:'display', screen:'display',
-    gpumodelvram:'gpu', graphicscard:'gpu', graphicsprocessor:'gpu', gpu:'gpu', graphics:'gpu',
-    batterycapacity:'battery', battery:'battery', batteryhealth:'battery_health',
-    batterylife:'battery_life', color:'color', colour:'color', weight:'weight',
-    os:'os', operatingsystem:'os', warranty:'warranty', dimensions:'dimensions',
-    resolution:'resolution', displayresolution:'resolution', brand:'brand', manufacturer:'brand',
-    model:'model', series:'series', condition:'condition'
+    condition:'condition', brand:'brand', manufacturer:'brand', make:'brand',
+    model:'model', productmodel:'model', series:'series',
+    cpu:'cpu', processor:'cpu', cpumodel:'cpu', processormodel:'cpu',
+    ram:'ram', memory:'ram', memoryram:'ram', ramtypecapacity:'ram',
+    storage:'storage', ssd:'storage', hdd:'storage', harddrive:'storage',
+    storagetypecapacity:'storage', storagecapacity:'storage',
+    display:'display', screen:'display', screensize:'display', displaysize:'display',
+    resolution:'resolution', displayresolution:'resolution',
+    gpu:'gpu', graphics:'gpu', graphicscard:'gpu', graphicsprocessor:'gpu',
+    gpumodel:'gpu', gpumodelvram:'gpu',
+    battery:'battery', batterycapacity:'battery', batterylife:'battery_life',
+    batteryhealth:'battery_health', weight:'weight', color:'color', colour:'color',
+    os:'os', operatingsystem:'os', warranty:'warranty', warrantyperiod:'warranty',
+    dimensions:'dimensions', size:'dimensions', connectivity:'connectivity',
+    camera:'camera', cameras:'camera', material:'material', waterresistance:'water_resistance'
   };
   const cleanKey = key => String(key || '').toLowerCase().replace(/[^a-z0-9]/g, '');
   const values = new Map();
   const add = (key, value) => {
     const canonical = aliases[cleanKey(key)];
-    const text = String(value ?? '').trim().replace(/^[:：\-\s]+|[,;\s]+$/g, '');
-    if (!canonical || !text || /^(?:n\/a|none|null|undefined|មិនបានបញ្ជាក់)$/i.test(text)) return;
+    const text = String(value ?? '').trim().replace(/^[:：=\-\s]+|[,;\s]+$/g, '');
+    if (!canonical || !text || /^(?:n\/a|none|null|undefined|មិនបានបញ្ជាក់|not specified)$/i.test(text)) return;
     if (!values.has(canonical)) values.set(canonical, text);
   };
-  Object.entries(raw).forEach(([key, value]) => {
-    if (typeof value !== 'object' && !['fullspecs','fullspecification','description'].includes(cleanKey(key))) add(key, value);
-  });
 
-  const fullSpecs = Object.entries(raw).find(([key]) => ['fullspecs','fullspecification','specificationsfull'].includes(cleanKey(key)))?.[1]
-    || product.full_specs || product.full_specifications || '';
-  const fullText = String(fullSpecs || '');
-  const fullPattern = /(?:^|[,\n])\s*-\s*([^:,\n]+)\s*:\s*([^,\n]+)/g;
+  // Read structured fields first, then fill any gaps from supplier full-spec text.
+  for (const [key, value] of Object.entries(raw)) {
+    if (value == null || typeof value === 'object' || ['fullspecs','fullspecification','specificationsfull','description'].includes(cleanKey(key))) continue;
+    const parts = String(value).split(/\s*[|｜]\s*/);
+    let extracted = false;
+    for (const part of parts) {
+      const pair = part.match(/^([^:：=]+)\s*[:：=]\s*(.+)$/);
+      if (pair && aliases[cleanKey(pair[1])]) {
+        add(pair[1], pair[2]);
+        extracted = true;
+      }
+    }
+    if (!extracted) add(key, value);
+  }
+
+  const fullSpecs = Object.entries(raw).find(([key]) =>
+    ['fullspecs','fullspecification','specificationsfull'].includes(cleanKey(key))
+  )?.[1] || product.full_specs || product.full_specifications || '';
+  const fullText = String(fullSpecs || '').replace(/\r/g, '');
+
+  // Supplier descriptions commonly put all specifications in one comma-separated line.
+  // Split only at the next "- Label:" marker so values containing commas remain intact.
+  const fullPattern = /(?:^|[,;\n])\s*-\s*([^:,;\n]+)\s*:\s*([\s\S]*?)(?=(?:[,;\n])\s*-\s*[^:,;\n]+\s*:|$)/g;
   let match;
   while ((match = fullPattern.exec(fullText))) add(match[1], match[2]);
-
-  // Split combined supplier values such as "Weight: 1.4Kg | Color: Matte Gray".
-  for (const [key, value] of [...values.entries()]) {
-    const parts = String(value).split(/\s*[|｜]\s*/);
-    if (parts.length < 2) continue;
-    for (const part of parts) {
-      const pair = part.match(/^([^:：]+)\s*[:：]\s*(.+)$/);
-      if (pair) add(pair[1], pair[2]);
-    }
-    const cleaned = parts.filter(part => !/^\s*(?:weight|color|colour)\s*[:：]/i.test(part)).join(' | ').trim();
-    if (cleaned) values.set(key, cleaned); else values.delete(key);
-  }
 
   const labels = {
     condition:'ស្ថានភាព', brand:'ម៉ាក', model:'ម៉ូដែល', series:'ស៊េរី',
     cpu:'CPU', ram:'RAM', storage:'ទំហំផ្ទុក', display:'អេក្រង់',
     gpu:'ក្រាហ្វិក (GPU)', battery:'ថ្ម', battery_health:'សុខភាពថ្ម',
     battery_life:'អាយុកាលថ្ម', weight:'ទម្ងន់', color:'ពណ៌',
-    os:'ប្រព័ន្ធប្រតិបត្តិការ', warranty:'ការធានា',
-    dimensions:'វិមាត្រ', resolution:'កម្រិតបង្ហាញ'
+    os:'ប្រព័ន្ធប្រតិបត្តិការ', warranty:'ការធានា', dimensions:'វិមាត្រ',
+    resolution:'កម្រិតបង្ហាញ', connectivity:'ការតភ្ជាប់', camera:'កាមេរ៉ា',
+    material:'សម្ភារៈ', water_resistance:'ធន់នឹងទឹក'
   };
-  const order = ['condition','brand','model','series','cpu','ram','storage','display','gpu','battery','battery_health','battery_life','weight','color','os','warranty','dimensions','resolution'];
-  return order.filter(key => values.has(key)).map(key => [labels[key], values.get(key)]);
+  const order = [
+    'condition','brand','model','series','cpu','ram','storage','display',
+    'resolution','gpu','battery','battery_health','battery_life','weight',
+    'color','os','connectivity','camera','water_resistance','material',
+    'warranty','dimensions'
+  ];
+  const seen = new Set();
+  return order.filter(key => {
+    const value = values.get(key);
+    if (!value || seen.has(value.toLowerCase())) return false;
+    seen.add(value.toLowerCase());
+    return true;
+  }).map(key => [labels[key], values.get(key)]);
 }
 
 function productCardSpecs(product = {}) {
