@@ -29,10 +29,31 @@ if errorlevel 1 (
   exit /b 1
 )
 
+where git >nul 2>nul
+if errorlevel 1 (
+  echo [ERROR] Git was not found. Install Git for Windows, then try again.
+  pause
+  exit /b 1
+)
+
 if not exist ".env" (
   echo [ERROR] Local .env file is missing.
   echo Restore your private .env file to the project root.
   echo Do NOT upload it to GitHub.
+  pause
+  exit /b 1
+)
+
+echo [0/6] Checking for GitHub updates...
+if not exist "scripts\UPDATE-FROM-GITHUB.ps1" (
+  echo [ERROR] Safe update script is missing. Startup stopped.
+  pause
+  exit /b 1
+)
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\UPDATE-FROM-GITHUB.ps1"
+if errorlevel 1 (
+  echo [ERROR] GitHub update was blocked to protect local changes.
+  echo Resolve the reported issue before starting 7inOne.
   pause
   exit /b 1
 )
