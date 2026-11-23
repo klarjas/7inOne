@@ -1969,6 +1969,9 @@ function showHomeDetailInspector() {
   if (detailsPopover && detailsPopover.parentElement !== inspector) inspector.appendChild(detailsPopover);
   inspector.classList.remove('is-closing');
   inspector.appendChild(detail);
+  // The product detail may have rendered before it was mounted in the right-side inspector.
+  // Populate the adjacent details popup only after the inspector contains the product root.
+  populateDetailsPopover(detail);
   $('steamDiscoveryHub')?.classList.add('hidden');
   inspector.classList.remove('hidden');
   inspector.scrollTo({ top: 0, behavior: 'smooth' });
