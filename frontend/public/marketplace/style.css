@@ -8854,3 +8854,60 @@ body > footer {
  .admin-aurora-drawer-overlay{padding:0}
  .admin-aurora-drawer-overlay .admin-aurora-dialog{width:100%;border-radius:14px 14px 0 0}
 }
+
+
+/* Official shop management — compact card with a centered edit popup. */
+.admin-official-shop-panel{margin:0 0 24px}
+.admin-official-shop-card{padding:20px;border:1px solid rgba(102,192,244,.17);border-radius:18px;background:linear-gradient(145deg,rgba(22,32,45,.96),rgba(18,28,40,.94));box-shadow:inset 0 1px 0 rgba(255,255,255,.035),0 12px 30px rgba(0,0,0,.12)}
+.admin-official-shop-identity{display:flex;align-items:center;gap:13px}
+.admin-official-shop-mark{display:grid;width:46px;height:46px;flex:0 0 auto;place-items:center;border:1px solid rgba(102,192,244,.22);border-radius:13px;background:rgba(102,192,244,.1);color:#66C0F4}
+.admin-official-shop-eyebrow{margin:0;color:#66C0F4;font-size:9px;font-weight:800;letter-spacing:1.1px}
+.admin-official-shop-title{margin:4px 0 0;color:#F0F6FC;font-size:17px;font-weight:800}
+.admin-official-shop-description{margin:4px 0 0;color:#91A6BA;font-size:11px;line-height:1.6}
+.admin-official-shop-summary{margin:16px 0 0;padding:11px 13px;border:1px solid rgba(148,163,184,.12);border-radius:10px;background:rgba(10,20,31,.48);color:#C7D5E0;font-size:11px;line-height:1.6}
+.admin-official-shop-actions{display:flex;align-items:center;flex-wrap:wrap;gap:9px;margin-top:15px}
+.admin-official-shop-edit,.admin-official-shop-view,.admin-official-shop-reload{display:inline-flex;min-height:36px;align-items:center;justify-content:center;gap:7px;padding:0 13px;border-radius:9px;font-size:11px;font-weight:750;cursor:pointer;transition:background .18s,border-color .18s,color .18s}
+.admin-official-shop-edit{border:1px solid rgba(102,192,244,.28);background:rgba(102,192,244,.12);color:#8DD3FA}
+.admin-official-shop-edit:hover{border-color:rgba(102,192,244,.55);background:rgba(102,192,244,.2);color:#D7F1FF}
+.admin-official-shop-view{border:1px solid rgba(148,163,184,.18);background:rgba(255,255,255,.035);color:#B7C7D6}
+.admin-official-shop-view:hover,.admin-official-shop-reload:hover{border-color:rgba(102,192,244,.32);background:rgba(102,192,244,.08);color:#D7F1FF}
+.admin-official-shop-reload{width:36px;padding:0;border:1px solid rgba(148,163,184,.18);background:transparent;color:#91A6BA}
+.admin-official-shop-modal[hidden]{display:none!important}
+.admin-official-shop-modal{position:fixed;inset:0;z-index:10050;display:flex;align-items:center;justify-content:center;padding:22px}
+.admin-official-shop-backdrop{position:absolute;inset:0;width:100%;height:100%;border:0;background:rgba(3,8,14,.78);backdrop-filter:blur(7px);cursor:default}
+.admin-official-shop-dialog{position:relative;z-index:1;width:min(620px,100%);max-height:min(88vh,820px);overflow:auto;border:1px solid rgba(102,192,244,.2);border-radius:18px;background:linear-gradient(155deg,#1B2838,#141D29 72%);box-shadow:0 26px 80px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.04);animation:admin-official-shop-pop .2s ease-out}
+@keyframes admin-official-shop-pop{from{transform:translateY(10px) scale(.985);opacity:0}to{transform:translateY(0) scale(1);opacity:1}}
+.admin-official-shop-modal-header{display:flex;align-items:flex-start;justify-content:space-between;gap:15px;padding:20px 22px 16px;border-bottom:1px solid rgba(42,71,94,.55)}
+.admin-official-shop-modal-header h2{margin:5px 0 0;color:#F0F6FC;font-size:17px;font-weight:800}
+.admin-official-shop-modal-header p:last-child{margin:4px 0 0;color:#91A6BA;font-size:10px}
+.admin-official-shop-close{display:grid;width:34px;height:34px;flex:0 0 auto;place-items:center;border:1px solid rgba(148,163,184,.18);border-radius:9px;background:rgba(255,255,255,.035);color:#AFC0D0;cursor:pointer}
+.admin-official-shop-close:hover{border-color:rgba(248,113,113,.35);background:rgba(248,113,113,.09);color:#FCA5A5}
+.admin-official-shop-form{display:grid;gap:14px;padding:18px 22px 20px}
+.admin-official-shop-form .label,.admin-official-shop-field-label{display:block;margin-bottom:6px;color:#AFC0D0;font-size:10px;font-weight:700}
+.admin-official-shop-form .field{border:1px solid rgba(116,145,170,.28);background:rgba(8,17,27,.62);color:#E5EDF6}
+.admin-official-shop-form .field:focus{border-color:rgba(102,192,244,.65);outline:0;box-shadow:0 0 0 3px rgba(102,192,244,.1)}
+.admin-official-shop-id-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 13px;border:1px solid rgba(102,192,244,.16);border-radius:10px;background:rgba(102,192,244,.055)}
+.admin-official-shop-id-row>div{display:grid;gap:3px}
+.admin-official-shop-id-row strong{color:#EAF4FC;font-size:14px;letter-spacing:.4px}
+.admin-official-shop-fixed{display:inline-flex;align-items:center;gap:5px;color:#BEEE11;font-size:10px;font-weight:750}
+.admin-official-shop-media-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+.admin-official-shop-preview{display:block;min-height:48px;margin-top:8px;color:#91A6BA;font-size:10px}
+.admin-official-shop-preview img{display:block;max-width:100%;max-height:100px;border:1px solid rgba(148,163,184,.18);border-radius:9px;object-fit:cover}
+.admin-official-shop-modal-footer{display:flex;justify-content:flex-end;gap:9px;margin-top:3px;padding-top:15px;border-top:1px solid rgba(42,71,94,.5)}
+.admin-official-shop-cancel,.admin-official-shop-save{display:inline-flex;min-height:39px;align-items:center;justify-content:center;gap:7px;padding:0 15px;border-radius:9px;font-size:11px;font-weight:750;cursor:pointer}
+.admin-official-shop-cancel{border:1px solid rgba(148,163,184,.22);background:transparent;color:#B7C7D6}
+.admin-official-shop-cancel:hover{background:rgba(255,255,255,.06);color:#fff}
+.admin-official-shop-save{border:1px solid rgba(102,192,244,.4);background:linear-gradient(135deg,#2476A8,#24577C);color:#F5FBFF;box-shadow:0 5px 16px rgba(0,0,0,.2)}
+.admin-official-shop-save:hover{border-color:#66C0F4;background:linear-gradient(135deg,#2D8BC2,#28648E)}
+.admin-official-shop-save:disabled{opacity:.55;cursor:wait}
+body.admin-official-shop-modal-open{overflow:hidden}
+@media(max-width:600px){
+ .admin-official-shop-card{padding:16px}
+ .admin-official-shop-modal{align-items:flex-end;padding:0}
+ .admin-official-shop-dialog{width:100%;max-height:92vh;border-radius:17px 17px 0 0}
+ .admin-official-shop-modal-header{padding:17px 16px 13px}
+ .admin-official-shop-form{padding:15px 16px 18px}
+ .admin-official-shop-media-grid{grid-template-columns:1fr}
+ .admin-official-shop-actions{gap:7px}
+}
+@media(prefers-reduced-motion:reduce){.admin-official-shop-dialog{animation:none}.admin-official-shop-edit,.admin-official-shop-view,.admin-official-shop-reload{transition:none}}
