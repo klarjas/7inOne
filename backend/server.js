@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { createClient } from '@supabase/supabase-js';
 import { registerSupportChat } from './support-chat.js';
 import { registerSellerChat } from './seller-chat.js';
+import { registerShoppingAssistant } from './shopping-assistant.js';
 import { registerMyPostsRoutes } from './my-posts.js';
 import { researchExternalProductCategory } from './product-research.js';
 import { randomUUID, randomBytes, randomInt, createHash, createHmac, timingSafeEqual, createCipheriv, createDecipheriv } from 'node:crypto';
@@ -322,6 +323,7 @@ function publicProduct(product) {
   };
 }
 registerSellerChat(app, { supabase, authenticate, requireVendor, upload, telegram, telegramStorageChatId, clean, fail, productPublicMaxAgeMs: PRODUCT_PUBLIC_MAX_AGE_MS, mediaProxyUrl });
+registerShoppingAssistant(app, { supabase, clean, fail, ratingsFor, publicProduct, productPublicMaxAgeMs: PRODUCT_PUBLIC_MAX_AGE_MS });
 
 async function fetchTelegramWithRetry(url, options, stage, maxAttempts = 3) {
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
