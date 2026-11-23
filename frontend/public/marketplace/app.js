@@ -1826,15 +1826,15 @@ function productGiftVisual(giftName = '') {
   const wireless = /wireless|bluetooth|2\.?4\s*(?:ghz|g)|ឥតខ្សែ|គ្មានខ្សែ/.test(value);
   const wired = /\bwired\b|usb[- ]?cable|with cable|មានខ្សែ|ខ្សែភ្ជាប់/.test(value);
   const connection = wireless === wired ? 'ប្រភេទមិនបានបញ្ជាក់' : wireless ? 'Wireless' : 'Wired';
-  if (/mouse|ម៉ៅស៍|កណ្ដុរ/.test(value)) return { icon: wireless === wired ? 'mouse' : wireless ? 'mouseWireless' : 'mouseWired', type: connection };
-  if (/keyboard|ក្ដារចុច/.test(value)) return { icon: 'keyboard', type: connection };
-  if (/headset|headphone|earphone|កាស/.test(value)) return { icon: 'headphones', type: wireless === wired ? connection : wireless ? 'Wireless / Bluetooth' : 'Wired' };
-  if (/usb|flash drive|memory stick|ថាសចល័ត/.test(value)) return { icon: 'usb', type: 'USB' };
-  if (/charger|adapter|ឆ្នាំងសាក/.test(value)) return { icon: 'charger', type: 'Power accessory' };
-  if (/speaker|បំពងសំឡេង/.test(value)) return { icon: 'speaker', type: 'Speaker' };
-  if (/monitor|screen|អេក្រង់/.test(value)) return { icon: 'monitor', type: 'Display' };
-  if (/bag|backpack|កាបូប/.test(value)) return { icon: 'giftbag', type: 'Bag' };
-  return { icon: 'package', type: 'Gift item' };
+  if (/mouse|ម៉ៅស៍|កណ្ដុរ/.test(value)) return { icon: wireless === wired ? 'mouse' : wireless ? 'mouseWireless' : 'mouseWired', type: connection, imageUrl: wireless ? 'https://images.pexels.com/photos/13870517/pexels-photo-13870517.jpeg?cs=srgb&dl=pexels-bertellifotografia-13870517.jpg&fm=jpg' : wired ? 'https://images.pexels.com/photos/20510003/pexels-photo-20510003.jpeg?cs=srgb&dl=pexels-bertellifotografia-20510003.jpg&fm=jpg' : '' };
+  if (/keyboard|ក្ដារចុច/.test(value)) return { icon: 'keyboard', type: connection, imageUrl: 'https://images.pexels.com/photos/20510004/pexels-photo-20510004.jpeg?cs=srgb&dl=pexels-bertellifotografia-20510004.jpg&fm=jpg' };
+  if (/headset|headphone|earphone|កាស/.test(value)) return { icon: 'headphones', type: wireless === wired ? connection : wireless ? 'Wireless / Bluetooth' : 'Wired', imageUrl: 'https://images.pexels.com/photos/7772548/pexels-photo-7772548.jpeg?cs=srgb&dl=pexels-caleboquendo-7772548.jpg&fm=jpg' };
+  if (/usb|flash drive|memory stick|ថាសចល័ត/.test(value)) return { icon: 'usb', type: 'USB', imageUrl: 'https://images.pexels.com/photos/18641665/pexels-photo-18641665.png?cs=srgb&dl=pexels-ruben-boekeloo-521336009-18641665.jpg&fm=jpg' };
+  if (/charger|adapter|ឆ្នាំងសាក/.test(value)) return { icon: 'charger', type: 'Power accessory', imageUrl: '' };
+  if (/speaker|បំពងសំឡេង/.test(value)) return { icon: 'speaker', type: 'Speaker', imageUrl: 'https://images.pexels.com/photos/7772558/pexels-photo-7772558.jpeg?cs=srgb&dl=pexels-caleboquendo-7772558.jpg&fm=jpg' };
+  if (/monitor|screen|អេក្រង់/.test(value)) return { icon: 'monitor', type: 'Display', imageUrl: '' };
+  if (/bag|backpack|កាបូប/.test(value)) return { icon: 'giftbag', type: 'Bag', imageUrl: '' };
+  return { icon: 'package', type: 'Gift item', imageUrl: '' };
 }
 
 function renderProductGiftCard(gifts = [], savedImages = [], productId = '') {
@@ -1843,7 +1843,8 @@ function renderProductGiftCard(gifts = [], savedImages = [], productId = '') {
   const items = gifts.map(gift => {
     const visual = productGiftVisual(gift);
     const saved = (savedImages || []).find(image => String(image.gift_name || '').trim().toLocaleLowerCase() === String(gift).trim().toLocaleLowerCase());
-    const visualHtml = saved?.image_url ? '<img src="' + esc(saved.image_url) + '" alt="' + esc(gift) + '" loading="lazy" decoding="async">' : '<span class="product-gift-placeholder">' + ic(visual.icon, 30) + '</span>';
+    const imageUrl = saved?.image_url || visual.imageUrl;
+    const visualHtml = imageUrl ? '<img src="' + esc(imageUrl) + '" alt="' + esc(gift) + '" loading="lazy" decoding="async" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span class="product-gift-placeholder" hidden>' + ic(visual.icon, 30) + '</span>' : '<span class="product-gift-placeholder">' + ic(visual.icon, 30) + '</span>';
     return '<article class="product-gift-item"><div class="product-gift-visual">' + visualHtml + '</div>' +
       '<strong class="product-gift-name">' + esc(gift) + '</strong><small class="product-gift-kind">' + esc(visual.type) + '</small>' +
       (admin ? '<div class="product-gift-admin-actions"><label class="product-gift-upload">ប្តូររូប<input type="file" accept="image/jpeg,image/png,image/webp" data-gift-image-upload data-gift-name="' + esc(gift) + '" data-product-id="' + esc(productId) + '"></label>' +
