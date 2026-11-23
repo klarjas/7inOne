@@ -1966,7 +1966,7 @@ async function ensureTelegramWebhook(req) {
     body: JSON.stringify({
       url: baseUrl + '/api/telegram/webhook',
       secret_token: secret,
-      allowed_updates: ['message'],
+      allowed_updates: ['message', 'channel_post', 'edited_channel_post'],
       drop_pending_updates: false
     })
   });
@@ -2084,11 +2084,101 @@ app.post('/api/me/telegram', authenticate, telegramWidgetLinkLimiter, async (req
   }
 });
 
-// Telegram sends updates here. Only a private chat can complete a pending link.
+function parseAssistantKnowledgePost(message) {
+  const raw = String(message?.text || message?.caption || '').trim();
+  if (!raw || raw.length > 8000) return null;
+  const lines = raw.split(/\r?\n/);
+  const prefix = (lines[0] || '').trim().toUpperCase();
+  const types = {
+    '[AI-LESSON]': 'lesson',
+    '[FAQ]': 'faq',
+    '[RULE]': 'rule',
+    '[UNLEARNED]': 'unlearned'
+  };
+  const entryType = types[prefix];
+  if (!entryType) return null;
+  let category = 'general';
+  let keywords = [];
+  const bodyLines = [];
+  for (const line of lines.slice(1)) {
+    const categoryMatch = line.match(/^\s*\[CATEGORY\]\s*(.+)$/i);
+    const keywordMatch = line.match(/^\s*\[KEYWORD\]\s*(.+)$/i);
+    if (categoryMatch) category = clean(categoryMatch[1], 100) || 'general';
+    else if (keywordMatch) keywords = keywordMatch[1].split(/[,，;]/).map(value => clean(value, 60)).filter(Boolean).slice(0, 20);
+    else if (!/^\s*\[(APPROVED|AI-LESSON|FAQ|RULE|UNLEARNED)\]\s*$/i.test(line)) bodyLines.push(line);
+  }
+  const content = bodyLines.join('\n').trim();
+  if (!content) return null;
+  const title = clean(content.split(/\r?\n/).find(line => line.trim()) || '', 160) || 'មេរៀនថ្មី';
+  return { entryType, category, keywords, title, content };
+}
+
+async function ingestAssistantKnowledgePost(message) {
+  const chat = message?.chat;
+  const expectedChatId = telegramStorageChatId();
+  if (!chat || chat.type !== 'channel' || !expectedChatId || String(chat.id) !== String(expectedChatId)) return;
+  const parsed = parseAssistantKnowledgePost(message);
+  if (!parsed) return;
+  const sourceChatId = Number(chat.id);
+  const sourceMessageId = Number(message.message_id);
+  if (!Number.isSafeInteger(sourceChatId) || !Number.isSafeInteger(sourceMessageId)) return;
+  const sourceDate = Number.isFinite(Number(message.date))
+    ? new Date(Number(message.date) * 1000).toISOString() : new Date().toISOString();
+  const { data: space, error: spaceError } = await supabase.from('assistant_knowledge_spaces')
+    .select('id').eq('space_code', 'primary').eq('is_enabled', true).maybeSingle();
+  if (spaceError || !space) throw spaceError || new Error('Assistant knowledge space is unavailable.');
+  await supabase.from('assistant_knowledge_spaces').update({
+    telegram_chat_id: sourceChatId,
+    updated_at: new Date().toISOString()
+  }).eq('id', space.id);
+
+  if (parsed.entryType === 'unlearned') {
+    const marker = { telegram_chat_id: sourceChatId, telegram_message_id: sourceMessageId };
+    const { data: existing, error: lookupError } = await supabase.from('assistant_learning_queue')
+      .select('id').eq('space_id', space.id).contains('context', marker).maybeSingle();
+    if (lookupError) throw lookupError;
+    if (!existing) {
+      const { error } = await supabase.from('assistant_learning_queue').insert({
+        space_id: space.id,
+        question: parsed.content.slice(0, 4000),
+        context: { ...marker, source: 'telegram_channel', source_date: sourceDate },
+        status: 'pending'
+      });
+      if (error) throw error;
+    }
+    return;
+  }
+
+  const structurallyValid = parsed.content.length >= 30 && parsed.title.length >= 3;
+  const payload = {
+    space_id: space.id,
+    title: parsed.title,
+    content: parsed.content.slice(0, 6000),
+    category: parsed.category,
+    entry_type: parsed.entryType,
+    keywords: parsed.keywords,
+    status: structurallyValid ? 'approved' : 'pending',
+    source_chat_id: sourceChatId,
+    source_message_id: sourceMessageId,
+    source_message_date: sourceDate,
+    approved_at: structurallyValid ? new Date().toISOString() : null,
+    updated_at: new Date().toISOString()
+  };
+  const { error } = await supabase.from('assistant_knowledge_entries')
+    .upsert(payload, { onConflict: 'source_chat_id,source_message_id' });
+  if (error) throw error;
+}
+
+// Telegram sends updates here. Private login/link flows remain separate from channel knowledge capture.
 app.post('/api/telegram/webhook', async (req, res) => {
   if (!telegramWebhookSecret(req)) return fail(res, 401, 'Unauthorized webhook');
   res.sendStatus(200);
   try {
+    const channelPost = req.body?.channel_post || req.body?.edited_channel_post;
+    if (channelPost) {
+      await ingestAssistantKnowledgePost(channelPost);
+      return;
+    }
     const message = req.body?.message;
     const chat = message?.chat;
     const textValue = clean(message?.text, 500);
