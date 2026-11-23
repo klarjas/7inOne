@@ -8874,7 +8874,7 @@ body > footer {
 .admin-official-shop-reload{width:36px;padding:0;border:1px solid rgba(148,163,184,.18);background:transparent;color:#91A6BA}
 .admin-official-shop-modal[hidden]{display:none!important}
 .admin-official-shop-modal{position:fixed;inset:0;z-index:10050;display:flex;align-items:center;justify-content:center;padding:22px}
-.admin-official-shop-backdrop{position:absolute;inset:0;width:100%;height:100%;border:0;background:rgba(3,8,14,.78);backdrop-filter:blur(7px);cursor:default}
+.admin-official-shop-backdrop{position:absolute;inset:0;width:100%;height:100%;border:0;background:rgba(3,8,14,.78);backdrop-filter:none;cursor:default}
 .admin-official-shop-dialog{position:relative;z-index:1;width:min(620px,100%);max-height:min(88vh,820px);overflow:auto;border:1px solid rgba(102,192,244,.2);border-radius:18px;background:linear-gradient(155deg,#1B2838,#141D29 72%);box-shadow:0 26px 80px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.04);animation:admin-official-shop-pop .2s ease-out}
 @keyframes admin-official-shop-pop{from{transform:translateY(10px) scale(.985);opacity:0}to{transform:translateY(0) scale(1);opacity:1}}
 .admin-official-shop-modal-header{display:flex;align-items:flex-start;justify-content:space-between;gap:15px;padding:20px 22px 16px;border-bottom:1px solid rgba(42,71,94,.55)}
@@ -8991,7 +8991,7 @@ body.admin-official-shop-modal-open{overflow:hidden}
 #view-admin .admin-management-launcher>span:nth-child(2){flex:1}
 #view-admin .admin-management-launcher>span:last-child{color:#91A6BA}
 #view-admin .admin-management-launcher:hover{border-color:rgba(102,192,244,.55);background:rgba(42,71,94,.42);color:#fff}
-#view-admin .admin-management-content{display:none!important}
+#view-admin .admin-management-content{display:contents!important}
 #view-admin .admin-management-popup{
   display:none!important;position:fixed!important;inset:0!important;z-index:10040!important;
   width:100%!important;height:100%!important;max-width:none!important;margin:0!important;
