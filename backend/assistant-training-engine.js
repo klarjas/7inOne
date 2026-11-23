@@ -4,6 +4,7 @@ const rawInterval = Number(process.env.ANANTA_TRAINING_INTERVAL_SECONDS || 21600
 const INTERVAL = (Number.isFinite(rawInterval) ? Math.max(3600, rawInterval) : 21600) * 1000;
 const LEVELS = ['Beginner','Learner','Intermediate','Advanced','Expert','Master'];
 let active = false, timer = null;
+const runtime = { started: false, running: false, lastAttemptAt: null, lastSuccessAt: null, lastError: '', intervalSeconds: INTERVAL / 1000, enabled: false };
 const token = () => process.env.HF_TOKEN || process.env.AI_API_KEY || '';
 const clean = (v,n=2000) => String(v ?? '').replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g,' ').trim().slice(0,n);
 async function ask(messages, max_tokens) {
@@ -22,7 +23,7 @@ const level = n => n>=95?6:n>=90?5:n>=80?4:n>=70?3:n>=60?2:1;
 async function cycle({supabase,port}) {
   if(active) return;
   if(!token()){console.warn('[ANANTA Training] Paused: configure HF_TOKEN or AI_API_KEY.');return;}
-  active=true;
+  active=true; runtime.running=true; runtime.lastAttemptAt=new Date().toISOString(); runtime.lastError='';
   try {
     const {data:space,error:se}=await supabase.from('assistant_knowledge_spaces').select('id,is_enabled').eq('space_code','primary').maybeSingle();
     if(se) throw se; if(!space?.is_enabled) throw new Error('Primary knowledge space disabled.');
@@ -59,12 +60,15 @@ async function cycle({supabase,port}) {
     const best=Math.max(Number(p.data?.best_score||0),score), next=Math.max(current,level(best));
     const {error:ue}=await supabase.from('assistant_training_progress').upsert({space_id:space.id,current_level:next,current_level_name:LEVELS[next-1],latest_score:score,best_score:best,lessons_completed:Number(p.data?.lessons_completed||0)+(passed?1:0),tests_passed:Number(p.data?.tests_passed||0)+(passed?1:0),tests_failed:Number(p.data?.tests_failed||0)+(passed?0:1),weak_topics:[...new Set([...weak,...(p.data?.weak_topics||[])])].slice(0,12),last_assessed_at:new Date().toISOString(),updated_at:new Date().toISOString()},{onConflict:'space_id'});
     if(ue) throw ue;
+    runtime.lastSuccessAt=new Date().toISOString();
     console.log('[ANANTA Training] graded:',JSON.stringify({lesson:lesson.title,score,passed}));
-  } catch(e){console.error('[ANANTA Training] cycle failed:',clean(e.message,500));}
-  finally{active=false;}
+  } catch(e){runtime.lastError=clean(e.message,500);console.error('[ANANTA Training] cycle failed:',runtime.lastError);}
+  finally{active=false;runtime.running=false;}
 }
+export function getAnantaTrainingStatus() { return { ...runtime, tokenConfigured: Boolean(token()), model: MODEL, intervalSeconds: INTERVAL / 1000, enabled: runtime.enabled }; }
 export function startAnantaTrainingEngine({supabase,port}) {
-  if(!supabase||process.env.ANANTA_TRAINING_ENABLED==='false'){console.log('[ANANTA Training] scheduler disabled or Supabase missing.');return ()=>{};}
+  if(!supabase||process.env.ANANTA_TRAINING_ENABLED==='false'){runtime.enabled=false;runtime.started=false;runtime.lastError=!supabase?'Supabase is not configured.':'ANANTA_TRAINING_ENABLED=false';console.log('[ANANTA Training] scheduler disabled or Supabase missing.');return ()=>{};}
+  runtime.enabled=true; runtime.started=true; runtime.lastError='';
   if(timer)return ()=>clearInterval(timer);
   const run=()=>cycle({supabase,port});
   const startup=setTimeout(run,60000); timer=setInterval(run,INTERVAL); startup.unref?.();timer.unref?.();
