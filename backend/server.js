@@ -5029,6 +5029,74 @@ app.patch('/api/admin/orders/:id', authenticate, requireAdmin, async (req, res) 
   res.json({ data });
 });
 
+// Private Admin-managed supplier registry. Supplier metadata is never exposed to storefront routes.
+const SUPPLIER_PARSER_ADAPTERS = new Set(['cc_computer']);
+function normalizeSupplierRegistryInput(body = {}) {
+  const supplierName = clean(body.supplier_name, 120);
+  const supplierKey = clean(body.supplier_key, 64).toLowerCase();
+  let parsed;
+  try { parsed = new URL(clean(body.base_url, 1000)); } catch { throw new Error('Enter a valid supplier URL.'); }
+  if (parsed.protocol !== 'https:' || parsed.username || parsed.password || isIP(parsed.hostname)) throw new Error('Supplier URL must use HTTPS and a public hostname.');
+  const hostname = parsed.hostname.toLowerCase().replace(/^www\./, '');
+  if (!/^(?=.{1,253}$)[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$/.test(hostname) || hostname.includes('..')) throw new Error('Supplier hostname is invalid.');
+  if (!/^[a-z0-9][a-z0-9_-]{1,63}$/.test(supplierKey)) throw new Error('Supplier key must use lowercase letters, numbers, hyphens or underscores.');
+  if (!supplierName) throw new Error('Supplier name is required.');
+  const parserKey = clean(body.parser_key, 40).toLowerCase();
+  if (!['cc_computer','opencart'].includes(parserKey)) throw new Error('Unsupported supplier adapter.');
+  parsed.hash = '';
+  return {
+    supplier_key: supplierKey, supplier_name: supplierName, base_url: parsed.href,
+    allowed_domains: [hostname], parser_key: parserKey,
+    is_verified: body.is_verified === true,
+    is_active: false,
+    notes: clean(body.notes, 1000)
+  };
+}
+app.get('/api/admin/suppliers', authenticate, requireAdmin, async (_req, res) => {
+  if (!db(res)) return;
+  const { data, error } = await supabase.from('supplier_registry')
+    .select('id,supplier_key,supplier_name,base_url,allowed_domains,parser_key,is_verified,is_active,notes,created_at,updated_at')
+    .order('supplier_name');
+  if (error) { console.error('Supplier registry read failed:', error.message); return fail(res, 500, 'Could not load supplier registry. Apply the supplier registry migration first.'); }
+  res.json({ data: (data || []).map(row => ({
+    ...row,
+    adapter_ready: SUPPLIER_PARSER_ADAPTERS.has(row.parser_key)
+  })) });
+});
+app.post('/api/admin/suppliers', authenticate, requireAdmin, async (req, res) => {
+  if (!db(res)) return;
+  let payload;
+  try { payload = normalizeSupplierRegistryInput(req.body); }
+  catch (error) { return fail(res, 400, error.message); }
+  const { data, error } = await supabase.from('supplier_registry').insert(payload)
+    .select('id,supplier_key,supplier_name,base_url,allowed_domains,parser_key,is_verified,is_active,notes,created_at,updated_at').single();
+  if (error) { console.error('Supplier registry create failed:', error.message); return fail(res, 400, error.code === '23505' ? 'Supplier key already exists.' : 'Could not add supplier.'); }
+  res.status(201).json({ data: { ...data, adapter_ready: SUPPLIER_PARSER_ADAPTERS.has(data.parser_key) } });
+});
+app.patch('/api/admin/suppliers/:id', authenticate, requireAdmin, async (req, res) => {
+  if (!db(res)) return;
+  const update = {};
+  if (typeof req.body.is_verified === 'boolean') update.is_verified = req.body.is_verified;
+  if (typeof req.body.is_active === 'boolean') {
+    if (req.body.is_active === true) {
+      const { data: current, error: readError } = await supabase.from('supplier_registry')
+        .select('is_verified,parser_key').eq('id', req.params.id).maybeSingle();
+      if (readError || !current) return fail(res, 404, 'Supplier was not found.');
+      if (!current.is_verified) return fail(res, 400, 'Verify this supplier before enabling it.');
+      if (!SUPPLIER_PARSER_ADAPTERS.has(current.parser_key)) return fail(res, 400, 'This supplier adapter is not ready yet.');
+    }
+    update.is_active = req.body.is_active;
+  }
+  if (req.body.notes !== undefined) update.notes = clean(req.body.notes, 1000);
+  if (!Object.keys(update).length) return fail(res, 400, 'No supported supplier changes were provided.');
+  update.updated_at = new Date().toISOString();
+  const { data, error } = await supabase.from('supplier_registry').update(update).eq('id', req.params.id)
+    .select('id,supplier_key,supplier_name,base_url,allowed_domains,parser_key,is_verified,is_active,notes,created_at,updated_at').maybeSingle();
+  if (error) { console.error('Supplier registry update failed:', error.message); return fail(res, 400, 'Could not update supplier.'); }
+  if (!data) return fail(res, 404, 'Supplier was not found.');
+  res.json({ data: { ...data, adapter_ready: SUPPLIER_PARSER_ADAPTERS.has(data.parser_key) } });
+});
+
 // Return JSON for unknown API paths instead of Next.js HTML 404 pages. This
 // makes missing or stale upload endpoints visible to the marketplace client.
 app.use('/api', (req, res) => fail(res, 404, `API route not found: ${req.method} ${req.path}`));
