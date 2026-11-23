@@ -1732,6 +1732,7 @@ function productDetailSpecEntries(product = {}) {
 
 function productDetailContentParts(description = '') {
   const narrative = [];
+  const promotions = [];
   const freeGifts = [];
   const warranty = [];
   const lines = String(description || '').replace(/\r/g, '').split('\n');
@@ -1739,14 +1740,17 @@ function productDetailContentParts(description = '') {
     const line = rawLine.trim();
     if (!line) { narrative.push(''); continue; }
     const clean = line.replace(/^[-•*]\s*/, '').replace(/^\*\*(.*?)\*\*\s*/, '$1 ').trim();
-    const freeMatch = clean.match(/^(?:free|free gift|gift|កាដូ|អំណោយ|ប្រូម៉ូសិន|promotion|ឈុតពិសេសក្នុងប្រអប់|របស់មានក្នុងប្រអប់|included in (?:the )?box)\s*[:：-]\s*(.+)$/i);
+    const freeMatch = clean.match(/^(?:free|free gift|gift|កាដូ|អំណោយ|ឈុតពិសេសក្នុងប្រអប់|របស់មានក្នុងប្រអប់|included in (?:the )?box)\s*[:：-]\s*(.+)$/i);
+    const promotionMatch = clean.match(/^(?:promotion|offer|upgrade|ប្រូម៉ូសិន|ការផ្តល់ជូន|ការដំឡើងបន្ថែម)\s*[:：-]\s*(.+)$/i);
     const warrantyMatch = clean.match(/^(?:warranty|ការធានា|រយៈពេលធានា)\s*[:：-]\s*(.+)$/i);
     if (freeMatch) freeGifts.push(freeMatch[1].trim());
+    else if (promotionMatch) promotions.push(promotionMatch[1].trim());
     else if (warrantyMatch) warranty.push(warrantyMatch[1].trim());
     else narrative.push(rawLine);
   }
   return {
     narrative: narrative.join('\n').replace(/\n{3,}/g, '\n\n').trim(),
+    promotions: [...new Set(promotions.filter(Boolean))],
     freeGifts: [...new Set(freeGifts.filter(Boolean))],
     warranty: [...new Set(warranty.filter(Boolean))]
   };
@@ -2762,9 +2766,9 @@ function renderProductDetail(options = {}) {
             <h2>${ic('file', 18)} ការពិពណ៌នា</h2>
             <div class="product-full-description product-narrative-description">${renderProductDescriptionHtml(detailContent.narrative || 'មិនទាន់មានការពិពណ៌នាលម្អិតទេ។')}</div>
           </section>
-          ${detailContent.freeGifts.length ? `<section class="product-promotion-section">
+          ${(detailContent.promotions.length || detailContent.freeGifts.length) ? `<section class="product-promotion-section">
             <h2>${ic('gift', 18)} ប្រូម៉ូសិន / កាដូឥតគិតថ្លៃ</h2>
-            <ul>${detailContent.freeGifts.map(gift => `<li>${esc(gift)}</li>`).join('')}</ul>
+            <ul>${detailContent.promotions.map(offer => `<li>${esc(offer)}</li>`).join('')}${detailContent.freeGifts.map(gift => `<li>${esc(gift)}</li>`).join('')}</ul>
           </section>` : ''}
           ${detailContent.warranty.length ? `<section class="product-warranty-section">
             <h2>${ic('shield-check', 18)} ការធានា</h2>
