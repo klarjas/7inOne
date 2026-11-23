@@ -2213,21 +2213,20 @@ async function openProduct(id, options = {}) {
     state.currentProduct?.listing_type === 'product';
   const cachedItem = state.products.find(row => row.listing_type === 'product' && String(row.id) === productId) || null;
 
+  // Never render cached/incomplete product data as the final detail page.
+  // Keep the detail view in skeleton state until every required request finishes.
   state.detailHydratedKey = null;
-  state.currentProduct = cachedItem ? { ...cachedItem } : { id: productId, listing_type: 'product' };
-  state.currentVendor = cachedItem
-    ? { ...(cachedItem.vendors || {}), id: cachedItem.vendors?.id || cachedItem.vendor_id, reviews: cachedItem.vendors?.reviews || [] }
-    : null;
+  state.currentProduct = { id: productId, listing_type: 'product' };
+  state.currentVendor = null;
   state.currentMarketplaceListing = null;
-  state.currentVariantId = cachedItem?.variants?.[0]?.id || null;
+  state.currentVariantId = null;
   state.productGalleryIndex = 0;
   state.productGalleryVideoActive = false;
 
   mountProductDetailPage();
   await showView('product', { preserveScroll: Boolean(options.preserveScroll), deferLoad: true });
   if (!isCurrent()) return false;
-  if (cachedItem) renderProductDetail();
-  else renderProductDetailSkeleton();
+  renderProductDetailSkeleton();
   if (!isCurrent()) return false;
 
   try {
@@ -2236,59 +2235,49 @@ async function openProduct(id, options = {}) {
   } catch {}
 
   try {
-    const vendorId = cachedItem?.vendor_id || cachedItem?.vendors?.id;
-    const detailRequests = [
+    // Fetch the authoritative product record and buyer order history together.
+    const [productResult] = await Promise.all([
       api('/api/products/' + encodeURIComponent(productId)),
-      state.session ? loadOrders().catch(() => {}) : Promise.resolve()
-    ];
-    if (vendorId) detailRequests.push(api('/api/vendors/' + encodeURIComponent(vendorId) + '/ratings'));
-    const results = await Promise.all(detailRequests);
+      state.session ? loadOrders() : Promise.resolve()
+    ]);
     if (!isCurrent()) return false;
 
-    const fetched = results[0]?.data;
+    const fetched = productResult?.data;
     if (!fetched) throw new Error('មិនមានព័ត៌មានទំនិញនេះទេ។');
     fetched.poster = cachedItem?.poster || fetched.poster || null;
 
-    let trust = results[2];
-    const fetchedVendorId = fetched.vendor_id || fetched.vendors?.id || vendorId;
-    if (!trust && fetchedVendorId) {
-      trust = await api('/api/vendors/' + encodeURIComponent(fetchedVendorId) + '/ratings');
+    // Resolve the vendor from the fresh product response, not from a possibly stale card.
+    const vendorId = fetched.vendor_id || fetched.vendors?.id || null;
+    let trust = null;
+    if (vendorId) {
+      trust = await api('/api/vendors/' + encodeURIComponent(vendorId) + '/ratings');
       if (!isCurrent()) return false;
     }
 
-    if (!isCurrent()) return false;
-    const current = state.currentProduct || cachedItem || {};
-    const merged = { ...current, ...fetched, listing_type: 'product' };
-    const oldImages = Array.isArray(current.product_images) ? current.product_images : [];
-    const newImages = Array.isArray(fetched.product_images) ? fetched.product_images : [];
-    const imageUrls = rows => rows.map(row => typeof row === 'string' ? row : row?.image_url || '').filter(Boolean);
-    const oldUrls = imageUrls(oldImages);
-    const newUrls = imageUrls(newImages);
-    if (oldUrls.length && oldUrls.length === newUrls.length && oldUrls.every((url, index) => url === newUrls[index])) {
-      merged.product_images = current.product_images;
-    }
-    const currentVendor = state.currentVendor || cachedItem?.vendors || {};
-    const fetchedVendor = fetched.vendors || {};
+    const merged = { ...(cachedItem || {}), ...fetched, listing_type: 'product' };
     state.currentProduct = merged;
     state.currentVendor = {
-      ...currentVendor,
-      ...fetchedVendor,
+      ...(cachedItem?.vendors || {}),
+      ...(fetched.vendors || {}),
       ...(trust?.data || {}),
-      id: fetchedVendorId || currentVendor.id,
-      reviews: trust?.data?.reviews || fetchedVendor.reviews || currentVendor.reviews || []
+      id: vendorId || fetched.vendors?.id || cachedItem?.vendor_id || null,
+      reviews: trust?.data?.reviews || fetched.vendors?.reviews || []
     };
-    state.currentVariantId = state.currentVariantId || fetched.variants?.[0]?.id || null;
+    state.currentVariantId = fetched.variants?.[0]?.id || null;
     state.detailHydratedKey = detailKey;
-    renderProductDetail({ isBackgroundHydration: true });
+
+    if (!isCurrent()) return false;
+    renderProductDetail();
     return true;
   } catch (error) {
     if (!isCurrent()) return false;
-    if (!cachedItem) {
-      toast(error.message, 'error');
-      void showView('home');
-      return false;
-    }
-    return true;
+    console.error('Could not load complete product detail:', error);
+    toast(error.message || 'មិនអាចផ្ទុកព័ត៌មានទំនិញបានទេ។', 'error');
+    state.detailHydratedKey = null;
+    state.currentProduct = null;
+    state.currentVendor = null;
+    void showView('home');
+    return false;
   }
 }
 
