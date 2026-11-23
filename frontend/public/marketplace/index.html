@@ -889,21 +889,49 @@
         </section>
 
         <!-- Admin-managed official shop -->
-        <section class="mb-6 rounded-3xl bg-white p-5 soft-shadow sm:p-6" id="adminManagedShopPanel">
-          <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
-            <div><p class="text-[10px] font-bold text-violet-700">OFFICIAL SHOP MANAGEMENT</p><h2 class="mt-1 text-xl font-bold">គ្រប់គ្រងហាងផ្លូវការ</h2><p class="mt-1 text-[10px] text-slate-500">គ្រប់គ្រង AURORA Computer ដាច់ដោយឡែកពីហាងអ្នកលក់ធម្មតា។</p></div>
-            <button type="button" id="adminManagedShopOpen" class="rounded-full bg-slate-900 px-4 py-2 text-[11px] font-bold text-white">មើលទំព័រហាង</button>
+        <section class="admin-official-shop-panel mb-6" id="adminManagedShopPanel">
+          <div class="admin-official-shop-card">
+            <div class="admin-official-shop-identity">
+              <div class="admin-official-shop-mark" aria-hidden="true"><span data-icon="store" data-icon-size="22"></span></div>
+              <div class="min-w-0">
+                <p class="admin-official-shop-eyebrow">OFFICIAL SHOP MANAGEMENT</p>
+                <h2 class="admin-official-shop-title">គ្រប់គ្រងហាងផ្លូវការ</h2>
+                <p class="admin-official-shop-description">គ្រប់គ្រង AURORA Computer ដាច់ដោយឡែកពីហាងអ្នកលក់ធម្មតា។</p>
+              </div>
+            </div>
+            <div class="admin-official-shop-summary" id="adminManagedShopStatus" aria-live="polite">កំពុងផ្ទុកព័ត៌មានហាង...</div>
+            <div class="admin-official-shop-actions">
+              <button type="button" id="adminManagedShopEdit" class="admin-official-shop-edit"><span data-icon="pencil" data-icon-size="15"></span> កែព័ត៌មានហាង</button>
+              <button type="button" id="adminManagedShopOpen" class="admin-official-shop-view">មើលទំព័រហាង <span data-icon="external-link" data-icon-size="14"></span></button>
+              <button type="button" id="adminManagedShopReload" class="admin-official-shop-reload" aria-label="ផ្ទុកព័ត៌មានហាងឡើងវិញ" title="ផ្ទុកឡើងវិញ"><span data-icon="refresh-cw" data-icon-size="15"></span></button>
+            </div>
           </div>
-          <div id="adminManagedShopStatus" class="mb-4 rounded-xl bg-slate-50 p-3 text-[11px] text-slate-500">កំពុងផ្ទុកព័ត៌មានហាង...</div>
-          <form id="adminManagedShopForm" class="grid gap-3 sm:grid-cols-2">
-            <label><span class="label">ឈ្មោះហាង</span><input class="field" name="store_name" required maxlength="80"></label>
-            <label><span class="label">Shop ID</span><input class="field" id="adminManagedShopId" readonly></label>
-            <label class="sm:col-span-2"><span class="label">ទីតាំងហាង</span><input class="field" name="store_location" maxlength="160"></label>
-            <label class="sm:col-span-2"><span class="label">ការពិពណ៌នាហាង</span><textarea class="field" name="description" rows="3" maxlength="1000"></textarea></label>
-            <label><span class="label">Logo ហាង</span><input class="field" name="logo" type="file" accept="image/jpeg,image/png,image/webp"><span id="adminManagedShopLogoPreview" class="mt-2 block text-[10px] text-slate-400">មិនទាន់មាន Logo</span></label>
-            <label><span class="label">Cover ហាង</span><input class="field" name="cover" type="file" accept="image/jpeg,image/png,image/webp"><span id="adminManagedShopCoverPreview" class="mt-2 block text-[10px] text-slate-400">មិនទាន់មាន Cover</span></label>
-            <div class="flex flex-wrap gap-2 sm:col-span-2"><button type="submit" class="brand-gradient rounded-full px-5 py-2.5 text-[11px] font-bold text-white">រក្សាទុកព័ត៌មានហាង</button><button type="button" id="adminManagedShopReload" class="rounded-full border border-slate-200 px-5 py-2.5 text-[11px] font-bold">ផ្ទុកឡើងវិញ</button></div>
-          </form>
+          <div class="admin-official-shop-modal" id="adminManagedShopModal" hidden aria-hidden="true">
+            <button type="button" class="admin-official-shop-backdrop" data-admin-shop-close aria-label="បិទ Popup"></button>
+            <section class="admin-official-shop-dialog" role="dialog" aria-modal="true" aria-labelledby="adminManagedShopModalTitle">
+              <header class="admin-official-shop-modal-header">
+                <div><p class="admin-official-shop-eyebrow">OFFICIAL SHOP MANAGEMENT</p><h2 id="adminManagedShopModalTitle">កែព័ត៌មានហាងផ្លូវការ</h2><p>កែប្រែព័ត៌មានសាធារណៈរបស់ AURORA Computer</p></div>
+                <button type="button" class="admin-official-shop-close" data-admin-shop-close aria-label="បិទ"><span data-icon="x" data-icon-size="19"></span></button>
+              </header>
+              <form id="adminManagedShopForm" class="admin-official-shop-form">
+                <div class="admin-official-shop-id-row">
+                  <div><span class="admin-official-shop-field-label">Shop ID</span><strong id="adminManagedShopId">—</strong></div>
+                  <span class="admin-official-shop-fixed"><span data-icon="shield-check" data-icon-size="13"></span> Official Shop</span>
+                </div>
+                <label><span class="label">ឈ្មោះហាង</span><input class="field" name="store_name" required maxlength="80"></label>
+                <label><span class="label">ទីតាំងហាង</span><input class="field" name="store_location" maxlength="160"></label>
+                <label><span class="label">ការពិពណ៌នាហាង</span><textarea class="field" name="description" rows="3" maxlength="1000"></textarea></label>
+                <div class="admin-official-shop-media-grid">
+                  <label><span class="label">Logo ហាង</span><input class="field" name="logo" type="file" accept="image/jpeg,image/png,image/webp"><span id="adminManagedShopLogoPreview" class="admin-official-shop-preview">មិនទាន់មាន Logo</span></label>
+                  <label><span class="label">Cover ហាង</span><input class="field" name="cover" type="file" accept="image/jpeg,image/png,image/webp"><span id="adminManagedShopCoverPreview" class="admin-official-shop-preview">មិនទាន់មាន Cover</span></label>
+                </div>
+                <footer class="admin-official-shop-modal-footer">
+                  <button type="button" class="admin-official-shop-cancel" data-admin-shop-close>បោះបង់</button>
+                  <button type="submit" class="admin-official-shop-save"><span data-icon="save" data-icon-size="15"></span> រក្សាទុកព័ត៌មានហាង</button>
+                </footer>
+              </form>
+            </section>
+          </div>
         </section>
 
         <!-- Vendor Verification Applications -->
