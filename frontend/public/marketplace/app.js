@@ -1983,8 +1983,8 @@ function showHomeDetailInspector() {
   if (!inspector || !detail) return;
   inspector.classList.remove('is-closing');
   inspector.appendChild(detail);
-  // The product detail may have rendered before it was mounted in the right-side inspector.
-  // Populate the adjacent details popup only after the inspector contains the product root.
+  $('homeJobsRail')?.classList.add('has-active-inspector');
+  // Keep description, specifications, reviews and related content in this scrollable panel.
   populateDetailsPopover(detail);
   $('steamDiscoveryHub')?.classList.add('hidden');
   inspector.classList.remove('hidden');
@@ -2013,6 +2013,7 @@ function closeHomeDetailInspector() {
   state.currentMarketplaceListing = null;
   if (!inspector) {
     if (detail && mount && detail.parentElement !== mount) mount.appendChild(detail);
+    $('homeJobsRail')?.classList.remove('has-active-inspector');
     return;
   }
   inspector.classList.add('is-closing');
@@ -2021,6 +2022,7 @@ function closeHomeDetailInspector() {
     if (detail && mount && detail.parentElement !== mount) mount.appendChild(detail);
     inspector.classList.add('hidden');
     inspector.classList.remove('is-closing');
+    $('homeJobsRail')?.classList.remove('has-active-inspector');
   }, 220);
 }
 
@@ -2486,39 +2488,11 @@ function detailBottomActions(item) {
   return `<div class="detail-bottom-actions"><button type="button" data-detail-action="save">${ic('bookmark',16)} <span>រក្សាទុក</span></button><button type="button" data-detail-action="report">${ic('flag',16)} <span>រាយការណ៍</span></button><button type="button" data-detail-action="share">${ic('share',16)} <span>ចែករំលែក</span></button></div>`;
 }
 
-function populateDetailsPopover(root, options = {}) {
-  const inspector = $('homeDetailInspector');
-  const modal = $('detailsPopoverModal');
-  const body = $('detailsPopoverBody');
-  if (!root || !inspector?.contains(root) || !modal || !body) return;
-  const wasOpen = modal.classList.contains('is-open');
-  body.replaceChildren();
-  const moved = new Set();
-  ['.product-detail-description','.product-trust-reviews-grid','.product-safety-note','.product-related-section','.detail-bottom-actions'].forEach(selector => {
-    root.querySelectorAll(selector).forEach(node => {
-      if (moved.has(node) || [...moved].some(parent => parent.contains(node))) return;
-      moved.add(node);
-      body.appendChild(node);
-    });
-  });
-  root.querySelectorAll('.product-detail-info > .product-meta-item').forEach(node => {
-    if (node.textContent.trim()) body.appendChild(node);
-  });
-  const titleAnchor = root.querySelector('.product-heading-block') || root.querySelector('.product-facts-list');
-  if (titleAnchor && !root.querySelector('[data-open-details-popover]')) {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'details-popover-trigger';
-    button.dataset.openDetailsPopover = 'true';
-    button.innerHTML = `${ic('file',15)} <span>មើលព័ត៌មានលម្អិត</span> ${ic('chevronRight',14)}`;
-    button.addEventListener('click', openDetailsPopover);
-    titleAnchor.insertAdjacentElement('afterend', button);
-  }
-  if (body.childElementCount) {
-    modal.classList.toggle('hidden', !wasOpen);
-    modal.classList.toggle('is-open', wasOpen);
-    modal.setAttribute('aria-hidden', String(!wasOpen));
-  } else closeDetailsPopover();
+function populateDetailsPopover(root) {
+  // Product details now stay inside the right-side workspace; no floating popup.
+  if (!root) return;
+  closeDetailsPopover();
+  root.querySelectorAll('[data-open-details-popover]').forEach(button => button.remove());
 }
 function syncDetailsPopoverTriggers(isOpen) {
   document.querySelectorAll('[data-open-details-popover]').forEach(button => {
