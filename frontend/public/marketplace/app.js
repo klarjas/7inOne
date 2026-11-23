@@ -4864,6 +4864,37 @@ async function renderAdmin() {
   $('maintenanceMessageInput').value = state.maintenanceMessage;
 
   const managedPanel = $('adminManagedShopPanel');
+  const adminPopupPanels = ['siteBrandingPanel', 'adminManagedShopPanel', 'adminVendorApplicationsPanel']
+    .map(id => $(id)).filter(Boolean);
+  if (!document.body.dataset.adminPopupHandlersBound) {
+    document.body.dataset.adminPopupHandlersBound = 'true';
+    const closeAdminPopup = panel => {
+      if (!panel) return;
+      panel.classList.remove('is-open');
+      panel.setAttribute('aria-hidden', 'true');
+      document.body.classList.remove('admin-management-popup-open');
+    };
+    document.querySelectorAll('[data-admin-popup-open]').forEach(button => {
+      button.addEventListener('click', () => {
+        const panel = $(button.dataset.adminPopupOpen);
+        if (!panel) return;
+        adminPopupPanels.forEach(item => closeAdminPopup(item));
+        panel.classList.add('is-open');
+        panel.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('admin-management-popup-open');
+        panel.querySelector('input:not([type="file"]),button,select,textarea')?.focus({ preventScroll: true });
+      });
+    });
+    adminPopupPanels.forEach(panel => {
+      panel.setAttribute('aria-hidden', 'true');
+      panel.addEventListener('click', event => {
+        if (event.target === panel || event.target.closest('[data-admin-popup-close]')) closeAdminPopup(panel);
+      });
+    });
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape') adminPopupPanels.forEach(panel => closeAdminPopup(panel));
+    });
+  }
   if (managedPanel && managedPanel.dataset.bound !== 'true') {
     managedPanel.dataset.bound = 'true';
     const shopModal = $('adminManagedShopModal');
