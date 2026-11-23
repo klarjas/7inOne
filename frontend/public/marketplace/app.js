@@ -1825,9 +1825,10 @@ function productGiftVisual(giftName = '') {
   const value = String(giftName || '').toLowerCase();
   const wireless = /wireless|bluetooth|2\.?4\s*(?:ghz|g)|ឥតខ្សែ|គ្មានខ្សែ/.test(value);
   const wired = /\bwired\b|usb[- ]?cable|with cable|មានខ្សែ|ខ្សែភ្ជាប់/.test(value);
-  if (/mouse|ម៉ៅស៍|កណ្ដុរ/.test(value)) return { icon: wireless ? 'mouseWireless' : wired ? 'mouseWired' : 'mouse', type: wireless ? 'Wireless' : wired ? 'Wired' : 'ប្រភេទមិនបានបញ្ជាក់' };
-  if (/keyboard|ក្ដារចុច/.test(value)) return { icon: 'keyboard', type: wireless ? 'Wireless' : wired ? 'Wired' : 'ប្រភេទមិនបានបញ្ជាក់' };
-  if (/headset|headphone|earphone|កាស/.test(value)) return { icon: 'headphones', type: wireless ? 'Wireless / Bluetooth' : wired ? 'Wired' : 'ប្រភេទមិនបានបញ្ជាក់' };
+  const connection = wireless === wired ? 'ប្រភេទមិនបានបញ្ជាក់' : wireless ? 'Wireless' : 'Wired';
+  if (/mouse|ម៉ៅស៍|កណ្ដុរ/.test(value)) return { icon: wireless === wired ? 'mouse' : wireless ? 'mouseWireless' : 'mouseWired', type: connection };
+  if (/keyboard|ក្ដារចុច/.test(value)) return { icon: 'keyboard', type: connection };
+  if (/headset|headphone|earphone|កាស/.test(value)) return { icon: 'headphones', type: wireless === wired ? connection : wireless ? 'Wireless / Bluetooth' : 'Wired' };
   if (/usb|flash drive|memory stick|ថាសចល័ត/.test(value)) return { icon: 'usb', type: 'USB' };
   if (/charger|adapter|ឆ្នាំងសាក/.test(value)) return { icon: 'charger', type: 'Power accessory' };
   if (/speaker|បំពងសំឡេង/.test(value)) return { icon: 'speaker', type: 'Speaker' };
