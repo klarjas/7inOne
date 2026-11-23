@@ -1689,8 +1689,20 @@ function productDetailSpecEntries(product = {}) {
     if (value == null || typeof value === 'object' ||
         ['fullspecs','fullspecification','specificationsfull','description'].includes(cleanKey(key))) continue;
     const canonical = aliases[cleanKey(key)];
+    if (!canonical) continue;
+    const parts = String(value).split(/\s*[|｜]\s*/);
+    let parsedPair = false;
+    for (const part of parts) {
+      const pair = part.match(/^([^:：=]+)\s*[:：=]\s*(.+)$/);
+      const pairKey = pair ? aliases[cleanKey(pair[1])] : '';
+      const text = String(pair?.[2] ?? '').trim().replace(/^[:：=\-\s]+|[,;\s]+$/g, '');
+      if (pairKey && text && !/^(?:n\/a|none|null|undefined|មិនបានបញ្ជាក់|not specified)$/i.test(text) && !values.has(pairKey)) {
+        values.set(pairKey, text);
+        parsedPair = true;
+      }
+    }
     const text = String(value).trim().replace(/^[:：=\-\s]+|[,;\s]+$/g, '');
-    if (canonical && text && !/^(?:n\/a|none|null|undefined|មិនបានបញ្ជាក់|not specified)$/i.test(text) && !values.has(canonical)) {
+    if (!parsedPair && text && !/^(?:n\/a|none|null|undefined|មិនបានបញ្ជាក់|not specified)$/i.test(text) && !values.has(canonical)) {
       values.set(canonical, text);
     }
   }
@@ -1727,7 +1739,7 @@ function productDetailContentParts(description = '') {
     const line = rawLine.trim();
     if (!line) { narrative.push(''); continue; }
     const clean = line.replace(/^[-•*]\s*/, '').replace(/^\*\*(.*?)\*\*$/, '$1').trim();
-    const freeMatch = clean.match(/^(?:free|free gift|gift|កាដូ|អំណោយ|ប្រូម៉ូសិន|promotion)\s*[:：-]\s*(.+)$/i);
+    const freeMatch = clean.match(/^(?:free|free gift|gift|កាដូ|អំណោយ|ប្រូម៉ូសិន|promotion|ឈុតពិសេសក្នុងប្រអប់|របស់មានក្នុងប្រអប់|included in (?:the )?box)\s*[:：-]\s*(.+)$/i);
     const warrantyMatch = clean.match(/^(?:warranty|ការធានា|រយៈពេលធានា)\s*[:：-]\s*(.+)$/i);
     if (freeMatch) freeGifts.push(freeMatch[1].trim());
     else if (warrantyMatch) warranty.push(warrantyMatch[1].trim());
