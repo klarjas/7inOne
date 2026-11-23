@@ -99,7 +99,6 @@ if not exist "scripts\ONE-WINDOW-CONTROLLER.ps1" (
   exit /b 1
 )
 
-start "" "http://localhost:10000/marketplace/index.html#home"
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\ONE-WINDOW-CONTROLLER.ps1"
 
 echo.
