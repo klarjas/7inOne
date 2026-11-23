@@ -8999,3 +8999,19 @@ img{content-visibility:auto}
   overflow-y: visible;
   overscroll-behavior: auto;
 }
+
+
+/* Shared centered layout: align the global header with every page shell. */
+.hd .shell{
+  width:min(1320px,calc(100% - 36px));
+  max-width:1320px;
+  margin-inline:auto;
+  padding-inline:0;
+}
+@media(max-width:767px){
+  .hd .shell{
+    width:min(1320px,calc(100% - 36px));
+    max-width:1320px;
+    padding-inline:0;
+  }
+}
