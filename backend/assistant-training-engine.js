@@ -21,8 +21,8 @@ async function ask(messages, max_tokens) {
 const lessonCode = x => (x.category||'general')+'-'+(String(x.title).match(/(?:មេរៀន|គោលការណ៍|នីតិវិធី)\s*(\d{1,4})/)?.[1]||String(x.id).slice(0,8));
 const level = n => n>=95?6:n>=90?5:n>=80?4:n>=70?3:n>=60?2:1;
 async function cycle({supabase,port}) {
-  if(active) return;
-  if(!token()){runtime.lastError='AI model token is not configured. Set HF_TOKEN or AI_API_KEY.';console.warn('[ANANTA Training] Paused: configure HF_TOKEN or AI_API_KEY.');return;}
+  if(active) return false;
+  if(!token()){runtime.lastError='AI model token is not configured. Set HF_TOKEN or AI_API_KEY.';console.warn('[ANANTA Training] Paused: configure HF_TOKEN or AI_API_KEY.');return false;}
   active=true; runtime.running=true; runtime.lastAttemptAt=new Date().toISOString(); runtime.lastError='';
   try {
     const {data:space,error:se}=await supabase.from('assistant_knowledge_spaces').select('id,is_enabled').eq('space_code','primary').maybeSingle();
@@ -62,8 +62,14 @@ async function cycle({supabase,port}) {
     if(ue) throw ue;
     runtime.lastSuccessAt=new Date().toISOString();
     console.log('[ANANTA Training] graded:',JSON.stringify({lesson:lesson.title,score,passed}));
-  } catch(e){runtime.lastError=clean(e.message,500);console.error('[ANANTA Training] cycle failed:',runtime.lastError);}
+    return true;
+  } catch(e){runtime.lastError=clean(e.message,500);console.error('[ANANTA Training] cycle failed:',runtime.lastError);return false;}
   finally{active=false;runtime.running=false;}
+}
+export async function runAnantaTrainingNow({supabase,port}) {
+  if(active) return {started:false,success:false,message:'A training cycle is already running.'};
+  const success=await cycle({supabase,port});
+  return {started:true,success,message:success?'Training attempt saved.':runtime.lastError||'Training failed.'};
 }
 export function getAnantaTrainingStatus() { return { ...runtime, tokenConfigured: Boolean(token()), model: MODEL, intervalSeconds: INTERVAL / 1000, enabled: runtime.enabled }; }
 export function startAnantaTrainingEngine({supabase,port}) {
