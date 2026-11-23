@@ -725,226 +725,146 @@
           </div>
         </div>
 
-        <!-- Branding & Hero Banner -->
-        <div class="mb-6 rounded-3xl bg-white p-5 soft-shadow sm:p-7" id="siteBrandingPanel">
-          <h2 class="mb-5 text-xl font-bold">ការកំណត់ Brand &amp; Hero Banner</h2>
-          <div class="grid gap-5 xl:grid-cols-2">
-            <section class="rounded-2xl bg-slate-50 p-4">
-              <div class="mb-4 flex items-center gap-4 rounded-2xl bg-white p-4">
-                <div class="brand-logo-preview" id="brandLogoPreview"><span>7</span></div>
-                <div><b class="block text-sm" id="brandPreviewTitle">7inOne</b><small class="text-[10px] text-slate-500" id="brandPreviewSubtitle">ផ្សារទិញលក់កម្ពុជា</small></div>
-              </div>
-              <label class="mb-3 block"><span class="label">Header Logo</span><input id="brandingLogoUpload" class="field bg-white" type="file" accept="image/jpeg,image/png,image/webp" /></label>
-              <div class="mb-3 flex items-center gap-4 rounded-2xl bg-white p-3">
-                <div class="brand-logo-preview" id="brandFaviconPreview"><span>7</span></div>
-                <div><b class="block text-xs">Browser Favicon</b></div>
-              </div>
-              <label class="mb-3 block"><span class="label">Browser Favicon</span><input id="brandingFaviconUpload" class="field bg-white" type="file" accept="image/jpeg,image/png,image/webp" /></label>
-              <label class="mb-3 block"><span class="label">ឈ្មោះ Brand</span><input id="brandTitleInput" class="field bg-white" maxlength="80" value="7inOne" /></label>
-              <label class="block"><span class="label">អក្សរតូចក្រោម Logo</span><input id="brandSubtitleInput" class="field bg-white" maxlength="120" value="ផ្សារទិញលក់កម្ពុជា" /></label>
-            </section>
-
-            <section class="rounded-2xl bg-slate-50 p-4">
-              <div class="hero-admin-preview mb-4">
-                <div>
-                  <small class="text-amber-200" id="brandHeroPreviewBadge">ផ្សារអនឡាញ</small>
-                  <b class="mt-1 block text-sm" id="brandHeroPreviewTitle">ទិញលក់ងាយៗ នៅជិតអ្នក</b>
-                  <span class="mt-1 block text-[10px] opacity-80" id="brandHeroPreviewSubtitle">ស្វែងរកទំនិញ...</span>
-                </div>
-                <div id="heroBannerPreviews" class="hero-admin-preview-images">
-                  <div class="hero-admin-preview-empty">01</div>
-                  <div class="hero-admin-preview-empty">02</div>
-                  <div class="hero-admin-preview-empty">03</div>
-                </div>
-              </div>
-              <label class="mb-3 block"><span class="label">Hero Images (1-3 រូប)</span><input id="brandingHeroUpload" class="field bg-white" type="file" accept="image/jpeg,image/png,image/webp" multiple /></label>
-              <label class="mb-3 block"><span class="label">Hero Badge</span><input id="heroBadgeInput" class="field bg-white" maxlength="100" /></label>
-              <label class="mb-3 block"><span class="label">ចំណងជើង Banner</span><input id="heroTitleInput" class="field bg-white" maxlength="160" /></label>
-              <label class="block"><span class="label">អត្ថបទពិពណ៌នា Banner</span><textarea id="heroSubtitleInput" class="field min-h-[80px] bg-white" maxlength="600"></textarea></label>
-              <label class="mt-3 flex items-center gap-2 text-[10px]"><input id="clearHeroImages" type="checkbox" /> លុបរូប Banner ចាស់ទាំងអស់</label>
-            </section>
-          </div>
-
-          <!-- Side Promo Posters -->
-          <div class="mt-6 border-t border-slate-100 pt-5" id="sidePosterAdmin">
-            <h3 class="mb-3 text-base font-bold">គ្រប់គ្រង Poster ខាងស្ដាំ</h3>
-            <div class="grid gap-4 lg:grid-cols-3">
-              <section class="rounded-2xl bg-slate-50 p-3">
-                <b class="text-xs">Poster ផ្ដេក ១</b>
-                <div class="poster-admin-preview" id="posterPreviewTop">Preview</div>
-                <input id="posterUploadTop" class="field mt-2 bg-white" type="file" accept="image/jpeg,image/png,image/webp" />
-                <input id="posterLinkTop" class="field mt-2 bg-white" type="url" placeholder="Link ពេលចុច https://..." />
-                <label class="mt-2 flex items-center gap-2 text-[10px]"><input id="posterEnabledTop" type="checkbox" checked /> បង្ហាញ Poster</label>
-                <label class="mt-1 flex items-center gap-2 text-[10px]"><input id="posterClearTop" type="checkbox" /> លុប Poster</label>
-              </section>
-              <section class="rounded-2xl bg-slate-50 p-3">
-                <b class="text-xs">Poster ផ្ដេក ២</b>
-                <div class="poster-admin-preview" id="posterPreviewMiddle">Preview</div>
-                <input id="posterUploadMiddle" class="field mt-2 bg-white" type="file" accept="image/jpeg,image/png,image/webp" />
-                <input id="posterLinkMiddle" class="field mt-2 bg-white" type="url" placeholder="Link ពេលចុច https://..." />
-                <label class="mt-2 flex items-center gap-2 text-[10px]"><input id="posterEnabledMiddle" type="checkbox" checked /> បង្ហាញ Poster</label>
-                <label class="mt-1 flex items-center gap-2 text-[10px]"><input id="posterClearMiddle" type="checkbox" /> លុប Poster</label>
-              </section>
-              <section class="rounded-2xl bg-slate-50 p-3">
-                <b class="text-xs">Poster បញ្ឈរ</b>
-                <div class="poster-admin-preview poster-admin-preview-tall" id="posterPreviewTall">Preview</div>
-                <input id="posterUploadTall" class="field mt-2 bg-white" type="file" accept="image/jpeg,image/png,image/webp" />
-                <input id="posterLinkTall" class="field mt-2 bg-white" type="url" placeholder="Link ពេលចុច https://..." />
-                <label class="mt-2 flex items-center gap-2 text-[10px]"><input id="posterEnabledTall" type="checkbox" checked /> បង្ហាញ Poster</label>
-                <label class="mt-1 flex items-center gap-2 text-[10px]"><input id="posterClearTall" type="checkbox" /> លុប Poster</label>
-              </section>
-            </div>
-          </div>
-
-          <div class="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4">
-            <p class="text-[10px] text-slate-500" id="brandingStatus">ការកំណត់ Brand បច្ចុប្បន្ន</p>
-            <button class="brand-gradient rounded-full px-6 py-3 text-[11px] font-bold text-white" id="saveBrandingBtn" type="button">រក្សាទុកការកំណត់ Brand &amp; Banner</button>
-          </div>
+        <!-- Three distinct admin management cards in one responsive row -->
+        <div class="admin-control-row">
+                  <!-- Branding & Hero Banner -->
+                  <div class="admin-control-card admin-branding-card" id="siteBrandingPanel">
+                    <h2 class="mb-5 text-xl font-bold">ការកំណត់ Brand &amp; Hero Banner</h2>
+                    <div class="grid gap-5 xl:grid-cols-2">
+                      <section class="rounded-2xl bg-slate-50 p-4">
+                        <div class="mb-4 flex items-center gap-4 rounded-2xl bg-white p-4">
+                          <div class="brand-logo-preview" id="brandLogoPreview"><span>7</span></div>
+                          <div><b class="block text-sm" id="brandPreviewTitle">7inOne</b><small class="text-[10px] text-slate-500" id="brandPreviewSubtitle">ផ្សារទិញលក់កម្ពុជា</small></div>
+                        </div>
+                        <label class="mb-3 block"><span class="label">Header Logo</span><input id="brandingLogoUpload" class="field bg-white" type="file" accept="image/jpeg,image/png,image/webp" /></label>
+                        <div class="mb-3 flex items-center gap-4 rounded-2xl bg-white p-3">
+                          <div class="brand-logo-preview" id="brandFaviconPreview"><span>7</span></div>
+                          <div><b class="block text-xs">Browser Favicon</b></div>
+                        </div>
+                        <label class="mb-3 block"><span class="label">Browser Favicon</span><input id="brandingFaviconUpload" class="field bg-white" type="file" accept="image/jpeg,image/png,image/webp" /></label>
+                        <label class="mb-3 block"><span class="label">ឈ្មោះ Brand</span><input id="brandTitleInput" class="field bg-white" maxlength="80" value="7inOne" /></label>
+                        <label class="block"><span class="label">អក្សរតូចក្រោម Logo</span><input id="brandSubtitleInput" class="field bg-white" maxlength="120" value="ផ្សារទិញលក់កម្ពុជា" /></label>
+                      </section>
+          
+                      <section class="rounded-2xl bg-slate-50 p-4">
+                        <div class="hero-admin-preview mb-4">
+                          <div>
+                            <small class="text-amber-200" id="brandHeroPreviewBadge">ផ្សារអនឡាញ</small>
+                            <b class="mt-1 block text-sm" id="brandHeroPreviewTitle">ទិញលក់ងាយៗ នៅជិតអ្នក</b>
+                            <span class="mt-1 block text-[10px] opacity-80" id="brandHeroPreviewSubtitle">ស្វែងរកទំនិញ...</span>
+                          </div>
+                          <div id="heroBannerPreviews" class="hero-admin-preview-images">
+                            <div class="hero-admin-preview-empty">01</div>
+                            <div class="hero-admin-preview-empty">02</div>
+                            <div class="hero-admin-preview-empty">03</div>
+                          </div>
+                        </div>
+                        <label class="mb-3 block"><span class="label">Hero Images (1-3 រូប)</span><input id="brandingHeroUpload" class="field bg-white" type="file" accept="image/jpeg,image/png,image/webp" multiple /></label>
+                        <label class="mb-3 block"><span class="label">Hero Badge</span><input id="heroBadgeInput" class="field bg-white" maxlength="100" /></label>
+                        <label class="mb-3 block"><span class="label">ចំណងជើង Banner</span><input id="heroTitleInput" class="field bg-white" maxlength="160" /></label>
+                        <label class="block"><span class="label">អត្ថបទពិពណ៌នា Banner</span><textarea id="heroSubtitleInput" class="field min-h-[80px] bg-white" maxlength="600"></textarea></label>
+                        <label class="mt-3 flex items-center gap-2 text-[10px]"><input id="clearHeroImages" type="checkbox" /> លុបរូប Banner ចាស់ទាំងអស់</label>
+                      </section>
+                    </div>
+          
+                    <!-- Side Promo Posters -->
+                    <div class="mt-6 border-t border-slate-100 pt-5" id="sidePosterAdmin">
+                      <h3 class="mb-3 text-base font-bold">គ្រប់គ្រង Poster ខាងស្ដាំ</h3>
+                      <div class="grid gap-4 lg:grid-cols-3">
+                        <section class="rounded-2xl bg-slate-50 p-3">
+                          <b class="text-xs">Poster ផ្ដេក ១</b>
+                          <div class="poster-admin-preview" id="posterPreviewTop">Preview</div>
+                          <input id="posterUploadTop" class="field mt-2 bg-white" type="file" accept="image/jpeg,image/png,image/webp" />
+                          <input id="posterLinkTop" class="field mt-2 bg-white" type="url" placeholder="Link ពេលចុច https://..." />
+                          <label class="mt-2 flex items-center gap-2 text-[10px]"><input id="posterEnabledTop" type="checkbox" checked /> បង្ហាញ Poster</label>
+                          <label class="mt-1 flex items-center gap-2 text-[10px]"><input id="posterClearTop" type="checkbox" /> លុប Poster</label>
+                        </section>
+                        <section class="rounded-2xl bg-slate-50 p-3">
+                          <b class="text-xs">Poster ផ្ដេក ២</b>
+                          <div class="poster-admin-preview" id="posterPreviewMiddle">Preview</div>
+                          <input id="posterUploadMiddle" class="field mt-2 bg-white" type="file" accept="image/jpeg,image/png,image/webp" />
+                          <input id="posterLinkMiddle" class="field mt-2 bg-white" type="url" placeholder="Link ពេលចុច https://..." />
+                          <label class="mt-2 flex items-center gap-2 text-[10px]"><input id="posterEnabledMiddle" type="checkbox" checked /> បង្ហាញ Poster</label>
+                          <label class="mt-1 flex items-center gap-2 text-[10px]"><input id="posterClearMiddle" type="checkbox" /> លុប Poster</label>
+                        </section>
+                        <section class="rounded-2xl bg-slate-50 p-3">
+                          <b class="text-xs">Poster បញ្ឈរ</b>
+                          <div class="poster-admin-preview poster-admin-preview-tall" id="posterPreviewTall">Preview</div>
+                          <input id="posterUploadTall" class="field mt-2 bg-white" type="file" accept="image/jpeg,image/png,image/webp" />
+                          <input id="posterLinkTall" class="field mt-2 bg-white" type="url" placeholder="Link ពេលចុច https://..." />
+                          <label class="mt-2 flex items-center gap-2 text-[10px]"><input id="posterEnabledTall" type="checkbox" checked /> បង្ហាញ Poster</label>
+                          <label class="mt-1 flex items-center gap-2 text-[10px]"><input id="posterClearTall" type="checkbox" /> លុប Poster</label>
+                        </section>
+                      </div>
+                    </div>
+          
+                    <div class="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4">
+                      <p class="text-[10px] text-slate-500" id="brandingStatus">ការកំណត់ Brand បច្ចុប្បន្ន</p>
+                      <button class="brand-gradient rounded-full px-6 py-3 text-[11px] font-bold text-white" id="saveBrandingBtn" type="button">រក្សាទុកការកំណត់ Brand &amp; Banner</button>
+                    </div>
+                  </div>
+                  <!-- Admin-managed official shop -->
+                  <section class="admin-control-card admin-official-shop-panel" id="adminManagedShopPanel">
+                    <div class="admin-official-shop-card">
+                      <div class="admin-official-shop-identity">
+                        <div class="admin-official-shop-mark" aria-hidden="true"><span data-icon="store" data-icon-size="22"></span></div>
+                        <div class="min-w-0">
+                          <p class="admin-official-shop-eyebrow">OFFICIAL SHOP MANAGEMENT</p>
+                          <h2 class="admin-official-shop-title">គ្រប់គ្រងហាងផ្លូវការ</h2>
+                          <p class="admin-official-shop-description">គ្រប់គ្រង AURORA Computer ដាច់ដោយឡែកពីហាងអ្នកលក់ធម្មតា។</p>
+                        </div>
+                      </div>
+                      <div class="admin-official-shop-summary" id="adminManagedShopStatus" aria-live="polite">កំពុងផ្ទុកព័ត៌មានហាង...</div>
+                      <div class="admin-official-shop-actions">
+                        <button type="button" id="adminManagedShopEdit" class="admin-official-shop-edit"><span data-icon="pencil" data-icon-size="15"></span> កែព័ត៌មានហាង</button>
+                        <button type="button" id="adminManagedShopOpen" class="admin-official-shop-view">មើលទំព័រហាង <span data-icon="external-link" data-icon-size="14"></span></button>
+                        <button type="button" id="adminManagedShopReload" class="admin-official-shop-reload" aria-label="ផ្ទុកព័ត៌មានហាងឡើងវិញ" title="ផ្ទុកឡើងវិញ"><span data-icon="refresh-cw" data-icon-size="15"></span></button>
+                      </div>
+                    </div>
+                    <div class="admin-official-shop-modal" id="adminManagedShopModal" hidden aria-hidden="true">
+                      <button type="button" class="admin-official-shop-backdrop" data-admin-shop-close aria-label="បិទ Popup"></button>
+                      <section class="admin-official-shop-dialog" role="dialog" aria-modal="true" aria-labelledby="adminManagedShopModalTitle">
+                        <header class="admin-official-shop-modal-header">
+                          <div><p class="admin-official-shop-eyebrow">OFFICIAL SHOP MANAGEMENT</p><h2 id="adminManagedShopModalTitle">កែព័ត៌មានហាងផ្លូវការ</h2><p>កែប្រែព័ត៌មានសាធារណៈរបស់ AURORA Computer</p></div>
+                          <button type="button" class="admin-official-shop-close" data-admin-shop-close aria-label="បិទ"><span data-icon="x" data-icon-size="19"></span></button>
+                        </header>
+                        <form id="adminManagedShopForm" class="admin-official-shop-form">
+                          <div class="admin-official-shop-id-row">
+                            <div><span class="admin-official-shop-field-label">Shop ID</span><strong id="adminManagedShopId">—</strong></div>
+                            <span class="admin-official-shop-fixed"><span data-icon="shield-check" data-icon-size="13"></span> Official Shop</span>
+                          </div>
+                          <label><span class="label">ឈ្មោះហាង</span><input class="field" name="store_name" required maxlength="80"></label>
+                          <label><span class="label">ទីតាំងហាង</span><input class="field" name="store_location" maxlength="160"></label>
+                          <label><span class="label">ការពិពណ៌នាហាង</span><textarea class="field" name="description" rows="3" maxlength="1000"></textarea></label>
+                          <div class="admin-official-shop-media-grid">
+                            <label><span class="label">Logo ហាង</span><input class="field" name="logo" type="file" accept="image/jpeg,image/png,image/webp"><span id="adminManagedShopLogoPreview" class="admin-official-shop-preview">មិនទាន់មាន Logo</span></label>
+                            <label><span class="label">Cover ហាង</span><input class="field" name="cover" type="file" accept="image/jpeg,image/png,image/webp"><span id="adminManagedShopCoverPreview" class="admin-official-shop-preview">មិនទាន់មាន Cover</span></label>
+                          </div>
+                          <footer class="admin-official-shop-modal-footer">
+                            <button type="button" class="admin-official-shop-cancel" data-admin-shop-close>បោះបង់</button>
+                            <button type="submit" class="admin-official-shop-save"><span data-icon="save" data-icon-size="15"></span> រក្សាទុកព័ត៌មានហាង</button>
+                          </footer>
+                        </form>
+                      </section>
+                    </div>
+                  </section>
+                  <!-- Vendor Verification Applications -->
+                  <section class="admin-control-card admin-applications-card" id="adminVendorApplicationsPanel">
+                    <header class="admin-applications-heading">
+                      <span class="admin-applications-icon" aria-hidden="true"><span data-icon="user-check" data-icon-size="20"></span></span>
+                      <div><p>SELLER VERIFICATION</p><h2>ពាក្យស្នើសុំអ្នកលក់</h2><small>ពិនិត្យ និងគ្រប់គ្រងសំណើចុះឈ្មោះអ្នកលក់</small></div>
+                    </header>
+                    <div class="mb-5 grid grid-cols-3 gap-3">
+                      <div class="rounded-2xl bg-white p-4 soft-shadow"><p class="text-[10px] text-slate-500">កំពុងរង់ចាំ</p><b class="mt-1 block text-2xl" id="adminPendingCount">0</b></div>
+                      <div class="rounded-2xl bg-white p-4 soft-shadow"><p class="text-[10px] text-slate-500">បានអនុម័ត</p><b class="mt-1 block text-2xl text-emerald-700" id="adminApprovedCount">0</b></div>
+                      <div class="rounded-2xl bg-white p-4 soft-shadow"><p class="text-[10px] text-slate-500">បានបដិសេធ</p><b class="mt-1 block text-2xl text-rose-600" id="adminRejectedCount">0</b></div>
+                    </div>
+                    <div class="admin-applications-list">
+                      <div class="space-y-3" id="adminApplications"></div>
+                    </div>
+                  </section>
         </div>
 
-        <!-- Telegram Diagnostics -->
-        <div class="mb-6 rounded-3xl bg-white p-5 soft-shadow sm:p-6">
-          <div class="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h2 class="text-lg font-bold">ស្ថានភាព Telegram Bot</h2>
-              <p class="text-[10px] text-slate-400">ពិនិត្យ Bot, Channel និងសិទ្ធិផ្ទុករូបភាព។</p>
-            </div>
-            <button class="rounded-full bg-slate-900 px-5 py-2.5 text-[11px] font-bold text-white" id="telegramDiagnosticsBtn" type="button">ពិនិត្យស្ថានភាព</button>
-          </div>
-          <div class="admin-telegram-diagnostics-result mt-4" id="telegramDiagnosticsResult" aria-live="polite">ចុច «ពិនិត្យស្ថានភាព» ដើម្បីពិនិត្យការភ្ជាប់ Telegram។</div>
-        </div>
-
-        <!-- Admin Supplier Product Management -->
-        <section class="mb-6 rounded-3xl bg-white p-5 soft-shadow sm:p-6" id="adminSupplierProductsPanel">
-          <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
-            <div><p class="text-[10px] font-bold text-emerald-700">AURORA COMPUTER · PRODUCT MANAGEMENT</p><h2 class="mt-1 text-xl font-bold">គ្រប់គ្រងផលិតផល AURORA Computer</h2><p class="mt-1 text-[10px] text-slate-500">បែងចែកផលិតផលបានផុសរួច និងផលិតផលទើបស្កេន។ បង្ហាញ ១០ ក្នុងមួយទំព័រ និងកែប្រែតាម Drawer។ ព័ត៌មាន Supplier បង្ហាញតែ Admin។</p></div>
-            <button type="button" id="adminSupplierRefresh" class="rounded-full border border-slate-200 px-4 py-2 text-[11px] font-bold">ផ្ទុកឡើងវិញ</button>
-          </div>
-          <section class="mb-5 rounded-2xl border border-slate-200 bg-slate-50 p-4" id="adminSupplierRegistryPanel">
-            <div class="mb-3"><b class="text-[12px]">SUPPLIER REGISTRY · គ្រប់គ្រងប្រភព Supplier</b><p class="mt-1 text-[10px] text-slate-500">បន្ថែម និងផ្ទៀងផ្ទាត់ Domain ជាមុន។ Supplier ដែលមិនទាន់មាន Adapter រួចរាល់ នឹងមិនអាចបើក Scanner បានទេ។ ព័ត៌មាននេះបង្ហាញតែ Admin។</p></div>
-            <div id="adminSupplierRegistryList" class="mb-4 space-y-2" aria-live="polite"><p class="text-[10px] text-slate-400">កំពុងផ្ទុកបញ្ជី Supplier...</p></div>
-            <form id="adminSupplierRegistryForm" class="grid gap-2 sm:grid-cols-2">
-              <input class="field bg-white" name="supplier_name" required maxlength="120" placeholder="ឈ្មោះ Supplier">
-              <input class="field bg-white" name="supplier_key" required maxlength="64" pattern="[a-z0-9][a-z0-9_-]{1,63}" placeholder="supplier_key ឧ. new_supplier">
-              <input class="field bg-white sm:col-span-2" name="base_url" type="url" required placeholder="https://supplier-website.com/">
-              <select class="field bg-white" name="parser_key" required><option value="opencart">OpenCart Adapter</option><option value="cc_computer">CC COMPUTER Adapter</option></select>
-              <button class="rounded-full bg-slate-900 px-4 py-2 text-[11px] font-bold text-white" type="submit">＋ បន្ថែម Supplier</button>
-            </form>
-            <p id="adminSupplierRegistryMessage" class="mt-2 text-[10px] text-slate-500" aria-live="polite"></p>
-          </section>
-          <div class="mb-5 rounded-2xl border border-emerald-200 bg-emerald-50/60 p-4">
-            <div class="mb-3"><b class="text-[12px]">នាំចូលផលិតផលពី Supplier តាម URL</b><p class="mt-1 text-[10px] text-slate-600">Link Catalog បង្ហាញ ១០ ផលិតផលក្នុងមួយលើក ហើយអាចបង្ហាញ ១០ បន្ទាប់។ Link ផលិតផលផ្ទាល់យកតែ ១ មុខ។ ប្រព័ន្ធស្នើ Category/Subcategory និងទាញពណ៌ ទម្ងន់ ថ្ម និង Specs ដែលមាននៅលើវេបសាយ។ Admin ពិនិត្យមុននាំចូល។ រំលងផលិតផលស្ទួន និងទិន្នន័យមិនច្បាស់។ តម្លៃលក់ = Supplier + $5។</p></div>
-            <form id="adminSupplierImportForm" class="flex flex-col gap-2 sm:flex-row">
-              <input class="field min-w-0 flex-1 bg-white" name="url" type="url" required value="https://cccomputerkh.com/" placeholder="https://supplier-website.com/">
-              <button class="rounded-full bg-slate-900 px-5 py-2.5 text-[11px] font-bold text-white" type="submit">ស្កេនផលិតផល</button>
-            </form>
-            <div id="adminSupplierImportResults" class="mt-3 space-y-2" aria-live="polite"></div>
-          </div>
-          <div id="adminSupplierAutoSyncPanel" class="mb-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-            <div class="flex flex-wrap items-center justify-between gap-3">
-              <div><b class="text-[12px]">CC COMPUTER · AUTO PRODUCT UPDATE</b><p class="mt-1 text-[10px] text-slate-600">ស្កេន MSI, Dell និង Lenovo រៀងរាល់ ១២ ម៉ោង។ ផ្ទៀងផ្ទាត់ ៣ ដំណាក់កាល មុន Update តម្លៃ/ស្តុក។ ផលិតផលបាត់ជាប់គ្នា ១៤ ថ្ងៃ នឹងលាក់ចេញពីហាង។</p></div>
-              <button type="button" id="adminSupplierAutoSyncRun" class="rounded-full bg-slate-900 px-4 py-2 text-[11px] font-bold text-white">ស្កេនឥឡូវនេះ</button>
-            </div>
-            <div id="adminSupplierAutoSyncStatus" class="mt-3 text-[10px] text-slate-500" aria-live="polite">Auto Sync កំណត់ពេលរៀងរាល់ ១២ ម៉ោង។</div>
-            <div class="mt-3 border-t border-slate-200 pt-3">
-              <div class="mb-2 text-[11px] font-bold">ការផ្លាស់ប្តូរដែលត្រូវការ Admin ពិនិត្យ</div>
-              <div id="adminSupplierReviewList" class="space-y-2"><p class="text-[10px] text-slate-400">កំពុងផ្ទុក...</p></div>
-            </div>
-          </div>
-          <details class="mb-5 rounded-2xl border border-slate-200 bg-slate-50">
-            <summary class="cursor-pointer px-4 py-3 text-[11px] font-bold">＋ បន្ថែមផលិតផលថ្មី</summary>
-          <form id="adminSupplierCreateForm" class="grid gap-3 border-t border-slate-200 p-4 sm:grid-cols-2">
-            <div class="sm:col-span-2"><b class="text-[12px]">បង្កើតផលិតផលថ្មី</b></div>
-            <label><span class="label">ឈ្មោះផលិតផល *</span><input class="field bg-white" name="title" required maxlength="160" placeholder="ឧ. ASUS ExpertBook B3605CCA"></label>
-            <label><span class="label">Category *</span><input class="field bg-white" name="category" required maxlength="80" placeholder="Laptop"></label>
-            <label><span class="label">តម្លៃលក់ដំបូង ($) *</span><input class="field bg-white" name="price" type="number" min="0" step="0.01" required></label>
-            <label><span class="label">ស្តុកដំបូង</span><input class="field bg-white" name="stock" type="number" min="0" step="1" value="0"></label>
-            <label class="sm:col-span-2"><span class="label">ពិពណ៌នា</span><textarea class="field bg-white" name="description" rows="2" maxlength="5000"></textarea></label>
-            <label><span class="label">ឈ្មោះ Supplier</span><input class="field bg-white" name="supplier_name" value="CC COMPUTER"></label>
-            <label><span class="label">Supplier URL (Admin only)</span><input class="field bg-white" name="supplier_url" type="url" placeholder="https://..."></label>
-            <label><span class="label">Supplier Price ($)</span><input class="field bg-white" name="supplier_price" type="number" min="0" step="0.01" value="0"></label>
-            <label><span class="label">Supplier Product Code</span><input class="field bg-white" name="supplier_product_code"></label>
-            <div class="flex items-center justify-end sm:col-span-2"><button class="brand-gradient rounded-full px-5 py-2.5 text-[11px] font-bold text-white" type="submit">បង្កើតផលិតផល</button></div>
-          </form>
-          </details>
-          <label class="mb-4 block"><span class="label">ស្វែងរកផលិតផល</span><input class="field" id="adminSupplierSearch" placeholder="ស្វែងរកតាមឈ្មោះ ឬ Category..."></label>
-          <div class="admin-aurora-tabs" role="tablist" aria-label="ប្រភេទផលិតផល"><button type="button" class="admin-aurora-tab is-active" data-aurora-tab="published">ផលិតផលបានផុសរួច</button><button type="button" class="admin-aurora-tab" data-aurora-tab="scanned">ផលិតផលទើបស្កេន <span id="adminAuroraScannedCount">0</span></button></div>
-          <div id="adminSupplierProductsList"><p class="py-6 text-center text-xs text-slate-400">កំពុងផ្ទុកផលិតផល...</p></div>
-          <section class="mt-6 rounded-2xl border border-slate-200 p-4" id="adminSmartGalleryPanel">
-            <div class="mb-3">
-              <p class="text-[10px] font-bold text-violet-700">SMART PRODUCT GALLERY</p>
-              <h3 class="mt-1 text-sm font-bold">ស្វែងរករូបផលិតផលបន្ថែម</h3>
-              <p class="mt-1 text-[10px] text-slate-500">ស្វែងរកតាមឈ្មោះផលិតផល រួចពិនិត្យម៉ូដែល និងរូបភាពមុនអនុម័ត។ រូបដែលអនុម័តនឹង Upload ទៅ Telegram មុនបង្ហាញក្នុង Gallery។</p>
-            </div>
-            <div class="flex flex-wrap gap-2">
-              <input class="field min-w-0 flex-1" id="adminGalleryProductSearch" placeholder="ស្វែងរកឈ្មោះផលិតផល..." autocomplete="off">
-              <button type="button" id="adminGalleryProductSearchRun" class="rounded-full bg-slate-900 px-4 py-2 text-[10px] font-bold text-white">ស្វែងរកផលិតផល</button>
-            </div>
-            <div id="adminGalleryProductResults" class="mt-3 space-y-2"><p class="text-[10px] text-slate-400">វាយឈ្មោះផលិតផលដើម្បីចាប់ផ្តើម។</p></div>
-            <div class="mt-5 border-t border-slate-100 pt-4">
-              <div class="mb-2 flex items-center justify-between gap-2"><b class="text-[11px]">រូបភាពរង់ចាំ Admin អនុម័ត</b><button type="button" id="adminGalleryCandidatesRefresh" class="text-[10px] font-bold text-violet-700">ផ្ទុកឡើងវិញ</button></div>
-              <div id="adminGalleryCandidates" class="space-y-3"><p class="text-[10px] text-slate-400">កំពុងផ្ទុក...</p></div>
-            </div>
-          </section>
-        </section>
-
-        <!-- Admin-managed official shop -->
-        <section class="admin-official-shop-panel mb-6" id="adminManagedShopPanel">
-          <div class="admin-official-shop-card">
-            <div class="admin-official-shop-identity">
-              <div class="admin-official-shop-mark" aria-hidden="true"><span data-icon="store" data-icon-size="22"></span></div>
-              <div class="min-w-0">
-                <p class="admin-official-shop-eyebrow">OFFICIAL SHOP MANAGEMENT</p>
-                <h2 class="admin-official-shop-title">គ្រប់គ្រងហាងផ្លូវការ</h2>
-                <p class="admin-official-shop-description">គ្រប់គ្រង AURORA Computer ដាច់ដោយឡែកពីហាងអ្នកលក់ធម្មតា។</p>
-              </div>
-            </div>
-            <div class="admin-official-shop-summary" id="adminManagedShopStatus" aria-live="polite">កំពុងផ្ទុកព័ត៌មានហាង...</div>
-            <div class="admin-official-shop-actions">
-              <button type="button" id="adminManagedShopEdit" class="admin-official-shop-edit"><span data-icon="pencil" data-icon-size="15"></span> កែព័ត៌មានហាង</button>
-              <button type="button" id="adminManagedShopOpen" class="admin-official-shop-view">មើលទំព័រហាង <span data-icon="external-link" data-icon-size="14"></span></button>
-              <button type="button" id="adminManagedShopReload" class="admin-official-shop-reload" aria-label="ផ្ទុកព័ត៌មានហាងឡើងវិញ" title="ផ្ទុកឡើងវិញ"><span data-icon="refresh-cw" data-icon-size="15"></span></button>
-            </div>
-          </div>
-          <div class="admin-official-shop-modal" id="adminManagedShopModal" hidden aria-hidden="true">
-            <button type="button" class="admin-official-shop-backdrop" data-admin-shop-close aria-label="បិទ Popup"></button>
-            <section class="admin-official-shop-dialog" role="dialog" aria-modal="true" aria-labelledby="adminManagedShopModalTitle">
-              <header class="admin-official-shop-modal-header">
-                <div><p class="admin-official-shop-eyebrow">OFFICIAL SHOP MANAGEMENT</p><h2 id="adminManagedShopModalTitle">កែព័ត៌មានហាងផ្លូវការ</h2><p>កែប្រែព័ត៌មានសាធារណៈរបស់ AURORA Computer</p></div>
-                <button type="button" class="admin-official-shop-close" data-admin-shop-close aria-label="បិទ"><span data-icon="x" data-icon-size="19"></span></button>
-              </header>
-              <form id="adminManagedShopForm" class="admin-official-shop-form">
-                <div class="admin-official-shop-id-row">
-                  <div><span class="admin-official-shop-field-label">Shop ID</span><strong id="adminManagedShopId">—</strong></div>
-                  <span class="admin-official-shop-fixed"><span data-icon="shield-check" data-icon-size="13"></span> Official Shop</span>
-                </div>
-                <label><span class="label">ឈ្មោះហាង</span><input class="field" name="store_name" required maxlength="80"></label>
-                <label><span class="label">ទីតាំងហាង</span><input class="field" name="store_location" maxlength="160"></label>
-                <label><span class="label">ការពិពណ៌នាហាង</span><textarea class="field" name="description" rows="3" maxlength="1000"></textarea></label>
-                <div class="admin-official-shop-media-grid">
-                  <label><span class="label">Logo ហាង</span><input class="field" name="logo" type="file" accept="image/jpeg,image/png,image/webp"><span id="adminManagedShopLogoPreview" class="admin-official-shop-preview">មិនទាន់មាន Logo</span></label>
-                  <label><span class="label">Cover ហាង</span><input class="field" name="cover" type="file" accept="image/jpeg,image/png,image/webp"><span id="adminManagedShopCoverPreview" class="admin-official-shop-preview">មិនទាន់មាន Cover</span></label>
-                </div>
-                <footer class="admin-official-shop-modal-footer">
-                  <button type="button" class="admin-official-shop-cancel" data-admin-shop-close>បោះបង់</button>
-                  <button type="submit" class="admin-official-shop-save"><span data-icon="save" data-icon-size="15"></span> រក្សាទុកព័ត៌មានហាង</button>
-                </footer>
-              </form>
-            </section>
-          </div>
-        </section>
-
-        <!-- Vendor Verification Applications -->
-        <div class="mb-5 grid grid-cols-3 gap-3">
-          <div class="rounded-2xl bg-white p-4 soft-shadow"><p class="text-[10px] text-slate-500">កំពុងរង់ចាំ</p><b class="mt-1 block text-2xl" id="adminPendingCount">0</b></div>
-          <div class="rounded-2xl bg-white p-4 soft-shadow"><p class="text-[10px] text-slate-500">បានអនុម័ត</p><b class="mt-1 block text-2xl text-emerald-700" id="adminApprovedCount">0</b></div>
-          <div class="rounded-2xl bg-white p-4 soft-shadow"><p class="text-[10px] text-slate-500">បានបដិសេធ</p><b class="mt-1 block text-2xl text-rose-600" id="adminRejectedCount">0</b></div>
-        </div>
-
-        <div class="rounded-3xl bg-white p-5 soft-shadow sm:p-6">
-          <h2 class="mb-4 font-bold">ពាក្យស្នើសុំអ្នកលក់</h2>
-          <div class="space-y-3" id="adminApplications"></div>
-        </div>
       </div>
     </section>
   </main>
