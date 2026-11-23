@@ -1773,8 +1773,20 @@ async function copyProductCode(button) {
       const field=document.createElement('textarea');field.value=code;field.style.position='fixed';field.style.opacity='0';document.body.appendChild(field);field.select();
       const copied=document.execCommand('copy');field.remove();if(!copied)throw new Error('Copy unavailable');
     }
-    const original=button.innerHTML;button.innerHTML=ic('check',12)+' បានចម្លង';button.classList.add('is-copied');
-    setTimeout(()=>{button.innerHTML=original;button.classList.remove('is-copied')},1300);
+    const original=button.innerHTML;
+    const originalLabel=button.getAttribute('aria-label');
+    const originalTitle=button.getAttribute('title');
+    button.innerHTML=ic('check',13);
+    button.setAttribute('aria-label','បានចម្លង Product ID');
+    button.setAttribute('title','បានចម្លង');
+    button.classList.add('is-copied');
+    setTimeout(()=>{
+      if(!button.isConnected)return;
+      button.innerHTML=original;
+      if(originalLabel===null)button.removeAttribute('aria-label');else button.setAttribute('aria-label',originalLabel);
+      if(originalTitle===null)button.removeAttribute('title');else button.setAttribute('title',originalTitle);
+      button.classList.remove('is-copied');
+    },1200);
   }catch{toast('មិនអាចចម្លង Product ID បានទេ។','error')}
 }
 
