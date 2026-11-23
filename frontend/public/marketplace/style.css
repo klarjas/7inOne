@@ -8984,3 +8984,17 @@ img{content-visibility:auto}
 #view-home .steam-discovery-hub {
   display: none !important;
 }
+
+
+/* Product cards belong to the normal document flow.
+   Keep scrolling on the page, not inside a nested product-grid panel. */
+#view-home #productGrid:not(.hidden),
+#view-home #skeletonGrid:not(.hidden) {
+  height: auto !important;
+  max-height: none !important;
+  min-height: 0 !important;
+  overflow: visible !important;
+  overflow-x: visible !important;
+  overflow-y: visible !important;
+  overscroll-behavior: auto !important;
+}
