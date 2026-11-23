@@ -8795,3 +8795,133 @@ img{content-visibility:auto}
 .details-popover-body li{margin:0!important;padding:9px 0!important;border:0!important;border-bottom:1px solid rgba(255,255,255,.06)!important;background:transparent!important}
 .details-popover-body li:last-child{border-bottom:0!important}
 #productGrid .cd.is-selected{border-color:#66C0F4!important;box-shadow:0 0 0 2px rgba(102,192,244,.25)!important}
+
+
+/* 7inOne right-side workspace — clean Steam Dark application layout */
+@media (min-width:1200px){
+  #view-home .home-layout-shell{grid-template-columns:184px minmax(0,1fr) 286px!important;gap:18px!important}
+}
+@media (min-width:1001px) and (max-width:1199px){
+  #view-home .home-layout-shell{grid-template-columns:156px minmax(0,1fr) 258px!important;gap:13px!important}
+  #view-home #homeJobsRail{display:flex!important}
+}
+#view-home #homeJobsRail{
+  min-width:0!important;
+  max-height:calc(100dvh - 104px)!important;
+  overflow-y:auto!important;
+  overscroll-behavior:contain;
+  scrollbar-width:thin;
+  scrollbar-color:#3D6687 transparent;
+}
+#view-home #homeJobsRail .steam-discovery-hub{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  padding:0!important;
+}
+#view-home #homeJobsRail .hub-quick-post-card,
+#view-home #homeJobsRail .hub-section,
+#view-home #homeJobsRail .hub-careers-toggle{
+  border:1px solid #2A475E!important;
+  border-radius:13px!important;
+  background:#16202D!important;
+  box-shadow:none!important;
+}
+#view-home #homeJobsRail .hub-quick-post-card{padding:14px!important}
+#view-home #homeJobsRail .hub-quick-post-card h2{font-size:14px!important;line-height:1.55}
+#view-home #homeJobsRail .hub-quick-post-card p{font-size:11px!important;line-height:1.65;color:#9FB2C3!important}
+#view-home #homeJobsRail .hub-section{padding:12px!important}
+#view-home #homeJobsRail .hub-section-heading{margin-bottom:9px!important}
+#view-home #homeJobsRail .hub-section-heading h3{font-size:12px!important}
+#view-home #homeJobsRail .hub-item-list{gap:7px!important}
+#view-home #homeJobsRail .hub-careers-toggle{overflow:hidden}
+#homeDetailInspector{
+  min-height:0!important;
+  max-height:calc(100dvh - 112px)!important;
+  overflow:hidden!important;
+  padding:0 12px 12px!important;
+  border:1px solid #2A475E!important;
+  border-radius:15px!important;
+  background:#16202D!important;
+  box-shadow:0 12px 30px rgba(0,0,0,.18)!important;
+}
+#homeDetailInspector .home-detail-inspector-heading{
+  flex:0 0 auto!important;
+  margin:0 -12px!important;
+  padding:10px 12px!important;
+  border-bottom:1px solid #2A475E!important;
+  background:#16202D!important;
+}
+#homeDetailInspector #productDetail{
+  flex:1 1 auto!important;
+  min-height:0!important;
+  overflow-y:auto!important;
+  padding:12px 2px 16px!important;
+  scrollbar-width:thin;
+  scrollbar-color:#3D6687 transparent;
+}
+#homeDetailInspector .product-detail-description,
+#homeDetailInspector .product-safety-note,
+#homeDetailInspector .product-related-section{
+  display:block!important;
+  margin-top:14px!important;
+  padding-top:12px!important;
+  border-top:1px solid rgba(102,192,244,.14)!important;
+}
+#homeDetailInspector .product-trust-reviews-grid{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr)!important;
+  gap:10px!important;
+  margin-top:14px!important;
+}
+#homeDetailInspector .detail-bottom-actions{display:flex!important;flex-wrap:wrap!important;gap:8px!important}
+#homeDetailInspector .details-popover-trigger{display:none!important}
+#homeDetailInspector .product-detail-description,
+#homeDetailInspector .product-trust-reviews-grid,
+#homeDetailInspector .product-safety-note,
+#homeDetailInspector .product-related-section{visibility:visible!important;opacity:1!important}
+#homeDetailInspector .product-spec-grid{grid-template-columns:minmax(0,1fr)!important}
+#homeDetailInspector .product-primary-actions,
+#homeDetailInspector .product-utility-actions,
+#homeDetailInspector .product-mobile-actions,
+#homeDetailInspector .listing-poster-chat{display:none!important}
+.details-popover{display:none!important}
+@media (max-width:1000px){
+  #view-home #homeJobsRail{display:none!important}
+  #view-home #homeJobsRail.has-active-inspector{
+    position:fixed!important;
+    z-index:95!important;
+    display:block!important;
+    inset:auto 8px calc(76px + env(safe-area-inset-bottom)) 8px!important;
+    width:auto!important;
+    max-height:78dvh!important;
+    margin:0!important;
+    padding:0!important;
+    overflow:hidden!important;
+    border:1px solid #3D6687!important;
+    border-radius:18px!important;
+    background:#16202D!important;
+    box-shadow:0 20px 65px rgba(0,0,0,.62)!important;
+  }
+  #view-home #homeJobsRail.has-active-inspector #homeDetailInspector{
+    display:flex!important;
+    width:100%!important;
+    max-height:78dvh!important;
+    height:78dvh!important;
+    border:0!important;
+    border-radius:18px!important;
+  }
+  #view-home #homeJobsRail.has-active-inspector #steamDiscoveryHub,
+  #view-home #homeJobsRail.has-active-inspector .hub-careers-toggle{display:none!important}
+}
+@media (max-width:640px){
+  #view-home #homeJobsRail.has-active-inspector{
+    inset:auto 6px calc(68px + env(safe-area-inset-bottom)) 6px!important;
+    max-height:80dvh!important;
+  }
+  #view-home #homeJobsRail.has-active-inspector #homeDetailInspector{
+    height:80dvh!important;
+    max-height:80dvh!important;
+  }
+  #homeDetailInspector #productDetail{padding:10px 12px 18px!important}
+}
