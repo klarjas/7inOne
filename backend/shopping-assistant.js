@@ -8,7 +8,7 @@ function assistantText(value, max = 700) {
 }
 function assistantTerms(value) {
   return assistantText(value, 700).toLocaleLowerCase()
-    .split(/[\s,.;:!?/\\|()[\]{}]+/u)
+    .split(/[\s,.;:!?()[\]{}|]+/u)
     .map(item => item.trim())
     .filter(item => item.length >= 2)
     .slice(0, 8);
