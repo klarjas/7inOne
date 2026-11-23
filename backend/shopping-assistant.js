@@ -1,3 +1,5 @@
+import rateLimit from 'express-rate-limit';
+
 const AI_DEFAULT_MODEL = process.env.AI_MODEL || 'Qwen/Qwen2.5-7B-Instruct';
 const AI_CHAT_URL = process.env.AI_CHAT_COMPLETIONS_URL || 'https://router.huggingface.co/v1/chat/completions';
 
@@ -72,8 +74,7 @@ async function askOpenSourceModel(message, language, products) {
 }
 
 export function registerShoppingAssistant(app, { supabase, clean, fail, ratingsFor, publicProduct, productPublicMaxAgeMs }) {
-  const limiter = (await import('express-rate-limit')).default;
-  app.post('/api/assistant/chat', limiter({ windowMs: 5 * 60 * 1000, limit: 18, standardHeaders: 'draft-8', legacyHeaders: false }), async (req, res) => {
+  app.post('/api/assistant/chat', rateLimit({ windowMs: 5 * 60 * 1000, limit: 18, standardHeaders: 'draft-8', legacyHeaders: false }), async (req, res) => {
     if (!supabase) return fail(res, 503, 'Shopping assistant is temporarily unavailable.');
     const message = assistantText(req.body?.message, 700);
     if (!message) return fail(res, 400, 'សូមសរសេរអ្វីដែលអ្នកចង់ស្វែងរក។');
@@ -86,13 +87,14 @@ export function registerShoppingAssistant(app, { supabase, clean, fail, ratingsF
         .select('id,title,description,price,stock,category,location,condition,created_at,renewed_at,vendor_id,product_images(id,file_id,image_url,sort_order),vendors!inner(id,store_name,status,store_logo_file_id)')
         .eq('status','active').gt('stock',0)
         .in('vendors.status',['approved','pending','rejected'])
-        .or('renewed_at.gte.' + cutoff + ',and(renewed_at.is.null,created_at.gte.' + cutoff + ')')
         .order('created_at',{ascending:false}).limit(45);
       const textTokens = tokens.filter(token => /[a-z0-9]/i.test(token));
+      const filters = ['or(renewed_at.gte.' + cutoff + ',and(renewed_at.is.null,created_at.gte.' + cutoff + '))'];
       if (textTokens.length) {
         const token = textTokens.sort((a,b) => b.length-a.length)[0].replace(/[%_,()]/g,'');
-        if (token) query = query.or('title.ilike.%' + token + '%,description.ilike.%' + token + '%,category.ilike.%' + token + '%');
+        if (token) filters.push('or(title.ilike.%' + token + '%,description.ilike.%' + token + '%,category.ilike.%' + token + '%)');
       }
+      query = query.or('and(' + filters.join(',') + ')');
       let { data, error } = await query;
       if (error && /renewed_at/i.test(error.message || '')) {
         let fallback = supabase.from('products')
