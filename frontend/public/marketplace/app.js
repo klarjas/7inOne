@@ -5068,7 +5068,8 @@ function renderSellerChatInbox() {
   badge.textContent = total > 99 ? '99+' : String(total);
   badge.classList.toggle('hidden', !total);
 
-  target.innerHTML = state.chatInbox.map((chat) => {
+  const assistantPinned = '<button type="button" data-ai-assistant class="seller-chat-inbox-item seller-chat-ai-pinned"><span class="seller-chat-ai-mark">✦</span><span class="min-w-0 flex-1"><b class="block truncate">AI ជួយរកទំនិញ</b><small class="block truncate text-slate-400">ស្វែងរក ប្រៀបធៀប និងពន្យល់ផលិតផល</small></span><span class="seller-chat-ai-pin" aria-label="Pinned">PIN</span></button>';
+  target.innerHTML = assistantPinned + state.chatInbox.map((chat) => {
     // Show the other participant: shop identity to buyers, personal identity to shop owners.
     const otherIsShop = String(chat.other_role || '').toLowerCase() === 'seller';
     const displayName = otherIsShop
@@ -6231,14 +6232,13 @@ function bindEvents() {
   // 7inOne Smart Shopping Assistant — uses only live marketplace catalogue results.
   (() => {
     const panel = $('shoppingAssistant');
-    const openButton = $('shoppingAssistantOpen');
     const closeButton = $('shoppingAssistantClose');
     const form = $('shoppingAssistantForm');
     const input = $('shoppingAssistantInput');
     const messages = $('shoppingAssistantMessages');
     const sendButton = $('shoppingAssistantSend');
     const language = $('shoppingAssistantLanguage');
-    if (!panel || !openButton || !closeButton || !form || !input || !messages || !sendButton) return;
+    if (!panel || !closeButton || !form || !input || !messages || !sendButton) return;
     const addMessage = (text, role) => {
       const node = document.createElement('div');
       node.className = 'shopping-assistant-message ' + role;
@@ -6268,20 +6268,41 @@ function bindEvents() {
       messages.appendChild(wrap);
       messages.scrollTop = messages.scrollHeight;
     };
-    openButton.addEventListener('click', () => {
+    const regularThreadNodes = ['sellerChatProductContext','sellerChatMessages','sellerChatProductBanner','sellerChatForm'];
+    window.openShoppingAssistantInChat = () => {
+      state.chatConversationId = null;
+      state.chatDraftProduct = null;
+      renderSellerChatDraftProduct();
+      $('sellerChatHeaderDefault').classList.add('hidden');
+      $('sellerChatHeaderSubtitle').classList.add('hidden');
+      $('sellerChatHeaderIdentity').classList.remove('hidden');
+      $('sellerChatHeaderTitle').textContent = '✦ AI ជួយរកទំនិញ';
+      $('sellerChatHeaderAvatar').innerHTML = '<span class="grid h-full w-full place-items-center text-[#66C0F4]">✦</span>';
+      $('sellerChatHeaderBack').classList.remove('hidden');
+      $('sellerChatInboxPane').classList.add('mobile-hidden');
+      $('sellerChatThread').classList.add('mobile-active');
+      regularThreadNodes.forEach(id => { const node = $(id); if (node) node.hidden = true; });
       panel.hidden = false;
-      openButton.hidden = true;
+      openModal('sellerChatModal');
       input.focus();
-    });
-    closeButton.addEventListener('click', () => {
+    };
+    const exitAssistant = () => {
       panel.hidden = true;
-      openButton.hidden = false;
-    });
+      regularThreadNodes.forEach(id => { const node = $(id); if (node) node.hidden = false; });
+      $('sellerChatInboxPane').classList.remove('mobile-hidden');
+      $('sellerChatThread').classList.remove('mobile-active');
+      $('sellerChatHeaderIdentity').classList.add('hidden');
+      $('sellerChatHeaderDefault').classList.remove('hidden');
+      $('sellerChatHeaderSubtitle').classList.remove('hidden');
+      $('sellerChatHeaderBack').classList.add('hidden');
+    };
+    closeButton.addEventListener('click', exitAssistant);
+    $('sellerChatHeaderBack')?.addEventListener('click', () => { if (!panel.hidden) exitAssistant(); });
     messages.addEventListener('click', event => {
       const card = event.target.closest('[data-assistant-product-id]');
       if (!card || !card.dataset.assistantProductId) return;
-      panel.hidden = true;
-      openButton.hidden = false;
+      exitAssistant();
+      closeModal('sellerChatModal');
       void openProduct(card.dataset.assistantProductId);
     });
     form.addEventListener('submit', async event => {
@@ -6761,6 +6782,7 @@ function bindEvents() {
   $('sellerChatHeaderBack').addEventListener('click', () => void openSellerChatInbox());
   $('sellerChatInboxRefresh').addEventListener('click', () => void loadUnifiedSellerChatInbox());
   $('sellerChatInboxList').addEventListener('click', (e) => {
+    if (e.target.closest('[data-ai-assistant]')) { openShoppingAssistantInChat(); return; }
     const btn = e.target.closest('[data-unified-chat]');
     if (btn) void openSellerChat(btn.dataset.unifiedChat);
   });
