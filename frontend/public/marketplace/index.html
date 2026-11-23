@@ -967,6 +967,38 @@
     </section>
   </main>
 
+  <!-- 7inOne Smart Shopping Assistant -->
+  <section class="shopping-assistant" id="shoppingAssistant" aria-label="7inOne Smart Shopping Assistant" hidden>
+    <div class="shopping-assistant-head">
+      <div class="shopping-assistant-brand">
+        <span class="shopping-assistant-mark">7</span>
+        <span><strong>7inOne Assistant</strong><small>ជំនួយការស្វែងរកផលិតផល</small></span>
+      </div>
+      <button type="button" class="shopping-assistant-close" id="shoppingAssistantClose" aria-label="បិទ">×</button>
+    </div>
+    <div class="shopping-assistant-language">
+      <label for="shoppingAssistantLanguage">ភាសា</label>
+      <select id="shoppingAssistantLanguage" aria-label="ជ្រើសរើសភាសា">
+        <option value="auto">ស្វ័យប្រវត្តិ</option>
+        <option value="km">ខ្មែរ</option>
+        <option value="zh">中文</option>
+        <option value="en">English</option>
+      </select>
+    </div>
+    <div class="shopping-assistant-messages" id="shoppingAssistantMessages" aria-live="polite">
+      <div class="shopping-assistant-message assistant">សួស្តី! ខ្ញុំអាចជួយរកផលិតផល ប្រៀបធៀបតម្លៃ និងពន្យល់លក្ខណៈបច្ចេកទេស។ តើអ្នកកំពុងស្វែងរកអ្វី?</div>
+    </div>
+    <form class="shopping-assistant-form" id="shoppingAssistantForm">
+      <textarea id="shoppingAssistantInput" rows="2" maxlength="700" placeholder="ឧ. ខ្ញុំចង់បាន Laptop សម្រាប់រៀន និងធ្វើការ តម្លៃក្រោម $500..." required></textarea>
+      <button type="submit" id="shoppingAssistantSend" aria-label="ផ្ញើសារ">➤</button>
+    </form>
+    <p class="shopping-assistant-footnote">បង្ហាញតែផលិតផលដែលមានក្នុង 7inOne ប៉ុណ្ណោះ</p>
+  </section>
+  <button type="button" class="shopping-assistant-launcher" id="shoppingAssistantOpen" aria-label="បើកជំនួយការ AI">
+    <span class="shopping-assistant-launcher-icon">✦</span><span>AI ជួយរកទំនិញ</span>
+  </button>
+
+
   <!-- ========================================================================
        FOOTER & MOBILE BOTTOM NAV
        ======================================================================== -->
