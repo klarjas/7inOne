@@ -5005,9 +5005,6 @@ await nextApp.prepare();
 app.use((req, res) => nextHandler(req, res));
 const server = app.listen(port, '0.0.0.0', () => console.log(`7inOne full-stack service listening on 0.0.0.0:${port}`));
 server.on('error', error => console.error('7inOne HTTP server failed to bind:', error));
- }, 15 * 60 * 1000);
-socialStoryCleanupTimer.unref?.();
-void cleanupExpiredSocialStories();
 
 const productLifecycleTimer=setInterval(()=>{void cleanupExpiredProducts()},60*60*1000);
 const vendorShortCleanupTimer=setInterval(()=>{void cleanupExpiredVendorShorts()},5*60*1000);
