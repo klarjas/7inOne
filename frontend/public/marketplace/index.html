@@ -137,11 +137,6 @@
           <small class="site-subtitle block truncate" id="siteSubtitle">ផ្សារទិញលក់កម្ពុជា</small>
         </span>
       </button>
-      <nav class="header-primary-nav" id="headerPrimaryNav" aria-label="ម៉ឺនុយចម្បង">
-        <button type="button" data-view="home" aria-current="page">ទំព័រដើម</button>
-        <button type="button" data-view="seller">ហាង / អ្នកលក់</button>
-        <button type="button" data-view="profile">គណនី</button>
-      </nav>
       <div class="delivery-location" aria-label="ទីតាំងរបស់អ្នក ប្រទេសកម្ពុជា">
         <span class="delivery-pin" aria-hidden="true">
           <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
@@ -180,11 +175,6 @@
           <button type="button" data-home-side="saved" aria-label="ទំនិញដែលបានរក្សាទុក"><span data-icon="heart" data-icon-size="16"></span><span data-i18n="រក្សាទុក">រក្សាទុក</span></button>
           <button type="button" data-home-side="orders" aria-label="ការបញ្ជាទិញ"><span data-icon="clipboard" data-icon-size="16"></span><span data-i18n="ការបញ្ជាទិញ">ការបញ្ជាទិញ</span></button>
         </div>
-
-        <button id="supportChatLauncher" type="button" class="relative grid h-10 w-10 place-items-center rounded-full text-slate-200 hover:bg-[#203244] hover:text-[#66C0F4] hidden" aria-label="ឆាតអ្នកទិញ និងអ្នកលក់" title="ប្រអប់សារ">
-          <span data-nav-icon="chat" aria-hidden="true"></span>
-          <span id="sellerChatUnreadBadge" class="absolute -right-0.5 -top-0.5 hidden min-w-[18px] rounded-full bg-rose-600 px-1 py-0.5 text-center text-[9px] font-bold leading-none text-white"></span>
-        </button>
 
         <!-- Notifications -->
         <div class="relative">
@@ -417,7 +407,7 @@
           <span>/</span>
           <span class="font-semibold text-slate-800">ព័ត៌មានលម្អិត</span>
         </nav>
-        <div id="productDetailPageMount"><div class="product-detail-page" id="productDetail"></div></div>
+        <div class="product-detail-page" id="productDetail" aria-live="polite"></div>
       </div>
     </section>
 
@@ -952,11 +942,11 @@
   </footer>
 
   <nav class="mobile-market-nav" id="mobileMarketNav" aria-label="ម៉ឺនុយ">
-    <button type="button" data-view="home" class="mobile-market-item active"><span data-nav-icon="home" aria-hidden="true"></span><small>ទំព័រដើម</small></button>
-    <button type="button" data-action="saved" class="mobile-market-item"><span data-nav-icon="heart" aria-hidden="true"></span><small>រក្សាទុក</small></button>
-    <button type="button" id="mobileMarketPost" class="fab" aria-label="ដាក់លក់ទំនិញ"><span data-nav-icon="plus" aria-hidden="true"></span></button>
-    <button type="button" data-action="open-chat" class="mobile-market-item"><span data-nav-icon="chat" aria-hidden="true"></span><small>សារ</small></button>
-    <button type="button" data-view="profile" class="mobile-market-item"><span data-nav-icon="user" aria-hidden="true"></span><small>គណនី</small></button>
+    <button type="button" data-view="home" class="mobile-market-item active"><span data-nav-icon="home"></span><small>ទំព័រដើម</small></button>
+    <button type="button" data-action="saved" class="mobile-market-item"><span data-nav-icon="heart"></span><small>រក្សាទុក</small></button>
+    <button type="button" id="mobileMarketPost" class="fab" aria-label="ដាក់លក់ទំនិញ"><span data-nav-icon="plus"></span></button>
+    <button type="button" data-action="open-chat" class="mobile-market-item"><span data-nav-icon="chat"></span><small>សារ</small></button>
+    <button type="button" data-view="profile" class="mobile-market-item"><span data-nav-icon="user"></span><small>គណនី</small></button>
   </nav>
 
   <!-- ========================================================================
@@ -1344,6 +1334,11 @@
     </section>
   </div>
 
+  <!-- Floating Chat Launcher -->
+  <button id="supportChatLauncher" type="button" class="hidden" aria-label="ឆាតអ្នកទិញ និងអ្នកលក់">
+    <span data-nav-icon="chat"></span>
+    <span id="sellerChatUnreadBadge" class="absolute -right-1 -top-1 hidden min-w-5 rounded-full bg-rose-600 px-1.5 py-0.5 text-[9px] font-bold text-white"></span>
+  </button>
 
   <!-- Global YouTube Video Popup: outside hidden marketplace views -->
   <dialog id="homeShortsPopup" class="home-shorts-popup" aria-label="មើលវីដេអូ YouTube">
