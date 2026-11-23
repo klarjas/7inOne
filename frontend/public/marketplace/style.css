@@ -7779,23 +7779,43 @@ body > footer {
 .product-detail-id {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 4px 7px;
-  border: 1px solid #2A475E;
-  border-radius: 7px;
-  background: #101822;
-  color: #8F98A0;
-  font-size: 9px;
+  justify-self: start;
+  gap: 8px;
+  width: fit-content;
+  max-width: 100%;
+  margin-top: -4px;
+  padding: 5px 9px;
+  border: 1px solid rgba(102, 192, 244, .18);
+  border-radius: 8px;
+  background: rgba(16, 24, 34, .58);
+  color: #AAB8C7;
+  font-size: 11px;
+  line-height: 1;
+}
+.product-detail-id-icon {
+  display: inline-flex;
+  align-items: center;
+  color: #66C0F4;
 }
 .product-detail-id code {
   color: #C7D5E0;
-  font-size: 9px;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: .025em;
   font-variant-numeric: tabular-nums;
 }
 .product-detail-id button {
   display: inline-grid;
   place-items: center;
+  width: 22px;
+  height: 22px;
+  margin: -3px -4px -3px 2px;
+  border-radius: 5px;
   color: #66C0F4;
+  transition: background .18s ease, color .18s ease;
+}
+.product-detail-id button:hover {
+  background: rgba(102, 192, 244, .12);
 }
 .product-detail-id button.is-copied {
   color: #86EFAC;
