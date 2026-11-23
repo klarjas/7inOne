@@ -4872,6 +4872,13 @@ async function renderAdmin() {
       if (!panel) return;
       panel.classList.remove('is-open');
       panel.setAttribute('aria-hidden', 'true');
+      if (panel.id === 'adminManagedShopPanel') {
+        const editPanel = $('adminManagedShopModal');
+        if (editPanel) {
+          editPanel.hidden = true;
+          editPanel.setAttribute('aria-hidden', 'true');
+        }
+      }
       document.body.classList.remove('admin-management-popup-open');
     };
     document.querySelectorAll('[data-admin-popup-open]').forEach(button => {
@@ -4892,7 +4899,14 @@ async function renderAdmin() {
       });
     });
     document.addEventListener('keydown', event => {
-      if (event.key === 'Escape') adminPopupPanels.forEach(panel => closeAdminPopup(panel));
+      if (event.key !== 'Escape') return;
+      const editPanel = $('adminManagedShopModal');
+      if (editPanel && !editPanel.hidden) {
+        editPanel.hidden = true;
+        editPanel.setAttribute('aria-hidden', 'true');
+        return;
+      }
+      adminPopupPanels.forEach(panel => closeAdminPopup(panel));
     });
   }
   if (managedPanel && managedPanel.dataset.bound !== 'true') {
@@ -4902,15 +4916,16 @@ async function renderAdmin() {
       if (!shopModal) return;
       shopModal.hidden = true;
       shopModal.setAttribute('aria-hidden', 'true');
-      document.body.classList.remove('admin-official-shop-modal-open');
     };
     const openShopModal = () => {
       if (!managedPanel.dataset.vendorId) return toast('មិនទាន់រកឃើញហាង AURORA Computer។', 'warning');
       if (!shopModal) return;
       shopModal.hidden = false;
       shopModal.setAttribute('aria-hidden', 'false');
-      document.body.classList.add('admin-official-shop-modal-open');
-      requestAnimationFrame(() => shopModal.querySelector('input[name="store_name"]')?.focus({ preventScroll: true }));
+      requestAnimationFrame(() => {
+        shopModal.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        shopModal.querySelector('input[name="store_name"]')?.focus({ preventScroll: true });
+      });
     };
     $('adminManagedShopReload')?.addEventListener('click', () => void renderAdminManagedShop());
     $('adminManagedShopEdit')?.addEventListener('click', openShopModal);
