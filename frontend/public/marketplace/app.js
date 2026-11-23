@@ -1929,49 +1929,7 @@ function renderProducts() {
   $('productGrid').classList.toggle('hidden', list.length === 0);
 
   $('skeletonGrid').classList.add('hidden');
-  renderSteamDiscoveryHub();
-}
-
-function renderSteamDiscoveryHub() {
-  const trendingRoot = $('hubTrendingList');
-  const savedRoot = $('hubSavedList');
-  const savedCount = $('hubSavedCount');
-  if (!trendingRoot || !savedRoot) return;
-
-  const products = (Array.isArray(state.products) ? state.products : [])
-    .filter(item => item?.listing_type === 'product');
-  const formatViews = value => {
-    const count = Math.max(0, Number(value) || 0);
-    return new Intl.NumberFormat('en', { notation: count >= 1000 ? 'compact' : 'standard', maximumFractionDigits: 1 }).format(count) + ' views';
-  };
-  const miniCard = (item, showViews = false) => {
-    const image = item.product_images?.find(img => img?.image_url)?.image_url || item.image_url || item.cover_url || '';
-    const rawPrice = item.price_label ?? item.display_price ?? item.price;
-    const priceText = String(rawPrice ?? '').trim();
-    const numericPrice = Number(priceText.replace(/,/g, ''));
-    const price = !priceText ? 'ទាក់ទងអ្នកលក់' : (/[ $៛]/.test(priceText) ? priceText : (Number.isFinite(numericPrice) ? money(numericPrice) : priceText));
-    return `<button type="button" class="hub-item-card" data-hub-product-id="${esc(item.id)}" aria-label="មើលព័ត៌មាន ${esc(item.title || 'ទំនិញ')}">
-      <span class="hub-item-thumb">${image ? `<img src="${esc(image)}" alt="" loading="lazy">` : ic('image',18)}</span>
-      <span class="hub-item-copy">
-        <span class="hub-item-title">${esc(item.title || 'ទំនិញមិនមានឈ្មោះ')}</span>
-        <span class="hub-item-meta"><span class="hub-item-price">${esc(price)}</span>${showViews ? `<span class="hub-item-views">${esc(formatViews(item.view_count))}</span>` : ''}</span>
-      </span>
-    </button>`;
-  };
-
-  const trending = [...products]
-    .sort((a,b) => (Number(b.view_count) || 0) - (Number(a.view_count) || 0))
-    .slice(0,4);
-  trendingRoot.innerHTML = trending.length
-    ? trending.map(item => miniCard(item,true)).join('')
-    : '<p class="hub-empty-message">មិនទាន់មានទំនិញពេញនិយមទេ។</p>';
-
-  const savedIds = state.savedIds instanceof Set ? state.savedIds : new Set();
-  const saved = products.filter(item => savedIds.has(item.id) || savedIds.has(String(item.id))).slice(0,3);
-  if (savedCount) savedCount.textContent = String(products.filter(item => savedIds.has(item.id) || savedIds.has(String(item.id))).length);
-  savedRoot.innerHTML = saved.length
-    ? saved.map(item => miniCard(item,false)).join('')
-    : `<p class="hub-empty-message">${state.session ? 'ចុចរូប Bookmark លើទំនិញដើម្បីរក្សាទុក' : 'ចូលគណនី ដើម្បីមើលទំនិញដែលបានរក្សាទុក'}</p>`;
+  
 }
 
 function setSelectedMarketplaceCard(type, id) {
@@ -2821,7 +2779,7 @@ function renderProductDetail(options = {}) {
       const kind = btn.dataset.productAction;
       if (kind === 'store' && v.id) void openStorefront(v.id);
       if (kind === 'buy') openCheckout(p);
-      if (kind === 'save') Promise.resolve(saveAction(p.id, btn)).finally(renderSteamDiscoveryHub);
+      if (kind === 'save') Promise.resolve(saveAction(p.id, btn));
       if (kind === 'offer') {
         if (!requireLogin()) return;
         state.currentOfferProduct = {...p, price: effectivePrice, variant_id: selectedVariant?.id || null};
@@ -2835,7 +2793,7 @@ function renderProductDetail(options = {}) {
 
   $('productDetail').querySelector('.product-related-grid')?.addEventListener('click', (e) => {
     const save = e.target.closest('[data-action="save"]');
-    if (save) { e.preventDefault(); e.stopPropagation(); Promise.resolve(saveAction(save.dataset.id, save)).finally(renderSteamDiscoveryHub); return; }
+    if (save) { e.preventDefault(); e.stopPropagation(); Promise.resolve(saveAction(save.dataset.id, save)); return; }
     const view = e.target.closest('[data-action="view"]');
     if (view) { void openProduct(view.dataset.id); return; }
     const store = e.target.closest('[data-action="store"]');
@@ -3220,7 +3178,7 @@ function handleStorefrontAction(event) {
   const auroraEdit=event.target.closest('[data-aurora-edit]');
   if(auroraEdit){event.preventDefault();event.stopPropagation();openAuroraProductEditor(auroraEdit.dataset.auroraEdit);return;}
   const heart = event.target.closest('[data-action="save"]');
-  if (heart) { event.preventDefault(); event.stopPropagation(); Promise.resolve(saveAction(heart.dataset.id, heart)).finally(renderSteamDiscoveryHub); return; }
+  if (heart) { event.preventDefault(); event.stopPropagation(); Promise.resolve(saveAction(heart.dataset.id, heart)); return; }
   const view = event.target.closest('[data-action="view"]');
   if (view) void openProduct(view.dataset.id);
 }
@@ -3279,7 +3237,7 @@ async function saveAction(productId, button) {
 async function loadSaved() {
   const r = await api('/api/saved');
   state.savedIds = new Set((r.data || []).map((x) => x.products?.id).filter(Boolean));
-  renderSteamDiscoveryHub();
+  
   return r.data || [];
 }
 
@@ -6005,20 +5963,13 @@ function bindEvents() {
       renderProducts();
     });
   });
-  $('homeJobsRail')?.addEventListener('click', (event) => {
-    const quickPost = event.target.closest('#hubQuickPostBtn');
-    if (quickPost) { $('postAdBtn')?.click(); return; }
-    const card = event.target.closest('[data-hub-product-id]');
-    if (card) { void openProduct(card.dataset.hubProductId, { preserveScroll: true }); }
-  });
-
   $('productGrid').addEventListener('click', (e) => {
     const copyId=e.target.closest('[data-copy-product-code]');
     if(copyId){e.preventDefault();e.stopPropagation();void copyProductCode(copyId);return;}
     const otherListing = e.target.closest('[data-action="view-listing"]');
     if (otherListing) { openMarketplaceListing(otherListing.dataset.type, otherListing.dataset.id); return; }
     const heart = e.target.closest('[data-action="save"]');
-    if (heart) { e.preventDefault(); e.stopPropagation(); Promise.resolve(saveAction(heart.dataset.id, heart)).finally(renderSteamDiscoveryHub); return; }
+    if (heart) { e.preventDefault(); e.stopPropagation(); Promise.resolve(saveAction(heart.dataset.id, heart)); return; }
     const store = e.target.closest('[data-action="store"]');
     if (store) { e.preventDefault(); e.stopPropagation(); void openStorefront(store.dataset.vendorId); return; }
     const view = e.target.closest('[data-action="view"]');
@@ -6106,7 +6057,7 @@ function bindEvents() {
       state.session = null;
       state.me = null;
       state.savedIds.clear();
-      renderSteamDiscoveryHub();
+      
       syncHeader();
       showView('home');
       toast('បានចាកចេញពីគណនីរួចរាល់។');
@@ -6604,7 +6555,7 @@ function bindEvents() {
     const open = e.target.closest('[data-open-product]');
     if (open) { void openProduct(open.dataset.openProduct); return; }
     const remove = e.target.closest('[data-remove-saved]');
-    if (remove) Promise.resolve(saveAction(remove.dataset.removeSaved, remove)).finally(renderSteamDiscoveryHub);
+    if (remove) Promise.resolve(saveAction(remove.dataset.removeSaved, remove));
   });
   $('profileTabContent')?.addEventListener('submit', async (e) => {
     const form = e.target.closest('[data-my-post-edit-form]');
@@ -7095,7 +7046,7 @@ async function boot() {
     }
 
     await Promise.allSettled(tasks);
-    renderSteamDiscoveryHub();
+    
     document.documentElement.classList.remove('route-restoring');
   } catch (err) {
     console.error('Boot error:', err);
