@@ -5076,7 +5076,7 @@ app.post('/api/admin/suppliers', authenticate, requireAdmin, async (req, res) =>
 app.patch('/api/admin/suppliers/:id', authenticate, requireAdmin, async (req, res) => {
   if (!db(res)) return;
   const update = {};
-  if (typeof req.body.is_verified === 'boolean') update.is_verified = req.body.is_verified;
+  if (typeof req.body.is_verified === 'boolean') { update.is_verified = req.body.is_verified; if (req.body.is_verified === false) update.is_active = false; }
   if (typeof req.body.is_active === 'boolean') {
     if (req.body.is_active === true) {
       const { data: current, error: readError } = await supabase.from('supplier_registry')
