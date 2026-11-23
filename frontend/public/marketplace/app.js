@@ -6782,7 +6782,7 @@ function bindEvents() {
   $('sellerChatHeaderBack').addEventListener('click', () => void openSellerChatInbox());
   $('sellerChatInboxRefresh').addEventListener('click', () => void loadUnifiedSellerChatInbox());
   $('sellerChatInboxList').addEventListener('click', (e) => {
-    if (e.target.closest('[data-ai-assistant]')) { openShoppingAssistantInChat(); return; }
+    if (e.target.closest('[data-ai-assistant]')) { window.openShoppingAssistantInChat?.(); return; }
     const btn = e.target.closest('[data-unified-chat]');
     if (btn) void openSellerChat(btn.dataset.unifiedChat);
   });
