@@ -8939,3 +8939,48 @@ img{content-visibility:auto}
 #view-home .steam-discovery-hub{display:none!important}
 #view-product #productDetailPageMount{width:100%;max-width:100%;min-width:0}
 #view-product #productDetail{width:100%;max-width:100%;margin:0 auto}
+
+
+/* Final correction: Home is a two-column layout with six product cards.
+   Keep the filter sidebar; remove the right discovery/jobs workspace entirely. */
+@media (min-width: 1101px) {
+  #view-home > .home-layout-shell.amazon-store-body.shell {
+    display: grid !important;
+    grid-template-columns: 220px minmax(0, 1fr) !important;
+    gap: 20px !important;
+    width: min(100% - 32px, 1920px) !important;
+    max-width: 1920px !important;
+    margin-inline: auto !important;
+    padding: 0 !important;
+  }
+
+  #view-home .home-main-content {
+    display: contents !important;
+  }
+
+  #view-home .amazon-filter-sidebar {
+    grid-column: 1 !important;
+  }
+
+  #view-home #productGrid:not(.hidden),
+  #view-home #skeletonGrid:not(.hidden) {
+    display: grid !important;
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+    gap: 14px !important;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1100px) {
+  #view-home > .home-layout-shell.amazon-store-body.shell {
+    display: grid !important;
+    grid-template-columns: 180px minmax(0, 1fr) !important;
+    gap: 14px !important;
+  }
+}
+
+#view-home #homeJobsRail,
+#view-home .home-jobs-rail,
+#view-home .home-detail-inspector,
+#view-home .steam-discovery-hub {
+  display: none !important;
+}
