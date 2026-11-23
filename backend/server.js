@@ -3897,6 +3897,7 @@ function extractCcSupplierProducts(html, baseUrl) {
     else if (/\b(laptop|notebook|vivobook|expertbook|zenbook|macbook|thinkpad|rog|strix)\b/i.test(identitySearch) || hasLaptopSpecs) { subcategory = 'laptop'; detailType = 'Laptop'; }
     else if (/\b(all[- ]in[- ]one|aio)\b/i.test(identitySearch)) { subcategory = 'all_in_one'; detailType = 'All-in-One'; }
     else if (/\b(desktop|tower|mini pc|mini computer)\b/i.test(identitySearch)) { subcategory = 'desktop'; detailType = 'Desktop'; }
+    else if (/\b(monitor[\s-]*arm|monitor[\s-]*mount|desk[\s-]*mount|vesa[\s-]*arm)\b/i.test(identitySearch)) { category = 'computer_accessories'; subcategory = 'monitor_arm'; detailType = 'Monitor Arm'; }
     else if (/\b(monitor|display screen)\b/i.test(identitySearch)) { subcategory = 'monitor'; detailType = 'Monitor'; }
     const classificationStatus = detailType === 'Unclassified' ? 'needs_review' : 'confirmed';
     const classificationConfidence = classificationStatus === 'confirmed' ? 'high' : 'low';
