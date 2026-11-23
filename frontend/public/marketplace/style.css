@@ -9187,3 +9187,101 @@ body.admin-management-popup-open{overflow:hidden}
     padding:12px 0 0!important;
   }
 }
+
+
+/* Final admin popup sizing and single-layer official shop editor. */
+/* Brand & Hero Banner: fixed viewport, bounded dialog, internal scrolling. */
+#view-admin .admin-management-popup.admin-branding-card{
+  padding:20px!important;
+}
+#view-admin .admin-management-popup.admin-branding-card>.admin-branding-dialog{
+  width:min(1120px,100%);
+  max-width:100%;
+  max-height:88dvh!important;
+  min-height:0;
+  overflow-x:hidden;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  padding:20px;
+}
+#view-admin .admin-branding-dialog>.grid.xl\\:grid-cols-2{
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  align-items:start;
+}
+#view-admin .admin-branding-dialog .grid.lg\\:grid-cols-3{
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+}
+#view-admin .admin-branding-dialog>h2{margin-bottom:14px!important}
+#view-admin .admin-branding-dialog .hero-admin-preview{min-height:150px}
+#view-admin .admin-branding-dialog .poster-admin-preview{min-height:90px}
+#view-admin .admin-branding-dialog .poster-admin-preview-tall{min-height:130px}
+
+/* The edit form is now part of the Official Shop popup, not a second overlay. */
+#view-admin .admin-official-shop-panel .admin-official-shop-modal{
+  position:static!important;
+  inset:auto!important;
+  z-index:auto!important;
+  display:block;
+  width:100%;
+  margin:16px 0 0;
+  padding:0!important;
+  background:transparent!important;
+}
+#view-admin .admin-official-shop-panel .admin-official-shop-modal[hidden]{
+  display:none!important;
+}
+#view-admin .admin-official-shop-panel .admin-official-shop-dialog{
+  position:static!important;
+  z-index:auto!important;
+  width:100%!important;
+  max-width:none!important;
+  max-height:none!important;
+  overflow:visible!important;
+  border:1px solid rgba(102,192,244,.2);
+  border-radius:14px;
+  background:linear-gradient(155deg,#1B2838,#141D29 72%);
+  box-shadow:none!important;
+  animation:none!important;
+}
+#view-admin .admin-official-shop-panel .admin-official-shop-modal-header{
+  padding:16px 18px 12px;
+}
+#view-admin .admin-official-shop-panel .admin-official-shop-modal-header h2{
+  margin:0;
+}
+#view-admin .admin-official-shop-panel .admin-official-shop-form{
+  padding:16px 18px 18px;
+}
+#view-admin .admin-official-shop-panel .admin-official-shop-backdrop{display:none!important}
+
+@media(max-width:900px){
+  #view-admin .admin-management-popup.admin-branding-card>.admin-branding-dialog{
+    max-height:90dvh!important;
+  }
+  #view-admin .admin-branding-dialog>.grid.xl\\:grid-cols-2{
+    grid-template-columns:minmax(0,1fr)!important;
+  }
+  #view-admin .admin-branding-dialog .grid.lg\\:grid-cols-3{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+}
+@media(max-width:760px){
+  #view-admin .admin-management-popup.admin-branding-card{
+    padding:10px 0 0!important;
+  }
+  #view-admin .admin-management-popup.admin-branding-card>.admin-branding-dialog{
+    width:100%;
+    max-height:92dvh!important;
+    padding:15px;
+    border-radius:17px 17px 0 0;
+  }
+  #view-admin .admin-branding-dialog .grid.lg\\:grid-cols-3{
+    grid-template-columns:minmax(0,1fr)!important;
+  }
+  #view-admin .admin-official-shop-panel .admin-official-shop-modal-header{
+    padding:14px 13px 11px;
+  }
+  #view-admin .admin-official-shop-panel .admin-official-shop-form{
+    padding:13px;
+  }
+}
