@@ -5005,20 +5005,7 @@ await nextApp.prepare();
 app.use((req, res) => nextHandler(req, res));
 const server = app.listen(port, '0.0.0.0', () => console.log(`7inOne full-stack service listening on 0.0.0.0:${port}`));
 server.on('error', error => console.error('7inOne HTTP server failed to bind:', error));
-async function cleanupExpiredSocialStories() {
-  if (!supabase) return;
-  try {
-    const { data: expired, error } = await supabase.from('social_stories')
-      .select('id,image_message_id').lte('expires_at', new Date().toISOString()).limit(100);
-    if (error) throw error;
-    if (!expired?.length) return;
-    for (const story of expired) await deleteTelegramMessage(story.image_message_id);
-    const ids = expired.map(story => story.id);
-    const { error: deleteError } = await supabase.from('social_stories').delete().in('id', ids);
-    if (deleteError) throw deleteError;
-  } catch (error) { console.warn('Expired Stories cleanup failed:', error.message); }
-}
-const socialStoryCleanupTimer = setInterval(() => { void cleanupExpiredSocialStories(); }, 15 * 60 * 1000);
+ }, 15 * 60 * 1000);
 socialStoryCleanupTimer.unref?.();
 void cleanupExpiredSocialStories();
 
