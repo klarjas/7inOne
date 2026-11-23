@@ -10,7 +10,7 @@ import { createClient } from '@supabase/supabase-js';
 import { registerSupportChat } from './support-chat.js';
 import { registerSellerChat } from './seller-chat.js';
 import { registerShoppingAssistant } from './shopping-assistant.js';
-import { startAnantaTrainingEngine } from './assistant-training-engine.js';
+import { startAnantaTrainingEngine, getAnantaTrainingStatus } from './assistant-training-engine.js';
 import { registerAnantaBrainUploadRoutes } from './ananta-brain-upload.js';
 import { registerMyPostsRoutes } from './my-posts.js';
 import { researchExternalProductCategory } from './product-research.js';
@@ -5227,6 +5227,22 @@ app.patch('/api/admin/suppliers/:id', authenticate, requireAdmin, async (req, re
   if (error) { console.error('Supplier registry update failed:', error.message); return fail(res, 400, 'Could not update supplier.'); }
   if (!data) return fail(res, 404, 'Supplier was not found.');
   res.json({ data: { ...data, adapter_ready: SUPPLIER_PARSER_ADAPTERS.has(data.parser_key) } });
+});
+
+app.get('/api/admin/ananta/learning', authenticate, requireAdmin, async (_req, res) => {
+  if (!db(res)) return;
+  const { data: space, error: spaceError } = await supabase.from('assistant_knowledge_spaces').select('id,assistant_name,is_enabled').eq('space_code','primary').maybeSingle();
+  if (spaceError) return fail(res, 500, 'Could not load ANANTA knowledge space.');
+  if (!space) return res.json({ data: { space: null, progress: null, approvedLessons: 0, attempts: [], totalAttempts: 0, runtime: getAnantaTrainingStatus() } });
+  const [progress, lessons, attempts, totals] = await Promise.all([
+    supabase.from('assistant_training_progress').select('*').eq('space_id', space.id).maybeSingle(),
+    supabase.from('assistant_knowledge_entries').select('id', { count: 'exact', head: true }).eq('space_id', space.id).eq('status','approved'),
+    supabase.from('assistant_training_attempts').select('id,lesson_code,level,question,answer,score,passed,feedback,weak_topics,created_at').eq('space_id', space.id).order('created_at',{ascending:false}).limit(30),
+    supabase.from('assistant_training_attempts').select('id', { count: 'exact', head: true }).eq('space_id', space.id)
+  ]);
+  const error = progress.error || lessons.error || attempts.error || totals.error;
+  if (error) return fail(res, 500, 'Could not load ANANTA training records.');
+  res.json({ data: { space, progress: progress.data || null, approvedLessons: lessons.count || 0, attempts: attempts.data || [], totalAttempts: totals.count || 0, runtime: getAnantaTrainingStatus() } });
 });
 
 // Return JSON for unknown API paths instead of Next.js HTML 404 pages. This
