@@ -152,6 +152,7 @@ Write-Host "----------------------------------------------------"
 
 try {
     Start-AppServer
+    Start-Process "http://localhost:10000/marketplace/index.html#home"
     if (Get-Command cloudflared -ErrorAction SilentlyContinue) {
         Write-Host "[TUNNEL] Starting Cloudflare Tunnel..." -ForegroundColor Cyan
         $script:Tunnel = Start-Process -FilePath "cloudflared" -ArgumentList @("tunnel","--url","http://localhost:10000") -WorkingDirectory $RepoRoot -PassThru -NoNewWindow
