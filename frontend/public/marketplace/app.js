@@ -1844,10 +1844,17 @@ function renderProductGiftCard(gifts = []) {
   if (!Array.isArray(gifts) || !gifts.length) return '';
   const expandedGifts = gifts.flatMap(gift => {
     const value = String(gift || '').trim();
-    const combo = value.match(/^(.*?)\\b(Keyboard)\\s*&\\s*(Mouse)$/i);
-    if (!combo) return [gift];
-    const sharedPrefix = combo[1];
-    return [sharedPrefix + combo[2], sharedPrefix + combo[3]];
+    if (!value) return [];
+    const combo = value.match(/^(.*?)\b(Keyboard)\s*&\s*(Mouse)$/i);
+    if (combo) {
+      const sharedPrefix = combo[1];
+      return [sharedPrefix + combo[2], sharedPrefix + combo[3]];
+    }
+    return value
+      .split(/[,;|\n]+/)
+      .flatMap(part => part.trim().split(/(?=Cleaning\s*Kit\b|Mouse\s*Pad\b)/i))
+      .map(part => part.trim())
+      .filter(Boolean);
   });
   const items = expandedGifts.map((gift, index) => {
     const item = '<span class="product-gift-entry">' +
@@ -1860,7 +1867,6 @@ function renderProductGiftCard(gifts = []) {
   return '<section class="product-short-gift-card" aria-label="ថែមកាដូសម្រាប់អ្នក"><h3>' +
     ic('gift', 16) + ' ថែមកាដូសម្រាប់អ្នក</h3><div class="product-gift-flow">' + items + '</div></section>';
 }
-
 function renderProductDescriptionHtml(value = '') {
   const lines = String(value || '').replace(/\r/g, '').split('\n');
   const renderInline = text => esc(text).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
