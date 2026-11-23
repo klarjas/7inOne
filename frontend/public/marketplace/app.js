@@ -2590,9 +2590,9 @@ function renderProductDetail(options = {}) {
 
         <section class="product-seller-card">
           <div class="product-seller-heading">
-            <div class="product-seller-logo">${p.poster?.avatar_url ? `<img src="${esc(p.poster.avatar_url)}" alt="">` : (v.store_logo_url ? `<img src="${esc(v.store_logo_url)}" alt="">` : avatarFallbackMarkup(v.store_name))}</div>
+            <div class="product-seller-logo">${v.store_logo_url ? `<img src="${esc(v.store_logo_url)}" alt="${esc(v.store_name)}" loading="lazy" decoding="async">` : `<span class="product-seller-logo-fallback">${ic('store', 22)}</span>`}</div>
             <div class="product-seller-identity">
-              <b>${esc(p.poster?.display_name || v.store_name || 'អ្នកលក់')}</b>
+              <b>${esc(v.store_name || 'ហាងអ្នកលក់')}</b>
               <span class="product-seller-verified">${v.status === 'approved' ? ic('checkcircle', 13) + ' អ្នកលក់បានផ្ទៀងផ្ទាត់' : 'អ្នកលក់'}</span>
             </div>
             <button type="button" class="product-store-button" data-product-action="store">${ic('store', 15)} មើលហាង</button>
