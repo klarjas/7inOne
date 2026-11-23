@@ -2609,7 +2609,7 @@ function renderProductDetail(options = {}) {
           </div>
           <div class="product-seller-metrics">
             <div><b>${Number(v.active_listings || 0)}</b><small>ទំនិញលក់</small></div>
-            <div><b>${Number(v.total_views || 0).toLocaleString()}</b><small>អ្នកមើល</small></div>
+            <div><b>${Number(v.total_views || 0).toLocaleString()}</b><small>អ្នកមើលហាង</small></div>
             <div><b>${reviewTotal}</b><small>ការវាយតម្លៃ</small></div>
           </div>
         </section>
@@ -2618,7 +2618,7 @@ function renderProductDetail(options = {}) {
           <section class="product-spec-section">
             <h2>${ic('sliders', 18)} លក្ខណៈបច្ចេកទេស</h2>
             <div class="product-spec-grid detail-spec-grid">
-              ${[['ប្រភេទ',CATEGORIES[p.category] || p.category],['ស្ថានភាព',p.condition],['កាលបរិច្ឆេទបង្ហោះ',p.created_at ? fmtDate(p.created_at) : ''],['ម៉ាក / ព័ត៌មានបន្ថែម',p.brand || p.specifications?.brand || p.specifications?.model || 'មិនបានបញ្ជាក់'],...Object.entries(p.specifications || {}).filter(([key,value])=>key!=='google_map_url'&&key!=='brand'&&key!=='model'&&value!=null&&String(value).trim()!=='').map(([key,value])=>[key.replace(/_/g,' '),value])].filter(([,value])=>value!=null&&String(value).trim()!=='').map(([key,value])=>`<div><small>${esc(key)}</small><b>${esc(value)}</b></div>`).join('')}
+              ${[['ស្ថានភាព',p.condition],['ម៉ាក / ព័ត៌មានបន្ថែម',p.brand || p.specifications?.brand || p.specifications?.model || 'មិនបានបញ្ជាក់'],...Object.entries(p.specifications || {}).filter(([key,value])=>!['google_map_url','brand','model','category','condition','created_at','view_count'].includes(key)&&value!=null&&String(value).trim()!=='').map(([key,value])=>[key.replace(/_/g,' '),value])].filter(([,value])=>value!=null&&String(value).trim()!=='').map(([key,value])=>`<div><small>${esc(key)}</small><b>${esc(value)}</b></div>`).join('')}
             </div>
           </section>
           <section class="product-description-copy">
