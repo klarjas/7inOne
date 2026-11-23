@@ -9315,3 +9315,15 @@ body.admin-management-popup-open{overflow:hidden}
 .shopping-assistant-form button{width:39px;height:39px;flex:0 0 39px;border:1px solid rgba(102,192,244,.32);border-radius:11px;background:#2A475E;color:#EAF4FC;font-size:17px;cursor:pointer}.shopping-assistant-form button:disabled{opacity:.45;cursor:wait}
 .shopping-assistant-footnote{margin:0;padding:0 13px 9px;background:rgba(22,32,45,.7);color:#71879B;font-size:9px;text-align:center}
 @media(max-width:640px){.shopping-assistant-launcher{right:13px;bottom:82px;padding:10px 13px}.shopping-assistant{right:10px;bottom:78px;width:calc(100vw - 20px);height:min(72dvh,620px)}}
+
+
+/* Smart Shopping Assistant lives inside the existing unified chat as its pinned first inbox item. */
+.seller-chat-ai-pinned{order:-1;border:1px solid rgba(102,192,244,.38)!important;background:linear-gradient(110deg,rgba(42,71,94,.2),rgba(22,32,45,.05))!important}
+.seller-chat-ai-mark{display:grid;width:44px;height:44px;flex:0 0 44px;place-items:center;border:1px solid rgba(102,192,244,.4);border-radius:50%;background:linear-gradient(145deg,#2A475E,#16202D);color:#66C0F4;font-size:22px;font-weight:900}
+.seller-chat-ai-pin{padding:3px 6px;border:1px solid rgba(102,192,244,.28);border-radius:6px;color:#66C0F4;font-size:8px;font-weight:900;letter-spacing:.08em}
+.seller-chat-thread{position:relative}
+.seller-chat-thread>.shopping-assistant{position:absolute;inset:0;right:auto;bottom:auto;z-index:5;display:flex;width:100%;height:100%;max-height:none;border:0;border-radius:0;background:#171A21;box-shadow:none;backdrop-filter:none}
+.seller-chat-thread>.shopping-assistant[hidden]{display:none!important}
+.shopping-assistant-launcher{display:none!important}
+.seller-chat-thread>.shopping-assistant .shopping-assistant-head{flex:0 0 auto}
+.seller-chat-thread>.shopping-assistant .shopping-assistant-messages{min-height:0}
