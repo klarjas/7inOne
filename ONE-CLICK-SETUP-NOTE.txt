@@ -1,0 +1,89 @@
+7inOne - ONE CLICK PC SETUP
+===========================
+
+PURPOSE
+-------
+Use the same External SSD to continue developing 7inOne on another Windows PC.
+The setup script checks and installs missing tools, installs project dependencies,
+generates the marketplace CSS, checks the code, and starts the local services.
+
+FILES
+-----
+ONE-CLICK-SETUP.bat   Main setup launcher
+START-AUTO-SYNC.bat   GitHub automatic commit/push watcher
+START-LOCAL.bat       Local 7inOne server
+SETUP-PC.bat          Basic dependency setup (alternative/manual use)
+
+BEFORE USING ON A DIFFERENT PC
+------------------------------
+1. Safely eject the External SSD from the previous PC.
+2. Connect the External SSD to the new PC.
+3. Open the 7inOne project folder on the External SSD.
+4. Confirm the private .env file is present in the project root.
+   Never send .env contents to anyone and never upload .env to GitHub.
+5. Open CMD in the project folder and check for local changes:
+      git status --short
+6. If there are no local changes, update from GitHub:
+      git pull --ff-only origin main
+   If Git reports local changes or a conflict, STOP. Do not reset, force-pull,
+   or delete files. Resolve the changes safely before continuing.
+
+ONE-CLICK SETUP
+---------------
+Double-click:
+    ONE-CLICK-SETUP.bat
+
+It will:
+- Check/install Git for Windows using winget.
+- Check/install Node.js LTS (20 or newer) using winget.
+- Check/install Cloudflare Tunnel using winget when available.
+- Run npm ci using the committed package-lock.json.
+- Generate frontend/public/marketplace/tailwind.css.
+- Run npm run check.
+- Open GitHub Auto-Sync and Cloudflare Tunnel windows.
+- Start the local 7inOne server.
+
+If Windows asks for permission, review the prompt before allowing installation.
+An internet connection and permission to install software are required.
+If a tool was installed but is not detected in the current CMD, close the window,
+open a new CMD, and run ONE-CLICK-SETUP.bat again.
+
+AFTER SETUP
+-----------
+- Local website: http://localhost:10000
+- Cloudflare Tunnel prints a public HTTPS URL ending in .trycloudflare.com.
+- Keep the Auto-Sync, Tunnel, and Local Server windows open while using them.
+- The Cloudflare URL is temporary and changes when a new Quick Tunnel is created.
+- Anyone with the temporary URL may be able to view the site. Do not expose
+  private/admin functions or real user data during testing.
+- Closing the Tunnel window stops public access; closing the server stops the app.
+- Continue editing files on this External SSD. Auto-Sync watches local changes
+  and pushes commits to GitHub main after changes settle.
+
+IMPORTANT SAFETY RULES
+----------------------
+- Use this same External SSD; do not clone a second copy unless specifically needed.
+- Do not work on the same project from two PCs at the same time.
+- Safely eject the SSD before moving it to another PC.
+- Never commit or upload .env, credentials, private keys, or secrets.
+- Do not use git push --force, git reset --hard, or destructive cleanup commands.
+- If Auto-Sync stops because GitHub has newer commits, stop and reconcile first.
+- Keep the existing Supabase project and data. Do not create a replacement project.
+- Do not deploy to Render unless explicitly requested.
+
+TROUBLESHOOTING
+---------------
+If setup fails:
+1. Read the error shown in the setup window.
+2. Do not delete project files or .env.
+3. Check internet access and whether winget is available:
+      winget --version
+4. Check installed tools:
+      git --version
+      node --version
+      npm --version
+      cloudflared --version
+5. Share the error text (never share .env contents) for help.
+
+END
+---
