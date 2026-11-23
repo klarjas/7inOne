@@ -154,42 +154,13 @@ try {
     Start-AppServer
     if (Get-Command cloudflared -ErrorAction SilentlyContinue) {
         Write-Host "[TUNNEL] Starting Cloudflare Tunnel..." -ForegroundColor Cyan
-        $TunnelLog = Join-Path $env:TEMP ("7inOne-cloudflared-" + [guid]::NewGuid().ToString("N") + ".log")
-        # Read cloudflared's own log file. Redirected console streams may be buffered
-        # or formatted differently on Windows and are not reliable for URL detection.
-        $script:Tunnel = Start-Process -FilePath "cloudflared" -ArgumentList @("tunnel","--url","http://localhost:10000","--loglevel","info","--logfile",$TunnelLog) -WorkingDirectory $RepoRoot -PassThru -NoNewWindow
-        Write-Host "[TUNNEL] Waiting for Cloudflare public URL..." -ForegroundColor Cyan
-
-        $PublicBaseUrl = $null
-        $TunnelDeadline = (Get-Date).AddSeconds(60)
-        while ((Get-Date) -lt $TunnelDeadline -and -not $PublicBaseUrl) {
-            $script:Tunnel.Refresh()
-            if ($script:Tunnel.HasExited) { break }
-            if (Test-Path -LiteralPath $TunnelLog) {
-                try {
-                    $logText = [System.IO.File]::ReadAllText($TunnelLog)
-                    if ($logText -match '(?i)https://[a-z0-9-]+\.trycloudflare\.com') {
-                        $PublicBaseUrl = $Matches[0].TrimEnd('.', '/', ')', ']', ',')
-                    }
-                } catch { }
-            }
-            if (-not $PublicBaseUrl) { Start-Sleep -Milliseconds 500 }
-        }
-
-        if ($PublicBaseUrl) {
-            $PublicAppUrl = $PublicBaseUrl + "/marketplace/index.html#home"
-            Write-Host "[TUNNEL] Public URL: $PublicBaseUrl" -ForegroundColor Green
-            Write-Host "[BROWSER] Opening 7inOne through Cloudflare..." -ForegroundColor Cyan
-            Start-Process $PublicAppUrl
-            Write-Host "[READY] $PublicAppUrl" -ForegroundColor Green
-        } else {
-            Write-Host "[TUNNEL WARNING] Could not obtain a trycloudflare.com URL within 60 seconds." -ForegroundColor Yellow
-            Write-Host "[BROWSER] Opening local address as fallback." -ForegroundColor Yellow
-            Start-Process "http://localhost:10000/marketplace/index.html#home"
-        }
+        Write-Host "[TUNNEL] The public trycloudflare.com URL will appear below. Copy it directly from this CMD window." -ForegroundColor Yellow
+        # Keep cloudflared attached to this console so its URL is printed directly,
+        # without log-file polling, browser launch, or a 60-second wait.
+        $script:Tunnel = Start-Process -FilePath "cloudflared" -ArgumentList @("tunnel","--url","http://localhost:10000") -WorkingDirectory $RepoRoot -PassThru -NoNewWindow
+        Write-Host "[TUNNEL] Waiting for the URL to appear in the cloudflared output above..." -ForegroundColor Gray
     } else {
-        Write-Host "[TUNNEL] cloudflared not found. Opening local address instead." -ForegroundColor Yellow
-        Start-Process "http://localhost:10000/marketplace/index.html#home"
+        Write-Host "[TUNNEL] cloudflared not found. Local app is available at http://localhost:10000/marketplace/index.html#home" -ForegroundColor Yellow
     }
 
     while ($true) {
