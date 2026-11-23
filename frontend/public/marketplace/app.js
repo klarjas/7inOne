@@ -2220,9 +2220,7 @@ async function openMarketplaceListing(type, id, options = {}) {
   if (alreadyOpen) return true;
 
   const requestId = ++state.detailRequestId;
-  const inlineInspector = options.inlineInspector === true || (
-    !options.forceFullPage && options.routeSyncNavigationId == null && $('view-home')?.classList.contains('active')
-  );
+  const inlineInspector = false; // Always open the dedicated product detail page.
   const isCurrent = () => requestId === state.detailRequestId &&
     (options.routeSyncNavigationId == null || options.routeSyncNavigationId === state.routeSyncNavigationId) &&
     String(state.currentProduct?.id || '') === listingId &&
@@ -2303,9 +2301,7 @@ async function openProduct(id, options = {}) {
   if (alreadyOpen) return true;
 
   const requestId = ++state.detailRequestId;
-  const inlineInspector = options.inlineInspector === true || (
-    !options.forceFullPage && options.routeSyncNavigationId == null && $('view-home')?.classList.contains('active')
-  );
+  const inlineInspector = false; // Always open the dedicated product detail page.
   const isCurrent = () => requestId === state.detailRequestId &&
     (options.routeSyncNavigationId == null || options.routeSyncNavigationId === state.routeSyncNavigationId) &&
     String(state.currentProduct?.id || '') === productId &&
