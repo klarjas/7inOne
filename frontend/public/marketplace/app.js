@@ -1961,12 +1961,26 @@ function renderSteamDiscoveryHub() {
     : `<p class="hub-empty-message">${state.session ? 'ចុចរូប Bookmark លើទំនិញដើម្បីរក្សាទុក' : 'ចូលគណនី ដើម្បីមើលទំនិញដែលបានរក្សាទុក'}</p>`;
 }
 
+function setSelectedMarketplaceCard(type, id) {
+  const grid = $('productGrid');
+  if (!grid) return;
+  const targetId = String(id ?? '');
+  const targetType = String(type || 'product');
+  grid.querySelectorAll('.cd').forEach(card => {
+    const action = card.querySelector('[data-action="view"],[data-action="view-listing"]');
+    const matches = action &&
+      String(action.dataset.id || '') === targetId &&
+      (targetType === 'product'
+        ? action.dataset.action === 'view'
+        : action.dataset.action === 'view-listing' && String(action.dataset.type || '') === targetType);
+    card.classList.toggle('is-selected', Boolean(matches));
+  });
+}
+
 function showHomeDetailInspector() {
   const inspector = $('homeDetailInspector');
   const detail = $('productDetail');
   if (!inspector || !detail) return;
-  const detailsPopover = $('detailsPopoverModal');
-  if (detailsPopover && detailsPopover.parentElement !== inspector) inspector.appendChild(detailsPopover);
   inspector.classList.remove('is-closing');
   inspector.appendChild(detail);
   // The product detail may have rendered before it was mounted in the right-side inspector.
@@ -1993,6 +2007,7 @@ function closeHomeDetailInspector() {
   const floatingActions = $('inspectorFloatingActions');
   if (floatingActions) { floatingActions.classList.add('hidden'); floatingActions.innerHTML = ''; floatingActions.onclick = null; }
   $('steamDiscoveryHub')?.classList.remove('hidden');
+  $('productGrid')?.querySelectorAll('.cd.is-selected').forEach(card => card.classList.remove('is-selected'));
   state.currentProduct = null;
   state.currentVendor = null;
   state.currentMarketplaceListing = null;
@@ -2194,6 +2209,7 @@ function renderProductDetailSkeleton() {
 async function openMarketplaceListing(type, id, options = {}) {
   if (!id || !['job', 'real_estate'].includes(type)) return false;
   const listingId = String(id);
+  setSelectedMarketplaceCard(type, listingId);
   const detailKey = type + ':' + listingId;
   const inspector = $('homeDetailInspector');
   const alreadyOpen = inspector && !inspector.classList.contains('hidden') &&
@@ -2276,6 +2292,7 @@ async function openMarketplaceListing(type, id, options = {}) {
 async function openProduct(id, options = {}) {
   if (!id) { toast('មិនមានលេខសម្គាល់ទំនិញទេ។', 'warning'); return false; }
   const productId = String(id);
+  setSelectedMarketplaceCard('product', productId);
   const detailKey = 'product:' + productId;
   const inspector = $('homeDetailInspector');
   const alreadyOpen = inspector && !inspector.classList.contains('hidden') &&
@@ -2503,12 +2520,19 @@ function populateDetailsPopover(root, options = {}) {
     modal.setAttribute('aria-hidden', String(!wasOpen));
   } else closeDetailsPopover();
 }
+function syncDetailsPopoverTriggers(isOpen) {
+  document.querySelectorAll('[data-open-details-popover]').forEach(button => {
+    button.classList.toggle('is-active', isOpen);
+    button.setAttribute('aria-expanded', String(isOpen));
+  });
+}
 function openDetailsPopover() {
   const modal = $('detailsPopoverModal'), body = $('detailsPopoverBody');
   if (!modal || !body?.childElementCount) return;
   modal.classList.remove('hidden');
   modal.classList.add('is-open');
   modal.setAttribute('aria-hidden', 'false');
+  syncDetailsPopoverTriggers(true);
 }
 function closeDetailsPopover() {
   const modal = $('detailsPopoverModal');
@@ -2516,6 +2540,7 @@ function closeDetailsPopover() {
   modal.classList.remove('is-open');
   modal.classList.add('hidden');
   modal.setAttribute('aria-hidden', 'true');
+  syncDetailsPopoverTriggers(false);
 }
 
 function renderMarketplaceListingInProductDetail(item, options = {}) {
