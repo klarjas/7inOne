@@ -1658,6 +1658,63 @@ function supplierCaptionSpecs(product = {}) {
   return parsed;
 }
 
+function productDetailSpecEntries(product = {}) {
+  const raw = { ...supplierCaptionSpecs(product), ...normalizedProductSpecs(product) };
+  const aliases = {
+    cpumodel:'cpu', processormodel:'cpu', cpu:'cpu', processor:'cpu',
+    ramtypecapacity:'ram', memoryram:'ram', ram:'ram', memory:'ram',
+    storagetypecapacity:'storage', storage:'storage', ssd:'storage', hdd:'storage',
+    screensize:'display', displaysize:'display', display:'display', screen:'display',
+    gpumodelvram:'gpu', graphicscard:'gpu', graphicsprocessor:'gpu', gpu:'gpu', graphics:'gpu',
+    batterycapacity:'battery', battery:'battery', batteryhealth:'battery_health',
+    batterylife:'battery_life', color:'color', colour:'color', weight:'weight',
+    os:'os', operatingsystem:'os', warranty:'warranty', dimensions:'dimensions',
+    resolution:'resolution', displayresolution:'resolution', brand:'brand', manufacturer:'brand',
+    model:'model', series:'series', condition:'condition'
+  };
+  const cleanKey = key => String(key || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const values = new Map();
+  const add = (key, value) => {
+    const canonical = aliases[cleanKey(key)];
+    const text = String(value ?? '').trim().replace(/^[:：\-\s]+|[,;\s]+$/g, '');
+    if (!canonical || !text || /^(?:n\/a|none|null|undefined|មិនបានបញ្ជាក់)$/i.test(text)) return;
+    if (!values.has(canonical)) values.set(canonical, text);
+  };
+  Object.entries(raw).forEach(([key, value]) => {
+    if (typeof value !== 'object' && !['fullspecs','fullspecification','description'].includes(cleanKey(key))) add(key, value);
+  });
+
+  const fullSpecs = Object.entries(raw).find(([key]) => ['fullspecs','fullspecification','specificationsfull'].includes(cleanKey(key)))?.[1]
+    || product.full_specs || product.full_specifications || '';
+  const fullText = String(fullSpecs || '');
+  const fullPattern = /(?:^|[,\n])\s*-\s*([^:,\n]+)\s*:\s*([^,\n]+)/g;
+  let match;
+  while ((match = fullPattern.exec(fullText))) add(match[1], match[2]);
+
+  // Split combined supplier values such as "Weight: 1.4Kg | Color: Matte Gray".
+  for (const [key, value] of [...values.entries()]) {
+    const parts = String(value).split(/\s*[|｜]\s*/);
+    if (parts.length < 2) continue;
+    for (const part of parts) {
+      const pair = part.match(/^([^:：]+)\s*[:：]\s*(.+)$/);
+      if (pair) add(pair[1], pair[2]);
+    }
+    const cleaned = parts.filter(part => !/^\s*(?:weight|color|colour)\s*[:：]/i.test(part)).join(' | ').trim();
+    if (cleaned) values.set(key, cleaned); else values.delete(key);
+  }
+
+  const labels = {
+    condition:'ស្ថានភាព', brand:'ម៉ាក', model:'ម៉ូដែល', series:'ស៊េរី',
+    cpu:'CPU', ram:'RAM', storage:'ទំហំផ្ទុក', display:'អេក្រង់',
+    gpu:'ក្រាហ្វិក (GPU)', battery:'ថ្ម', battery_health:'សុខភាពថ្ម',
+    battery_life:'អាយុកាលថ្ម', weight:'ទម្ងន់', color:'ពណ៌',
+    os:'ប្រព័ន្ធប្រតិបត្តិការ', warranty:'ការធានា',
+    dimensions:'វិមាត្រ', resolution:'កម្រិតបង្ហាញ'
+  };
+  const order = ['condition','brand','model','series','cpu','ram','storage','display','gpu','battery','battery_health','battery_life','weight','color','os','warranty','dimensions','resolution'];
+  return order.filter(key => values.has(key)).map(key => [labels[key], values.get(key)]);
+}
+
 function productCardSpecs(product = {}) {
   const specs = { ...supplierCaptionSpecs(product), ...normalizedProductSpecs(product) };
   const entries = Object.entries(specs).filter(([key, value]) => {
@@ -2634,7 +2691,7 @@ function renderProductDetail(options = {}) {
           <section class="product-spec-section">
             <h2>${ic('sliders', 18)} លក្ខណៈបច្ចេកទេស</h2>
             <div class="product-spec-grid detail-spec-grid">
-              ${[['ស្ថានភាព',p.condition],['ម៉ាក / ព័ត៌មានបន្ថែម',p.brand || p.specifications?.brand || p.specifications?.model || 'មិនបានបញ្ជាក់'],...Object.entries(p.specifications || {}).filter(([key,value])=>!['google_map_url','brand','model','category','condition','created_at','view_count'].includes(key)&&value!=null&&String(value).trim()!=='').map(([key,value])=>[key.replace(/_/g,' '),value])].filter(([,value])=>value!=null&&String(value).trim()!=='').map(([key,value])=>`<div><small>${esc(key)}</small><b>${esc(value)}</b></div>`).join('')}
+              ${productDetailSpecEntries(p).map(([key,value])=>`<div><small>${esc(key)}</small><b>${esc(value)}</b></div>`).join('')}
             </div>
           </section>
           <section class="product-description-copy">
