@@ -8813,7 +8813,7 @@ body > footer {
 
 /* Unified polished hover feedback for marketplace buttons. */
 button:hover:not(:disabled):not(.product-buy-primary):not(#supportChatLauncher) {
-  transform: translateY(-2px);
+  transform: none;
   box-shadow: 0 10px 24px rgba(102, 192, 244, .16);
   border-color: #66C0F4;
   filter: brightness(1.035) saturate(1.06);
