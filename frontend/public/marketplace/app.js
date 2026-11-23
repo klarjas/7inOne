@@ -2205,6 +2205,8 @@ function showHomeDetailInspector() {
   const inspector = $('homeDetailInspector');
   const detail = $('productDetail');
   if (!inspector || !detail) return;
+  const detailsPopover = $('detailsPopoverModal');
+  if (detailsPopover && detailsPopover.parentElement !== inspector) inspector.appendChild(detailsPopover);
   inspector.classList.remove('is-closing');
   inspector.appendChild(detail);
   $('steamDiscoveryHub')?.classList.add('hidden');
