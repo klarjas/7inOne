@@ -5,7 +5,7 @@ const INTERVAL = (Number.isFinite(rawInterval) ? Math.max(3600, rawInterval) : 2
 const LEVELS = ['Beginner','Learner','Intermediate','Advanced','Expert','Master'];
 let active = false, timer = null;
 const token = () => process.env.HF_TOKEN || process.env.AI_API_KEY || '';
-const clean = (v,n=2000) => String(v ?? '').replace(/[\\u0000-\\u0008\\u000B\\u000C\\u000E-\\u001F]/g,' ').trim().slice(0,n);
+const clean = (v,n=2000) => String(v ?? '').replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g,' ').trim().slice(0,n);
 async function ask(messages, max_tokens) {
   const key = token();
   if (!key) throw new Error('AI model token is not configured.');
@@ -17,7 +17,7 @@ async function ask(messages, max_tokens) {
   if(i>=0&&j>i) return JSON.parse(t.slice(i,j+1));
   throw new Error('AI returned invalid JSON.');
 }
-const lessonCode = x => (x.category||'general')+'-'+(String(x.title).match(/(?:មេរៀន|គោលការណ៍|នីតិវិធី)\\s*(\\d{1,4})/)?.[1]||String(x.id).slice(0,8));
+const lessonCode = x => (x.category||'general')+'-'+(String(x.title).match(/(?:មេរៀន|គោលការណ៍|នីតិវិធី)\s*(\d{1,4})/)?.[1]||String(x.id).slice(0,8));
 const level = n => n>=95?6:n>=90?5:n>=80?4:n>=70?3:n>=60?2:1;
 async function cycle({supabase,port}) {
   if(active) return;
