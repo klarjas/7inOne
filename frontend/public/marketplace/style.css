@@ -8697,3 +8697,37 @@ body > footer {
   #view-product .product-gift-name { font-size: 12px; }
   #view-product .product-gift-icon { width: 19px; height: 19px; }
 }
+
+
+/* Product detail primary actions: compact, content-sized buttons in requested order. */
+#view-product .product-detail-page:has(.product-primary-actions) .product-primary-actions{
+  display:flex!important;
+  flex-wrap:wrap;
+  align-items:center;
+  justify-content:flex-start;
+  gap:10px!important;
+}
+#view-product .product-detail-page:has(.product-primary-actions) .product-primary-actions > button{
+  display:inline-flex;
+  flex:0 0 auto;
+  width:auto!important;
+  min-width:0!important;
+  min-height:42px;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  padding:0 15px;
+  border-radius:999px;
+  font-size:13px;
+  line-height:1.2;
+  white-space:nowrap;
+}
+#view-product .product-detail-page:has(.product-primary-actions) .product-primary-actions > button svg{
+  width:16px;
+  height:16px;
+  flex:0 0 auto;
+}
+@media(max-width:420px){
+  #view-product .product-detail-page:has(.product-primary-actions) .product-primary-actions{gap:8px!important}
+  #view-product .product-detail-page:has(.product-primary-actions) .product-primary-actions > button{min-height:40px;padding-inline:11px;font-size:12px}
+}
