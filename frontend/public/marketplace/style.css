@@ -27,6 +27,7 @@
 /* Database-controlled maintenance mode */
 body:not(.maintenance-ready)>header,body:not(.maintenance-ready)>main,body:not(.maintenance-ready)>footer{visibility:hidden}
 body.maintenance-active{overflow:hidden}
+.maintenance-overlay.hidden{display:none}
 .maintenance-overlay{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;padding:24px;background:radial-gradient(circle at 18% 16%,rgba(129,140,248,.32),transparent 34%),radial-gradient(circle at 85% 82%,rgba(45,212,191,.18),transparent 30%),linear-gradient(135deg,#111827 0%,#1e1b4b 52%,#0f172a 100%);color:#fff}
 .maintenance-glass-card{width:min(100%,560px);padding:clamp(28px,6vw,54px);border:1px solid rgba(255,255,255,.2);border-radius:30px;background:rgba(255,255,255,.09);box-shadow:0 28px 100px rgba(0,0,0,.32),inset 0 1px 0 rgba(255,255,255,.12);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);text-align:center;animation:maintenanceCardIn .65s cubic-bezier(.22,1,.36,1) both}
 .maintenance-gear-wrap{position:relative;display:grid;place-items:center;width:92px;height:92px;margin:0 auto 24px;border:1px solid rgba(255,255,255,.2);border-radius:28px;background:rgba(255,255,255,.1);color:#c7d2fe}.maintenance-gear{font-size:54px;line-height:1;animation:maintenanceSpin 12s linear infinite}.maintenance-spark{position:absolute;right:8px;top:5px;color:#fcd34d;font-size:19px;animation:maintenanceSpark 2s ease-in-out infinite}
