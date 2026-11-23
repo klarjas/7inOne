@@ -6228,6 +6228,97 @@ function bindEvents() {
       category: videoButton.dataset.videoCategory
     });
   });
+  // 7inOne Smart Shopping Assistant — uses only live marketplace catalogue results.
+  (() => {
+    const panel = $('shoppingAssistant');
+    const openButton = $('shoppingAssistantOpen');
+    const closeButton = $('shoppingAssistantClose');
+    const form = $('shoppingAssistantForm');
+    const input = $('shoppingAssistantInput');
+    const messages = $('shoppingAssistantMessages');
+    const sendButton = $('shoppingAssistantSend');
+    const language = $('shoppingAssistantLanguage');
+    if (!panel || !openButton || !closeButton || !form || !input || !messages || !sendButton) return;
+    const addMessage = (text, role) => {
+      const node = document.createElement('div');
+      node.className = 'shopping-assistant-message ' + role;
+      node.textContent = String(text || '');
+      messages.appendChild(node);
+      messages.scrollTop = messages.scrollHeight;
+      return node;
+    };
+    const renderProducts = products => {
+      if (!Array.isArray(products) || !products.length) return;
+      const wrap = document.createElement('div');
+      wrap.className = 'shopping-assistant-products';
+      products.forEach(product => {
+        const card = document.createElement('button');
+        card.type = 'button';
+        card.className = 'shopping-assistant-product';
+        card.dataset.assistantProductId = String(product.id || '');
+        const image = product.product_images?.find(item => item.image_url)?.image_url || '';
+        const verified = product.vendors?.status === 'approved';
+        const price = product.display_price != null ? money(product.display_price) : 'សួរតម្លៃហាង';
+        card.innerHTML =
+          (image ? '<img src="' + esc(image) + '" alt="" loading="lazy">' : '<span class="shopping-assistant-product-placeholder">7</span>') +
+          '<span class="shopping-assistant-product-info"><strong>' + esc(product.title || 'ផលិតផល') + '</strong>' +
+          '<b>' + esc(price) + '</b><small>' + esc(product.vendors?.store_name || 'ហាងអ្នកលក់') + (verified ? ' · ✓ Verified' : '') + '</small></span>';
+        wrap.appendChild(card);
+      });
+      messages.appendChild(wrap);
+      messages.scrollTop = messages.scrollHeight;
+    };
+    openButton.addEventListener('click', () => {
+      panel.hidden = false;
+      openButton.hidden = true;
+      input.focus();
+    });
+    closeButton.addEventListener('click', () => {
+      panel.hidden = true;
+      openButton.hidden = false;
+    });
+    messages.addEventListener('click', event => {
+      const card = event.target.closest('[data-assistant-product-id]');
+      if (!card || !card.dataset.assistantProductId) return;
+      panel.hidden = true;
+      openButton.hidden = false;
+      void openProduct(card.dataset.assistantProductId);
+    });
+    form.addEventListener('submit', async event => {
+      event.preventDefault();
+      const prompt = input.value.trim();
+      if (!prompt || sendButton.disabled) return;
+      addMessage(prompt, 'user');
+      input.value = '';
+      sendButton.disabled = true;
+      const waiting = addMessage('កំពុងស្វែងរកផលិតផលដែលសមស្រប...', 'assistant waiting');
+      try {
+        const response = await fetch('/api/assistant/chat', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ message: prompt, language: language?.value || 'auto' })
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(payload.error || 'មិនអាចភ្ជាប់ជំនួយការបានទេ។');
+        waiting.remove();
+        addMessage(payload.message || 'ខ្ញុំរកឃើញផលិតផលខាងក្រោម។', 'assistant');
+        renderProducts(payload.products);
+      } catch (error) {
+        waiting.remove();
+        addMessage(error.message || 'មានបញ្ហា។ សូមព្យាយាមម្ដងទៀត។', 'assistant');
+      } finally {
+        sendButton.disabled = false;
+        input.focus();
+      }
+    });
+    input.addEventListener('keydown', event => {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        form.requestSubmit();
+      }
+    });
+  })();
+
   $('searchForm').addEventListener('submit', (e) => {
     e.preventDefault();
     state.searchTerm = $('searchInput').value.trim();
