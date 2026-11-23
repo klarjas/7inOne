@@ -1844,7 +1844,6 @@ function renderProductGiftCard(gifts = []) {
   if (!Array.isArray(gifts) || !gifts.length) return '';
   const items = gifts.map((gift, index) => {
     const item = '<span class="product-gift-entry">' +
-      ic(productGiftIcon(gift), 20, 'product-gift-icon') +
       '<span class="product-gift-name">' + esc(gift) + '</span></span>';
     const plus = index < gifts.length - 1
       ? '<span class="product-gift-plus" aria-hidden="true">' + ic('plus', 13) + '</span>'
