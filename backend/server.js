@@ -3854,7 +3854,7 @@ function extractCcSupplierProducts(html, baseUrl) {
     const brandPattern = /asus|vivobook|expertbook|zenbook|tuf|rog|msi|acer|lenovo|dell|hp|macbook|logitech|razer|corsair|microsoft|steelseries|hyperx|jbl|samsung|kingston|crucial|western digital|wd\b|seagate|tp link|tplink/i;
     const brandFromPath = imagePathText.match(/\b(logitech|razer|corsair|microsoft|steelseries|hyperx|asus|acer|lenovo|dell|hp|msi|samsung|kingston|jbl)\b/i)?.[1] || '';
     const imageTitleWords = imageTitle.split(/\s+/).filter(Boolean);
-    const variantNoise = new Set(['wireless','keyboard','mouse','combo','keys','key','plus','for','with','and','pebble','wave','pop','icon']);
+    const variantNoise = new Set(['wireless','keyboard','mouse','combo','keys','key','plus','for','with','and','pebble','wave','pop','icon','comfort']);
     const isAccessoryImage = /\b(keyboard|mouse|accessor)\b/i.test(imagePathText);
     const imageVariantLabel = isAccessoryImage ? imageTitleWords.filter(word =>
       !variantNoise.has(word.toLowerCase()) &&
@@ -3868,7 +3868,7 @@ function extractCcSupplierProducts(html, baseUrl) {
       || parentHeadings.find(value => value.length > 4 && value.length < 180 && !/^(?:home|shop|products|category|categories|cart|checkout)$/i.test(value))
       || [brandFromPath, imageTitleWords.filter(word => !imageVariantLabel.split(/\s+/).includes(word)).join(' ')].filter(Boolean).join(' ')
       || '';
-    const configurationLabel = imageVariantLabel || 'Standard';
+    const configurationLabel = imageVariantLabel;
     const specs = text.split('\n').map(line => line.trim()).filter(line => line && !/^(?:Code|Product\s*Code)\s*:/i.test(line) && !/^\$/.test(line) && !/^Free\s*:/i.test(line) && !/^[-_]{3,}$/.test(line));
     const searchable = (title + ' ' + text).toLowerCase();
     const identitySearch = (title + ' ' + specs.slice(0, 5).join(' ') + ' ' + imagePathText).toLowerCase();
@@ -3940,7 +3940,12 @@ function normalizeSupplierIdentity(value) {
   return String(value || '').toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '');
 }
 function supplierModelKey(product) {
-  return normalizeSupplierIdentity(product?.title || '');
+  let key = normalizeSupplierIdentity(product?.title || '');
+  const configuration = normalizeSupplierIdentity(product?.configuration_label || '');
+  if (configuration && configuration !== 'standard' && key.endsWith(configuration) && key.length > configuration.length + 3) {
+    key = key.slice(0, -configuration.length);
+  }
+  return key;
 }
 function supplierCoreValue(product, key) {
   return String(product?.specifications?.[key] || product?.listing_details?.specifications?.[key] || '').trim();
