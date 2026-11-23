@@ -154,9 +154,10 @@ try {
     Start-AppServer
     if (Get-Command cloudflared -ErrorAction SilentlyContinue) {
         Write-Host "[TUNNEL] Starting Cloudflare Tunnel..." -ForegroundColor Cyan
-        $TunnelOut = Join-Path $env:TEMP ("7inOne-cloudflared-" + [guid]::NewGuid().ToString("N") + ".out.log")
-        $TunnelErr = Join-Path $env:TEMP ("7inOne-cloudflared-" + [guid]::NewGuid().ToString("N") + ".err.log")
-        $script:Tunnel = Start-Process -FilePath "cloudflared" -ArgumentList @("tunnel","--url","http://localhost:10000") -WorkingDirectory $RepoRoot -PassThru -NoNewWindow -RedirectStandardOutput $TunnelOut -RedirectStandardError $TunnelErr
+        $TunnelLog = Join-Path $env:TEMP ("7inOne-cloudflared-" + [guid]::NewGuid().ToString("N") + ".log")
+        # Read cloudflared's own log file. Redirected console streams may be buffered
+        # or formatted differently on Windows and are not reliable for URL detection.
+        $script:Tunnel = Start-Process -FilePath "cloudflared" -ArgumentList @("tunnel","--url","http://localhost:10000","--loglevel","info","--logfile",$TunnelLog) -WorkingDirectory $RepoRoot -PassThru -NoNewWindow
         Write-Host "[TUNNEL] Waiting for Cloudflare public URL..." -ForegroundColor Cyan
 
         $PublicBaseUrl = $null
@@ -164,16 +165,13 @@ try {
         while ((Get-Date) -lt $TunnelDeadline -and -not $PublicBaseUrl) {
             $script:Tunnel.Refresh()
             if ($script:Tunnel.HasExited) { break }
-            foreach ($logFile in @($TunnelOut, $TunnelErr)) {
-                if (Test-Path -LiteralPath $logFile) {
-                    try {
-                        $logText = [System.IO.File]::ReadAllText($logFile)
-                        if ($logText -match 'https://[a-z0-9-]+\.trycloudflare\.com') {
-                            $PublicBaseUrl = $Matches[0]
-                            break
-                        }
-                    } catch { }
-                }
+            if (Test-Path -LiteralPath $TunnelLog) {
+                try {
+                    $logText = [System.IO.File]::ReadAllText($TunnelLog)
+                    if ($logText -match '(?i)https://[a-z0-9-]+\.trycloudflare\.com') {
+                        $PublicBaseUrl = $Matches[0].TrimEnd('.', '/', ')', ']', ',')
+                    }
+                } catch { }
             }
             if (-not $PublicBaseUrl) { Start-Sleep -Milliseconds 500 }
         }
