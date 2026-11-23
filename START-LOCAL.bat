@@ -102,8 +102,8 @@ if exist "START-AUTO-SYNC.bat" if exist "scripts\AUTO-SYNC.ps1" (
 
 echo.
 echo [5/5] Starting Local Server...
-start "7inOne Local Server" /D "%~dp0" cmd /k "npm start"
-echo [OK] Local Server window opened.
+start "7inOne Live Update + Local Server" /D "%~dp0" powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\\LIVE-GITHUB-UPDATE.ps1"
+echo [OK] Live GitHub Update + Local Server supervisor opened.
 echo [INFO] Local URL: http://localhost:10000/marketplace/index.html#home
 
 echo.
