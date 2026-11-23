@@ -3854,11 +3854,12 @@ function extractCcSupplierProducts(html, baseUrl) {
     const brandPattern = /asus|vivobook|expertbook|zenbook|tuf|rog|msi|acer|lenovo|dell|hp|macbook|logitech|razer|corsair|microsoft|steelseries|hyperx|jbl|samsung|kingston|crucial|western digital|wd\b|seagate|tp link|tplink/i;
     const brandFromPath = imagePathText.match(/\b(logitech|razer|corsair|microsoft|steelseries|hyperx|asus|acer|lenovo|dell|hp|msi|samsung|kingston|jbl)\b/i)?.[1] || '';
     const imageTitleWords = imageTitle.split(/\s+/).filter(Boolean);
-    const variantNoise = new Set(['wireless','keyboard','mouse','combo','keys','key','plus','for','with','and']);
-    const imageVariantLabel = imageTitleWords.filter(word =>
+    const variantNoise = new Set(['wireless','keyboard','mouse','combo','keys','key','plus','for','with','and','pebble','wave','pop','icon']);
+    const isAccessoryImage = /\b(keyboard|mouse|accessor)\b/i.test(imagePathText);
+    const imageVariantLabel = isAccessoryImage ? imageTitleWords.filter(word =>
       !variantNoise.has(word.toLowerCase()) &&
-      !normalizeSupplierIdentity(word).match(/^(?:mk\d+|k\d+|k\d+s|k\d+plus|pop|pebble|wave|icon|keys|2)$/i)
-    ).filter(word => !brandFromPath || word.toLowerCase() !== brandFromPath.toLowerCase()).join(' ').trim();
+      !normalizeSupplierIdentity(word).match(/^(?:mk\d+|k\d+|k\d+s|k\d+plus|2)$/i)
+    ).filter(word => !brandFromPath || word.toLowerCase() !== brandFromPath.toLowerCase()).join(' ').trim() : '';
     const title = headings.find(value => brandPattern.test(value))
       || parentHeadings.find(value => brandPattern.test(value))
       || text.split('\n').map(line => line.trim()).find(line => brandPattern.test(line) && line.length > 5 && line.length < 180)
