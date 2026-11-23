@@ -2786,7 +2786,10 @@ function renderProductDetail(options = {}) {
           ${shortCaptionContent.narrative ? `<p class="product-short-summary-text">${esc(shortCaptionContent.narrative)}</p>` : ''}
           ${(detailContent.promotions.length || detailContent.freeGifts.length) ? `<div class="product-short-caption-offers" aria-label="ប្រូម៉ូសិន និងកាដូ">
             ${detailContent.promotions.map(offer => `<div class="product-short-offer"><span class="product-short-offer-label">${ic('tag', 13)} ប្រូម៉ូសិន</span><span>${esc(offer)}</span></div>`).join('')}
-            ${detailContent.freeGifts.map(gift => `<div class="product-short-gift"><span class="product-short-offer-label">${ic('gift', 13)} កាដូឥតគិតថ្លៃ</span><span>${esc(gift)}</span></div>`).join('')}
+            ${detailContent.freeGifts.length ? `<section class="product-short-gift-card" aria-label="ថែមកាដូសម្រាប់អ្នក">
+              <h3>${ic('gift', 16)} ថែមកាដូសម្រាប់អ្នក</h3>
+              <ul>${detailContent.freeGifts.map(gift => `<li>${esc(gift)}</li>`).join('')}</ul>
+            </section>` : ''}
           </div>` : ''}
         </div>
 
