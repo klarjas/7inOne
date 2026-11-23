@@ -6951,26 +6951,52 @@ body > footer {
 
 #view-product .product-detail-page:has(.product-primary-actions) .product-short-caption-offers {
   display: grid;
-  gap: 6px;
+  gap: 8px;
   margin-top: 10px;
 }
-#view-product .product-detail-page:has(.product-primary-actions) .product-short-offer,
-#view-product .product-detail-page:has(.product-primary-actions) .product-short-gift {
+#view-product .product-detail-page:has(.product-primary-actions) .product-short-offer {
   display: flex;
   align-items: flex-start;
   gap: 9px;
   padding: 8px 10px;
   border-radius: 9px;
+  background: rgba(102, 192, 244, .08);
+  color: #B9DDF2;
   font-size: 12px;
   line-height: 1.65;
 }
-#view-product .product-detail-page:has(.product-primary-actions) .product-short-offer {
-  background: rgba(102, 192, 244, .08);
-  color: #B9DDF2;
-}
-#view-product .product-detail-page:has(.product-primary-actions) .product-short-gift {
-  background: rgba(190, 238, 17, .08);
+#view-product .product-detail-page:has(.product-primary-actions) .product-short-gift-card {
+  padding: 12px 14px;
+  border: 1px solid rgba(190, 238, 17, .22);
+  border-radius: 11px;
+  background: linear-gradient(135deg, rgba(190, 238, 17, .09), rgba(22, 32, 45, .72));
   color: #D7EBA0;
+}
+#view-product .product-detail-page:has(.product-primary-actions) .product-short-gift-card h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px;
+  color: #DDF49A;
+  font-size: 12px;
+  font-weight: 800;
+}
+#view-product .product-detail-page:has(.product-primary-actions) .product-short-gift-card h3 svg {
+  flex: 0 0 auto;
+  color: #BEEE11;
+}
+#view-product .product-detail-page:has(.product-primary-actions) .product-short-gift-card ul {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+  padding: 0 0 0 19px;
+  list-style: disc;
+}
+#view-product .product-detail-page:has(.product-primary-actions) .product-short-gift-card li {
+  padding-left: 2px;
+  color: #D7EBA0;
+  font-size: 12px;
+  line-height: 1.6;
 }
 #view-product .product-detail-page:has(.product-primary-actions) .product-short-offer-label {
   display: inline-flex;
