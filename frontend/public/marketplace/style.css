@@ -8540,3 +8540,7 @@ body > footer {
     padding: 14px;
   }
 }
+/* Compact inline product specification list */
+#view-product .product-spec-list { display:flex; flex-direction:column; gap:0; margin:0; padding:0; }
+#view-product .product-spec-list p { margin:0; padding:1px 0; color:#C7D5E0; font-size:12px; line-height:1.45; overflow-wrap:anywhere; }
+#view-product .product-spec-list strong { color:#E5EDF6; font-weight:750; }
