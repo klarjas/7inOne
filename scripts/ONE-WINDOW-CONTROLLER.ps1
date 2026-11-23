@@ -3,9 +3,9 @@
 $ErrorActionPreference = "Stop"
 $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 Set-Location -LiteralPath $RepoRoot
-$PollSeconds = 2
+$PollSeconds = 3
 $DebounceSeconds = 8
-$UpdateIntervalSeconds = 20
+$UpdateIntervalSeconds = 10
 $LastFingerprint = ""
 $StableSince = Get-Date
 $LastRemoteCheck = (Get-Date).AddSeconds(-$UpdateIntervalSeconds)
