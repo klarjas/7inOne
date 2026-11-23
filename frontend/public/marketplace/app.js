@@ -1659,8 +1659,9 @@ function supplierCaptionSpecs(product = {}) {
 }
 
 function productDetailSpecEntries(product = {}) {
+  // Technical specifications must come from explicit structured fields only.
+  // Do not infer specs from the narrative description or supplier marketing copy.
   const raw = {
-    ...supplierCaptionSpecs(product),
     ...normalizedProductSpecs(product),
     ...(product.listing_details?.specifications || {}),
     ...(product.specifications || {})
@@ -1684,53 +1685,29 @@ function productDetailSpecEntries(product = {}) {
   };
   const cleanKey = key => String(key || '').toLowerCase().replace(/[^a-z0-9]/g, '');
   const values = new Map();
-  const add = (key, value) => {
-    const canonical = aliases[cleanKey(key)];
-    const text = String(value ?? '').trim().replace(/^[:：=\-\s]+|[,;\s]+$/g, '');
-    if (!canonical || !text || /^(?:n\/a|none|null|undefined|មិនបានបញ្ជាក់|not specified)$/i.test(text)) return;
-    if (!values.has(canonical)) values.set(canonical, text);
-  };
-
-  // Read structured fields first, then fill any gaps from supplier full-spec text.
   for (const [key, value] of Object.entries(raw)) {
-    if (value == null || typeof value === 'object' || ['fullspecs','fullspecification','specificationsfull','description'].includes(cleanKey(key))) continue;
-    const parts = String(value).split(/\s*[|｜]\s*/);
-    let extracted = false;
-    for (const part of parts) {
-      const pair = part.match(/^([^:：=]+)\s*[:：=]\s*(.+)$/);
-      if (pair && aliases[cleanKey(pair[1])]) {
-        add(pair[1], pair[2]);
-        extracted = true;
-      }
+    if (value == null || typeof value === 'object' ||
+        ['fullspecs','fullspecification','specificationsfull','description'].includes(cleanKey(key))) continue;
+    const canonical = aliases[cleanKey(key)];
+    const text = String(value).trim().replace(/^[:：=\-\s]+|[,;\s]+$/g, '');
+    if (canonical && text && !/^(?:n\/a|none|null|undefined|មិនបានបញ្ជាក់|not specified)$/i.test(text) && !values.has(canonical)) {
+      values.set(canonical, text);
     }
-    if (!extracted) add(key, value);
   }
-
-  const fullSpecs = Object.entries(raw).find(([key]) =>
-    ['fullspecs','fullspecification','specificationsfull'].includes(cleanKey(key))
-  )?.[1] || product.full_specs || product.full_specifications || '';
-  const fullText = String(fullSpecs || '').replace(/\r/g, '');
-
-  // Supplier descriptions commonly put all specifications in one comma-separated line.
-  // Split only at the next "- Label:" marker so values containing commas remain intact.
-  const fullPattern = /(?:^|[,;\n])\s*-\s*([^:,;\n]+)\s*:\s*([\s\S]*?)(?=(?:[,;\n])\s*-\s*[^:,;\n]+\s*:|$)/g;
-  let match;
-  while ((match = fullPattern.exec(fullText))) add(match[1], match[2]);
-
   const labels = {
     condition:'ស្ថានភាព', brand:'ម៉ាក', model:'ម៉ូដែល', series:'ស៊េរី',
-    cpu:'CPU', ram:'RAM', storage:'ទំហំផ្ទុក', display:'អេក្រង់',
-    gpu:'ក្រាហ្វិក (GPU)', battery:'ថ្ម', battery_health:'សុខភាពថ្ម',
-    battery_life:'អាយុកាលថ្ម', weight:'ទម្ងន់', color:'ពណ៌',
-    os:'ប្រព័ន្ធប្រតិបត្តិការ', warranty:'ការធានា', dimensions:'វិមាត្រ',
-    resolution:'កម្រិតបង្ហាញ', connectivity:'ការតភ្ជាប់', camera:'កាមេរ៉ា',
-    material:'សម្ភារៈ', water_resistance:'ធន់នឹងទឹក'
+    cpu:'CPU', ram:'RAM', storage:'SSD', display:'អេក្រង់',
+    resolution:'កម្រិតបង្ហាញ', gpu:'ក្រាហ្វិក (GPU)', battery:'ថ្ម',
+    battery_health:'សុខភាពថ្ម', battery_life:'អាយុកាលថ្ម', weight:'ទម្ងន់',
+    color:'ពណ៌', os:'ប្រព័ន្ធប្រតិបត្តិការ', connectivity:'ការតភ្ជាប់',
+    camera:'កាមេរ៉ា', water_resistance:'ធន់នឹងទឹក', material:'សម្ភារៈ',
+    warranty:'ការធានា', dimensions:'វិមាត្រ'
   };
   const order = [
     'condition','brand','model','series','cpu','ram','storage','display',
     'resolution','gpu','battery','battery_health','battery_life','weight',
     'color','os','connectivity','camera','water_resistance','material',
-    'warranty','dimensions'
+    'dimensions'
   ];
   const seen = new Set();
   return order.filter(key => {
@@ -1739,6 +1716,54 @@ function productDetailSpecEntries(product = {}) {
     seen.add(value.toLowerCase());
     return true;
   }).map(key => [labels[key], values.get(key)]);
+}
+
+function productDetailContentParts(description = '') {
+  const narrative = [];
+  const freeGifts = [];
+  const warranty = [];
+  const lines = String(description || '').replace(/\r/g, '').split('\n');
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+    if (!line) { narrative.push(''); continue; }
+    const clean = line.replace(/^[-•*]\s*/, '').replace(/^\*\*(.*?)\*\*$/, '$1').trim();
+    const freeMatch = clean.match(/^(?:free|free gift|gift|កាដូ|អំណោយ|ប្រូម៉ូសិន|promotion)\s*[:：-]\s*(.+)$/i);
+    const warrantyMatch = clean.match(/^(?:warranty|ការធានា|រយៈពេលធានា)\s*[:：-]\s*(.+)$/i);
+    if (freeMatch) freeGifts.push(freeMatch[1].trim());
+    else if (warrantyMatch) warranty.push(warrantyMatch[1].trim());
+    else narrative.push(rawLine);
+  }
+  return {
+    narrative: narrative.join('\n').replace(/\n{3,}/g, '\n\n').trim(),
+    freeGifts: [...new Set(freeGifts.filter(Boolean))],
+    warranty: [...new Set(warranty.filter(Boolean))]
+  };
+}
+
+function renderProductDescriptionHtml(value = '') {
+  const lines = String(value || '').replace(/\r/g, '').split('\n');
+  const renderInline = text => esc(text).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  const blocks = [];
+  let paragraph = [];
+  let bullets = [];
+  const flushParagraph = () => {
+    if (paragraph.length) blocks.push('<p>' + paragraph.map(renderInline).join('<br>') + '</p>');
+    paragraph = [];
+  };
+  const flushBullets = () => {
+    if (bullets.length) blocks.push('<ul>' + bullets.map(item => '<li>' + renderInline(item) + '</li>').join('') + '</ul>');
+    bullets = [];
+  };
+  for (const line of lines) {
+    const trimmed = line.trim();
+    const bullet = trimmed.match(/^[-•]\s+(.+)$/);
+    if (!trimmed) { flushParagraph(); flushBullets(); continue; }
+    if (bullet) { flushParagraph(); bullets.push(bullet[1]); }
+    else { flushBullets(); paragraph.push(trimmed); }
+  }
+  flushParagraph();
+  flushBullets();
+  return blocks.join('');
 }
 
 function productCardSpecs(product = {}) {
@@ -2615,6 +2640,7 @@ function renderProductDetail(options = {}) {
   };
 
   const descriptions = productDescriptionParts(p);
+  const detailContent = productDetailContentParts(descriptions.full || descriptions.short);
   const images = (p.product_images || []).filter((i) => i.image_url);
   const videoId = youtubeVideoId(p.youtube_video_url);
   const hasVideo = Boolean(videoId);
@@ -2722,8 +2748,16 @@ function renderProductDetail(options = {}) {
           </section>
           <section class="product-description-copy">
             <h2>${ic('file', 18)} ការពិពណ៌នា</h2>
-            <p class="product-full-description">${esc(descriptions.full || descriptions.short || 'មិនទាន់មានការពិពណ៌នាលម្អិតទេ។')}</p>
+            <div class="product-full-description product-narrative-description">${renderProductDescriptionHtml(detailContent.narrative || 'មិនទាន់មានការពិពណ៌នាលម្អិតទេ។')}</div>
           </section>
+          ${detailContent.freeGifts.length ? `<section class="product-promotion-section">
+            <h2>${ic('gift', 18)} ប្រូម៉ូសិន / កាដូឥតគិតថ្លៃ</h2>
+            <ul>${detailContent.freeGifts.map(gift => `<li>${esc(gift)}</li>`).join('')}</ul>
+          </section>` : ''}
+          ${detailContent.warranty.length ? `<section class="product-warranty-section">
+            <h2>${ic('shield-check', 18)} ការធានា</h2>
+            <p>${detailContent.warranty.map(esc).join(' · ')}</p>
+          </section>` : ''}
           ${renderProductDetailLocation(p)}
           ${detailBottomActions({...p,listing_type:'product'})}
         </article>
