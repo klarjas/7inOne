@@ -1842,10 +1842,17 @@ function productGiftIcon(giftName = '') {
 
 function renderProductGiftCard(gifts = []) {
   if (!Array.isArray(gifts) || !gifts.length) return '';
-  const items = gifts.map((gift, index) => {
+  const expandedGifts = gifts.flatMap(gift => {
+    const value = String(gift || '').trim();
+    const combo = value.match(/^(.*?)\\b(Keyboard)\\s*&\\s*(Mouse)$/i);
+    if (!combo) return [gift];
+    const sharedPrefix = combo[1];
+    return [sharedPrefix + combo[2], sharedPrefix + combo[3]];
+  });
+  const items = expandedGifts.map((gift, index) => {
     const item = '<span class="product-gift-entry">' +
       '<span class="product-gift-name">' + esc(gift) + '</span></span>';
-    const plus = index < gifts.length - 1
+    const plus = index < expandedGifts.length - 1
       ? '<span class="product-gift-plus" aria-hidden="true">' + ic('plus', 13) + '</span>'
       : '';
     return item + plus;
