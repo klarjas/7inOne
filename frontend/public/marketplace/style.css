@@ -8731,3 +8731,46 @@ body > footer {
   #view-product .product-detail-page:has(.product-primary-actions) .product-primary-actions{gap:8px!important}
   #view-product .product-detail-page:has(.product-primary-actions) .product-primary-actions > button{min-height:40px;padding-inline:11px;font-size:12px}
 }
+
+
+/* Premium Buy Now button — subtle glass gradient and restrained shimmer. */
+#view-product .product-detail-page:has(.product-primary-actions) .product-buy-primary {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border: 1px solid rgba(112, 190, 202, .24);
+  background: linear-gradient(145deg, rgba(29, 43, 48, 0.88), rgba(17, 29, 39, 0.92));
+  color: #F0FAFC;
+  box-shadow: 0 6px 18px rgba(8, 20, 28, .28), inset 0 1px 0 rgba(255,255,255,.07);
+  transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
+#view-product .product-detail-page:has(.product-primary-actions) .product-buy-primary::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: -45%;
+  bottom: -45%;
+  left: -65%;
+  width: 34%;
+  transform: skewX(-22deg);
+  background: linear-gradient(90deg, transparent, rgba(210, 248, 255, .13), transparent);
+  animation: product-buy-soft-shimmer 5.8s ease-in-out infinite;
+  pointer-events: none;
+}
+#view-product .product-detail-page:has(.product-primary-actions) .product-buy-primary:hover {
+  transform: translateY(-1px);
+  border-color: rgba(102, 192, 244, .48);
+  background: linear-gradient(145deg, rgba(34, 55, 61, .96), rgba(19, 36, 48, .98));
+  box-shadow: 0 9px 22px rgba(8, 20, 28, .34), 0 0 13px rgba(102, 192, 244, .09), inset 0 1px 0 rgba(255,255,255,.09);
+}
+@keyframes product-buy-soft-shimmer {
+  0%, 72%, 100% { left: -65%; opacity: 0; }
+  78% { opacity: .7; }
+  94% { left: 130%; opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #view-product .product-detail-page:has(.product-primary-actions) .product-buy-primary::after {
+    animation: none;
+    display: none;
+  }
+}
