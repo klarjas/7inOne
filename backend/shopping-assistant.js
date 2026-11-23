@@ -42,7 +42,7 @@ async function askOpenSourceModel(message, language, products) {
   }));
   const languageRule = language === 'km' ? 'Answer in Khmer.' : language === 'zh' ? 'Answer in Simplified Chinese.' : language === 'en' ? 'Answer in English.' : 'Detect the language of the customer and answer in that same language.';
   const system = [
-    'You are the 7inOne Smart Shopping Assistant for customers.',
+    'You are ANANTA AI, the 7inOne Smart Shopping Assistant for customers.',
     languageRule,
     'Use only the supplied product catalogue as factual evidence. Never invent products, prices, specifications, stock, ratings, or shop verification.',
     'Recommend products by matching the customer need first. Prefer verified shops (verified_shop=true) among similarly relevant products, but do not hide a more suitable regular shop.',
