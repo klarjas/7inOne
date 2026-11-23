@@ -49,6 +49,16 @@ const ICON_PATHS = {
   calendar: '<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
   refresh: '<path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/>',
   package: '<path d="m12 3 9 5-9 5-9-5 9-5Z"/><path d="M3 8v9l9 5 9-5V8M12 13v9M7.5 5.5l9 5"/>',
+  mouse: '<rect x="6" y="2" width="12" height="20" rx="6"/><path d="M12 2v6m-6 0h12"/>',
+  mouseWired: '<rect x="6" y="2" width="12" height="17" rx="6"/><path d="M12 2v6m-6 0h12M12 19v2m0 0 3 2"/>',
+  mouseWireless: '<rect x="6" y="2" width="12" height="17" rx="6"/><path d="M12 2v6m-6 0h12M4 4a11 11 0 0 0 0 13m16-13a11 11 0 0 1 0 13"/>',
+  keyboard: '<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M6 9h.01M9 9h.01M12 9h.01M15 9h.01M18 9h.01M6 12h.01M9 12h.01M12 12h.01M15 12h.01M18 12h.01M8 15h8"/>',
+  headphones: '<path d="M3 14v-3a9 9 0 0 1 18 0v3"/><rect x="2" y="13" width="5" height="8" rx="2"/><rect x="17" y="13" width="5" height="8" rx="2"/>',
+  usb: '<path d="M12 2v15m0-15 3 3m-3-3-3 3m3 12 4 3m-4-3-4 3"/><circle cx="12" cy="19" r="1.5"/>',
+  charger: '<path d="M8 2v5m8-5v5M6 7h12v5a6 6 0 0 1-12 0V7Zm6 11v4"/>',
+  speaker: '<rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="9" r="2"/><circle cx="12" cy="16" r="3"/>',
+  monitor: '<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/>',
+  giftbag: '<path d="M4 8h16l-1 13H5L4 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>',
   truck: '<path d="M3 6h11v12H3zM14 10h4l3 3v5h-7z"/><circle cx="7.5" cy="18" r="2"/><circle cx="17.5" cy="18" r="2"/>',
   play: '<path d="m8 5 11 7-11 7z"/>',
   volume: '<path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7m3-10a9 9 0 0 1 0 13"/>',
@@ -1811,6 +1821,35 @@ function productDetailContentParts(description = '') {
   };
 }
 
+function productGiftVisual(giftName = '') {
+  const value = String(giftName || '').toLowerCase();
+  const wireless = /wireless|bluetooth|2\.?4\s*(?:ghz|g)|ឥតខ្សែ|គ្មានខ្សែ/.test(value);
+  const wired = /\bwired\b|usb[- ]?cable|with cable|មានខ្សែ|ខ្សែភ្ជាប់/.test(value);
+  if (/mouse|ម៉ៅស៍|កណ្ដុរ/.test(value)) return { icon: wireless ? 'mouseWireless' : wired ? 'mouseWired' : 'mouse', type: wireless ? 'Wireless' : wired ? 'Wired' : 'ប្រភេទមិនបានបញ្ជាក់' };
+  if (/keyboard|ក្ដារចុច/.test(value)) return { icon: 'keyboard', type: wireless ? 'Wireless' : wired ? 'Wired' : 'ប្រភេទមិនបានបញ្ជាក់' };
+  if (/headset|headphone|earphone|កាស/.test(value)) return { icon: 'headphones', type: wireless ? 'Wireless / Bluetooth' : wired ? 'Wired' : 'ប្រភេទមិនបានបញ្ជាក់' };
+  if (/usb|flash drive|memory stick|ថាសចល័ត/.test(value)) return { icon: 'usb', type: 'USB' };
+  if (/charger|adapter|ឆ្នាំងសាក/.test(value)) return { icon: 'charger', type: 'Power accessory' };
+  if (/speaker|បំពងសំឡេង/.test(value)) return { icon: 'speaker', type: 'Speaker' };
+  if (/monitor|screen|អេក្រង់/.test(value)) return { icon: 'monitor', type: 'Display' };
+  if (/bag|backpack|កាបូប/.test(value)) return { icon: 'giftbag', type: 'Bag' };
+  return { icon: 'package', type: 'Gift item' };
+}
+
+function renderProductGiftCard(gifts = [], savedImages = [], productId = '') {
+  if (!Array.isArray(gifts) || !gifts.length) return '';
+  const admin = isAdmin();
+  const items = gifts.map(gift => {
+    const visual = productGiftVisual(gift);
+    const saved = (savedImages || []).find(image => String(image.gift_name || '').trim().toLocaleLowerCase() === String(gift).trim().toLocaleLowerCase());
+    const visualHtml = saved?.image_url ? '<img src="' + esc(saved.image_url) + '" alt="' + esc(gift) + '" loading="lazy" decoding="async">' : '<span class="product-gift-placeholder">' + ic(visual.icon, 30) + '</span>';
+    return '<article class="product-gift-item"><div class="product-gift-visual">' + visualHtml + '</div>' +
+      '<strong class="product-gift-name">' + esc(gift) + '</strong><small class="product-gift-kind">' + esc(visual.type) + '</small>' +
+      (admin ? '<div class="product-gift-admin-actions"><label class="product-gift-upload">ប្តូររូប<input type="file" accept="image/jpeg,image/png,image/webp" data-gift-image-upload data-gift-name="' + esc(gift) + '" data-product-id="' + esc(productId) + '"></label>' +
+        (saved?.image_url ? '<button type="button" data-gift-image-reset data-gift-name="' + esc(gift) + '" data-product-id="' + esc(productId) + '">រូបស្វ័យប្រវត្តិ</button>' : '') + '</div>' : '') + '</article>';
+  }).join('');
+  return '<section class="product-short-gift-card" aria-label="ថែមកាដូសម្រាប់អ្នក"><h3>' + ic('gift', 16) + ' ថែមកាដូសម្រាប់អ្នក</h3><div class="product-gift-grid">' + items + '</div></section>';
+}
 function renderProductDescriptionHtml(value = '') {
   const lines = String(value || '').replace(/\r/g, '').split('\n');
   const renderInline = text => esc(text).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
@@ -2763,7 +2802,7 @@ function renderProductDetail(options = {}) {
   renderProductDetailMarkup($('productDetail'), `
   <div class="product-detail-page">
     <section class="product-hero-grid">
-      <div class="product-detail-gallery">${galleryHtml}</div>
+      <div class="product-detail-gallery">${galleryHtml}${renderProductGiftCard(detailContent.freeGifts, p.gift_images || [], p.id)}</div>
       <div class="product-detail-info">
         <div class="product-top-meta">
           <span class="product-category-badge">${esc(CATEGORIES[p.category] || p.category || 'ទំនិញ')}</span>
@@ -2784,12 +2823,8 @@ function renderProductDetail(options = {}) {
           </div>
           ${p.variants?.length ? `<section class="product-variant-picker"><b>ជ្រើសរើសជម្រើស</b><div class="product-variant-options">${p.variants.map(variant => `<button type="button" data-product-variant="${esc(variant.id)}" class="${String(selectedVariant?.id) === String(variant.id) ? 'is-selected' : ''}" aria-pressed="${String(selectedVariant?.id) === String(variant.id)}" ${Number(variant.stock) <= 0 ? 'disabled' : ''}><span>${esc(variant.option_value)}</span><small>${money(variant.price)}${Number(variant.stock) <= 0 ? ' · អស់ស្តុក' : ''}</small></button>`).join('')}</div>${selectedVariant?.sku ? `<small class="product-variant-sku">Product Code: ${esc(selectedVariant.sku)}</small>` : ''}</section>` : ''}
           ${shortCaptionContent.narrative ? `<p class="product-short-summary-text">${esc(shortCaptionContent.narrative)}</p>` : ''}
-          ${(detailContent.promotions.length || detailContent.freeGifts.length) ? `<div class="product-short-caption-offers" aria-label="ប្រូម៉ូសិន និងកាដូ">
+          ${detailContent.promotions.length ? `<div class="product-short-caption-offers" aria-label="ប្រូម៉ូសិន">
             ${detailContent.promotions.map(offer => `<div class="product-short-offer"><span class="product-short-offer-label">${ic('tag', 13)} ប្រូម៉ូសិន</span><span>${esc(offer)}</span></div>`).join('')}
-            ${detailContent.freeGifts.length ? `<section class="product-short-gift-card" aria-label="ថែមកាដូសម្រាប់អ្នក">
-              <h3>${ic('gift', 16)} ថែមកាដូសម្រាប់អ្នក</h3>
-              <ul>${detailContent.freeGifts.map(gift => `<li>${esc(gift)}</li>`).join('')}</ul>
-            </section>` : ''}
           </div>` : ''}
         </div>
 
@@ -2890,6 +2925,24 @@ function renderProductDetail(options = {}) {
     void copyProductCode(copyProductIdButton);
   });
 
+  $('productDetail').querySelectorAll('[data-gift-image-upload]').forEach(input => input.addEventListener('change', async () => {
+    const file = input.files?.[0]; if (!file) return;
+    const giftName = input.dataset.giftName, productId = input.dataset.productId;
+    const form = new FormData(); form.append('gift_name', giftName); form.append('image', file); input.disabled = true;
+    try {
+      const result = await api('/api/admin/products/' + encodeURIComponent(productId) + '/gift-image', { method: 'POST', body: form });
+      p.gift_images = [...(p.gift_images || []).filter(image => String(image.gift_name || '').trim().toLocaleLowerCase() !== giftName.trim().toLocaleLowerCase()), result.data];
+      toast('បានប្តូររូបកាដូ និងរក្សាទុកតាម Telegram ជោគជ័យ។'); renderProductDetail();
+    } catch (error) { input.disabled = false; input.value = ''; toast(error.message || 'មិនអាចប្តូររូបកាដូបានទេ។', 'error'); }
+  }));
+  $('productDetail').querySelectorAll('[data-gift-image-reset]').forEach(button => button.addEventListener('click', async () => {
+    button.disabled = true;
+    try {
+      await api('/api/admin/products/' + encodeURIComponent(button.dataset.productId) + '/gift-image', { method: 'DELETE', body: JSON.stringify({ gift_name: button.dataset.giftName }) });
+      p.gift_images = (p.gift_images || []).filter(image => String(image.gift_name || '').trim().toLocaleLowerCase() !== button.dataset.giftName.trim().toLocaleLowerCase());
+      toast('បានត្រឡប់ទៅរូបតំណាងស្វ័យប្រវត្តិ។'); renderProductDetail();
+    } catch (error) { button.disabled = false; toast(error.message || 'មិនអាចត្រឡប់រូបកាដូបានទេ។', 'error'); }
+  }));
   $('productDetail').querySelectorAll('[data-product-variant]').forEach(button => button.addEventListener('click', () => {
     const variant = (p.variants || []).find(item => String(item.id) === String(button.dataset.productVariant));
     if (!variant) return;
