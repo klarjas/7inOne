@@ -4489,11 +4489,11 @@ app.post('/api/admin/supplier-import/scan', authenticate, requireAdmin, async (r
   if (!supabase) return fail(res, 503, 'Supabase is not configured.');
   try {
     const { url, products: scannedProducts, scan } = await loadCcSupplierCatalog(clean(req.body.url, 1000));
-    const groupedProducts = await researchSupplierGroups(groupCcSupplierProducts(scannedProducts));
+    const groupedProducts = groupCcSupplierProducts(scannedProducts);
     const requestedOffset = Math.max(0, Number.parseInt(req.body.offset, 10) || 0);
     const isSingleProductUrl = groupedProducts.length <= 1;
     const batchSize = isSingleProductUrl ? 1 : 10;
-    const batch = groupedProducts.slice(requestedOffset, requestedOffset + batchSize);
+    const batch = await researchSupplierGroups(groupedProducts.slice(requestedOffset, requestedOffset + batchSize));
     const { data: vendor, error: vendorError } = await supabase.from('vendors').select('id').ilike('store_name', 'AURORA Computer').maybeSingle();
     if (vendorError || !vendor) return fail(res, 404, 'AURORA Computer shop was not found.');
     const index = await getAuroraSupplierImportIndex(vendor.id);
@@ -4636,6 +4636,14 @@ app.post('/api/admin/supplier-import/import', authenticate, requireAdmin, async 
     if (codeConflict) return fail(res, 409, 'One or more supplier product codes are already linked to another product.');
     if (!variantsToAdd.length) {
       if (existingProduct) {
+        const categorySyncAt = new Date().toISOString();
+        const { error: noVariantCategoryError } = await supabase.from('products').update({ category: group.category || 'other', updated_at: categorySyncAt }).eq('id', existingProduct.id);
+        if (noVariantCategoryError) throw noVariantCategoryError;
+        const { error: noVariantDetailsError } = await supabase.from('product_listing_details').upsert({
+          product_id: existingProduct.id, category: group.category || 'other', subcategory: group.subcategory || 'other',
+          detail_type: group.detail_type || 'Other', specifications: existingProduct.listing_details?.specifications || {}, updated_at: categorySyncAt
+        }, { onConflict: 'product_id' });
+        if (noVariantDetailsError) throw noVariantDetailsError;
         const parentAvailability = group.variants.some(item => item.availability !== 'out_of_stock') ? 1 : 0;
         const { error: parentStockError } = await supabase.from('products')
           .update({ stock: parentAvailability, updated_at: new Date().toISOString() }).eq('id', existingProduct.id);
