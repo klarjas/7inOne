@@ -5068,7 +5068,7 @@ function renderSellerChatInbox() {
   badge.textContent = total > 99 ? '99+' : String(total);
   badge.classList.toggle('hidden', !total);
 
-  const assistantPinned = '<button type="button" data-ai-assistant class="seller-chat-inbox-item seller-chat-ai-pinned"><span class="seller-chat-ai-mark">✦</span><span class="min-w-0 flex-1"><b class="block truncate">AI ជួយរកទំនិញ</b><small class="block truncate text-slate-400">ស្វែងរក ប្រៀបធៀប និងពន្យល់ផលិតផល</small></span><span class="seller-chat-ai-pin" aria-label="Pinned">PIN</span></button>';
+  const assistantPinned = '<button type="button" data-ai-assistant class="seller-chat-inbox-item seller-chat-ai-pinned"><span class="seller-chat-ai-mark">✦</span><span class="min-w-0 flex-1"><b class="block truncate">ANANTA AI</b><small class="block truncate text-slate-400">ស្វែងរក ប្រៀបធៀប និងពន្យល់ផលិតផល</small></span><span class="seller-chat-ai-pin" aria-label="Pinned">PIN</span></button>';
   target.innerHTML = assistantPinned + state.chatInbox.map((chat) => {
     // Show the other participant: shop identity to buyers, personal identity to shop owners.
     const otherIsShop = String(chat.other_role || '').toLowerCase() === 'seller';
