@@ -9393,3 +9393,13 @@ body > header.hd.glass {
   border-radius: 999px;
   background: rgba(16, 24, 34, 0.65);
 }
+
+/* 7inOne: align the desktop header container to the full home content shell. */
+@media (min-width: 1101px) {
+  body > header.hd.glass > .shell,
+  .hd > .shell {
+    width: min(calc(100% - 32px), 1920px);
+    max-width: 1920px;
+    margin-inline: auto;
+  }
+}
