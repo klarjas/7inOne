@@ -3838,19 +3838,41 @@ function extractCcSupplierProducts(html, baseUrl) {
       .map(item => supplierPlainText(item[1])).filter(Boolean);
     const parentHeadings = imageCard === card ? [] : [...imageCard.matchAll(/<(?:h1|h2|h3|h4)\b[^>]*>([\s\S]*?)<\/(?:h1|h2|h3|h4)>/gi)]
       .map(item => supplierPlainText(item[1])).filter(Boolean);
-    const title = headings.find(value => /asus|vivobook|expertbook|zenbook|tuf|rog|msi|acer|lenovo|dell|hp|macbook/i.test(value))
-      || parentHeadings.find(value => /asus|vivobook|expertbook|zenbook|tuf|rog|msi|acer|lenovo|dell|hp|macbook/i.test(value))
-      || text.split('\n').map(line => line.trim()).find(line => /asus|vivobook|expertbook|zenbook|tuf|rog|msi|acer|lenovo|dell|hp|macbook/i.test(line) && line.length > 5 && line.length < 180)
-      || parentText.split('\n').map(line => line.trim()).find(line => /asus|vivobook|expertbook|zenbook|tuf|rog|msi|acer|lenovo|dell|hp|macbook/i.test(line) && line.length > 5 && line.length < 180)
-      || headings.find(value => value.length > 4 && value.length < 180 && !/^(?:home|shop|products|category|categories|cart|checkout)$/i.test(value))
-      || parentHeadings.find(value => value.length > 4 && value.length < 180 && !/^(?:home|shop|products|category|categories|cart|checkout)$/i.test(value))
-      || ''; 
-    const specs = text.split('\n').map(line => line.trim()).filter(line => line && !/^(?:Code|Product\s*Code)\s*:/i.test(line) && !/^\$/.test(line) && !/^Free\s*:/i.test(line) && !/^[-_]{3,}$/.test(line));
     const imageUrls = supplierImageCandidates(card, baseUrl).slice(0, 5);
     if (!imageUrls.length) imageUrls.push(...supplierImageCandidates(imageCard, baseUrl).slice(0, 5));
+    const imageMeta = [...(imageCard + ' ' + card).matchAll(/<(?:img|source)\b[^>]*(?:src|data-src|data-original|alt|title)\s*=\s*(?:"([^"]*)"|'([^']*)')/gi)]
+      .map(match => match[1] || match[2] || '').filter(Boolean);
+    const imageUrlForIdentity = imageUrls[0] || imageMeta[0] || '';
+    let imagePathText = '';
+    let imageTitle = '';
+    try {
+      const imageUrl = new URL(imageUrlForIdentity, baseUrl);
+      const pathParts = imageUrl.pathname.split('/').filter(Boolean);
+      imagePathText = decodeURIComponent(pathParts.slice(-3).join(' ')).replace(/[-_]+/g, ' ');
+      imageTitle = decodeURIComponent(pathParts[pathParts.length - 1] || '').replace(/\.(?:jpe?g|png|webp|gif)$/i, '').replace(/[-_]+/g, ' ').replace(/\s+/g, ' ').trim();
+    } catch {}
+    const brandPattern = /asus|vivobook|expertbook|zenbook|tuf|rog|msi|acer|lenovo|dell|hp|macbook|logitech|razer|corsair|microsoft|steelseries|hyperx|jbl|samsung|kingston|crucial|western digital|wd\b|seagate|tp link|tplink/i;
+    const brandFromPath = imagePathText.match(/\b(logitech|razer|corsair|microsoft|steelseries|hyperx|asus|acer|lenovo|dell|hp|msi|samsung|kingston|jbl)\b/i)?.[1] || '';
+    const imageTitleWords = imageTitle.split(/\s+/).filter(Boolean);
+    const variantNoise = new Set(['wireless','keyboard','mouse','combo','keys','key','plus','for','with','and']);
+    const imageVariantLabel = imageTitleWords.filter(word =>
+      !variantNoise.has(word.toLowerCase()) &&
+      !normalizeSupplierIdentity(word).match(/^(?:mk\d+|k\d+|k\d+s|k\d+plus|pop|pebble|wave|icon|keys|2)$/i)
+    ).filter(word => !brandFromPath || word.toLowerCase() !== brandFromPath.toLowerCase()).join(' ').trim();
+    const title = headings.find(value => brandPattern.test(value))
+      || parentHeadings.find(value => brandPattern.test(value))
+      || text.split('\n').map(line => line.trim()).find(line => brandPattern.test(line) && line.length > 5 && line.length < 180)
+      || parentText.split('\n').map(line => line.trim()).find(line => brandPattern.test(line) && line.length > 5 && line.length < 180)
+      || headings.find(value => value.length > 4 && value.length < 180 && !/^(?:home|shop|products|category|categories|cart|checkout)$/i.test(value))
+      || parentHeadings.find(value => value.length > 4 && value.length < 180 && !/^(?:home|shop|products|category|categories|cart|checkout)$/i.test(value))
+      || [brandFromPath, imageTitleWords.filter(word => !imageVariantLabel.split(/\s+/).includes(word)).join(' ')].filter(Boolean).join(' ')
+      || '';
+    const configurationLabel = imageVariantLabel || 'Standard';
+    const specs = text.split('\n').map(line => line.trim()).filter(line => line && !/^(?:Code|Product\s*Code)\s*:/i.test(line) && !/^\$/.test(line) && !/^Free\s*:/i.test(line) && !/^[-_]{3,}$/.test(line));
     const searchable = (title + ' ' + text).toLowerCase();
-    const identitySearch = (title + ' ' + specs.slice(0, 5).join(' ')).toLowerCase();
+    const identitySearch = (title + ' ' + specs.slice(0, 5).join(' ') + ' ' + imagePathText).toLowerCase();
     const titleSearch = title.toLowerCase();
+    const productTypeSearch = (title + ' ' + imagePathText).toLowerCase();
     const hasLaptopSpecs = /\b(?:cpu|processor)\s*:/i.test(text) && /\bram\s*:/i.test(text) && /\b(?:display|\d{1,2}(?:\.\d)?[- ]?inch|screen)\b/i.test(text)
       || /\b(?:intel(?:®)?\s+core|amd\s+ryzen)\b/i.test(text) && /\bram\s*:/i.test(text) && /\b\d{1,2}(?:\.\d)?[- ]?inch\b/i.test(text);
     const pickSpec = pattern => specs.find(line => pattern.test(line)) || '';
@@ -3865,8 +3887,8 @@ function extractCcSupplierProducts(html, baseUrl) {
     let detailType = 'Computer';
     // Classify the actual product before accessory words in bundle/freebie text.
     if (/\b(laptop bag|notebook bag|computer bag)\b/i.test(titleSearch)) { category = 'computer_accessories'; subcategory = 'bag'; detailType = 'Computer Bag'; }
-    else if (/\b(keyboard)\b/i.test(titleSearch)) { category = 'computer_accessories'; subcategory = 'keyboard'; detailType = 'Keyboard'; }
-    else if (/\b(mouse|mice)\b/i.test(titleSearch)) { category = 'computer_accessories'; subcategory = 'mouse'; detailType = 'Mouse'; }
+    else if (/\b(keyboard|keypad)\b/i.test(productTypeSearch)) { category = 'computer_accessories'; subcategory = 'keyboard'; detailType = 'Keyboard'; }
+    else if (/\b(mouse|mice)\b/i.test(productTypeSearch)) { category = 'computer_accessories'; subcategory = 'mouse'; detailType = 'Mouse'; }
     else if (/\b(charger|power adapter|ac adapter)\b/i.test(titleSearch)) { category = 'computer_accessories'; subcategory = 'charger'; detailType = 'Charger'; }
     else if (/\b(cable|usb hub|adapter|dongle)\b/i.test(titleSearch)) { category = 'computer_accessories'; subcategory = 'cable_adapter'; detailType = 'Cable / Adapter'; }
     else if (/\b(laptop|notebook|vivobook|expertbook|zenbook|macbook|thinkpad|rog|strix)\b/i.test(identitySearch) || hasLaptopSpecs) { subcategory = 'laptop'; detailType = 'Laptop'; }
@@ -3885,6 +3907,7 @@ function extractCcSupplierProducts(html, baseUrl) {
     results.push({
       supplier_product_code: code,
       title: clean(title, 160),
+      configuration_label: clean(configurationLabel, 80),
       supplier_price: supplierPrice,
       availability: detectCcSupplierAvailability(card, text),
       selling_price: Number.isFinite(supplierPrice) ? Math.round((supplierPrice + 5) * 100) / 100 : null,
@@ -3948,7 +3971,7 @@ function uniqueSupplierConfigurations(variants) {
 function supplierVariantLabel(product) {
   const specs = product?.specifications || {};
   const parts = [specs.ram_type_capacity, specs.storage_type_capacity].filter(Boolean);
-  return parts.length ? parts.join(' · ') : (product?.supplier_product_code || 'ជម្រើស');
+  return parts.length ? parts.join(' · ') : (product?.configuration_label || product?.option_value || product?.supplier_product_code || 'ជម្រើស');
 }
 function groupCcSupplierProducts(products) {
   const groups = [];
