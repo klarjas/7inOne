@@ -10,6 +10,7 @@ import { createClient } from '@supabase/supabase-js';
 import { registerSupportChat } from './support-chat.js';
 import { registerSellerChat } from './seller-chat.js';
 import { registerMyPostsRoutes } from './my-posts.js';
+import { researchExternalProductCategory } from './product-research.js';
 import { randomUUID, randomBytes, randomInt, createHash, createHmac, timingSafeEqual, createCipheriv, createDecipheriv } from 'node:crypto';
 import { lookup } from 'node:dns/promises';
 import { isIP } from 'node:net';
@@ -3883,9 +3884,9 @@ function extractCcSupplierProducts(html, baseUrl) {
     const color = colorLine.replace(/^(?:color|colour|ពណ៌)\s*:/i, '').trim();
     const weight = weightLine.replace(/^(?:weight|ទម្ងន់)\s*:/i, '').trim();
     const battery = batteryLine.replace(/^(?:battery|ថ្ម)\s*:/i, '').trim();
-    let category = 'computers';
+    let category = 'other';
     let subcategory = 'other';
-    let detailType = 'Computer';
+    let detailType = 'Unclassified';
     // Classify the actual product before accessory words in bundle/freebie text.
     if (/\b(laptop bag|notebook bag|computer bag)\b/i.test(titleSearch)) { category = 'computer_accessories'; subcategory = 'bag'; detailType = 'Computer Bag'; }
     else if (/\b(keyboard|keypad)\b/i.test(productTypeSearch)) { category = 'computer_accessories'; subcategory = 'keyboard'; detailType = 'Keyboard'; }
@@ -3897,6 +3898,8 @@ function extractCcSupplierProducts(html, baseUrl) {
     else if (/\b(all[- ]in[- ]one|aio)\b/i.test(identitySearch)) { subcategory = 'all_in_one'; detailType = 'All-in-One'; }
     else if (/\b(desktop|tower|mini pc|mini computer)\b/i.test(identitySearch)) { subcategory = 'desktop'; detailType = 'Desktop'; }
     else if (/\b(monitor|display screen)\b/i.test(identitySearch)) { subcategory = 'monitor'; detailType = 'Monitor'; }
+    const classificationStatus = detailType === 'Unclassified' ? 'needs_review' : 'confirmed';
+    const classificationConfidence = classificationStatus === 'confirmed' ? 'high' : 'low';
     let productUrl = baseUrl;
     const links = [...card.matchAll(/<a\b[^>]*href\s*=\s*(?:"([^"]+)"|'([^']+)'|([^\s>]+))/gi)];
     if (!links.length && imageCard !== card) links.push(...imageCard.matchAll(/<a\b[^>]*href\s*=\s*(?:"([^"]+)"|'([^']+)'|([^\s>]+))/gi));
@@ -3917,6 +3920,8 @@ function extractCcSupplierProducts(html, baseUrl) {
       category,
       subcategory,
       detail_type: detailType,
+      classification_status: classificationStatus,
+      classification_confidence: classificationConfidence,
       specifications: {
         cpu_model: specs.find(line => /^-?\s*(?:CPU|Processor)\s*:/i.test(line))?.replace(/^-?\s*(?:CPU|Processor)\s*:/i, '').trim()
           || specs.find(line => /\b(?:Intel(?:®)?\s+Core|AMD\s+Ryzen)\b/i.test(line)) || '',
@@ -4005,6 +4010,36 @@ function groupCcSupplierProducts(products) {
     };
   });
 }
+async function applyExternalProductResearch(group) {
+  const externalResearch = await researchExternalProductCategory(group);
+  const researched = { ...group, external_research: externalResearch };
+  if (externalResearch.status === 'confirmed' && externalResearch.suggested_category) {
+    researched.category = externalResearch.suggested_category;
+    researched.subcategory = externalResearch.suggested_subcategory;
+    researched.detail_type = externalResearch.suggested_detail_type;
+    researched.classification_status = 'confirmed';
+    researched.classification_confidence = externalResearch.confidence;
+    researched.classification_source = 'external_research';
+  } else if (researched.classification_status !== 'confirmed') {
+    researched.classification_status = 'needs_review';
+    researched.classification_confidence = externalResearch.confidence || 'low';
+  }
+  return researched;
+}
+
+async function researchSupplierGroups(groups) {
+  const output = new Array(groups.length);
+  let nextIndex = 0;
+  const workers = Array.from({ length: Math.min(3, groups.length) }, async () => {
+    while (nextIndex < groups.length) {
+      const index = nextIndex++;
+      output[index] = await applyExternalProductResearch(groups[index]);
+    }
+  });
+  await Promise.all(workers);
+  return output;
+}
+
 async function getAuroraSupplierImportIndex(vendorId) {
   const { data: products, error: productError } = await supabase.from('products')
     .select('id,title,price,stock').eq('vendor_id', vendorId);
@@ -4453,7 +4488,7 @@ app.post('/api/admin/supplier-import/scan', authenticate, requireAdmin, async (r
   if (!supabase) return fail(res, 503, 'Supabase is not configured.');
   try {
     const { url, products: scannedProducts, scan } = await loadCcSupplierCatalog(clean(req.body.url, 1000));
-    const groupedProducts = groupCcSupplierProducts(scannedProducts);
+    const groupedProducts = await researchSupplierGroups(groupCcSupplierProducts(scannedProducts));
     const requestedOffset = Math.max(0, Number.parseInt(req.body.offset, 10) || 0);
     const isSingleProductUrl = groupedProducts.length <= 1;
     const batchSize = isSingleProductUrl ? 1 : 10;
@@ -4489,10 +4524,11 @@ app.post('/api/admin/supplier-import/scan', authenticate, requireAdmin, async (r
         const variantCode = String(variant.supplier_product_code || '').trim().toUpperCase();
         return variantCode && index.knownCodes.has(variantCode) && !existingProduct;
       });
-      const status = conflictingTitle || codeConflicts ? 'needs_review' : !newVariants.length ? 'duplicate' : existingProduct ? 'update_existing' : group.verified ? 'ready' : 'needs_review';
+      const status = conflictingTitle || codeConflicts || group.classification_status !== 'confirmed' ? 'needs_review' : !newVariants.length ? 'duplicate' : existingProduct ? 'update_existing' : group.verified ? 'ready' : 'needs_review';
       const seenGroupConfigurations = new Set();
       return {
         ...group, duplicate: status === 'duplicate', status,
+        import_blocked: Boolean(conflictingTitle || codeConflicts || !group.verified),
         existing_product_id: existingProduct?.id || null,
         new_variant_count: newVariants.length,
         variants: group.variants.map(variant => {
@@ -4543,11 +4579,24 @@ app.post('/api/admin/supplier-import/import', authenticate, requireAdmin, async 
   try {
     if (!code || !Number.isFinite(expectedPrice) || expectedPrice <= 0) return fail(res, 400, 'Missing verified product code or supplier price.');
     const { url, products } = await loadCcSupplierCatalog(catalogUrl);
-    const group = groupCcSupplierProducts(products).find(item => item.variants.some(variant => variant.supplier_product_code === code));
-    const selectedVariant = group?.variants.find(variant => variant.supplier_product_code === code);
-    if (!group || !selectedVariant || !group.verified || selectedVariant.supplier_price !== expectedPrice) {
+    let group = groupCcSupplierProducts(products).find(item => item.variants.some(variant => variant.supplier_product_code === code));
+    if (!group) return fail(res, 409, 'Supplier product was not found. Scan the catalog again.');
+    group = await applyExternalProductResearch(group);
+    const selectedVariant = group.variants.find(variant => variant.supplier_product_code === code);
+    const allowedCategories = new Set(['computers','computer_accessories','mobile','mobile_accessories','audio','networking','storage','components','other']);
+    const requestedCategory = clean(req.body.category, 64);
+    if (requestedCategory && !allowedCategories.has(requestedCategory)) return fail(res, 400, 'Invalid product category.');
+    if (requestedCategory) {
+      group.category = requestedCategory;
+      group.subcategory = clean(req.body.subcategory, 80) || 'other';
+      group.detail_type = clean(req.body.detail_type, 100) || 'Needs Admin Review';
+      group.classification_status = 'confirmed';
+      group.classification_source = 'admin_override';
+    }
+    if (!selectedVariant || !group.verified || selectedVariant.supplier_price !== expectedPrice) {
       return fail(res, 409, 'Supplier details changed or could not be verified. Scan the catalog again.');
     }
+    if (group.classification_status !== 'confirmed') return fail(res, 409, 'Category មិនទាន់បានផ្ទៀងផ្ទាត់ទេ។ សូមជ្រើស Category និងប្រភេទលម្អិតដោយ Admin មុននាំចូល។');
     const { data: vendor, error: vendorError } = await supabase.from('vendors').select('id').ilike('store_name', 'AURORA Computer').maybeSingle();
     if (vendorError || !vendor) return fail(res, 404, 'AURORA Computer shop was not found.');
     const index = await getAuroraSupplierImportIndex(vendor.id);
@@ -4647,13 +4696,15 @@ app.post('/api/admin/supplier-import/import', authenticate, requireAdmin, async 
         detail_type: group.detail_type || 'Other', specifications: commonSpecs, updated_at: new Date().toISOString()
       }, { onConflict: 'product_id' });
       if (detailsError) throw detailsError;
+      const { error: categorySyncError } = await supabase.from('products').update({ category: group.category || 'other', updated_at: new Date().toISOString() }).eq('id', targetProductId);
+      if (categorySyncError) throw categorySyncError;
     }
     if (!existingProduct?.supplier_source) {
       const primary = group.variants[0];
       const { error: sourceError } = await supabase.from('product_supplier_sources').insert({
         product_id: targetProductId, supplier_name: 'CC COMPUTER', supplier_url: primary.supplier_url || url,
         supplier_price: primary.supplier_price, supplier_product_code: primary.supplier_product_code,
-        notes: 'One supplier model with configuration variants. Variant-level codes and prices are stored separately. Retail price = supplier price + $5.'
+        notes: 'One supplier model with configuration variants. Variant-level codes and prices are stored separately. Retail price = supplier price + $5.' + (group.external_research?.sources?.length ? ' External category research: ' + group.external_research.sources.map(source => source.url).join(' | ') : '') + (group.classification_source === 'admin_override' ? ' Category confirmed by Admin.' : '')
       });
       if (sourceError) throw sourceError;
       createdParentSource = true;
