@@ -1636,7 +1636,7 @@ app.get('/api/products', async (req, res) => {
 app.get('/api/products/:id', async (req, res) => {
   if (!db(res)) return;
   const cutoff = new Date(Date.now() - PRODUCT_PUBLIC_MAX_AGE_MS).toISOString();
-  const productFields = '*,product_images(id,file_id,image_url,sort_order),vendors!inner(id,user_id,store_name,status,store_logo_file_id)';
+  const productFields = '*,product_images(id,file_id,image_url,sort_order),vendors!inner(id,user_id,public_shop_id,store_name,status,store_logo_file_id)';
   let { data, error } = await supabase.from('products').select(productFields)
     .eq('id', req.params.id).eq('status', 'active').in('vendors.status', ['approved','pending','rejected'])
     .or(`renewed_at.gte.${cutoff},and(renewed_at.is.null,created_at.gte.${cutoff})`)
@@ -1691,7 +1691,17 @@ app.get('/api/products/:id', async (req, res) => {
   data.seller_rating = trust[data.vendor_id]?.average ?? null;
   data.seller_review_count = trust[data.vendor_id]?.count ?? 0;
   const ownerId = data.vendors?.user_id;
-  if (ownerId) {
+  const isAuroraOfficialShop = String(data.vendors?.public_shop_id || '').toUpperCase() === 'A001'
+    || String(data.vendors?.store_name || '').trim().toLowerCase() === 'aurora computer';
+  if (isAuroraOfficialShop) {
+    // Official AURORA product pages must use the shop logo, never an admin/seller profile avatar.
+    // Do not query the owner's profile image for this shop.
+    data.poster = {
+      user_id: ownerId || null,
+      display_name: data.vendors?.store_name || 'AURORA Computer',
+      avatar_url: null
+    };
+  } else if (ownerId) {
     const { data: profile } = await supabase.from('profiles').select('id,display_name,avatar_url,avatar_file_id,avatar_path').eq('id', ownerId).maybeSingle();
     data.poster = profile ? {
       user_id: profile.id,
