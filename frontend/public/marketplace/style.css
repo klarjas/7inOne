@@ -8774,3 +8774,38 @@ body > footer {
     display: none;
   }
 }
+
+
+/* Animated line-art gift box: lid gently opens and closes. */
+#view-product .product-short-gift-card h3 .product-gift-heading-icon {
+  display: block;
+  width: 21px;
+  height: 21px;
+  flex: 0 0 auto;
+  overflow: visible;
+  color: #BEEE11;
+}
+#view-product .product-gift-heading-icon path {
+  stroke: currentColor;
+  stroke-width: 1.55;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+#view-product .product-gift-heading-icon .gift-box-body,
+#view-product .product-gift-heading-icon .gift-box-ribbon {
+  fill: none;
+}
+#view-product .product-gift-heading-icon .gift-box-lid {
+  fill: none;
+  transform-box: view-box;
+  transform-origin: 14px 9px;
+  animation: gift-box-open-close 3.4s ease-in-out infinite;
+}
+@keyframes gift-box-open-close {
+  0%, 16%, 100% { transform: rotate(0deg) translateY(0); }
+  34%, 58% { transform: rotate(-13deg) translateY(-1px); }
+  76% { transform: rotate(0deg) translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #view-product .product-gift-heading-icon .gift-box-lid { animation: none; }
+}
