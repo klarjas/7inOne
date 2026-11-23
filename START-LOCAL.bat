@@ -62,7 +62,16 @@ if errorlevel 1 (
 )
 
 echo.
-echo [3/4] Starting GitHub Auto-Sync...
+echo [3/5] Building Next.js production app...
+call npm run build
+if errorlevel 1 (
+  echo [ERROR] Next.js production build failed. Server was not started.
+  pause
+  exit /b 1
+)
+
+echo.
+echo [4/5] Starting GitHub Auto-Sync...
 if exist "START-AUTO-SYNC.bat" if exist "scripts\AUTO-SYNC.ps1" (
   start "7inOne GitHub Auto-Sync" /D "%~dp0" cmd /k "START-AUTO-SYNC.bat"
   echo [OK] GitHub Auto-Sync started in a separate window.
@@ -71,7 +80,7 @@ if exist "START-AUTO-SYNC.bat" if exist "scripts\AUTO-SYNC.ps1" (
 )
 
 echo.
-echo [4/4] Starting Local Server...
+echo [5/5] Starting Local Server...
 start "7inOne Local Server" /D "%~dp0" cmd /k "npm start"
 echo [OK] Local Server window opened.
 echo [INFO] Local URL: http://localhost:10000/marketplace/index.html#home
