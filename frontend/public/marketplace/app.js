@@ -2803,7 +2803,7 @@ function renderProductDetail(options = {}) {
   renderProductDetailMarkup($('productDetail'), `
   <div class="product-detail-page">
     <section class="product-hero-grid">
-      <div class="product-detail-gallery">${galleryHtml}${renderProductGiftCard(detailContent.freeGifts)}</div>
+      <div class="product-detail-gallery">${galleryHtml}</div>
       <div class="product-detail-info">
         <div class="product-top-meta">
           <span class="product-category-badge">${esc(CATEGORIES[p.category] || p.category || 'ទំនិញ')}</span>
@@ -2824,6 +2824,7 @@ function renderProductDetail(options = {}) {
           </div>
           ${p.variants?.length ? `<section class="product-variant-picker"><b>ជ្រើសរើសជម្រើស</b><div class="product-variant-options">${p.variants.map(variant => `<button type="button" data-product-variant="${esc(variant.id)}" class="${String(selectedVariant?.id) === String(variant.id) ? 'is-selected' : ''}" aria-pressed="${String(selectedVariant?.id) === String(variant.id)}" ${Number(variant.stock) <= 0 ? 'disabled' : ''}><span>${esc(variant.option_value)}</span><small>${money(variant.price)}${Number(variant.stock) <= 0 ? ' · អស់ស្តុក' : ''}</small></button>`).join('')}</div>${selectedVariant?.sku ? `<small class="product-variant-sku">Product Code: ${esc(selectedVariant.sku)}</small>` : ''}</section>` : ''}
           ${shortCaptionContent.narrative ? `<p class="product-short-summary-text">${esc(shortCaptionContent.narrative)}</p>` : ''}
+           ${renderProductGiftCard(detailContent.freeGifts)}
           ${detailContent.promotions.length ? `<div class="product-short-caption-offers" aria-label="ប្រូម៉ូសិន">
             ${detailContent.promotions.map(offer => `<div class="product-short-offer"><span class="product-short-offer-label">${ic('tag', 13)} ប្រូម៉ូសិន</span><span>${esc(offer)}</span></div>`).join('')}
           </div>` : ''}
