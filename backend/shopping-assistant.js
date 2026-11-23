@@ -30,7 +30,16 @@ function assistantFallbackMessage(language, count) {
   if (language === 'en') return count ? 'I found these currently listed products in 7inOne. Please open a product to verify its latest price and specifications.' : 'I could not find a matching product in the current 7inOne catalogue. Try another keyword or budget.';
   return count ? 'ខ្ញុំបានរកឃើញផលិតផលដែលកំពុងមានក្នុង 7inOne ដូចខាងក្រោម។ សូមចុចលើផលិតផល ដើម្បីមើលតម្លៃ និងលក្ខណៈបច្ចេកទេសលម្អិត។' : 'ខ្ញុំមិនទាន់រកឃើញផលិតផលដែលត្រូវនឹងលក្ខខណ្ឌទេ។ សាកល្បងប្ដូរពាក្យស្វែងរក ឬថវិកា។';
 }
-async function askOpenSourceModel(message, language, products) {
+async function loadAssistantKnowledge(supabase) {
+  try {
+    const {data:space}=await supabase.from('assistant_knowledge_spaces').select('id').eq('space_code','primary').eq('is_enabled',true).maybeSingle();
+    if(!space?.id)return [];
+    const {data,error}=await supabase.from('assistant_knowledge_entries').select('title,content,category,entry_type').eq('space_id',space.id).eq('status','approved').order('created_at',{ascending:true}).limit(12);
+    if(error)throw error;
+    return (data||[]).map(x=>({title:assistantText(x.title,180),content:assistantText(x.content,900),category:assistantText(x.category,80),type:x.entry_type})).filter(x=>x.title&&x.content);
+  } catch(error){console.warn('ANANTA knowledge lookup failed:',assistantText(error.message,200));return [];}
+}
+async function askOpenSourceModel(message, language, products, knowledge = []) {
   const token = process.env.HF_TOKEN || process.env.AI_API_KEY;
   if (!token) return null;
   const compactProducts = products.map(product => ({
@@ -48,6 +57,7 @@ async function askOpenSourceModel(message, language, products) {
     'Recommend products by matching the customer need first. Prefer verified shops (verified_shop=true) among similarly relevant products, but do not hide a more suitable regular shop.',
     'Explain technical terms simply. If a specification is missing, say it is not listed.',
     'Do not claim a product is available unless stock is greater than zero.',
+    'Use approved 7inOne knowledge notes when relevant; they are guidance, not evidence for product prices or stock.',
     'Keep the answer concise and helpful. Product cards are rendered separately from this answer.'
   ].join(' ');
   const response = await fetch(AI_CHAT_URL, {
@@ -59,7 +69,7 @@ async function askOpenSourceModel(message, language, products) {
       max_tokens: 420,
       messages: [
         { role: 'system', content: system },
-        { role: 'user', content: 'Customer request: ' + message + '\nCatalogue evidence (JSON): ' + JSON.stringify(compactProducts) }
+        { role: 'user', content: 'Customer request: ' + message + '\nCatalogue evidence (JSON): ' + JSON.stringify(compactProducts) + '\nApproved knowledge notes (JSON): ' + JSON.stringify(knowledge) }
       ]
     }),
     signal: AbortSignal.timeout(25000)
@@ -145,7 +155,8 @@ export function registerShoppingAssistant(app, { supabase, clean, fail, ratingsF
         detectedLanguage = /[\u4e00-\u9fff]/.test(message) ? 'zh' : /[a-z]/i.test(message) && !/[\u1780-\u17ff]/.test(message) ? 'en' : 'km';
       }
       let answer = null;
-      try { answer = await askOpenSourceModel(message, detectedLanguage, products); }
+      const knowledge = await loadAssistantKnowledge(supabase);
+      try { answer = await askOpenSourceModel(message, detectedLanguage, products, knowledge); }
       catch (modelError) { console.warn('7inOne assistant model fallback:', modelError.message); }
       return res.json({
         message: answer || assistantFallbackMessage(detectedLanguage, products.length),
