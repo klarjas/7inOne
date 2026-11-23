@@ -87,9 +87,9 @@ body>footer{flex:0 0 auto;margin-top:auto}
 .skeleton:after{display:none}
 #skeletonGrid .skeleton{animation:skeletonShimmer 1.55s linear infinite}
 @keyframes skeletonShimmer{to{background-position-x:-220%}}
-button,.cat-pill,.tag-btn,.menu-action,.account-shortcut{transition:transform .24s var(--motion-ease),opacity .2s ease,background-color .24s ease,border-color .24s ease,color .24s ease,box-shadow .24s var(--motion-ease)}
-button:hover:not(:disabled){filter:saturate(1.04)}
-button:active:not(:disabled),.cat-pill:active,.tag-btn:active,.account-shortcut:active{transform:scale(.97)}
+
+
+
 button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid rgba(16,185,129,.28);outline-offset:2px}
 .cat-pill,.tag-btn{box-shadow:0 1px 2px rgba(15,23,42,.025)}
 .product-card{border-color:#e9edf5;box-shadow:0 4px 18px rgba(30,41,59,.035);transition:transform .34s var(--motion-ease),box-shadow .34s var(--motion-ease),border-color .28s ease;backface-visibility:hidden}
@@ -3369,11 +3369,7 @@ select:focus-visible,
 }
 
 /* 5. Buttons and interactive hover states */
-button:hover:not(:disabled):not(.product-buy-primary):not(.hero-primary-action):not(#supportChatLauncher) {
-  background-color: #2A475E;
-  border-color: #66C0F4;
-  color: #66C0F4;
-}
+
 
 /* 6. Floating buyer/seller chat */
 #sellerChatModal.modal,
@@ -8811,18 +8807,18 @@ body > footer {
   #view-product .product-gift-heading-icon .gift-box-lid { animation: none; }
 }
 
-/* Unified polished hover feedback for marketplace buttons. */
-button:hover:not(:disabled):not(.product-buy-primary):not(#supportChatLauncher) {
-  transform: none;
-  box-shadow: 0 10px 24px rgba(102, 192, 244, .16);
-  border-color: #66C0F4;
-  filter: brightness(1.035) saturate(1.06);
-}
-button:active:not(:disabled) {
-  transform: translateY(0) scale(.98);
-  box-shadow: 0 3px 9px rgba(102, 192, 244, .10);
-}
 @media (prefers-reduced-motion: reduce) {
-  button { transition: none !important; }
-  button:hover:not(:disabled) { transform: none; }
+  .product-buy-primary,
+  .product-chat-primary,
+  .product-save-action,
+  .seller-action-button,
+  .seller-add-button,
+  .seller-chat-header-icon,
+  .seller-chat-attach,
+  .seller-chat-send,
+  .product-lightbox-close,
+  .product-lightbox-nav,
+  .home-shorts-popup-overlay-close {
+    transition: none !important;
+  }
 }
