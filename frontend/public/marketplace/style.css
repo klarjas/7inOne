@@ -8468,6 +8468,8 @@ body > footer {
 }
 #view-product .product-detail-page:has(.product-primary-actions) .buyer-safety-card {
   min-width: 0;
+  height: 100%;
+  box-sizing: border-box;
   padding: 16px;
   border: 1px solid rgba(190,238,17,.2);
   border-radius: 13px;
