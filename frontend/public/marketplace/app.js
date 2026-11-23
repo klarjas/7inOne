@@ -11,7 +11,7 @@
 const ICON_PATHS = {
   bag: '<path d="M5 8h14l1 13H4L5 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>',
   cleaningBottle: '<path d="M10 3h4v3h-4zM9 6h6l1 3v12H8V9l1-3Z"/><path d="M14 3h3l2 2M11 12h2m-2 3h2"/>',
-  mousePad: '<rect x="2.5" y="5" width="19" height="14" rx="2"/><rect x="9" y="7.5" width="6" height="9" rx="3"/><path d="M12 7.5v3"/>',
+  mousePad: '<rect x="2.5" y="5" width="19" height="14" rx="2"/><path d="M5 8h14"/>',
   search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>',
   plus: '<path d="M12 5v14M5 12h14"/>',
   bell: '<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/>',
