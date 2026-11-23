@@ -137,7 +137,7 @@
           <small class="site-subtitle block truncate" id="siteSubtitle">ផ្សារទិញលក់កម្ពុជា</small>
         </span>
       </button>
-      <nav class="header-primary-nav" aria-label="ម៉ឺនុយចម្បង">
+      <nav class="header-primary-nav" id="headerPrimaryNav" aria-label="ម៉ឺនុយចម្បង">
         <button type="button" data-view="home" aria-current="page">ទំព័រដើម</button>
         <button type="button" data-view="seller">ហាង / អ្នកលក់</button>
         <button type="button" data-view="profile">គណនី</button>
@@ -182,7 +182,7 @@
         </div>
 
         <button id="supportChatLauncher" type="button" class="relative grid h-10 w-10 place-items-center rounded-full text-slate-200 hover:bg-[#203244] hover:text-[#66C0F4] hidden" aria-label="ឆាតអ្នកទិញ និងអ្នកលក់" title="ប្រអប់សារ">
-          <span data-nav-icon="chat"></span>
+          <span data-nav-icon="chat" aria-hidden="true"></span>
           <span id="sellerChatUnreadBadge" class="absolute -right-0.5 -top-0.5 hidden min-w-[18px] rounded-full bg-rose-600 px-1 py-0.5 text-center text-[9px] font-bold leading-none text-white"></span>
         </button>
 
@@ -982,11 +982,11 @@
   </footer>
 
   <nav class="mobile-market-nav" id="mobileMarketNav" aria-label="ម៉ឺនុយ">
-    <button type="button" data-view="home" class="mobile-market-item active"><span data-nav-icon="home"></span><small>ទំព័រដើម</small></button>
-    <button type="button" data-action="saved" class="mobile-market-item"><span data-nav-icon="heart"></span><small>រក្សាទុក</small></button>
-    <button type="button" id="mobileMarketPost" class="fab" aria-label="ដាក់លក់ទំនិញ"><span data-nav-icon="plus"></span></button>
-    <button type="button" data-action="open-chat" class="mobile-market-item"><span data-nav-icon="chat"></span><small>សារ</small></button>
-    <button type="button" data-view="profile" class="mobile-market-item"><span data-nav-icon="user"></span><small>គណនី</small></button>
+    <button type="button" data-view="home" class="mobile-market-item active"><span data-nav-icon="home" aria-hidden="true"></span><small>ទំព័រដើម</small></button>
+    <button type="button" data-action="saved" class="mobile-market-item"><span data-nav-icon="heart" aria-hidden="true"></span><small>រក្សាទុក</small></button>
+    <button type="button" id="mobileMarketPost" class="fab" aria-label="ដាក់លក់ទំនិញ"><span data-nav-icon="plus" aria-hidden="true"></span></button>
+    <button type="button" data-action="open-chat" class="mobile-market-item"><span data-nav-icon="chat" aria-hidden="true"></span><small>សារ</small></button>
+    <button type="button" data-view="profile" class="mobile-market-item"><span data-nav-icon="user" aria-hidden="true"></span><small>គណនី</small></button>
   </nav>
 
   <!-- ========================================================================
