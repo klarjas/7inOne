@@ -2773,6 +2773,9 @@ function renderProductDetail(options = {}) {
     </div>
   </div>`, options);
 
+  // Populate the adjacent details popup for product listings as well as jobs/properties.
+  populateDetailsPopover(root, options);
+
   $('productDetail').querySelectorAll('[data-product-variant]').forEach(button => button.addEventListener('click', () => {
     const variant = (p.variants || []).find(item => String(item.id) === String(button.dataset.productVariant));
     if (!variant) return;
