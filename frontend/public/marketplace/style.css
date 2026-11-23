@@ -9153,3 +9153,37 @@ body.admin-management-popup-open{overflow:hidden}
     overflow:auto;
   }
 }
+
+
+/* Higher-specificity reset for legacy card selectors on popup overlay roots. */
+#view-admin .admin-management-popup.admin-branding-card,
+#view-admin .admin-management-popup.admin-official-shop-panel,
+#view-admin .admin-management-popup.admin-applications-card{
+  position:fixed!important;
+  inset:0!important;
+  display:none!important;
+  width:100vw!important;
+  height:100dvh!important;
+  max-width:none!important;
+  max-height:none!important;
+  margin:0!important;
+  padding:24px!important;
+  align-items:center!important;
+  justify-content:center!important;
+  overflow:hidden!important;
+  border:0!important;
+  border-radius:0!important;
+  background:rgba(3,8,14,.78)!important;
+  box-shadow:none!important;
+}
+#view-admin .admin-management-popup.admin-branding-card.is-open,
+#view-admin .admin-management-popup.admin-official-shop-panel.is-open,
+#view-admin .admin-management-popup.admin-applications-card.is-open{display:flex!important}
+@media(max-width:760px){
+  #view-admin .admin-management-popup.admin-branding-card,
+  #view-admin .admin-management-popup.admin-official-shop-panel,
+  #view-admin .admin-management-popup.admin-applications-card{
+    align-items:flex-end!important;
+    padding:12px 0 0!important;
+  }
+}
