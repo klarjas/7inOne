@@ -2711,7 +2711,10 @@ function renderProductDetail(options = {}) {
   };
 
   const descriptions = productDescriptionParts(p);
+  const shortCaptionContent = productDetailContentParts(descriptions.short);
   const detailContent = productDetailContentParts(descriptions.full || descriptions.short);
+  detailContent.promotions = [...new Set([...shortCaptionContent.promotions, ...detailContent.promotions])];
+  detailContent.freeGifts = [...new Set([...shortCaptionContent.freeGifts, ...detailContent.freeGifts])];
   const images = (p.product_images || []).filter((i) => i.image_url);
   const videoId = youtubeVideoId(p.youtube_video_url);
   const hasVideo = Boolean(videoId);
@@ -2780,7 +2783,11 @@ function renderProductDetail(options = {}) {
             <span class="product-stock-badge ${stockKnown && effectiveStock <= 0 ? 'is-out' : ''}">${ic(stockKnown && effectiveStock <= 0 ? 'x' : 'checkcircle', 14)} ${stockLabel}</span>
           </div>
           ${p.variants?.length ? `<section class="product-variant-picker"><b>ជ្រើសរើសជម្រើស</b><div class="product-variant-options">${p.variants.map(variant => `<button type="button" data-product-variant="${esc(variant.id)}" class="${String(selectedVariant?.id) === String(variant.id) ? 'is-selected' : ''}" aria-pressed="${String(selectedVariant?.id) === String(variant.id)}" ${Number(variant.stock) <= 0 ? 'disabled' : ''}><span>${esc(variant.option_value)}</span><small>${money(variant.price)}${Number(variant.stock) <= 0 ? ' · អស់ស្តុក' : ''}</small></button>`).join('')}</div>${selectedVariant?.sku ? `<small class="product-variant-sku">Product Code: ${esc(selectedVariant.sku)}</small>` : ''}</section>` : ''}
-          ${descriptions.short ? `<p class="product-short-summary-text">${esc(descriptions.short)}</p>` : ''}
+          ${shortCaptionContent.narrative ? `<p class="product-short-summary-text">${esc(shortCaptionContent.narrative)}</p>` : ''}
+          ${(detailContent.promotions.length || detailContent.freeGifts.length) ? `<div class="product-short-caption-offers" aria-label="ប្រូម៉ូសិន និងកាដូ">
+            ${detailContent.promotions.map(offer => `<div class="product-short-offer"><span class="product-short-offer-label">${ic('tag', 13)} ប្រូម៉ូសិន</span><span>${esc(offer)}</span></div>`).join('')}
+            ${detailContent.freeGifts.map(gift => `<div class="product-short-gift"><span class="product-short-offer-label">${ic('gift', 13)} កាដូឥតគិតថ្លៃ</span><span>${esc(gift)}</span></div>`).join('')}
+          </div>` : ''}
         </div>
 
         <div>
@@ -2827,10 +2834,7 @@ function renderProductDetail(options = {}) {
             <h2>${ic('file', 18)} ការពិពណ៌នា</h2>
             <div class="product-full-description product-narrative-description">${renderProductDescriptionHtml(detailContent.narrative || 'មិនទាន់មានការពិពណ៌នាលម្អិតទេ។')}</div>
           </section>
-          ${(detailContent.promotions.length || detailContent.freeGifts.length) ? `<section class="product-promotion-section">
-            <h2>${ic('gift', 18)} ប្រូម៉ូសិន / កាដូឥតគិតថ្លៃ</h2>
-            <ul>${detailContent.promotions.map(offer => `<li>${esc(offer)}</li>`).join('')}${detailContent.freeGifts.map(gift => `<li>${esc(gift)}</li>`).join('')}</ul>
-          </section>` : ''}
+
           ${detailContent.warranty.length ? `<section class="product-warranty-section">
             <h2>${ic('shield-check', 18)} ការធានា</h2>
             <p>${detailContent.warranty.map(esc).join(' · ')}</p>
