@@ -4477,7 +4477,7 @@ function renderSupplierImportResults(result, catalogUrl) {
       const uniqueVariantCount = variants.filter(variant => !variant.duplicate_configuration).length;
       const variantRows = variants.map(variant => {
         const variantSpecs = variant.specifications || {};
-        const label = [variantSpecs.ram_type_capacity,variantSpecs.storage_type_capacity].filter(Boolean).join(' · ') || 'Configuration មិនទាន់ច្បាស់';
+        const label = [variantSpecs.ram_type_capacity,variantSpecs.storage_type_capacity].filter(Boolean).join(' · ') || variant.configuration_label || variant.option_value || variant.supplier_product_code || 'ជម្រើស';
         return '<li class="flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 py-2"><span><b>'+esc(label)+'</b><small class="block text-slate-500">Code: '+esc(variant.supplier_product_code||'—')+' · '+(variant.availability==='out_of_stock'?'<span class="text-rose-600">Supplier អស់ស្តុក</span>':'<span class="text-emerald-700">Supplier មានលក់</span>')+(variant.duplicate_configuration?' · Configuration ស្ទួន':variant.already_imported?' · មានរួចហើយ':'')+'</small></span><span class="text-right"><b>'+money(variant.selling_price)+'</b><small class="block text-slate-500">Supplier '+money(variant.supplier_price)+'</small></span></li>';
       }).join('');
       const status = item.status || 'needs_review';
