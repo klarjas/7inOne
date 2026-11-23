@@ -9784,3 +9784,123 @@ body > header.hd.glass { z-index: var(--z-header); }
  #view-product .marketplace-listing-detail-page .listing-mobile-actions .listing-mobile-chat { border-color:#2A475E;background:#1B2B3C;color:#66C0F4; }
  #view-product .marketplace-listing-detail-page .listing-mobile-actions .listing-mobile-save.is-saved { border-color:#BEEE11;color:#BEEE11; }
 }
+
+
+/* Restore the centered pre-PR120 three-column homepage layout.
+   Keep newer product/detail functionality and the Steam Dark surfaces. */
+@media (min-width: 1101px) {
+  #view-home > .home-layout-shell.amazon-store-body.shell {
+    display: grid !important;
+    grid-template-columns: 184px minmax(0, 1fr) 228px !important;
+    gap: 18px !important;
+    column-gap: 18px !important;
+    row-gap: 18px !important;
+    width: min(1320px, calc(100% - 36px)) !important;
+    max-width: 1320px !important;
+    margin: 0 auto !important;
+    padding: 16px 0 36px !important;
+    box-sizing: border-box !important;
+  }
+  #view-home .home-main-content {
+    display: block !important;
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    min-width: 0 !important;
+  }
+  #view-home .amazon-filter-sidebar {
+    display: flex !important;
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    position: sticky !important;
+    top: 92px !important;
+    height: auto !important;
+    max-height: calc(100vh - 108px) !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    overflow-y: auto !important;
+  }
+  #view-home .home-jobs-rail,
+  #view-home #homeJobsRail {
+    display: flex !important;
+    flex-direction: column !important;
+    grid-column: 3 !important;
+    grid-row: 1 !important;
+    align-self: start !important;
+    position: sticky !important;
+    top: 92px !important;
+    height: auto !important;
+    max-height: calc(100vh - 108px) !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 2px 14px !important;
+    overflow-y: auto !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-sizing: border-box !important;
+  }
+  #view-home .home-jobs-rail .jobs-panel {
+    display: flex !important;
+    min-height: 0 !important;
+    height: auto !important;
+    border: 1px solid #2A475E !important;
+    border-radius: 15px !important;
+    background: #16202D !important;
+    box-shadow: none !important;
+  }
+  #view-home #productGrid:not(.hidden),
+  #view-home #skeletonGrid:not(.hidden) {
+    max-height: none !important;
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+  #view-home #categoryStrip {
+    display: flex !important;
+  }
+  #searchForm #searchCategory {
+    display: block !important;
+  }
+  #searchForm > span.hidden.h-5.w-px.bg-slate-200 {
+    display: block !important;
+    width: 1px !important;
+    height: 20px !important;
+  }
+}
+@media (max-width: 1100px) {
+  #view-home .home-jobs-rail,
+  #view-home #homeJobsRail {
+    display: none !important;
+  }
+}
+@media (max-width: 1000px) and (min-width: 701px) {
+  #view-home > .home-layout-shell.amazon-store-body.shell {
+    display: grid !important;
+    grid-template-columns: 150px minmax(0, 1fr) !important;
+    gap: 12px !important;
+    width: min(1320px, calc(100% - 36px)) !important;
+    max-width: 1320px !important;
+    margin: 0 auto !important;
+    padding: 16px 0 36px !important;
+  }
+  #view-home .home-main-content {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+  }
+  #view-home .amazon-filter-sidebar {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    position: sticky !important;
+    top: 92px !important;
+    height: auto !important;
+    max-height: calc(100vh - 108px) !important;
+  }
+}
+@media (max-width: 700px) {
+  #view-home > .home-layout-shell.amazon-store-body.shell {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 8px 13px 28px !important;
+  }
+}
