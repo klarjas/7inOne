@@ -1,6 +1,6 @@
 const MODEL = process.env.AI_MODEL || 'Qwen/Qwen2.5-7B-Instruct';
 const URL = process.env.AI_CHAT_COMPLETIONS_URL || 'https://router.huggingface.co/v1/chat/completions';
-const rawInterval = Number(process.env.ANANTA_TRAINING_INTERVAL_SECONDS || 21600);
+const rawInterval = Number(process.env.ANANTA_TRAINING_INTERVAL_SECONDS || 3600);
 const INTERVAL = (Number.isFinite(rawInterval) ? Math.max(3600, rawInterval) : 21600) * 1000;
 const LEVELS = ['Beginner','Learner','Intermediate','Advanced','Expert','Master'];
 let active = false, timer = null;
@@ -22,7 +22,7 @@ const lessonCode = x => (x.category||'general')+'-'+(String(x.title).match(/(?:á
 const level = n => n>=95?6:n>=90?5:n>=80?4:n>=70?3:n>=60?2:1;
 async function cycle({supabase,port}) {
   if(active) return;
-  if(!token()){console.warn('[ANANTA Training] Paused: configure HF_TOKEN or AI_API_KEY.');return;}
+  if(!token()){runtime.lastError='AI model token is not configured. Set HF_TOKEN or AI_API_KEY.';console.warn('[ANANTA Training] Paused: configure HF_TOKEN or AI_API_KEY.');return;}
   active=true; runtime.running=true; runtime.lastAttemptAt=new Date().toISOString(); runtime.lastError='';
   try {
     const {data:space,error:se}=await supabase.from('assistant_knowledge_spaces').select('id,is_enabled').eq('space_code','primary').maybeSingle();
