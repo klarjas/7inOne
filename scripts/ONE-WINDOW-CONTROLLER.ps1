@@ -152,13 +152,47 @@ Write-Host "----------------------------------------------------"
 
 try {
     Start-AppServer
-    Start-Process "http://localhost:10000/marketplace/index.html#home"
     if (Get-Command cloudflared -ErrorAction SilentlyContinue) {
         Write-Host "[TUNNEL] Starting Cloudflare Tunnel..." -ForegroundColor Cyan
-        $script:Tunnel = Start-Process -FilePath "cloudflared" -ArgumentList @("tunnel","--url","http://localhost:10000") -WorkingDirectory $RepoRoot -PassThru -NoNewWindow
-        Write-Host "[TUNNEL] Running (PID $($script:Tunnel.Id)); copy the trycloudflare.com URL shown above." -ForegroundColor Green
-    } else { Write-Host "[TUNNEL] cloudflared not found. Local access remains available." -ForegroundColor Yellow }
-    Write-Host "[READY] Open http://localhost:10000/marketplace/index.html#home" -ForegroundColor Green
+        $TunnelOut = Join-Path $env:TEMP ("7inOne-cloudflared-" + [guid]::NewGuid().ToString("N") + ".out.log")
+        $TunnelErr = Join-Path $env:TEMP ("7inOne-cloudflared-" + [guid]::NewGuid().ToString("N") + ".err.log")
+        $script:Tunnel = Start-Process -FilePath "cloudflared" -ArgumentList @("tunnel","--url","http://localhost:10000") -WorkingDirectory $RepoRoot -PassThru -NoNewWindow -RedirectStandardOutput $TunnelOut -RedirectStandardError $TunnelErr
+        Write-Host "[TUNNEL] Waiting for Cloudflare public URL..." -ForegroundColor Cyan
+
+        $PublicBaseUrl = $null
+        $TunnelDeadline = (Get-Date).AddSeconds(60)
+        while ((Get-Date) -lt $TunnelDeadline -and -not $PublicBaseUrl) {
+            $script:Tunnel.Refresh()
+            if ($script:Tunnel.HasExited) { break }
+            foreach ($logFile in @($TunnelOut, $TunnelErr)) {
+                if (Test-Path -LiteralPath $logFile) {
+                    try {
+                        $logText = [System.IO.File]::ReadAllText($logFile)
+                        if ($logText -match 'https://[a-z0-9-]+\.trycloudflare\.com') {
+                            $PublicBaseUrl = $Matches[0]
+                            break
+                        }
+                    } catch { }
+                }
+            }
+            if (-not $PublicBaseUrl) { Start-Sleep -Milliseconds 500 }
+        }
+
+        if ($PublicBaseUrl) {
+            $PublicAppUrl = $PublicBaseUrl + "/marketplace/index.html#home"
+            Write-Host "[TUNNEL] Public URL: $PublicBaseUrl" -ForegroundColor Green
+            Write-Host "[BROWSER] Opening 7inOne through Cloudflare..." -ForegroundColor Cyan
+            Start-Process $PublicAppUrl
+            Write-Host "[READY] $PublicAppUrl" -ForegroundColor Green
+        } else {
+            Write-Host "[TUNNEL WARNING] Could not obtain a trycloudflare.com URL within 60 seconds." -ForegroundColor Yellow
+            Write-Host "[BROWSER] Opening local address as fallback." -ForegroundColor Yellow
+            Start-Process "http://localhost:10000/marketplace/index.html#home"
+        }
+    } else {
+        Write-Host "[TUNNEL] cloudflared not found. Opening local address instead." -ForegroundColor Yellow
+        Start-Process "http://localhost:10000/marketplace/index.html#home"
+    }
 
     while ($true) {
         Start-Sleep -Seconds $PollSeconds
