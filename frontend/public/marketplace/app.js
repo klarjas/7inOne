@@ -4879,7 +4879,7 @@ async function renderAdmin() {
       shopModal.hidden = false;
       shopModal.setAttribute('aria-hidden', 'false');
       document.body.classList.add('admin-official-shop-modal-open');
-      requestAnimationFrame(() => shopModal.querySelector('input[name="store_name"]')?.focus());
+      requestAnimationFrame(() => shopModal.querySelector('input[name="store_name"]')?.focus({ preventScroll: true }));
     };
     $('adminManagedShopReload')?.addEventListener('click', () => void renderAdminManagedShop());
     $('adminManagedShopEdit')?.addEventListener('click', openShopModal);
