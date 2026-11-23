@@ -83,7 +83,7 @@ if errorlevel 1 (
 )
 
 echo.
-echo [3/5] Building Next.js production app...
+echo [3/4] Building Next.js production app...
 call npm run build
 if errorlevel 1 (
   echo [ERROR] Next.js production build failed. Server was not started.
@@ -92,47 +92,15 @@ if errorlevel 1 (
 )
 
 echo.
-echo [4/5] Starting GitHub Auto-Sync...
-if exist "START-AUTO-SYNC.bat" if exist "scripts\AUTO-SYNC.ps1" (
-  start "7inOne GitHub Auto-Sync" /D "%~dp0" cmd /k "START-AUTO-SYNC.bat"
-  echo [OK] GitHub Auto-Sync started in a separate window.
-) else (
-  echo [WARNING] Auto-Sync files are missing. GitHub Auto-Sync was not started.
+echo [4/4] Starting all 7inOne services in this same window...
+if not exist "scripts\ONE-WINDOW-CONTROLLER.ps1" (
+  echo [ERROR] One-window controller is missing.
+  pause
+  exit /b 1
 )
 
-echo.
-echo [5/5] Starting Local Server...
-start "7inOne Live Update + Local Server" /D "%~dp0" powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\\LIVE-GITHUB-UPDATE.ps1"
-echo [OK] Live GitHub Update + Local Server supervisor opened.
-echo [INFO] Local URL: http://localhost:10000/marketplace/index.html#home
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\ONE-WINDOW-CONTROLLER.ps1"
 
 echo.
-echo Waiting for the local server...
-timeout /t 5 /nobreak >nul
-
-echo.
-echo Starting Cloudflare Tunnel...
-where cloudflared >nul 2>nul
-if errorlevel 1 (
-  echo [WARNING] cloudflared was not found.
-  echo Local app is running, but no Public URL is available.
-  echo Run ONE-CLICK-SETUP.bat or install Cloudflare Tunnel, then try again.
-) else (
-  start "7inOne Public URL - Cloudflare" /D "%~dp0" cmd /k "cloudflared tunnel --url http://localhost:10000"
-  echo [OK] Cloudflare Tunnel started in a separate window.
-  echo [INFO] Find the https://...trycloudflare.com URL in that window.
-  echo [INFO] Your app link is: https://YOUR-TUNNEL.trycloudflare.com/marketplace/index.html#home
-)
-
-echo.
-echo Opening 7inOne in your browser...
-start "" "http://localhost:10000/marketplace/index.html#home"
-
-echo.
-echo ==================================================
-echo [SUCCESS] 7inOne startup commands have been launched.
-echo Keep the Local Server, Cloudflare Tunnel and Auto-Sync
-echo windows open while you use the app.
-echo ==================================================
-echo.
+echo [INFO] 7inOne control center has stopped.
 pause
