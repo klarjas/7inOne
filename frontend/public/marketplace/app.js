@@ -1738,7 +1738,7 @@ function productDetailContentParts(description = '') {
   for (const rawLine of lines) {
     const line = rawLine.trim();
     if (!line) { narrative.push(''); continue; }
-    const clean = line.replace(/^[-•*]\s*/, '').replace(/^\*\*(.*?)\*\*$/, '$1').trim();
+    const clean = line.replace(/^[-•*]\s*/, '').replace(/^\*\*(.*?)\*\*\s*/, '$1 ').trim();
     const freeMatch = clean.match(/^(?:free|free gift|gift|កាដូ|អំណោយ|ប្រូម៉ូសិន|promotion|ឈុតពិសេសក្នុងប្រអប់|របស់មានក្នុងប្រអប់|included in (?:the )?box)\s*[:：-]\s*(.+)$/i);
     const warrantyMatch = clean.match(/^(?:warranty|ការធានា|រយៈពេលធានា)\s*[:：-]\s*(.+)$/i);
     if (freeMatch) freeGifts.push(freeMatch[1].trim());
