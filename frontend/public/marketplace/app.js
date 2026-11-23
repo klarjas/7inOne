@@ -762,13 +762,6 @@ const state = {
   activeJobCategory: 'all',
   activeJobSubcategory: 'all',
   jobsSort: 'newest',
-  socialPosts: [],
-  socialStories: [],
-  socialStoryPreviewUrl: null,
-  socialStoryViewerIndex: 0,
-  socialCommentsOpen: new Set(),
-  socialCommentsCache: new Map(),
-  socialUploadPreviewUrl: null,
   savedIds: new Set(),
   favoritePending: new Set(),
   activeCategory: 'all',
@@ -1525,32 +1518,9 @@ function applySiteBranding(data = {}) {
   }
 
   if (b.faviconUrl) applyFavicon(b.faviconUrl);
-  if ($('heroBadge')) $('heroBadge').textContent = String(b.heroBadge || '');
-  if ($('heroTitle')) $('heroTitle').textContent = String(b.heroTitle || '');
-  if ($('heroSubtitle')) $('heroSubtitle').textContent = String(b.heroSubtitle || '');
 
   renderHomeSidePosters();
 
-  const images = Array.isArray(b.heroImages) ? b.heroImages.slice(0, 3) : [];
-  for (let i = 1; i <= 3; i++) {
-    const target = $('heroImage' + i);
-    const item = images[i - 1];
-    const url = item?.url || item?.image_url || item?.imageUrl || '';
-    if (!target) continue;
-    if (url) {
-      target.parentElement?.querySelector('.hero-placeholder')?.classList.add('hidden');
-      target.src = url;
-      target.classList.remove('hidden');
-      target.onerror = () => {
-        target.classList.add('hidden');
-        target.parentElement?.querySelector('.hero-placeholder')?.classList.remove('hidden');
-      };
-    } else {
-      target.removeAttribute('src');
-      target.classList.add('hidden');
-      target.parentElement?.querySelector('.hero-placeholder')?.classList.remove('hidden');
-    }
-  }
 }
 
 function renderHomeSidePosters() {
@@ -1863,209 +1833,6 @@ function productCard(p, index) {
 }
 
 
-// --------------------------------------------------------------------------
-// 7.1 Community photo feed
-// --------------------------------------------------------------------------
-function socialProfileMarkup(profile = {}) {
-  const name = profile.display_name || 'អ្នកប្រើប្រាស់';
-  const avatar = profile.avatar_url || '';
-  return `<span class="social-avatar">${avatar ? `<img src="${esc(avatar)}" alt="">` : esc(Array.from(name)[0] || '7')}</span>`;
-}
-function syncSocialComposerIdentity() {
-  const profile = state.me?.profile || state.me || {};
-  const name = profile.display_name || state.me?.user?.user_metadata?.display_name || state.me?.email?.split('@')[0] || 'អ្នកប្រើប្រាស់';
-  const avatar = profile.avatar_url || '';
-  const target = $('socialComposerAvatar');
-  if ($('socialComposerName')) $('socialComposerName').textContent = name;
-  if (target) target.innerHTML = avatar ? `<img src="${esc(avatar)}" alt="">` : esc(Array.from(name)[0] || '7');
-}
-function renderSocialStories() {
-  const target = $('socialStoriesList');
-  if (!target) return;
-  const createCard = '<label class="social-story-create" for="socialStoryImage"><span class="social-story-create-icon">＋</span><b>បង្កើត Story</b></label>';
-  target.innerHTML = createCard + state.socialStories.map((story, index) => {
-    const profile = story.profile || {};
-    return `<button type="button" class="social-story-card" data-social-story-view="${index}" aria-label="មើល Story របស់ ${esc(profile.display_name || 'អ្នកប្រើប្រាស់')}">
-      <img class="social-story-photo" src="${esc(story.image_url)}" alt="" loading="lazy">
-      <span class="social-story-avatar">${socialProfileMarkup(profile)}</span>
-      <b>${esc(profile.display_name || 'អ្នកប្រើប្រាស់')}</b>
-    </button>`;
-  }).join('');
-}
-function renderSocialStoriesSkeleton() {
-  const target = $('socialStoriesList');
-  if (!target) return;
-  const bar = (width, height, extra = '') => `<span class="skeleton social-sk-bar ${extra}" style="width:${width};height:${height}px" aria-hidden="true"></span>`;
-  target.innerHTML = '<label class="social-story-create" for="socialStoryImage"><span class="social-story-create-icon">＋</span><b>បង្កើត Story</b></label>' +
-    Array.from({ length: 5 }, () => `<div class="social-story-card social-story-skeleton" aria-hidden="true"><span class="skeleton social-story-sk-photo"></span><span class="skeleton social-story-sk-avatar"></span>${bar('64%',7,'social-story-sk-name')}</div>`).join('');
-}
-async function loadSocialStories() {
-  const target = $('socialStoriesList');
-  if (!target) return;
-  const cancelSkeleton = !state.socialStories.length ? scheduleSkeleton(renderSocialStoriesSkeleton) : () => {};
-  try {
-    const result = await api('/api/social/stories');
-    cancelSkeleton();
-    state.socialStories = Array.isArray(result.data) ? result.data : [];
-    renderSocialStories();
-  } catch (error) {
-    cancelSkeleton();
-    target.innerHTML = '<div class="social-feed-empty">មិនអាចផ្ទុក Stories បានទេ.</div><label class="social-story-create" for="socialStoryImage"><span class="social-story-create-icon">＋</span><b>បង្កើត Story</b></label>';
-  }
-}
-function clearSocialStoryImage() {
-  const input = $('socialStoryImage');
-  if (input) input.value = '';
-  if (state.socialStoryPreviewUrl) URL.revokeObjectURL(state.socialStoryPreviewUrl);
-  state.socialStoryPreviewUrl = null;
-  $('socialStoryPreview')?.classList.add('hidden');
-  $('socialStoryPreviewImage')?.removeAttribute('src');
-}
-async function publishSocialStory() {
-  if (!requireLogin()) return;
-  const file = $('socialStoryImage')?.files?.[0];
-  if (!file) { toast('សូមជ្រើសរើសរូបភាព Story។', 'error'); return; }
-  if (!['image/jpeg','image/png','image/webp'].includes(file.type) || file.size > 8 * 1024 * 1024) {
-    toast('សូមប្រើរូប JPG, PNG ឬ WEBP ដែលមានទំហំមិនលើស 8MB។', 'error'); return;
-  }
-  const button = $('socialStoryPublishBtn');
-  if (button) { button.disabled = true; button.textContent = 'កំពុងផុស...'; }
-  const form = new FormData();
-  form.append('image', file);
-  try {
-    await api('/api/social/stories', { method: 'POST', body: form });
-    clearSocialStoryImage();
-    await loadSocialStories();
-    toast('បានផុស Story ជោគជ័យ! Story នឹងបាត់ក្រោយ 24 ម៉ោង។');
-  } catch (error) { toast(error.message || 'មិនអាចផុស Story បានទេ។', 'error'); }
-  finally { if (button) { button.disabled = false; button.textContent = 'ផុស Story'; } }
-}
-function showSocialStory(index) {
-  if (!state.socialStories.length) return;
-  state.socialStoryViewerIndex = (index + state.socialStories.length) % state.socialStories.length;
-  const story = state.socialStories[state.socialStoryViewerIndex];
-  const profile = story.profile || {};
-  $('socialStoryViewerImage').src = story.image_url;
-  $('socialStoryViewerAuthor').innerHTML = socialProfileMarkup(profile) + '<b>' + esc(profile.display_name || 'អ្នកប្រើប្រាស់') + '</b>';
-  $('socialStoryViewerProgress').style.width = ((state.socialStoryViewerIndex + 1) / state.socialStories.length * 100) + '%';
-  $('socialStoryViewer').classList.remove('hidden');
-}
-function closeSocialStoryViewer() {
-  $('socialStoryViewer')?.classList.add('hidden');
-  $('socialStoryViewerImage')?.removeAttribute('src');
-}
-function renderSocialPosts() {
-  const target = $('socialFeedList');
-  if (!target) return;
-  if (!state.socialPosts.length) { target.innerHTML = '<div class="social-feed-empty">មិនទាន់មានការផុសទេ។ ចាប់ផ្ដើមចែករំលែកមុនគេ!</div>'; return; }
-  target.innerHTML = state.socialPosts.map(post => {
-    const author = post.profile || {};
-    const liked = Boolean(post.liked_by_me);
-    const comments = state.socialCommentsCache.get(post.id) || [];
-    const opened = state.socialCommentsOpen.has(post.id);
-    return `<article class="social-feed-card" data-social-post="${esc(post.id)}">
-      <div class="social-post-author">${socialProfileMarkup(author)}<div style="min-width:0;flex:1"><b>${esc(author.display_name || 'អ្នកប្រើប្រាស់')}</b><small>${timeAgoKm(post.created_at)}</small></div></div>
-      ${post.caption ? `<p class="social-post-caption">${esc(post.caption)}</p>` : ''}
-      <img class="social-post-image" src="${esc(post.image_url)}" alt="រូបភាពដែលបានផុស" loading="lazy">
-      <div class="social-post-actions">
-        <button type="button" data-social-like="${esc(post.id)}" class="${liked ? 'is-liked' : ''}" aria-pressed="${liked}">♡ ${Number(post.like_count || 0)} Like</button>
-        <button type="button" data-social-comments="${esc(post.id)}">💬 ${Number(post.comment_count || 0)} Comment</button>
-      </div>
-      ${opened ? `<div class="social-comment-panel"><div class="social-comment-list">${comments.map(comment => `<div class="social-comment"><b>${esc(comment.display_name || 'អ្នកប្រើប្រាស់')}</b>${esc(comment.body)}</div>`).join('') || '<small style="color:#8F98A0">មិនទាន់មានមតិយោបល់</small>'}</div><form class="social-comment-form" data-social-comment-form="${esc(post.id)}"><input name="comment" maxlength="500" placeholder="សរសេរមតិយោបល់..." required><button type="submit">ផ្ញើ</button></form></div>` : ''}
-    </article>`;
-  }).join('');
-}
-function renderSocialPostsSkeleton() {
-  const target = $('socialFeedList');
-  if (!target) return;
-  const bar = (width, height) => `<span class="skeleton social-feed-sk-bar" style="width:${width};height:${height}px" aria-hidden="true"></span>`;
-  target.innerHTML = Array.from({ length: 2 }, (_, index) => `
-    <article class="social-feed-card social-feed-skeleton" aria-hidden="true">
-      <div class="social-post-author"><span class="skeleton social-feed-sk-avatar"></span><div class="social-feed-sk-author-lines">${bar('112px',8)}${bar('68px',6)}</div></div>
-      <div class="social-feed-sk-caption">${bar(index ? '76%' : '92%',8)}${bar('54%',8)}</div>
-      <span class="skeleton social-feed-sk-image"></span>
-      <div class="social-feed-sk-actions">${bar('70px',8)}${bar('88px',8)}</div>
-    </article>`).join('');
-}
-async function loadSocialPosts() {
-  const target = $('socialFeedList');
-  if (!target) return;
-  const cancelSkeleton = !state.socialPosts.length ? scheduleSkeleton(renderSocialPostsSkeleton) : () => {};
-  try {
-    const result = await api('/api/social/posts');
-    cancelSkeleton();
-    state.socialPosts = Array.isArray(result.data) ? result.data : [];
-    renderSocialPosts();
-    syncSocialComposerIdentity();
-  } catch (error) {
-    cancelSkeleton();
-    target.innerHTML = '<div class="social-feed-empty">មិនអាចផ្ទុកការផុសបានទេ.</div>';
-  }
-}
-function clearSocialImage() {
-  const input = $('socialPostImage');
-  if (input) input.value = '';
-  if (state.socialUploadPreviewUrl) URL.revokeObjectURL(state.socialUploadPreviewUrl);
-  state.socialUploadPreviewUrl = null;
-  $('socialUploadPreview')?.classList.add('hidden');
-  $('socialUploadPreviewImage')?.removeAttribute('src');
-}
-async function publishSocialPost() {
-  if (!requireLogin()) return;
-  const file = $('socialPostImage')?.files?.[0];
-  const caption = $('socialPostCaption')?.value.trim() || '';
-  if (!file) { toast('សូមជ្រើសរើសរូបភាពជាមុនសិន។', 'error'); return; }
-  if (!['image/jpeg','image/png','image/webp'].includes(file.type) || file.size > 8 * 1024 * 1024) {
-    toast('សូមប្រើរូប JPG, PNG ឬ WEBP ដែលមានទំហំមិនលើស 8MB។', 'error'); return;
-  }
-  const button = $('socialPublishBtn');
-  if (button) { button.disabled = true; button.textContent = 'កំពុងផុស...'; }
-  const form = new FormData();
-  form.append('image', file);
-  form.append('caption', caption);
-  try {
-    await api('/api/social/posts', { method: 'POST', body: form });
-    $('socialPostCaption').value = '';
-    clearSocialImage();
-    await loadSocialPosts();
-    toast('បានផុសរូបភាពជោគជ័យ!');
-  } catch (error) { toast(error.message || 'មិនអាចផុសរូបភាពបានទេ។', 'error'); }
-  finally { if (button) { button.disabled = false; button.textContent = 'ផុសរូបភាព'; } }
-}
-async function toggleSocialLike(postId) {
-  if (!requireLogin()) return;
-  try {
-    const result = await api(`/api/social/posts/${encodeURIComponent(postId)}/like`, { method: 'POST', body: JSON.stringify({}) });
-    const post = state.socialPosts.find(item => String(item.id) === String(postId));
-    if (post) { post.liked_by_me = result.liked; post.like_count = result.like_count; renderSocialPosts(); }
-  } catch (error) { toast(error.message || 'មិនអាច Like បានទេ។', 'error'); }
-}
-async function toggleSocialComments(postId) {
-  if (!state.socialCommentsOpen.has(postId)) {
-    state.socialCommentsOpen.add(postId);
-    try {
-      const result = await api(`/api/social/posts/${encodeURIComponent(postId)}/comments`);
-      state.socialCommentsCache.set(postId, result.data || []);
-    } catch (error) { toast(error.message || 'មិនអាចផ្ទុកមតិយោបល់បានទេ។', 'error'); }
-  } else state.socialCommentsOpen.delete(postId);
-  renderSocialPosts();
-}
-async function submitSocialComment(form) {
-  if (!requireLogin()) return;
-  const postId = form.dataset.socialCommentForm;
-  const input = form.elements.comment;
-  const body = input?.value.trim() || '';
-  if (!body) return;
-  try {
-    await api(`/api/social/posts/${encodeURIComponent(postId)}/comments`, { method: 'POST', body: JSON.stringify({ body }) });
-    const result = await api(`/api/social/posts/${encodeURIComponent(postId)}/comments`);
-    state.socialCommentsCache.set(postId, result.data || []);
-    const post = state.socialPosts.find(item => String(item.id) === String(postId));
-    if (post) post.comment_count = result.data.length;
-    renderSocialPosts();
-  } catch (error) { toast(error.message || 'មិនអាចផ្ញើមតិយោបល់បានទេ។', 'error'); }
-}
-
 function marketplaceCard(item, index) {
   if (item.listing_type === 'product') return productCard(item, index);
   const labels = { job: 'ការងារ', real_estate: 'អចលនទ្រព្យ' };
@@ -2145,13 +1912,6 @@ function renderProducts() {
   });
   $('productGrid').innerHTML = list.map(marketplaceCard).join('');
   renderCategorySpecFilters();
-  const resultCount = $('resultCount');
-  if (resultCount) resultCount.textContent = `${list.length} ប្រកាស`;
-  const typeTitles = { all: 'ប្រកាសថ្មីៗទាំងអស់', product: 'ផលិតផល', job: 'ការងារ', real_estate: 'អចលនទ្រព្យ' };
-  const listingTitle = $('listingTitle');
-  if (listingTitle) listingTitle.textContent = typeTitles[state.activeListingType] || typeTitles.all;
-  const listingSub = $('listingSub');
-  if (listingSub) listingSub.textContent = state.searchTerm ? `លទ្ធផលស្វែងរកសម្រាប់ «${esc(state.searchTerm)}»` : 'ផលិតផល ការងារ ផ្ទះជួល និងដីលក់ បង្ហាញតាមពេលបង្ហោះថ្មីបំផុត';
   $('emptyHome').classList.toggle('hidden', list.length > 0);
   $('productGrid').classList.toggle('hidden', list.length === 0);
 
@@ -3012,6 +2772,9 @@ function renderProductDetail(options = {}) {
       <button type="button" class="brand-gradient" data-product-action="buy">${ic('bag', 16)}<span>ទិញឥឡូវនេះ</span></button>
     </div>
   </div>`, options);
+
+  // Populate the adjacent details popup for product listings as well as jobs/properties.
+  populateDetailsPopover(root, options);
 
   $('productDetail').querySelectorAll('[data-product-variant]').forEach(button => button.addEventListener('click', () => {
     const variant = (p.variants || []).find(item => String(item.id) === String(button.dataset.productVariant));
@@ -3875,13 +3638,6 @@ function revokeProductImagePreviews() {
   (state.selectedProductImages || []).forEach((item) => {
     if (item.kind === 'new' && item.previewUrl) URL.revokeObjectURL(item.previewUrl);
   });
-}
-function syncProductImageFileInput() {
-  const input = $('productImage');
-  if (!input) return;
-  const transfer = new DataTransfer();
-  (state.selectedProductImages || []).filter((item) => item.kind === 'new').forEach((item) => transfer.items.add(item.file));
-  input.files = transfer.files;
 }
 function updateProductYoutubePreview() {
   const input = $('productYoutubeVideoUrl');
@@ -6495,7 +6251,6 @@ function bindEvents() {
       accepted.push({ kind: 'new', file: file, previewUrl: URL.createObjectURL(file) });
     }
     state.selectedProductImages = current.concat(accepted);
-    syncProductImageFileInput();
     renderProductImageAlbum();
     event.currentTarget.value = '';
   });
@@ -6514,7 +6269,6 @@ function bindEvents() {
       if (!removed) return;
       if (removed.kind === 'new' && removed.previewUrl) URL.revokeObjectURL(removed.previewUrl);
       images.splice(index, 1);
-      syncProductImageFileInput();
       renderProductImageAlbum();
     }
   });
