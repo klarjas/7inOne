@@ -2400,12 +2400,21 @@ function bindListingDetailActions(root, item) {
     }
     if (!requireLogin()) return;
     if (action === 'save') {
-      button.disabled = true;
+      const saveButtons = [...root.querySelectorAll('[data-detail-action="save"]')];
+      saveButtons.forEach(node => { node.disabled = true; });
       try {
         const result = await api('/api/listing-saves', {method:'POST',body:JSON.stringify({listing_type:item.listing_type,id:item.id})});
-        if (result.data?.saved) { button.classList.add('is-saved'); button.querySelector('span').textContent='បានរក្សាទុក'; toast('បានរក្សាទុកប្រកាស!'); }
+        if (typeof result.data?.saved === 'boolean') {
+          saveButtons.forEach(node => {
+            node.classList.toggle('is-saved', result.data.saved);
+            node.setAttribute('aria-pressed', String(result.data.saved));
+            const label = node.querySelector('span');
+            if (label) label.textContent = result.data.saved ? 'បានរក្សាទុក' : 'រក្សាទុក';
+          });
+          toast(result.data.saved ? 'បានរក្សាទុកប្រកាស!' : 'បានដកចេញពីប្រកាសដែលបានរក្សាទុក។');
+        }
       } catch (error) { toast(error.message || 'មិនអាចរក្សាទុកបានទេ។','error'); }
-      finally { button.disabled = false; }
+      finally { saveButtons.forEach(node => { node.disabled = false; }); }
       return;
     }
     if (action === 'report') {
