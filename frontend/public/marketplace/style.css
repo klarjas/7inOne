@@ -9000,6 +9000,26 @@ body.admin-official-shop-modal-open{overflow:hidden}
   backdrop-filter:none;
 }
 #view-admin .admin-management-popup.is-open{display:flex!important}
+
+#view-admin .admin-management-popup{
+  box-sizing:border-box!important;
+  height:auto!important;
+  max-height:calc(100vh - 48px)!important;
+  flex-direction:column!important;
+  align-items:stretch!important;
+  justify-content:flex-start!important;
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+}
+#view-admin .admin-management-popup.admin-applications-card{
+  display:none!important;
+  flex-direction:column!important;
+  gap:14px;
+}
+#view-admin .admin-management-popup.admin-applications-card.is-open{display:flex!important}
+#view-admin .admin-management-popup.admin-official-shop-panel{flex-direction:column!important}
+#view-admin .admin-management-popup .admin-management-popup-close{align-self:flex-end;flex:0 0 34px}
+
 #view-admin .admin-management-popup.admin-branding-card{
   box-sizing:border-box;display:none!important;flex-direction:column;
   width:min(980px,100%)!important;border:1px solid rgba(102,192,244,.24);
@@ -9020,6 +9040,10 @@ body.admin-official-shop-modal-open{overflow:hidden}
 #view-admin .admin-management-popup .admin-management-popup-close:hover{border-color:#66C0F4;color:#fff}
 body.admin-management-popup-open{overflow:hidden}
 @media(max-width:760px){
+  #view-admin .admin-management-popup{
+    height:auto!important;max-height:92vh!important;
+    width:100%!important;flex-direction:column!important;
+  }
   #view-admin .admin-management-launchers{grid-template-columns:1fr;gap:8px}
   #view-admin .admin-management-launcher{min-height:48px}
   #view-admin .admin-management-popup{align-items:flex-end!important;padding:0!important}
