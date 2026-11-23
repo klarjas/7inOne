@@ -2716,8 +2716,8 @@ function renderProductDetail(options = {}) {
         <article class="product-detail-description">
           <section class="product-spec-section">
             <h2>${ic('sliders', 18)} លក្ខណៈបច្ចេកទេស</h2>
-            <div class="product-spec-grid detail-spec-grid">
-              ${productDetailSpecEntries(p).map(([key,value])=>`<div><small>${esc(key)}</small><b>${esc(value)}</b></div>`).join('')}
+            <div class="product-spec-list">
+              ${productDetailSpecEntries(p).map(([key,value])=>`<p><strong>${esc(key)} :</strong> ${esc(value)}</p>`).join('')}
             </div>
           </section>
           <section class="product-description-copy">
