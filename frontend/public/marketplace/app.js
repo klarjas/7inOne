@@ -4866,11 +4866,32 @@ async function renderAdmin() {
   const managedPanel = $('adminManagedShopPanel');
   if (managedPanel && managedPanel.dataset.bound !== 'true') {
     managedPanel.dataset.bound = 'true';
+    const shopModal = $('adminManagedShopModal');
+    const closeShopModal = () => {
+      if (!shopModal) return;
+      shopModal.hidden = true;
+      shopModal.setAttribute('aria-hidden', 'true');
+      document.body.classList.remove('admin-official-shop-modal-open');
+    };
+    const openShopModal = () => {
+      if (!managedPanel.dataset.vendorId) return toast('មិនទាន់រកឃើញហាង AURORA Computer។', 'warning');
+      if (!shopModal) return;
+      shopModal.hidden = false;
+      shopModal.setAttribute('aria-hidden', 'false');
+      document.body.classList.add('admin-official-shop-modal-open');
+      requestAnimationFrame(() => shopModal.querySelector('input[name="store_name"]')?.focus());
+    };
     $('adminManagedShopReload')?.addEventListener('click', () => void renderAdminManagedShop());
+    $('adminManagedShopEdit')?.addEventListener('click', openShopModal);
     $('adminManagedShopOpen')?.addEventListener('click', () => {
       const vendorId = managedPanel.dataset.vendorId;
       if (vendorId) { location.hash = 'store/' + encodeURIComponent(vendorId); }
       else toast('មិនទាន់រកឃើញហាង AURORA Computer។', 'warning');
+    });
+    shopModal?.querySelectorAll('[data-admin-shop-close]').forEach(button => button.addEventListener('click', closeShopModal));
+    shopModal?.querySelector('.admin-official-shop-dialog')?.addEventListener('click', event => event.stopPropagation());
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && shopModal && !shopModal.hidden) closeShopModal();
     });
     $('adminManagedShopForm')?.addEventListener('submit', async event => {
       event.preventDefault();
@@ -4891,6 +4912,7 @@ async function renderAdmin() {
         form.elements.cover.value = '';
         toast('បានរក្សាទុកព័ត៌មាន AURORA Computer។');
         await renderAdminManagedShop();
+        closeShopModal();
       } catch (error) {
         toast(error.message || 'មិនអាចរក្សាទុកព័ត៌មានហាងបានទេ។', 'error');
       } finally { if (button) button.disabled = false; }
