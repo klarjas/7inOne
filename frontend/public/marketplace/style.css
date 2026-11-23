@@ -3061,11 +3061,7 @@ body:has(#view-home) {
 :is(#view-home,#view-product,#view-store,#view-profile,#view-seller,#view-admin) :is(
   input,select,textarea
 )::placeholder{color:#92939F}
-:is(#view-home,#view-product,#view-store,#view-profile,#view-seller,#view-admin) :is(
-  button,.btn,.tab-button,[role="button"]
-):not(.primary):not(.btn-primary):not([class*="brand"]){
-  border-color:var(--gpt-border);
-}
+
 :is(#view-home,#view-product,#view-store,#view-profile,#view-seller,#view-admin) :is(
   .hd,.header,.topbar,.profile-tabs,.storefront-tabs,.product-tabs
 ){
