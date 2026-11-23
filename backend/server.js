@@ -1649,7 +1649,7 @@ app.post('/api/admin/products/:id/gift-image', authenticate, requireAdmin, uploa
     uploaded = await uploadToTelegram(req.file);
     const { data: saved, error: saveError } = await supabase.from('product_gift_images').upsert({ product_id: product.id, gift_key: giftKey, gift_name: giftName, file_id: uploaded.fileId, telegram_message_id: uploaded.messageId, mime_type: uploaded.mimeType, updated_at: new Date().toISOString() }, { onConflict: 'product_id,gift_key' }).select('gift_name,gift_key,file_id,mime_type').single();
     if (saveError) throw saveError;
-    if (prior?.telegram_message_id && prior.telegram_message_id !== uploaded.messageId) await deleteTelegramMessage(prior.telegram_message_id);
+    if (prior?.telegram_message_id && prior.telegram_message_id !== uploaded.messageId) { try { await deleteTelegramMessage(prior.telegram_message_id); } catch (cleanupError) { console.warn('Old gift image Telegram cleanup failed:', cleanupError.message); } }
     return res.status(201).json({ data: { gift_name: saved.gift_name, gift_key: saved.gift_key, image_url: mediaProxyUrl(saved.file_id, saved.mime_type) } });
   } catch (error) {
     if (uploaded?.messageId) await deleteTelegramMessage(uploaded.messageId);
@@ -1668,7 +1668,7 @@ app.delete('/api/admin/products/:id/gift-image', authenticate, requireAdmin, asy
   if (!prior) return res.json({ data: { reset: true } });
   const { error: deleteError } = await supabase.from('product_gift_images').delete().eq('id', prior.id);
   if (deleteError) return fail(res, 500, 'Could not reset gift image');
-  if (prior.telegram_message_id) await deleteTelegramMessage(prior.telegram_message_id);
+  if (prior.telegram_message_id) { try { await deleteTelegramMessage(prior.telegram_message_id); } catch (cleanupError) { console.warn('Reset gift image Telegram cleanup failed:', cleanupError.message); } }
   return res.json({ data: { reset: true } });
 });
 app.get('/api/products/:id', async (req, res) => {
