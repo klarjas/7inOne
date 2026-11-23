@@ -11,8 +11,21 @@ async function ask(messages, max_tokens) {
   const key = token();
   if (!key) throw new Error('AI model token is not configured.');
   const r = await fetch(URL,{method:'POST',headers:{authorization:'Bearer '+key,'content-type':'application/json'},body:JSON.stringify({model:MODEL,temperature:0.2,max_tokens,messages}),signal:AbortSignal.timeout(30000)});
-  if (!r.ok) throw new Error('AI provider HTTP '+r.status);
-  const t = (await r.json())?.choices?.[0]?.message?.content || '';
+  const bodyText = await r.text();
+  if (!r.ok) {
+    let detail = bodyText;
+    try {
+      const parsed = JSON.parse(bodyText);
+      detail = parsed?.error?.message ?? parsed?.message ?? parsed?.error ?? parsed?.detail ?? bodyText;
+      if (typeof detail !== 'string') detail = JSON.stringify(detail);
+    } catch {}
+    detail = clean(detail,700).replaceAll(key,'[REDACTED]');
+    throw new Error('AI provider HTTP '+r.status+': '+(detail || 'No error details returned.'));
+  }
+  let payload;
+  try { payload = JSON.parse(bodyText); }
+  catch { throw new Error('AI provider returned invalid JSON: '+clean(bodyText,300).replaceAll(key,'[REDACTED]')); }
+  const t = payload?.choices?.[0]?.message?.content || '';
   try { return JSON.parse(t); } catch {}
   const i=t.indexOf('{'), j=t.lastIndexOf('}');
   if(i>=0&&j>i) return JSON.parse(t.slice(i,j+1));
