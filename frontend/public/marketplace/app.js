@@ -1658,6 +1658,61 @@ function supplierCaptionSpecs(product = {}) {
   return parsed;
 }
 
+function renderProductUpgradePanel(product = {}) {
+  // Upgrade information is displayed only when explicitly supplied in structured data.
+  // Never infer RAM slots, maximum capacity, soldered memory, or replaceability from a product name.
+  const sources = [
+    product.listing_details?.specifications,
+    product.specifications,
+    product.listing_details?.upgradeability,
+    product.upgradeability
+  ].filter(source => source && typeof source === 'object' && !Array.isArray(source));
+  const values = new Map();
+  const aliases = {
+    ramtype:'ram_type', memorytype:'ram_type', ddrtype:'ram_type',
+    ramonboard:'ram_onboard', onboardram:'ram_onboard', solderedram:'ram_onboard',
+    ram slots:'ram_slots', ramslots:'ram_slots', memoryslots:'ram_slots',
+    ramslotsused:'ram_slots_used', ramslotsfree:'ram_slots_free', fre eramslots:'ram_slots_free',
+    maxram:'ram_max', maximumram:'ram_max', maxmemory:'ram_max', maximummemory:'ram_max',
+    ramupgrade:'ram_upgrade', memoryupgrade:'ram_upgrade',
+    m2slots:'ssd_slots', m2slotcount:'ssd_slots', storageslots:'ssd_slots', ssdslots:'ssd_slots',
+    freem2slots:'ssd_slots_free', storageslotsfree:'ssd_slots_free', ssdslotsfree:'ssd_slots_free',
+    storageupgrade:'ssd_upgrade', ssdupgrade:'ssd_upgrade', maxstorage:'ssd_max',
+    pcieversion:'pcie_version', satabay:'sata_bay',
+    cpuupgrade:'cpu_upgrade', cpusocket:'cpu_socket',
+    gpuupgrade:'gpu_upgrade', gputype:'gpu_type',
+    wificard:'wifi_card', wifiupgrade:'wifi_upgrade',
+    batteryreplaceable:'battery_replaceable', batteryupgrade:'battery_replaceable',
+    coolingsystem:'cooling', coolingupgrade:'cooling_upgrade', fancount:'fan_count',
+    ports:'ports', expansionports:'ports'
+  };
+  const clean = key => String(key || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  for (const source of sources) {
+    for (const [key, value] of Object.entries(source)) {
+      const canonical = aliases[clean(key)];
+      if (canonical && value != null && String(value).trim()) values.set(canonical, String(value).trim());
+    }
+  }
+  const groups = [
+    { key:'ram', title:'RAM Upgrade', icon:'package', fields:[['ram_type','ប្រភេទ RAM'],['ram_onboard','RAM ជាប់ Board'],['ram_slots','ចំនួន RAM Slot'],['ram_slots_used','Slot កំពុងប្រើ'],['ram_slots_free','Slot ទំនេរ'],['ram_max','RAM អតិបរមា'],['ram_upgrade','លទ្ធភាព Upgrade']] },
+    { key:'ssd', title:'SSD / Storage Upgrade', icon:'hard-drive', fields:[['ssd_slots','ចំនួន M.2 Slot'],['ssd_slots_free','Slot ទំនេរ'],['pcie_version','PCIe Version'],['sata_bay','SATA Bay'],['ssd_max','Storage អតិបរមា'],['ssd_upgrade','លទ្ធភាព Upgrade']] },
+    { key:'cpu', title:'CPU Upgrade', icon:'cpu', fields:[['cpu_socket','CPU Socket'],['cpu_upgrade','លទ្ធភាព Upgrade']] },
+    { key:'gpu', title:'GPU / Graphics', icon:'monitor', fields:[['gpu_type','ប្រភេទ GPU'],['gpu_upgrade','លទ្ធភាព Upgrade']] },
+    { key:'wireless', title:'Wi-Fi Card', icon:'wifi', fields:[['wifi_card','Wi-Fi Card'],['wifi_upgrade','លទ្ធភាពប្តូរ']] },
+    { key:'battery', title:'Battery', icon:'battery-charging', fields:[['battery_replaceable','អាចប្តូរថ្មបានឬទេ']] },
+    { key:'cooling', title:'Cooling System', icon:'fan', fields:[['cooling','ប្រព័ន្ធ Cooling'],['fan_count','ចំនួន Fan'],['cooling_upgrade','ការថែទាំ / Upgrade']] },
+    { key:'ports', title:'Ports & Expansion', icon:'plug', fields:[['ports','រន្ធភ្ជាប់ / Expansion']] }
+  ];
+  const cards = groups.map(group => {
+    const present = group.fields.filter(([key]) => values.has(key));
+    if (!present.length) return '';
+    const explicitStatus = values.get(group.key === 'ram' ? 'ram_upgrade' : group.key === 'ssd' ? 'ssd_upgrade' : group.key === 'cpu' ? 'cpu_upgrade' : group.key === 'gpu' ? 'gpu_upgrade' : group.key === 'wireless' ? 'wifi_upgrade' : group.key === 'battery' ? 'battery_replaceable' : group.key === 'cooling' ? 'cooling_upgrade' : '');
+    const status = explicitStatus ? `<span class="upgrade-status">${esc(explicitStatus)}</span>` : '';
+    return `<article class="upgrade-detail-card"><header><span class="upgrade-detail-icon">${ic(group.icon,17)}</span><b>${esc(group.title)}</b>${status}</header><dl>${present.map(([key,label])=>`<div><dt>${esc(label)}</dt><dd>${esc(values.get(key))}</dd></div>`).join('')}</dl></article>`;
+  }).filter(Boolean).join('');
+  return `<aside class="product-upgrade-panel"><div class="product-upgrade-heading"><span>${ic('wrench',18)}</span><div><h3>Upgrade & Expandability</h3><p>ព័ត៌មានអំពីការបន្ថែម និងការប្តូរគ្រឿងបន្លាស់</p></div></div>${cards || '<div class="upgrade-data-empty"><b>មិនទាន់មានព័ត៌មាន Upgrade ដែលបានផ្ទៀងផ្ទាត់</b><p>ត្រូវការលេខម៉ូដែលពេញលេញ និងឯកសារបច្ចេកទេសរបស់ក្រុមហ៊ុន ដើម្បីបញ្ជាក់ RAM ជាប់ Board, Slot, SSD និងគ្រឿងបន្លាស់ដែលអាច Upgrade បាន។</p></div>'}<p class="upgrade-data-note">${ic('shield',13)} បង្ហាញតែព័ត៌មានដែលមានក្នុងទិន្នន័យបច្ចេកទេសដែលបានបញ្ជាក់ប៉ុណ្ណោះ។</p></aside>`;
+}
+
 function productDetailSpecEntries(product = {}) {
   // Technical specifications must come from explicit structured fields only.
   // Do not infer specs from the narrative description or supplier marketing copy.
@@ -2758,8 +2813,14 @@ function renderProductDetail(options = {}) {
         <article class="product-detail-description">
           <section class="product-spec-section">
             <h2>${ic('sliders', 18)} លក្ខណៈបច្ចេកទេស</h2>
-            <div class="product-spec-list">
-              ${productDetailSpecEntries(p).map(([key,value])=>`<p><strong>${esc(key)} :</strong> ${esc(value)}</p>`).join('')}
+            <div class="product-spec-layout">
+              <div class="product-spec-primary">
+                <h3>ព័ត៌មានបច្ចេកទេសសំខាន់ៗ</h3>
+                <div class="product-spec-list">
+                  ${productDetailSpecEntries(p).map(([key,value])=>`<p><strong>${esc(key)} :</strong> ${esc(value)}</p>`).join('') || '<p class="product-spec-empty">មិនទាន់មានទិន្នន័យបច្ចេកទេសដែលបានបញ្ជាក់ទេ។</p>'}
+                </div>
+              </div>
+              ${renderProductUpgradePanel(p)}
             </div>
           </section>
           <section class="product-description-copy">
