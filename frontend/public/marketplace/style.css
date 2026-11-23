@@ -8544,3 +8544,21 @@ body > footer {
 #view-product .product-spec-list { display:flex; flex-direction:column; gap:0; margin:0; padding:0; }
 #view-product .product-spec-list p { margin:0; padding:1px 0; color:#C7D5E0; font-size:12px; line-height:1.45; overflow-wrap:anywhere; }
 #view-product .product-spec-list strong { color:#E5EDF6; font-weight:750; }
+
+/* Product narrative, promotions and warranty are separate content sections. */
+#view-product .product-narrative-description { white-space:normal; }
+#view-product .product-narrative-description p { margin:0 0 10px; }
+#view-product .product-narrative-description p:last-child { margin-bottom:0; }
+#view-product .product-narrative-description ul,
+#view-product .product-promotion-section ul { margin:8px 0 0; padding-left:20px; list-style:disc; }
+#view-product .product-narrative-description li,
+#view-product .product-promotion-section li { margin:3px 0; }
+#view-product .product-promotion-section,
+#view-product .product-warranty-section { margin-top:16px; padding-top:14px; border-top:1px solid #2A475E; }
+#view-product .product-promotion-section h2,
+#view-product .product-warranty-section h2 { display:flex; align-items:center; gap:8px; margin:0; color:#E5EDF6; font-size:14px; font-weight:750; }
+#view-product .product-promotion-section h2 svg { color:#BEEE11; }
+#view-product .product-warranty-section h2 svg { color:#66C0F4; }
+#view-product .product-promotion-section ul,
+#view-product .product-warranty-section p { color:#C7D5E0; font-size:12px; line-height:1.65; }
+#view-product .product-warranty-section p { margin:7px 0 0; }
