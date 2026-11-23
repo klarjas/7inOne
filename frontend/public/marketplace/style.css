@@ -9713,3 +9713,74 @@ body > header.hd.glass { z-index: var(--z-header); }
   .mobile-market-nav { min-height: 68px; padding-bottom: calc(7px + env(safe-area-inset-bottom)); }
   #toastArea { right: 10px !important; bottom: calc(78px + env(safe-area-inset-bottom)) !important; width: min(92vw,360px) !important; }
 }
+
+
+/* Product detail readability and Steam Dark treatment for jobs / real estate */
+#view-product .product-safety-note li { font-size:13px; line-height:1.8; }
+#view-product .product-detail-id,
+#view-product .product-detail-id code { font-size:12px; }
+#view-product .product-meta-item { font-size:12px; }
+#view-product .marketplace-listing-detail-page {
+ width:100%;max-width:1440px;margin:0 auto;padding:clamp(14px,2vw,26px);
+ border:1px solid #2A475E;border-radius:20px;background:linear-gradient(145deg,#172535 0%,#111C29 100%);
+ color:#C7D5E0;box-shadow:0 14px 36px rgba(0,0,0,.2);
+}
+#view-product .marketplace-listing-detail-layout { grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr);gap:clamp(18px,2.2vw,32px);align-items:start; }
+#view-product .marketplace-listing-detail-media .product-gallery-stage,
+#view-product .marketplace-listing-detail-media .marketplace-detail-image,
+#view-product .marketplace-listing-detail-media .marketplace-detail-image-placeholder { border:1px solid #2A475E;border-radius:16px;background:#101822;color:#8F98A0; }
+#view-product .marketplace-listing-detail-media .product-gallery-stage { min-height:300px;overflow:hidden; }
+#view-product .marketplace-listing-detail-media .marketplace-detail-image { max-height:620px;aspect-ratio:4/3;object-fit:contain; }
+#view-product .marketplace-listing-detail-media .product-gallery-thumbs { display:flex;flex-wrap:wrap;gap:9px; }
+#view-product .marketplace-listing-detail-media .product-gallery-thumb { width:76px;height:76px;padding:3px;border:1px solid #2A475E;border-radius:10px;background:#101822; }
+#view-product .marketplace-listing-detail-media .product-gallery-thumb.active,
+#view-product .marketplace-listing-detail-media .product-gallery-thumb:hover { border-color:#66C0F4; }
+#view-product .marketplace-listing-detail-info { min-width:0;padding:0;color:#C7D5E0; }
+#view-product .marketplace-listing-detail-info .product-category-badge { border:1px solid #2A475E;background:#16202D;color:#66C0F4; }
+#view-product .marketplace-listing-detail-info .product-meta-item,
+#view-product .marketplace-listing-detail-info .marketplace-detail-location { color:#AAB8C7; }
+#view-product .marketplace-listing-detail-info .product-facts-list { display:grid;gap:10px;margin:16px 0;padding:0;list-style:none; }
+#view-product .marketplace-listing-detail-info .product-facts-list li { padding:13px 15px;border:1px solid #2A475E;border-radius:12px;background:rgba(16,24,34,.78);color:#C7D5E0; }
+#view-product .marketplace-listing-detail-info .product-facts-list li>span { display:block;margin-bottom:5px;color:#8F98A0;font-size:12px; }
+#view-product .marketplace-listing-detail-info .product-detail-title { color:#F0F6FC; }
+#view-product .marketplace-listing-detail-info .product-facts-price { color:#BEEE11; }
+#view-product .marketplace-listing-detail-info .product-facts-list strong { color:#E6EDF3; }
+#view-product .marketplace-listing-detail-info .listing-poster-detail,
+#view-product .marketplace-listing-detail-info .product-detail-description,
+#view-product .marketplace-listing-detail-info .product-spec-grid>div { border-color:#2A475E;background:#16202D;color:#C7D5E0; }
+#view-product .marketplace-listing-detail-info .listing-poster-detail { display:flex;align-items:center;gap:12px;padding:14px;border:1px solid #2A475E;border-radius:14px; }
+#view-product .marketplace-listing-detail-info .listing-poster-detail-copy { min-width:0;flex:1; }
+#view-product .marketplace-listing-detail-info .listing-poster-detail-copy small,
+#view-product .marketplace-listing-detail-info .listing-poster-detail-copy time { color:#8F98A0; }
+#view-product .marketplace-listing-detail-info .listing-poster-detail-copy b { color:#F0F6FC; }
+#view-product .marketplace-listing-detail-info .listing-poster-chat,
+#view-product .marketplace-listing-detail-info .detail-bottom-actions button,
+#view-product .listing-mobile-save { border:1px solid #2A475E;border-radius:10px;background:#101822;color:#C7D5E0; }
+#view-product .marketplace-listing-detail-info .listing-poster-chat:hover,
+#view-product .marketplace-listing-detail-info .detail-bottom-actions button:hover,
+#view-product .listing-mobile-save:hover { border-color:#66C0F4;background:#1B2B3C;color:#66C0F4; }
+#view-product .marketplace-listing-detail-info .product-detail-description h2,
+#view-product .marketplace-listing-detail-info .product-spec-grid b { color:#E6EDF3; }
+#view-product .marketplace-listing-detail-info .product-detail-description p,
+#view-product .marketplace-listing-detail-info .product-spec-grid small { color:#AAB8C7; }
+#view-product .marketplace-listing-detail-info .product-spec-grid>div { border:1px solid #2A475E;border-radius:10px; }
+#view-product .marketplace-listing-detail-info .detail-map-frame { overflow:hidden;border:1px solid #2A475E;border-radius:12px;background:#101822; }
+#view-product .marketplace-listing-detail-page .listing-mobile-actions { display:none; }
+@media(max-width:760px) {
+ #view-product .marketplace-listing-detail-page { padding:12px 10px 108px;border-radius:15px; }
+ #view-product .marketplace-listing-detail-layout { grid-template-columns:minmax(0,1fr);gap:16px; }
+ #view-product .marketplace-listing-detail-media .product-gallery-stage { min-height:220px; }
+ #view-product .marketplace-listing-detail-media .marketplace-detail-image { max-height:440px; }
+ #view-product .marketplace-listing-detail-page .listing-mobile-actions {
+  position:fixed;z-index:120;right:0;bottom:0;left:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;
+  padding:10px max(12px,env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));
+  border-top:1px solid #2A475E;background:rgba(16,24,34,.96);box-shadow:0 -10px 28px rgba(0,0,0,.28);
+  -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
+ }
+ #view-product .marketplace-listing-detail-page .listing-mobile-actions button {
+  display:inline-flex;min-height:46px;align-items:center;justify-content:center;gap:8px;
+  border:1px solid #2A475E;border-radius:11px;background:#16202D;color:#C7D5E0;font-size:13px;font-weight:750;
+ }
+ #view-product .marketplace-listing-detail-page .listing-mobile-actions .listing-mobile-chat { border-color:#2A475E;background:#1B2B3C;color:#66C0F4; }
+ #view-product .marketplace-listing-detail-page .listing-mobile-actions .listing-mobile-save.is-saved { border-color:#BEEE11;color:#BEEE11; }
+}

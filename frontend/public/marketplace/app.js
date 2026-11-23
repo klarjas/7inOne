@@ -36,6 +36,7 @@ const ICON_PATHS = {
   eye: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>',
   star: '<path d="m12 3 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9Z"/>',
   send: '<path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>',
+  share: '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.7 10.7 6.6-4.4m-6.6 7 6.6 4.4"/>',
   store: '<path d="M3 10h18l-1 11H4L3 10Z"/><path d="m3 10 2-7h14l2 7M8 10v3m8-3v3"/>',
   wallet: '<path d="M4 6h15a2 2 0 0 1 2 2v11H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14"/><path d="M21 11h-5a2 2 0 0 0 0 4h5"/>',
   file: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h8"/>',
@@ -2379,7 +2380,7 @@ function renderProductDetailLocation(item) {
     </div>
     <div class="detail-map-frame">
       ${embedUrl ? `<iframe src="${esc(embedUrl)}" title="ផែនទីទីតាំងផលិតផល" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen style="background:#16202D"></iframe>` : ''}
-      ${embedUrl ? `<button type="button" class="detail-map-open" data-detail-action="map" data-map-url="${esc(embedUrl)}">មើលផែនទី</button>` : ''}
+      ${embedUrl && rawUrl ? `<button type="button" class="detail-map-open" data-detail-action="map" data-map-url="${esc(rawUrl)}">មើលផែនទី</button>` : ''}
     </div>
   </section>`;
 }
@@ -2399,12 +2400,21 @@ function bindListingDetailActions(root, item) {
     }
     if (!requireLogin()) return;
     if (action === 'save') {
-      button.disabled = true;
+      const saveButtons = [...root.querySelectorAll('[data-detail-action="save"]')];
+      saveButtons.forEach(node => { node.disabled = true; });
       try {
         const result = await api('/api/listing-saves', {method:'POST',body:JSON.stringify({listing_type:item.listing_type,id:item.id})});
-        if (result.data?.saved) { button.classList.add('is-saved'); button.querySelector('span').textContent='បានរក្សាទុក'; toast('បានរក្សាទុកប្រកាស!'); }
+        if (typeof result.data?.saved === 'boolean') {
+          saveButtons.forEach(node => {
+            node.classList.toggle('is-saved', result.data.saved);
+            node.setAttribute('aria-pressed', String(result.data.saved));
+            const label = node.querySelector('span');
+            if (label) label.textContent = result.data.saved ? 'បានរក្សាទុក' : 'រក្សាទុក';
+          });
+          toast(result.data.saved ? 'បានរក្សាទុកប្រកាស!' : 'បានដកចេញពីប្រកាសដែលបានរក្សាទុក។');
+        }
       } catch (error) { toast(error.message || 'មិនអាចរក្សាទុកបានទេ។','error'); }
-      finally { button.disabled = false; }
+      finally { saveButtons.forEach(node => { node.disabled = false; }); }
       return;
     }
     if (action === 'report') {
@@ -2486,10 +2496,10 @@ function renderMarketplaceListingInProductDetail(item, options = {}) {
     ? `<div class="product-gallery-stage"><img class="product-listing-main-image" src="${esc(gallery[0])}" alt="${esc(item.title)}"></div>${gallery.length > 1 ? `<div class="product-gallery-thumbs">${gallery.map((url,index)=>`<button type="button" class="product-gallery-thumb ${index===0?'active':''}" data-shared-listing-image="${index}"><img src="${esc(url)}" alt="រូបភាព ${index+1}" loading="lazy"></button>`).join('')}</div>` : ''}`
     : `<div class="product-gallery-stage">${ic('image',48)}</div>`;
   renderProductDetailMarkup(root, `
-    <div class="product-detail-page">
-      <section class="product-hero-grid">
-        <div class="product-detail-gallery">${imageHtml}${listingVideoButton(item)}</div>
-        <div class="product-detail-info">
+    <div class="product-detail-page marketplace-listing-detail-page">
+      <section class="product-hero-grid marketplace-listing-detail-layout">
+        <div class="product-detail-gallery marketplace-listing-detail-media">${imageHtml}${listingVideoButton(item)}</div>
+        <div class="product-detail-info marketplace-listing-detail-info">
           <div class="product-top-meta">
             <span class="product-category-badge">${label}</span>
             <span class="product-meta-item">${ic('clock',14)} ${item.created_at ? timeAgoKm(item.created_at) : ''}</span>
@@ -2514,9 +2524,13 @@ function renderMarketplaceListingInProductDetail(item, options = {}) {
           <p class="product-meta-item">${esc(item.contact_phone || item.phone || '')}</p>
         </div>
       </section>
+      <div class="product-mobile-actions listing-mobile-actions" aria-label="សកម្មភាពប្រកាស">
+        <button type="button" class="listing-mobile-chat" data-listing-chat>${ic('chat',16)}<span>ឆាត</span></button>
+        <button type="button" class="listing-mobile-save" data-detail-action="save">${ic('bookmark',16)}<span>រក្សាទុក</span></button>
+      </div>
     </div>`, options);
   bindListingDetailActions(root, item);
-  root.querySelector('[data-listing-chat]')?.addEventListener('click', () => { void startListingPosterChat(item); });
+  root.querySelectorAll('[data-listing-chat]').forEach(button => button.addEventListener('click', () => { void startListingPosterChat(item); }));
   root.querySelectorAll('[data-shared-listing-image]').forEach(button => button.addEventListener('click', () => {
     const index = Number(button.dataset.sharedListingImage);
     if (!gallery[index]) return;
@@ -2530,13 +2544,23 @@ function renderMarketplaceListingInProductDetail(item, options = {}) {
 function renderProductDetail(options = {}) {
   const root = $('productDetail');
   const p = state.currentProduct;
-  const v = state.currentVendor;
+  const vendorRecord = state.currentVendor || p?.vendors || p?.vendor || {};
   if (!p) return;
   if (p.listing_type === 'job' || p.listing_type === 'real_estate') {
     renderMarketplaceListingInProductDetail(p, options);
     return;
   }
-  if (!v) return;
+  const v = {
+    id: vendorRecord.id || p.vendor_id || null,
+    store_name: vendorRecord.store_name || p.store_name || 'ហាងអ្នកលក់',
+    store_logo_url: vendorRecord.store_logo_url || vendorRecord.logo_url || p.store_logo_url || null,
+    status: vendorRecord.status || p.vendor_status || 'pending',
+    active_listings: Number(vendorRecord.active_listings || 0),
+    total_views: Number(vendorRecord.total_views || 0),
+    review_count: Number(vendorRecord.review_count || 0),
+    rating: Number(vendorRecord.rating || 0),
+    reviews: Array.isArray(vendorRecord.reviews) ? vendorRecord.reviews : []
+  };
 
   const descriptions = productDescriptionParts(p);
   const images = (p.product_images || []).filter((i) => i.image_url);
@@ -2795,7 +2819,7 @@ function renderProductDetail(options = {}) {
   $('productDetail').querySelectorAll('[data-product-action]').forEach((btn) => {
     btn.addEventListener('click', () => {
       const kind = btn.dataset.productAction;
-      if (kind === 'store') void openStorefront(v.id);
+      if (kind === 'store' && v.id) void openStorefront(v.id);
       if (kind === 'buy') openCheckout(p);
       if (kind === 'save') Promise.resolve(saveAction(p.id, btn)).finally(renderSteamDiscoveryHub);
       if (kind === 'offer') {
@@ -3205,32 +3229,43 @@ function handleStorefrontAction(event) {
    10. Profile, Orders & Saved Items
    -------------------------------------------------------------------------- */
 
+function syncProductDetailSaveButtons(productId, isSaved) {
+  const root = $('productDetail');
+  if (!root || String(state.currentProduct?.id || '') !== String(productId)) return;
+  root.querySelectorAll('[data-product-action="save"]').forEach(node => {
+    node.classList.toggle('is-saved', Boolean(isSaved));
+    node.classList.toggle('saved', Boolean(isSaved));
+    node.setAttribute('aria-pressed', String(Boolean(isSaved)));
+    const label = node.querySelector('span');
+    if (label) label.textContent = isSaved ? 'បានរក្សាទុក' : 'រក្សាទុក';
+    if (node.classList.contains('product-gallery-save')) {
+      node.setAttribute('aria-label', isSaved ? 'ដកចេញពីទំនិញដែលបានរក្សាទុក' : 'រក្សាទុករូបភាព');
+      node.setAttribute('title', isSaved ? 'បានរក្សាទុក' : 'រក្សាទុក');
+    }
+  });
+}
+
 async function saveAction(productId, button) {
   const id = String(productId || '').trim();
   if (!id || !requireLogin()) return false;
   const wasSaved = [...state.savedIds].some(value => String(value) === id);
+  const detailRoot = $('productDetail');
+  const detailButtons = detailRoot && String(state.currentProduct?.id || '') === id
+    ? [...detailRoot.querySelectorAll('[data-product-action="save"]')]
+    : [];
   if (button) button.disabled = true;
+  detailButtons.forEach(node => { node.disabled = true; });
   try {
     if (wasSaved) {
       await api('/api/saved/' + encodeURIComponent(id), { method: 'DELETE' });
       state.savedIds = new Set([...state.savedIds].filter(value => String(value) !== id));
-      if (button) {
-        button.classList.remove('is-saved');
-        button.setAttribute('aria-pressed', 'false');
-        const label = button.querySelector('span');
-        if (label) label.textContent = 'រក្សាទុក';
-      }
+      syncProductDetailSaveButtons(id, false);
       toast('បានដកចេញពីទំនិញដែលបានរក្សាទុក។');
       return false;
     }
     await api('/api/saved/' + encodeURIComponent(id), { method: 'POST' });
     state.savedIds.add(id);
-    if (button) {
-      button.classList.add('is-saved');
-      button.setAttribute('aria-pressed', 'true');
-      const label = button.querySelector('span');
-      if (label) label.textContent = 'បានរក្សាទុក';
-    }
+    syncProductDetailSaveButtons(id, true);
     toast('បានរក្សាទុកទំនិញ!');
     return true;
   } catch (error) {
@@ -3238,6 +3273,7 @@ async function saveAction(productId, button) {
     throw error;
   } finally {
     if (button) button.disabled = false;
+    detailButtons.forEach(node => { node.disabled = false; });
   }
 }
 async function loadSaved() {
