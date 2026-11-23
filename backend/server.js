@@ -1043,7 +1043,7 @@ async function cleanupExpiredProducts(){
   if(productCleanupPromise)return productCleanupPromise;
   productCleanupPromise=(async()=>{
     const cutoff=new Date(Date.now()-PRODUCT_AUTO_DELETE_AGE_MS).toISOString();
-    const {data:stale,error}=await supabase.from('products').select('id,status,product_images(id,telegram_message_id)').lt('renewed_at',cutoff).neq('status','archived').limit(200);
+    const {data:stale,error}=await supabase.from('products').select('id,status,product_images(id,telegram_message_id),product_gift_images(telegram_message_id)').lt('renewed_at',cutoff).neq('status','archived').limit(200);
     if(error){console.error('Product lifecycle cleanup failed:',error.message);return {deleted:0,archived:0,error:error.message}}
     let deleted=0,archived=0;
     for(const product of stale||[]){
@@ -1057,7 +1057,7 @@ async function cleanupExpiredProducts(){
       const {error:deleteError}=await supabase.from('products').delete().eq('id',product.id);
       if(deleteError){console.warn('Could not delete expired product:',product.id,deleteError.message);continue}
       deleted++;
-      for(const image of product.product_images||[])if(image.telegram_message_id)await deleteTelegramMessage(image.telegram_message_id);
+      for(const image of product.product_images||[])if(image.telegram_message_id)await deleteTelegramMessage(image.telegram_message_id);\n      for(const giftImage of product.product_gift_images||[])if(giftImage.telegram_message_id)await deleteTelegramMessage(giftImage.telegram_message_id);
     }
     if(deleted||archived)console.log('Product lifecycle cleanup:',{deleted,archived});
     return {deleted,archived};
@@ -2802,7 +2802,7 @@ app.patch('/api/products/:id', authenticate, async (req, res) => {
 });
 app.delete('/api/products/:id', authenticate, async (req, res) => {
   const [{ data: vendor }, admin] = await Promise.all([vendorFor(req.user.id), isAdmin(req.user.id)]);
-  const { data: product } = await supabase.from('products').select('id,vendor_id,product_images(id,telegram_message_id)').eq('id', req.params.id).maybeSingle();
+  const { data: product } = await supabase.from('products').select('id,vendor_id,product_images(id,telegram_message_id),product_gift_images(telegram_message_id)').eq('id', req.params.id).maybeSingle();
   if (!product) return fail(res, 404, 'Product not found');
   if (!admin && (!vendor || vendor.status === 'blocked' || product.vendor_id !== vendor.id)) return fail(res, 403, 'Active store ownership required');
   const { count: soldCount } = await supabase.from('order_items').select('id', { count: 'exact', head: true }).eq('product_id', product.id);
@@ -2813,7 +2813,7 @@ app.delete('/api/products/:id', authenticate, async (req, res) => {
   }
   const { error } = await supabase.from('products').delete().eq('id', product.id);
   if (error) return fail(res, 500, 'Could not delete product');
-  for (const img of product.product_images || []) await deleteTelegramMessage(img.telegram_message_id);
+  for (const img of product.product_images || []) await deleteTelegramMessage(img.telegram_message_id);\n  for (const giftImage of product.product_gift_images || []) await deleteTelegramMessage(giftImage.telegram_message_id);
   res.json({ success: true, archived: false });
 });
 app.post('/api/products/:id/images', authenticate, upload.array('images', 10), async (req, res) => {
