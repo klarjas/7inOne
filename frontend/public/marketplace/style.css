@@ -8627,7 +8627,7 @@ body > footer {
 
 
 /* Compact inline product gifts: product icon + name, separated by plus signs. */
-#view-product .product-short-gift-card {
+#view-product .product-detail-page:has(.product-primary-actions) .product-short-gift-card {
   grid-column: 1 / -1;
   min-width: 0;
   margin-top: 14px;
@@ -8637,7 +8637,7 @@ body > footer {
   background: transparent;
   color: #D7EBA0;
 }
-#view-product .product-short-gift-card h3 {
+#view-product .product-detail-page:has(.product-primary-actions) .product-short-gift-card h3 {
   display: flex;
   align-items: center;
   gap: 7px;
@@ -8646,7 +8646,7 @@ body > footer {
   font-size: 12px;
   font-weight: 750;
 }
-#view-product .product-short-gift-card h3 svg {
+#view-product .product-detail-page:has(.product-primary-actions) .product-short-gift-card h3 svg {
   flex: 0 0 auto;
   color: #BEEE11;
 }
@@ -8693,7 +8693,7 @@ body > footer {
   height: 13px;
 }
 @media (max-width: 639px) {
-  #view-product .product-short-gift-card { margin-top: 12px; }
+  #view-product .product-detail-page:has(.product-primary-actions) .product-short-gift-card { margin-top: 12px; }
   #view-product .product-gift-flow { column-gap: 7px; row-gap: 7px; }
   #view-product .product-gift-name { font-size: 12px; }
   #view-product .product-gift-icon { width: 19px; height: 19px; }
