@@ -3851,7 +3851,7 @@ function extractCcSupplierProducts(html, baseUrl) {
       imagePathText = decodeURIComponent(pathParts.slice(-3).join(' ')).replace(/[-_]+/g, ' ');
       imageTitle = decodeURIComponent(pathParts[pathParts.length - 1] || '').replace(/\.(?:jpe?g|png|webp|gif)$/i, '').replace(/[-_]+/g, ' ').replace(/\s+/g, ' ').trim();
     } catch {}
-    const brandPattern = /asus|vivobook|expertbook|zenbook|tuf|rog|msi|acer|lenovo|dell|hp|macbook|logitech|razer|corsair|microsoft|steelseries|hyperx|jbl|samsung|kingston|crucial|western digital|wd\b|seagate|tp link|tplink/i;
+    const brandPattern = /asus|proart|vivobook|expertbook|zenbook|tuf|rog|msi|acer|lenovo|dell|hp|macbook|logitech|razer|corsair|microsoft|steelseries|hyperx|jbl|samsung|kingston|crucial|western digital|wd\b|seagate|tp link|tplink/i;
     const brandFromPath = imagePathText.match(/\b(logitech|razer|corsair|microsoft|steelseries|hyperx|asus|acer|lenovo|dell|hp|msi|samsung|kingston|jbl)\b/i)?.[1] || '';
     const imageTitleWords = imageTitle.split(/\s+/).filter(Boolean);
     const variantNoise = new Set(['wireless','keyboard','mouse','combo','keys','key','plus','for','with','and','pebble','wave','pop','icon','comfort']);
@@ -3892,6 +3892,7 @@ function extractCcSupplierProducts(html, baseUrl) {
     else if (/\b(mouse|mice)\b/i.test(productTypeSearch)) { category = 'computer_accessories'; subcategory = 'mouse'; detailType = 'Mouse'; }
     else if (/\b(charger|power adapter|ac adapter)\b/i.test(titleSearch)) { category = 'computer_accessories'; subcategory = 'charger'; detailType = 'Charger'; }
     else if (/\b(cable|usb hub|adapter|dongle)\b/i.test(titleSearch)) { category = 'computer_accessories'; subcategory = 'cable_adapter'; detailType = 'Cable / Adapter'; }
+    else if (/\b(tablet|proart\s+pz14)\b/i.test(identitySearch) || (/\bsoft keyboard\b/i.test(text) && /\b\d{1,2}(?:\.\d)?[- ]?inch\b/i.test(text))) { subcategory = 'tablet'; detailType = 'Tablet'; }
     else if (/\b(laptop|notebook|vivobook|expertbook|zenbook|macbook|thinkpad|rog|strix)\b/i.test(identitySearch) || hasLaptopSpecs) { subcategory = 'laptop'; detailType = 'Laptop'; }
     else if (/\b(all[- ]in[- ]one|aio)\b/i.test(identitySearch)) { subcategory = 'all_in_one'; detailType = 'All-in-One'; }
     else if (/\b(desktop|tower|mini pc|mini computer)\b/i.test(identitySearch)) { subcategory = 'desktop'; detailType = 'Desktop'; }
