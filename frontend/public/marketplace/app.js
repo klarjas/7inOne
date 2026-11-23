@@ -4626,6 +4626,9 @@ async function renderSupplierUpdateReviews() {
   }
 }
 
+let adminAuroraTab = 'published';
+const adminAuroraPages = { published: 1, scanned: 1 };
+
 async function renderAdminSupplierProducts() {
   const target = $('adminSupplierProductsList');
   if (!target || !isAdmin()) return;
@@ -4636,23 +4639,36 @@ async function renderAdminSupplierProducts() {
     void renderSupplierUpdateReviews();
     void renderAdminGalleryCandidates();
     const term = String($('adminSupplierSearch')?.value || '').trim().toLowerCase();
-    const products = state.adminSupplierProducts.filter(p => {
-      const aurora = String(p.vendors?.store_name || '').trim().toLowerCase() === 'aurora computer';
-      return aurora && (!term || [p.title,p.category,p.supplier_source?.supplier_name].join(' ').toLowerCase().includes(term));
-    });
-    const groups = new Map();
-    products.forEach(p => { const name=auroraProductGroup(p); if(!groups.has(name))groups.set(name,[]); groups.get(name).push(p); });
-    const labels={active:'បង្ហាញ',pending:'រង់ចាំ',rejected:'បដិសេធ',archived:'បានលាក់',sold:'លក់រួច'};
-    target.innerHTML = products.length ? Array.from(groups.entries()).map(([name,items]) =>
-      '<section class="admin-aurora-group"><header><strong>'+esc(name)+'</strong><span>'+items.length+' ផលិតផល</span></header><div class="admin-aurora-list">'+
-      items.map(p => {
+    const allAurora = state.adminSupplierProducts.filter(p =>
+      String(p.vendors?.store_name || '').trim().toLowerCase() === 'aurora computer'
+    );
+    const published = allAurora.filter(p => p.status === 'active');
+    const scanned = allAurora.filter(p => p.status === 'pending');
+    const source = adminAuroraTab === 'published' ? published : scanned;
+    const filtered = source.filter(p => !term || [p.title,p.category,p.supplier_source?.supplier_name,p.supplier_source?.supplier_product_code].join(' ').toLowerCase().includes(term));
+    const pageSize = 10;
+    const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
+    adminAuroraPages[adminAuroraTab] = Math.min(Math.max(1, adminAuroraPages[adminAuroraTab] || 1), pageCount);
+    const page = adminAuroraPages[adminAuroraTab];
+    const pageItems = filtered.slice((page - 1) * pageSize, page * pageSize);
+    const labels={active:'បានផុស',pending:'រង់ចាំ Admin',rejected:'បដិសេធ',archived:'បានលាក់',sold:'លក់រួច'};
+    const selectedIds = new Set();
+    target.innerHTML =
+      '<div class="admin-aurora-list-toolbar"><span>បង្ហាញ '+(filtered.length ? ((page-1)*pageSize+1)+'–'+Math.min(page*pageSize,filtered.length) : '0')+' ក្នុង '+filtered.length+' ផលិតផល</span>'+
+      (adminAuroraTab === 'scanned' ? '<div class="admin-aurora-bulk-tools"><label><input type="checkbox" data-aurora-select-page> ជ្រើសរើសទាំង ១០</label><button type="button" class="admin-aurora-publish-link" data-aurora-publish-selected><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0L7 9m5-5 5 5M5 14v5h14v-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg> ផុសផលិតផលដែលបានជ្រើស</button></div>' : '')+
+      '</div>'+
+      (pageItems.length ? '<div class="admin-aurora-list">'+pageItems.map(p=>{
         const image=productImage(p);
         return '<article class="admin-aurora-row" data-admin-aurora-edit="'+esc(p.id)+'" tabindex="0" role="button">'+
+          (adminAuroraTab === 'scanned' ? '<label class="admin-aurora-select" aria-label="ជ្រើសរើស '+esc(p.title||'ផលិតផល')+'"><input type="checkbox" data-aurora-product-select="'+esc(p.id)+'"></label>' : '')+
           '<div class="admin-aurora-thumb">'+(image?'<img src="'+esc(image)+'" alt="">':ic('image',24))+'</div>'+
           '<div class="admin-aurora-info"><strong>'+esc(p.title||'')+'</strong><span>'+esc(p.category==='computers'?'Computer':p.category||'Computer')+' · '+esc(p.listing_details?.detail_type||'Laptop')+' · '+esc(p.supplier_source?.supplier_product_code||'គ្មាន Product Code')+'</span></div>'+
           '<div class="admin-aurora-meta"><strong>'+money(p.price)+'</strong><span>'+(Number(p.stock)>0?'មានលក់':'អស់ស្តុក')+'</span><small class="admin-aurora-status is-'+esc(p.status||'pending')+'">'+esc(labels[p.status]||p.status||'—')+'</small></div>'+
           '<div class="admin-aurora-actions"><button type="button" class="admin-aurora-edit" data-admin-aurora-edit="'+esc(p.id)+'">'+ic('pencil',14)+' កែប្រែ</button><button type="button" class="admin-aurora-delete" data-admin-aurora-delete="'+esc(p.id)+'" aria-label="លុបផលិតផល">'+ic('trash-2',14)+' លុប</button></div></article>';
-      }).join('')+'</div></section>').join('') : '<div class="admin-aurora-empty">មិនមានផលិតផល AURORA ត្រូវនឹងការស្វែងរកទេ។</div>';
+      }).join('')+'</div>' : '<div class="admin-aurora-empty">'+(adminAuroraTab==='published'?'មិនទាន់មានផលិតផលដែលបានផុសទេ។':'មិនមានផលិតផលទើបស្កេនរង់ចាំ Admin ទេ។')+'</div>')+
+      (pageCount>1 ? '<nav class="admin-aurora-pagination" aria-label="ទំព័រផលិតផល"><span>ទំព័រ '+page+' / '+pageCount+'</span><div><button type="button" data-aurora-page="'+(page-1)+'" '+(page<=1?'disabled':'')+'>Previous</button><button type="button" data-aurora-page="'+(page+1)+'" '+(page>=pageCount?'disabled':'')+'>Next</button></div></nav>' : '');
+    const count=$('adminAuroraScannedCount'); if(count) count.textContent=String(scanned.length);
+    document.querySelectorAll('[data-aurora-tab]').forEach(button=>button.classList.toggle('is-active',button.dataset.auroraTab===adminAuroraTab));
   } catch(error) {
     target.innerHTML='<p class="py-6 text-center text-xs text-rose-500">មិនអាចផ្ទុកផលិតផល AURORA បានទេ។</p>';
     toast(error.message||'មិនអាចផ្ទុកផលិតផលបានទេ។','error');
@@ -4673,7 +4689,7 @@ function openAdminAuroraProductEditor(productId) {
   const source=p.supplier_source||{},details=p.listing_details||{},specs=details.specifications||{};
   const images=(p.product_images||[]).filter(item=>item.image_url),variants=p.product_variants||[];
   const modal=document.createElement('div');
-  modal.id='adminAuroraProductEditModal';modal.className='admin-aurora-modal';
+  modal.id='adminAuroraProductEditModal';modal.className='admin-aurora-modal admin-aurora-drawer-overlay';
   modal.setAttribute('role','dialog');modal.setAttribute('aria-modal','true');
   const statusOptions=['active','pending','rejected','archived','sold'].map(v=>'<option value="'+v+'" '+(p.status===v?'selected':'')+'>'+({active:'បង្ហាញលើហាង',pending:'រង់ចាំ',rejected:'បដិសេធ',archived:'លាក់ផលិតផល',sold:'លក់រួច'}[v])+'</option>').join('');
   const categoryOptions=[['computers','Computer'],['computer_accessories','Computer Accessories'],['mobile','Mobile'],['mobile_accessories','Mobile Accessories'],['audio','Audio'],['networking','Networking'],['storage','Storage'],['components','Components']].map(([value,label])=>'<option value="'+value+'" '+((p.category||'computers')===value?'selected':'')+'>'+label+'</option>').join('');
@@ -7097,7 +7113,33 @@ function bindEvents() {
     if (active && !active.disabled) void updateAdminSupplierRegistry(active.dataset.supplierRegistryActive, { is_active: active.dataset.next === 'true' });
   });
   void renderAdminSupplierRegistry();
-  $('adminSupplierSearch')?.addEventListener('input',()=>void renderAdminSupplierProducts());
+  $('adminSupplierSearch')?.addEventListener('input',()=>{adminAuroraPages[adminAuroraTab]=1;void renderAdminSupplierProducts();});
+  $('adminSupplierProductsPanel')?.addEventListener('click', async event => {
+    const tab=event.target.closest('[data-aurora-tab]');
+    if(tab){adminAuroraTab=tab.dataset.auroraTab;void renderAdminSupplierProducts();return;}
+    const page=event.target.closest('[data-aurora-page]');
+    if(page&&!page.disabled){adminAuroraPages[adminAuroraTab]=Number(page.dataset.auroraPage)||1;void renderAdminSupplierProducts();return;}
+    const publish=event.target.closest('[data-aurora-publish-selected]');
+    if(publish){
+      const ids=Array.from(document.querySelectorAll('[data-aurora-product-select]:checked')).map(input=>input.dataset.auroraProductSelect);
+      if(!ids.length)return toast('សូមជ្រើសរើសផលិតផលយ៉ាងតិច ១ មុខ។','error');
+      const confirmed=await appDialog({mode:'confirm',title:'ផុសផលិតផលជាក្រុម',message:'តើអ្នកចង់ផុសផលិតផល '+ids.length+' មុខដែលបានជ្រើសរើសមែនទេ?',confirmLabel:'ផុសផលិតផល'});
+      if(!confirmed)return;
+      publish.disabled=true;
+      let succeeded=0;const failed=[];
+      for(const id of ids){
+        try{await api('/api/products/'+encodeURIComponent(id),{method:'PATCH',body:JSON.stringify({status:'active'})});succeeded++;}
+        catch(error){failed.push(error.message||id);}
+      }
+      toast('ផុសបាន '+succeeded+'/'+ids.length+' ផលិតផល'+(failed.length?' · មាន '+failed.length+' មុខមិនទាន់ផុស':''));
+      await renderAdminSupplierProducts();return;
+    }
+  });
+  $('adminSupplierProductsList')?.addEventListener('change',event=>{
+    if(event.target.matches('[data-aurora-select-page]')){
+      document.querySelectorAll('[data-aurora-product-select]').forEach(input=>input.checked=event.target.checked);
+    }
+  });
   $('adminSupplierCreateForm')?.addEventListener('submit',async event=>{
     event.preventDefault();const form=event.currentTarget,data=Object.fromEntries(new FormData(form).entries());
     try{const created=await api('/api/products',{method:'POST',body:JSON.stringify({title:data.title,category:data.category,description:data.description||'',price:Math.round((Number(data.supplier_price||0)+5)*100)/100,stock:Number(data.stock||0),location:'Cambodia',condition:'ថ្មី'})});const id=created.data?.id;if(!id)throw new Error('មិនទទួលបាន Product ID');
