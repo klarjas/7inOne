@@ -10,7 +10,7 @@ import { createClient } from '@supabase/supabase-js';
 import { registerSupportChat } from './support-chat.js';
 import { registerSellerChat } from './seller-chat.js';
 import { registerShoppingAssistant } from './shopping-assistant.js';
-import { startAnantaTrainingEngine, getAnantaTrainingStatus } from './assistant-training-engine.js';
+import { startAnantaTrainingEngine, getAnantaTrainingStatus, runAnantaTrainingNow } from './assistant-training-engine.js';
 import { registerAnantaBrainUploadRoutes } from './ananta-brain-upload.js';
 import { registerMyPostsRoutes } from './my-posts.js';
 import { researchExternalProductCategory } from './product-research.js';
@@ -5227,6 +5227,16 @@ app.patch('/api/admin/suppliers/:id', authenticate, requireAdmin, async (req, re
   if (error) { console.error('Supplier registry update failed:', error.message); return fail(res, 400, 'Could not update supplier.'); }
   if (!data) return fail(res, 404, 'Supplier was not found.');
   res.json({ data: { ...data, adapter_ready: SUPPLIER_PARSER_ADAPTERS.has(data.parser_key) } });
+});
+
+app.post('/api/admin/ananta/learning/run', authenticate, requireAdmin, async (_req, res) => {
+  if (!db(res)) return;
+  if (process.env.ANANTA_TRAINING_ENABLED === 'false') return fail(res, 409, 'ANANTA_TRAINING_ENABLED is false.');
+  if (!process.env.HF_TOKEN && !process.env.AI_API_KEY) return fail(res, 503, 'AI model token is missing. Configure HF_TOKEN or AI_API_KEY in Render Environment.');
+  const result = await runAnantaTrainingNow({ supabase, port });
+  if (!result.started) return res.status(409).json({ error: result.message, data: { runtime: getAnantaTrainingStatus() } });
+  if (!result.success) return res.status(502).json({ error: result.message, data: { runtime: getAnantaTrainingStatus() } });
+  return res.json({ data: { ...result, runtime: getAnantaTrainingStatus() } });
 });
 
 app.get('/api/admin/ananta/learning', authenticate, requireAdmin, async (_req, res) => {
