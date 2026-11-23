@@ -2574,11 +2574,15 @@ function renderProductDetail(options = {}) {
           <span class="product-category-badge">${esc(CATEGORIES[p.category] || p.category || 'ទំនិញ')}</span>
           <span class="product-meta-item">${ic('clock', 14)} ${fmtDate(p.created_at)}</span>
           <span class="product-meta-item">${ic('eye', 14)} ${Number(p.view_count || 0).toLocaleString()} Views</span>
-          <span class="product-meta-item product-detail-id"><span>Product ID</span><code>${esc(selectedVariant?.sku || displayProductCode(p))}</code><button type="button" data-copy-product-code="${esc(selectedVariant?.sku || displayProductCode(p))}" aria-label="ចម្លង Product ID" title="ចម្លង Product ID">${ic('clipboard', 12)}</button></span>
         </div>
 
         <div class="product-heading-block">
           <h1 class="product-detail-title">${esc(p.title)}</h1>
+          <div class="product-detail-id" aria-label="Product ID">
+            <span class="product-detail-id-icon" aria-hidden="true">${ic('tag', 14)}</span>
+            <code>${esc(selectedVariant?.sku || displayProductCode(p))}</code>
+            <button type="button" data-copy-product-code="${esc(selectedVariant?.sku || displayProductCode(p))}" aria-label="ចម្លង Product ID" title="ចម្លង Product ID">${ic('clipboard', 13)}</button>
+          </div>
           <div class="product-price-stock-row">
             <strong class="product-facts-price">${money(effectivePrice)}</strong>
             <span class="product-stock-badge ${stockKnown && effectiveStock <= 0 ? 'is-out' : ''}">${ic(stockKnown && effectiveStock <= 0 ? 'x' : 'checkcircle', 14)} ${stockLabel}</span>
@@ -2670,6 +2674,13 @@ function renderProductDetail(options = {}) {
 
   // Populate the adjacent details popup for product listings as well as jobs/properties.
   populateDetailsPopover(root, options);
+
+  const copyProductIdButton = $('productDetail').querySelector('[data-copy-product-code]');
+  copyProductIdButton?.addEventListener('click', event => {
+    event.preventDefault();
+    event.stopPropagation();
+    void copyProductCode(copyProductIdButton);
+  });
 
   $('productDetail').querySelectorAll('[data-product-variant]').forEach(button => button.addEventListener('click', () => {
     const variant = (p.variants || []).find(item => String(item.id) === String(button.dataset.productVariant));
