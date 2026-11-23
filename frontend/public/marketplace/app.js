@@ -2320,15 +2320,25 @@ function renderProductDetailLocation(item) {
   if (!location && !rawUrl) return '';
   const embedUrl = extractGoogleMapEmbedUrl(rawUrl, location || 'Cambodia');
   return `<section class="detail-location-layout">
-    <div class="detail-location-copy">
-      <div class="detail-location-heading">${ic('pin',17)} <b>ទីតាំង</b></div>
-      <p>${esc(item.location || 'កម្ពុជា')}</p>
-      ${item.address ? `<small>${esc(item.address)}</small>` : ''}
+    <div class="detail-location-main">
+      <div class="detail-location-copy">
+        <div class="detail-location-heading">${ic('pin',17)} <b>ទីតាំង</b></div>
+        <p>${esc(item.location || 'កម្ពុជា')}</p>
+        ${item.address ? `<small>${esc(item.address)}</small>` : ''}
+      </div>
+      <div class="detail-map-frame">
+        ${embedUrl ? `<iframe src="${esc(embedUrl)}" title="ផែនទីទីតាំងផលិតផល" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen style="background:#16202D"></iframe>` : ''}
+        ${embedUrl && rawUrl ? `<button type="button" class="detail-map-open" data-detail-action="map" data-map-url="${esc(rawUrl)}">មើលផែនទី</button>` : ''}
+      </div>
     </div>
-    <div class="detail-map-frame">
-      ${embedUrl ? `<iframe src="${esc(embedUrl)}" title="ផែនទីទីតាំងផលិតផល" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen style="background:#16202D"></iframe>` : ''}
-      ${embedUrl && rawUrl ? `<button type="button" class="detail-map-open" data-detail-action="map" data-map-url="${esc(rawUrl)}">មើលផែនទី</button>` : ''}
-    </div>
+    <aside class="buyer-safety-card" aria-label="ការណែនាំសុវត្ថិភាពអ្នកទិញ">
+      <h3>${ic('shield',17)} ការណែនាំសុវត្ថិភាពអ្នកទិញ</h3>
+      <ul>
+        <li>${ic('checkcircle',14)} <span>ពិនិត្យទំនិញដោយផ្ទាល់ មុនពេលទូទាត់ប្រាក់</span></li>
+        <li>${ic('checkcircle',14)} <span>ស្នើសុំរូបភាព ឬព័ត៌មានបន្ថែម ប្រសិនបើមិនច្បាស់</span></li>
+        <li>${ic('alert',14)} <span>កុំផ្ញើប្រាក់ជាមុន ទៅគណនីដែលមិនអាចផ្ទៀងផ្ទាត់បាន</span></li>
+      </ul>
+    </aside>
   </section>`;
 }
 function bindListingDetailActions(root, item) {
