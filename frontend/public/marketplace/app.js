@@ -2792,12 +2792,8 @@ function renderProductDetail(options = {}) {
 
         <div>
           <div class="product-primary-actions">
-            <button type="button" class="product-buy-primary" data-product-action="buy">${ic('bag', 18)} ទិញឥឡូវនេះ</button>
-            <button type="button" class="product-save-primary" data-product-action="save" aria-pressed="${saved}">${ic('bookmark', 16)} <span>${saved ? 'បានរក្សាទុក' : 'រក្សាទុក'}</span></button>
-          </div>
-          <div class="product-utility-actions">
             <button type="button" class="product-chat-primary" data-product-action="chat">${ic('chat', 18)} ឆាតជាមួយអ្នកលក់</button>
-            <button type="button" data-product-action="offer">${ic('tag', 16)} តថ្លៃទំនិញ</button>
+            <button type="button" class="product-buy-primary" data-product-action="buy">${ic('bag', 18)} ទិញឥឡូវនេះ</button>
           </div>
         </div>
 
@@ -2877,7 +2873,6 @@ function renderProductDetail(options = {}) {
 
     <div class="product-mobile-actions">
       <button type="button" data-product-action="chat">${ic('chat', 16)}<span>ឆាត</span></button>
-      <button type="button" data-product-action="offer">${ic('tag', 16)}<span>តថ្លៃ</span></button>
       <button type="button" class="brand-gradient" data-product-action="buy">${ic('bag', 16)}<span>ទិញឥឡូវនេះ</span></button>
     </div>
   </div>`, options);
