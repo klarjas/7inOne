@@ -5153,6 +5153,9 @@ function loadYouTubeIframeApi() {
       document.head.appendChild(script);
     }
   }).catch(error => {
+    if (!window.YT?.Player) {
+      document.querySelector('script[src="https://www.youtube.com/iframe_api"]')?.remove();
+    }
     listingVideoApiPromise = null;
     throw error;
   });
