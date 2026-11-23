@@ -4572,6 +4572,38 @@ function renderSupplierImportResults(result, catalogUrl) {
     (page.has_more ? '<div class="pt-3 text-center"><button type="button" class="rounded-full border border-slate-300 px-5 py-2.5 text-[11px] font-bold" data-supplier-import-next="'+Number(page.next_offset||0)+'">បង្ហាញផលិតផល ១០ ម៉ូដែលបន្ទាប់</button></div>' : '');
   target.dataset.catalogUrl = catalogUrl;
 }
+async function renderAdminSupplierRegistry() {
+  const target = $('adminSupplierRegistryList');
+  if (!target || !isAdmin()) return;
+  try {
+    const result = await api('/api/admin/suppliers');
+    const suppliers = result.data || [];
+    target.innerHTML = suppliers.length ? suppliers.map(item => {
+      const ready = item.adapter_ready === true;
+      const status = !item.is_verified ? 'មិនទាន់ផ្ទៀងផ្ទាត់' : !ready ? 'Domain ផ្ទៀងផ្ទាត់រួច · Adapter មិនទាន់រួច' : item.is_active ? 'សកម្ម' : 'បានផ្ទៀងផ្ទាត់ · បិទ Scanner';
+      const tone = item.is_active ? 'text-emerald-700 bg-emerald-50' : 'text-amber-700 bg-amber-50';
+      return '<article class="rounded-xl border border-slate-200 bg-white p-3">' +
+        '<div class="flex flex-wrap items-start justify-between gap-2"><div class="min-w-0"><b class="block text-[11px]">' + esc(item.supplier_name) + '</b>' +
+        '<p class="mt-1 break-all text-[10px] text-slate-500">' + esc(item.base_url) + '</p><p class="mt-1 text-[9px] text-slate-400">Adapter: ' + esc(item.parser_key) + ' · Domain: ' + esc((item.allowed_domains || []).join(', ')) + '</p></div>' +
+        '<span class="rounded-full px-2 py-1 text-[9px] font-bold ' + tone + '">' + status + '</span></div>' +
+        '<div class="mt-3 flex flex-wrap gap-2">' +
+        '<button type="button" data-supplier-registry-verify="' + esc(item.id) + '" data-next="' + (!item.is_verified) + '" class="rounded-full border border-slate-300 px-3 py-1.5 text-[10px] font-bold">' + (item.is_verified ? 'ដកការផ្ទៀងផ្ទាត់' : 'ផ្ទៀងផ្ទាត់ Domain') + '</button>' +
+        '<button type="button" data-supplier-registry-active="' + esc(item.id) + '" data-next="' + (!item.is_active) + '" ' + (!ready || !item.is_verified ? 'disabled' : '') + ' class="rounded-full border border-slate-300 px-3 py-1.5 text-[10px] font-bold disabled:cursor-not-allowed disabled:opacity-40">' + (item.is_active ? 'បិទ Scanner' : 'បើក Scanner') + '</button>' +
+        '</div></article>';
+    }).join('') : '<p class="text-[10px] text-slate-400">មិនទាន់មាន Supplier ទេ។</p>';
+  } catch (error) {
+    target.innerHTML = '<p class="text-[10px] text-rose-600">' + esc(error.message || 'មិនអាចផ្ទុក Supplier Registry បានទេ។') + '</p>';
+  }
+}
+async function updateAdminSupplierRegistry(id, payload) {
+  try {
+    await api('/api/admin/suppliers/' + encodeURIComponent(id), { method: 'PATCH', body: JSON.stringify(payload) });
+    toast('បានរក្សាទុក Supplier Registry។');
+    await renderAdminSupplierRegistry();
+  } catch (error) {
+    toast(error.message || 'មិនអាចកែប្រែ Supplier បានទេ។', 'error');
+  }
+}
 async function scanAuroraSupplierCatalog(url, offset = 0) {
   const target = $('adminSupplierImportResults');
   if (target) target.innerHTML = '<p class="py-5 text-center text-xs text-slate-500">កំពុងស្កេន និងផ្ទៀងផ្ទាត់ទិន្នន័យពី Supplier...</p>';
@@ -7107,7 +7139,29 @@ function bindEvents() {
     }
   });
 
-  $('adminSupplierRefresh')?.addEventListener('click',()=>void renderAdminSupplierProducts());
+  $('adminSupplierRefresh')?.addEventListener('click',()=>{void renderAdminSupplierProducts();void renderAdminSupplierRegistry();});
+  $('adminSupplierRegistryForm')?.addEventListener('submit', async event => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const data = Object.fromEntries(new FormData(form).entries());
+    const message = $('adminSupplierRegistryMessage');
+    if (message) message.textContent = 'កំពុងរក្សាទុក Supplier...';
+    try {
+      await api('/api/admin/suppliers', { method: 'POST', body: JSON.stringify(data) });
+      form.reset();
+      if (message) message.textContent = 'បានបន្ថែម Supplier។ Domain ត្រូវផ្ទៀងផ្ទាត់ ហើយ Adapter ត្រូវរួចរាល់ មុនបើក Scanner។';
+      await renderAdminSupplierRegistry();
+    } catch (error) {
+      if (message) message.textContent = error.message || 'មិនអាចបន្ថែម Supplier បានទេ។';
+    }
+  });
+  $('adminSupplierRegistryList')?.addEventListener('click', event => {
+    const verify = event.target.closest('[data-supplier-registry-verify]');
+    if (verify) return void updateAdminSupplierRegistry(verify.dataset.supplierRegistryVerify, { is_verified: verify.dataset.next === 'true' });
+    const active = event.target.closest('[data-supplier-registry-active]');
+    if (active && !active.disabled) void updateAdminSupplierRegistry(active.dataset.supplierRegistryActive, { is_active: active.dataset.next === 'true' });
+  });
+  void renderAdminSupplierRegistry();
   $('adminSupplierSearch')?.addEventListener('input',()=>void renderAdminSupplierProducts());
   $('adminSupplierCreateForm')?.addEventListener('submit',async event=>{
     event.preventDefault();const form=event.currentTarget,data=Object.fromEntries(new FormData(form).entries());
