@@ -122,7 +122,13 @@ echo ==================================================
 echo.
 
 start "7inOne GitHub Auto-Sync" cmd /k ""%~dp0START-AUTO-SYNC.bat""
-start "7inOne Cloudflare Tunnel" cmd /k cloudflared tunnel --url http://localhost:10000
+where cloudflared >nul 2>nul
+if errorlevel 1 (
+  echo [WARNING] Cloudflare Tunnel is not available in this CMD.
+  echo Local development will continue. Reopen CMD after installation if needed.
+) else (
+  start "7inOne Cloudflare Tunnel" cmd /k cloudflared tunnel --url http://localhost:10000
+)
 call "%~dp0START-LOCAL.bat"
 exit /b 0
 
