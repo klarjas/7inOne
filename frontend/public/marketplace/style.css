@@ -9294,3 +9294,102 @@ body>footer{
     margin: 0;
   }
 }
+
+
+/* --------------------------------------------------------------------------
+   7inOne · Unified Steam Dark Glass Header
+   Scope: header surface, duplicate primary navigation, search and header actions.
+   -------------------------------------------------------------------------- */
+body > header.hd.glass {
+  background: rgba(22, 32, 45, 0.82);
+  border-bottom: 1px solid rgba(102, 192, 244, 0.16);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.22);
+  -webkit-backdrop-filter: saturate(140%) blur(18px);
+  backdrop-filter: saturate(140%) blur(18px);
+}
+
+/* Keep the header uncluttered; the duplicate primary links are hidden. */
+.header-primary-nav {
+  display: none !important;
+}
+
+/* Search field and its action button share one compact glass surface. */
+#searchForm {
+  height: 40px;
+  max-width: 520px;
+  padding: 2px 4px 2px 12px;
+  border: 1px solid rgba(102, 192, 244, 0.22);
+  border-radius: 12px;
+  background: rgba(16, 24, 34, 0.85);
+  box-shadow: none;
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+
+#searchForm:focus-within {
+  background: #101822;
+  border-color: #66C0F4;
+  box-shadow: 0 0 0 3px rgba(102, 192, 244, 0.14);
+}
+
+#searchForm #searchInput {
+  min-width: 0;
+  height: 100%;
+  background: transparent;
+  color: #C7D5E0;
+}
+
+#searchForm #searchInput::placeholder {
+  color: #8F98A0;
+  opacity: 1;
+}
+
+#searchForm #searchBtn {
+  display: grid;
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  margin-left: 3px;
+  padding: 0;
+  border: 1px solid rgba(102, 192, 244, 0.24);
+  border-radius: 9px;
+  background: linear-gradient(135deg, #2B74B8, #316282);
+  color: #FFFFFF;
+  box-shadow: 0 3px 10px rgba(43, 116, 184, 0.2);
+}
+
+#searchForm #searchBtn:hover {
+  background: linear-gradient(135deg, #316282, #2B74B8);
+  color: #FFFFFF;
+}
+
+#postAdBtn {
+  min-height: 38px;
+  padding-inline: 16px;
+  border: 1px solid rgba(102, 192, 244, 0.32);
+  border-radius: 10px;
+  background: linear-gradient(135deg, #2B74B8, #3A89C9);
+  color: #FFFFFF;
+  box-shadow: 0 4px 14px rgba(43, 116, 184, 0.2);
+}
+
+.header-shortcuts button,
+#notificationBtn {
+  min-height: 38px;
+  border-radius: 10px;
+  color: #C7D5E0;
+  transition: background .18s ease, color .18s ease, border-color .18s ease;
+}
+
+.header-shortcuts button:hover,
+#notificationBtn:hover {
+  background: rgba(102, 192, 244, 0.12);
+  color: #66C0F4;
+}
+
+#profileMenuBtn {
+  border: 1px solid rgba(102, 192, 244, 0.2);
+  border-radius: 999px;
+  background: rgba(16, 24, 34, 0.65);
+}
