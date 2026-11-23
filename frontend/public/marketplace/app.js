@@ -1864,8 +1864,13 @@ function renderProductGiftCard(gifts = []) {
       : '';
     return item + plus;
   }).join('');
+  const animatedGiftBox = '<svg class="product-gift-heading-icon" viewBox="0 0 28 28" fill="none" aria-hidden="true">' +
+    '<path class="gift-box-body" d="M4.5 12.2h19v12h-19zM3.5 9h21v4h-21z" />' +
+    '<path class="gift-box-ribbon" d="M14 9v15M14 8.8C10.2 8.8 7.8 7.5 7.8 5.5c0-1.4 1.1-2.3 2.5-2.3 2.2 0 3.7 2.4 3.7 5.6ZM14 8.8c3.8 0 6.2-1.3 6.2-3.3 0-1.4-1.1-2.3-2.5-2.3-2.2 0-3.7 2.4-3.7 5.6Z" />' +
+    '<path class="gift-box-lid" d="M3.5 8.8 6 5.8l8 2.8 8-2.8 2.5 3" />' +
+    '</svg>';
   return '<section class="product-short-gift-card" aria-label="ថែមកាដូសម្រាប់អ្នក"><h3>' +
-    ic('gift', 16) + ' ថែមកាដូសម្រាប់អ្នក</h3><div class="product-gift-flow">' + items + '</div></section>';
+    animatedGiftBox + ' ថែមកាដូសម្រាប់អ្នក</h3><div class="product-gift-flow">' + items + '</div></section>';
 }
 function renderProductDescriptionHtml(value = '') {
   const lines = String(value || '').replace(/\r/g, '').split('\n');
