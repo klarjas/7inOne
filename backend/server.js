@@ -1633,6 +1633,44 @@ app.get('/api/products', async (req, res) => {
   res.set('Cache-Control', 'no-store');
   res.json({ data: enriched.map(publicProduct), page, limit, total: count || 0 });
 });
+app.post('/api/admin/products/:id/gift-image', authenticate, requireAdmin, upload.single('image'), async (req, res) => {
+  if (!db(res)) return;
+  const giftName = clean(req.body?.gift_name, 180);
+  if (!giftName) return fail(res, 400, 'Gift name is required');
+  const invalid = imageUploadError(req.file, 8 * 1024 * 1024);
+  if (invalid) return fail(res, 400, invalid);
+  const { data: product, error: productError } = await supabase.from('products').select('id').eq('id', req.params.id).maybeSingle();
+  if (productError || !product) return fail(res, 404, 'Product not found');
+  const giftKey = createHash('sha256').update(giftName.toLocaleLowerCase().replace(/\s+/g, ' ').trim()).digest('hex');
+  let uploaded = null;
+  try {
+    const { data: prior, error: priorError } = await supabase.from('product_gift_images').select('id,telegram_message_id').eq('product_id', product.id).eq('gift_key', giftKey).maybeSingle();
+    if (priorError) throw priorError;
+    uploaded = await uploadToTelegram(req.file);
+    const { data: saved, error: saveError } = await supabase.from('product_gift_images').upsert({ product_id: product.id, gift_key: giftKey, gift_name: giftName, file_id: uploaded.fileId, telegram_message_id: uploaded.messageId, mime_type: uploaded.mimeType, updated_at: new Date().toISOString() }, { onConflict: 'product_id,gift_key' }).select('gift_name,gift_key,file_id,mime_type').single();
+    if (saveError) throw saveError;
+    if (prior?.telegram_message_id && prior.telegram_message_id !== uploaded.messageId) await deleteTelegramMessage(prior.telegram_message_id);
+    return res.status(201).json({ data: { gift_name: saved.gift_name, gift_key: saved.gift_key, image_url: mediaProxyUrl(saved.file_id, saved.mime_type) } });
+  } catch (error) {
+    if (uploaded?.messageId) await deleteTelegramMessage(uploaded.messageId);
+    console.error('Product gift image save failed:', error.message);
+    return fail(res, 500, 'Could not save gift image. Check Telegram storage and database migration.');
+  }
+});
+
+app.delete('/api/admin/products/:id/gift-image', authenticate, requireAdmin, async (req, res) => {
+  if (!db(res)) return;
+  const giftName = clean(req.body?.gift_name, 180);
+  if (!giftName) return fail(res, 400, 'Gift name is required');
+  const giftKey = createHash('sha256').update(giftName.toLocaleLowerCase().replace(/\s+/g, ' ').trim()).digest('hex');
+  const { data: prior, error: readError } = await supabase.from('product_gift_images').select('id,telegram_message_id').eq('product_id', req.params.id).eq('gift_key', giftKey).maybeSingle();
+  if (readError) return fail(res, 500, 'Could not load saved gift image');
+  if (!prior) return res.json({ data: { reset: true } });
+  const { error: deleteError } = await supabase.from('product_gift_images').delete().eq('id', prior.id);
+  if (deleteError) return fail(res, 500, 'Could not reset gift image');
+  if (prior.telegram_message_id) await deleteTelegramMessage(prior.telegram_message_id);
+  return res.json({ data: { reset: true } });
+});
 app.get('/api/products/:id', async (req, res) => {
   if (!db(res)) return;
   const cutoff = new Date(Date.now() - PRODUCT_PUBLIC_MAX_AGE_MS).toISOString();
@@ -1709,6 +1747,9 @@ app.get('/api/products/:id', async (req, res) => {
       avatar_url: profile.avatar_url ? normalizeMediaUrl(profile.avatar_url) : (profile.avatar_file_id ? mediaProxyUrl(profile.avatar_file_id) : publicMediaUrl(profile.avatar_path))
     } : null;
   }
+  const { data: giftImages, error: giftImagesError } = await supabase.from('product_gift_images').select('gift_name,gift_key,file_id,mime_type').eq('product_id', data.id);
+  if (giftImagesError) { console.error('Could not load product gift images:', giftImagesError.message); return fail(res, 500, 'Could not load product gift images'); }
+  data.gift_images = (giftImages || []).map(item => ({ gift_name: item.gift_name, gift_key: item.gift_key, image_url: mediaProxyUrl(item.file_id, item.mime_type) }));
   res.json({ data: publicProduct(data) });
 });
 
