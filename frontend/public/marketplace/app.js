@@ -6302,6 +6302,7 @@ function bindEvents() {
         if (!response.ok) throw new Error(payload.error || 'មិនអាចភ្ជាប់ជំនួយការបានទេ។');
         waiting.remove();
         addMessage(payload.message || 'ខ្ញុំរកឃើញផលិតផលខាងក្រោម។', 'assistant');
+        if (payload.ai_enabled === false) addMessage('ចំណាំ៖ ការស្វែងរកផលិតផលដំណើរការហើយ ប៉ុន្តែ Open-source AI Model មិនទាន់បានភ្ជាប់ទៅ Render នៅឡើយទេ។', 'assistant waiting');
         renderProducts(payload.products);
       } catch (error) {
         waiting.remove();
