@@ -1058,13 +1058,21 @@ function toast(message, type = 'success') {
   setTimeout(() => el.remove(), 3200);
 }
 
+function syncBodyScrollLock() {
+  const shouldLock = Boolean(document.querySelector(
+    '.modal.open, .admin-aurora-modal, .aurora-edit-overlay, ' +
+    'dialog[open]:not(#homeShortsPopup), .product-lightbox.open, .seller-chat-image-preview'
+  ));
+  document.body.classList.toggle('overflow-hidden', shouldLock);
+}
+
 function openModal(id) {
   closeDropdowns();
   const modal = $(id);
   if (!modal) return;
   modal.classList.add('open');
   modal.setAttribute('aria-hidden', 'false');
-  if (id !== 'sellerChatModal') document.body.classList.add('overflow-hidden');
+  syncBodyScrollLock();
 }
 
 function closeModal(id) {
@@ -1072,7 +1080,7 @@ function closeModal(id) {
   if (!el) return;
   el.classList.remove('open');
   el.setAttribute('aria-hidden', 'true');
-  if (!document.querySelector('.modal.open')) document.body.classList.remove('overflow-hidden');
+  syncBodyScrollLock();
 }
 
 function appDialog({ mode = 'confirm', title = 'បញ្ជាក់សកម្មភាព', message = '', placeholder = 'សរសេរមូលហេតុនៅទីនេះ...', confirmLabel, danger = false } = {}) {
@@ -1322,6 +1330,10 @@ function showView(name, options = {}) {
   $('view-' + name)?.classList.add('active');
   document.querySelectorAll('#mobileMarketNav [data-view]').forEach((btn) => {
     btn.classList.toggle('active', btn.dataset.view === name);
+  });
+  document.querySelectorAll('#headerPrimaryNav [data-view]').forEach((btn) => {
+    if (btn.dataset.view === name) btn.setAttribute('aria-current', 'page');
+    else btn.removeAttribute('aria-current');
   });
 
   document.documentElement.dataset.initialView = name;
@@ -1977,53 +1989,10 @@ function setSelectedMarketplaceCard(type, id) {
   });
 }
 
-function showHomeDetailInspector() {
-  const inspector = $('homeDetailInspector');
-  const detail = $('productDetail');
-  if (!inspector || !detail) return;
-  inspector.classList.remove('is-closing');
-  inspector.appendChild(detail);
-  $('homeJobsRail')?.classList.add('has-active-inspector');
-  // Keep description, specifications, reviews and related content in this scrollable panel.
-  populateDetailsPopover(detail);
-  $('steamDiscoveryHub')?.classList.add('hidden');
-  inspector.classList.remove('hidden');
-  inspector.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
 function mountProductDetailPage() {
   const mount = $('productDetailPageMount');
   const detail = $('productDetail');
   if (mount && detail && detail.parentElement !== mount) mount.appendChild(detail);
-}
-
-function closeHomeDetailInspector() {
-  closeDetailsPopover();
-  const inspector = $('homeDetailInspector');
-  const detail = $('productDetail');
-  const mount = $('productDetailPageMount');
-  ++state.detailRequestId;
-  state.detailHydratedKey = null;
-  const floatingActions = $('inspectorFloatingActions');
-  if (floatingActions) { floatingActions.classList.add('hidden'); floatingActions.innerHTML = ''; floatingActions.onclick = null; }
-  $('steamDiscoveryHub')?.classList.remove('hidden');
-  $('productGrid')?.querySelectorAll('.cd.is-selected').forEach(card => card.classList.remove('is-selected'));
-  state.currentProduct = null;
-  state.currentVendor = null;
-  state.currentMarketplaceListing = null;
-  if (!inspector) {
-    if (detail && mount && detail.parentElement !== mount) mount.appendChild(detail);
-    $('homeJobsRail')?.classList.remove('has-active-inspector');
-    return;
-  }
-  inspector.classList.add('is-closing');
-  window.setTimeout(() => {
-    if (!inspector.classList.contains('is-closing')) return;
-    if (detail && mount && detail.parentElement !== mount) mount.appendChild(detail);
-    inspector.classList.add('hidden');
-    inspector.classList.remove('is-closing');
-    $('homeJobsRail')?.classList.remove('has-active-inspector');
-  }, 220);
 }
 
 async function loadProducts() {
@@ -2140,7 +2109,7 @@ function renderProductDetailMarkup(root, markup, options = {}) {
   const isHydration = options.isBackgroundHydration === true;
   const previousImage = isHydration ? root.querySelector('#productMainImage, .product-listing-main-image') : null;
   const previousSrc = previousImage?.getAttribute('src') || '';
-  const scrollContainer = root.closest('#homeDetailInspector') || root;
+  const scrollContainer = root;
   const previousScrollTop = isHydration ? scrollContainer.scrollTop : 0;
   const template = document.createElement('template');
   template.innerHTML = markup;
@@ -2213,14 +2182,7 @@ async function openMarketplaceListing(type, id, options = {}) {
   const listingId = String(id);
   setSelectedMarketplaceCard(type, listingId);
   const detailKey = type + ':' + listingId;
-  const inspector = $('homeDetailInspector');
-  const alreadyOpen = inspector && !inspector.classList.contains('hidden') &&
-    String(state.currentProduct?.id || '') === listingId &&
-    state.currentProduct?.listing_type === type && state.detailHydratedKey === detailKey;
-  if (alreadyOpen) return true;
-
   const requestId = ++state.detailRequestId;
-  const inlineInspector = false; // Always open the dedicated product detail page.
   const isCurrent = () => requestId === state.detailRequestId &&
     (options.routeSyncNavigationId == null || options.routeSyncNavigationId === state.routeSyncNavigationId) &&
     String(state.currentProduct?.id || '') === listingId &&
@@ -2235,27 +2197,19 @@ async function openMarketplaceListing(type, id, options = {}) {
   state.productGalleryIndex = 0;
   state.productGalleryVideoActive = false;
 
-  if (inlineInspector) {
-    showHomeDetailInspector();
-    if (cachedItem) renderProductDetail();
-    else renderProductDetailSkeleton();
-  } else {
-    mountProductDetailPage();
-    await showView('product', { preserveScroll: Boolean(options.preserveScroll), deferLoad: true });
-    if (!isCurrent()) return false;
-    if (!cachedItem) renderProductDetailSkeleton();
-    else renderProductDetail();
-  }
+  mountProductDetailPage();
+  await showView('product', { preserveScroll: Boolean(options.preserveScroll), deferLoad: true });
+  if (!isCurrent()) return false;
+  if (!cachedItem) renderProductDetailSkeleton();
+  else renderProductDetail();
   if (!isCurrent()) return false;
 
-  if (!inlineInspector) {
-    try {
-      sessionStorage.setItem('ecomstore.activeView', 'product');
-      sessionStorage.setItem('ecomstore.currentProductId', listingId);
-      sessionStorage.setItem('ecomstore.currentListingType', type);
-      sessionStorage.setItem('ecomstore.currentListingId', listingId);
-    } catch {}
-  }
+  try {
+    sessionStorage.setItem('ecomstore.activeView', 'product');
+    sessionStorage.setItem('ecomstore.currentProductId', listingId);
+    sessionStorage.setItem('ecomstore.currentListingType', type);
+    sessionStorage.setItem('ecomstore.currentListingId', listingId);
+  } catch {}
 
   try {
     const result = await api('/api/marketplace/listings?limit=100&type=' + encodeURIComponent(type));
@@ -2281,8 +2235,7 @@ async function openMarketplaceListing(type, id, options = {}) {
     if (!isCurrent()) return false;
     if (!cachedItem) {
       toast(error.message || 'មិនអាចបើកព័ត៌មានប្រកាសបានទេ។', 'error');
-      if (inlineInspector) closeHomeDetailInspector();
-      else void showView('home');
+      void showView('home');
       return false;
     }
     return true;
@@ -2294,14 +2247,7 @@ async function openProduct(id, options = {}) {
   const productId = String(id);
   setSelectedMarketplaceCard('product', productId);
   const detailKey = 'product:' + productId;
-  const inspector = $('homeDetailInspector');
-  const alreadyOpen = inspector && !inspector.classList.contains('hidden') &&
-    String(state.currentProduct?.id || '') === productId &&
-    state.currentProduct?.listing_type === 'product' && state.detailHydratedKey === detailKey;
-  if (alreadyOpen) return true;
-
   const requestId = ++state.detailRequestId;
-  const inlineInspector = false; // Always open the dedicated product detail page.
   const isCurrent = () => requestId === state.detailRequestId &&
     (options.routeSyncNavigationId == null || options.routeSyncNavigationId === state.routeSyncNavigationId) &&
     String(state.currentProduct?.id || '') === productId &&
@@ -2318,25 +2264,17 @@ async function openProduct(id, options = {}) {
   state.productGalleryIndex = 0;
   state.productGalleryVideoActive = false;
 
-  if (inlineInspector) {
-    showHomeDetailInspector();
-    if (cachedItem) renderProductDetail();
-    else renderProductDetailSkeleton();
-  } else {
-    mountProductDetailPage();
-    await showView('product', { preserveScroll: Boolean(options.preserveScroll), deferLoad: true });
-    if (!isCurrent()) return false;
-    if (cachedItem) renderProductDetail();
-    else renderProductDetailSkeleton();
-  }
+  mountProductDetailPage();
+  await showView('product', { preserveScroll: Boolean(options.preserveScroll), deferLoad: true });
+  if (!isCurrent()) return false;
+  if (cachedItem) renderProductDetail();
+  else renderProductDetailSkeleton();
   if (!isCurrent()) return false;
 
-  if (!inlineInspector) {
-    try {
-      sessionStorage.setItem('ecomstore.currentProductId', productId);
-      sessionStorage.setItem('ecomstore.activeView', 'product');
-    } catch {}
-  }
+  try {
+    sessionStorage.setItem('ecomstore.currentProductId', productId);
+    sessionStorage.setItem('ecomstore.activeView', 'product');
+  } catch {}
 
   try {
     const vendorId = cachedItem?.vendor_id || cachedItem?.vendors?.id;
@@ -2388,8 +2326,7 @@ async function openProduct(id, options = {}) {
     if (!isCurrent()) return false;
     if (!cachedItem) {
       toast(error.message, 'error');
-      if (inlineInspector) closeHomeDetailInspector();
-      else void showView('home');
+      void showView('home');
       return false;
     }
     return true;
@@ -2578,27 +2515,6 @@ function renderMarketplaceListingInProductDetail(item, options = {}) {
         </div>
       </section>
     </div>`, options);
-  const dock = $('inspectorFloatingActions');
-  if (dock && $('homeDetailInspector')?.contains(root)) {
-    dock.innerHTML = `<button type="button" data-float-action="chat">${ic('chat',17)} <span>ឆាតជាមួយអ្នកផុស</span></button>
-      <button type="button" data-float-action="save" class="listing-save-action">${ic('bookmark',17)} <span>រក្សាទុក</span></button>`;
-    dock.classList.remove('hidden');
-    dock.onclick = async event => {
-      const button = event.target.closest('[data-float-action]');
-      if (!button) return;
-      if (button.dataset.floatAction === 'chat') { void startListingPosterChat(item); return; }
-      if (button.dataset.floatAction === 'save') {
-        if (!requireLogin()) return;
-        button.disabled = true;
-        try {
-          const result = await api('/api/listing-saves', {method:'POST',body:JSON.stringify({listing_type:item.listing_type,id:item.id})});
-          if (result.data?.saved) { button.classList.add('is-saved'); const label=button.querySelector('span'); if(label) label.textContent='បានរក្សាទុក'; toast('បានរក្សាទុកប្រកាស!'); }
-          else { button.classList.remove('is-saved'); const label=button.querySelector('span'); if(label) label.textContent='រក្សាទុក'; }
-        } catch (error) { toast(error.message || 'មិនអាចរក្សាទុកបានទេ។','error'); }
-        finally { button.disabled = false; }
-      }
-    };
-  } else if (dock) { dock.classList.add('hidden'); dock.innerHTML = ''; }
   bindListingDetailActions(root, item);
   root.querySelector('[data-listing-chat]')?.addEventListener('click', () => { void startListingPosterChat(item); });
   root.querySelectorAll('[data-shared-listing-image]').forEach(button => button.addEventListener('click', () => {
@@ -2876,28 +2792,6 @@ function renderProductDetail(options = {}) {
   if (initialZoomImage) initialZoomImage.onclick = openProductLightbox;
   $('productDetail').querySelector('[data-gallery-zoom-button]')?.addEventListener('click', openProductLightbox);
 
-  const dock = $('inspectorFloatingActions');
-  if (dock && $('homeDetailInspector')?.contains(root)) {
-    dock.innerHTML = `<button type="button" data-float-action="buy">${ic('bag',17)} <span>ទិញឥឡូវនេះ</span></button>
-      <button type="button" data-float-action="chat">${ic('chat',17)} <span>ឆាត</span></button>
-      <button type="button" data-float-action="save" class="${saved ? 'is-saved' : ''}" aria-pressed="${saved}">${ic('bookmark',17)} <span>${saved ? 'បានរក្សាទុក' : 'រក្សាទុក'}</span></button>`;
-    dock.classList.remove('hidden');
-    dock.onclick = event => {
-      const button = event.target.closest('[data-float-action]');
-      if (!button) return;
-      const action = button.dataset.floatAction;
-      if (action === 'buy') openCheckout(p);
-      if (action === 'chat') void startBuyerSellerChat(p.id);
-      if (action === 'save') Promise.resolve(saveAction(p.id, button)).then(() => {
-        const isSaved = state.savedIds.has(p.id);
-        button.classList.toggle('is-saved', isSaved);
-        button.setAttribute('aria-pressed', String(isSaved));
-        const label = button.querySelector('span');
-        if (label) label.textContent = isSaved ? 'បានរក្សាទុក' : 'រក្សាទុក';
-      }).finally(renderSteamDiscoveryHub);
-    };
-  } else if (dock) { dock.classList.add('hidden'); dock.innerHTML = ''; }
-
   $('productDetail').querySelectorAll('[data-product-action]').forEach((btn) => {
     btn.addEventListener('click', () => {
       const kind = btn.dataset.productAction;
@@ -2941,12 +2835,14 @@ function openProductLightbox() {
   updateProductLightbox();
   $('productLightbox').classList.add('open');
   $('productLightbox').setAttribute('aria-hidden', 'false');
+  syncBodyScrollLock();
 }
 
 function closeProductLightbox() {
   state.productLightboxOpen = false;
   $('productLightbox').classList.remove('open');
   $('productLightbox').setAttribute('aria-hidden', 'true');
+  syncBodyScrollLock();
 }
 
 /* --------------------------------------------------------------------------
@@ -2973,7 +2869,10 @@ async function openStorefront(vendorId, options = {}) {
       renderStorefront();
     });
     const [result, catalogue, taxonomy] = await Promise.all([
-      api('/api/vendors/' + encodeURIComponent(storeId) + '/ratings'),
+      api('/api/vendors/' + encodeURIComponent(storeId) + '/ratings').catch(error => {
+        console.warn('Could not load storefront ratings:', error.message);
+        return { data: null };
+      }),
       api('/api/products?page=1&limit=' + state.currentStoreLimit + '&vendor_id=' + encodeURIComponent(storeId) + '&include_out_of_stock=true'),
       api('/api/vendors/' + encodeURIComponent(storeId) + '/categories').catch(() => ({ data: [] }))
     ]);
@@ -3110,7 +3009,7 @@ function renderAuroraProductList(products) {
     }).join('')+'</div></section>';
   }).join('')+'</div>';
 }
-function closeAuroraProductEditor(){const modal=$('auroraProductEditModal');if(modal)modal.remove();document.body.classList.remove('overflow-hidden');}
+function closeAuroraProductEditor(){const modal=$('auroraProductEditModal');if(modal)modal.remove();syncBodyScrollLock();}
 function openAuroraProductEditor(productId){
   if(!isAdmin())return;
   const p=state.currentStoreProducts.find(x=>String(x.id)===String(productId));
@@ -3146,7 +3045,7 @@ function openAuroraProductEditor(productId){
       toast('បានរក្សាទុកការកែប្រែផលិតផល។');closeAuroraProductEditor();await openStorefront(state.currentStoreId,{preserveScroll:true});
     }catch(err){toast(err.message||'មិនអាចរក្សាទុកផលិតផលបានទេ។','error');btn.disabled=false;btn.textContent='រក្សាទុក';}
   });
-  document.body.appendChild(modal);document.body.classList.add('overflow-hidden');
+  document.body.appendChild(modal);syncBodyScrollLock();
 }
 
 function renderStorefront() {
@@ -4493,7 +4392,7 @@ async function renderAdminSupplierProducts() {
 function closeAdminAuroraProductEditor() {
   const modal=$('adminAuroraProductEditModal');
   if(modal)modal.remove();
-  document.body.classList.remove('overflow-hidden');
+  syncBodyScrollLock();
 }
 
 function openAdminAuroraProductEditor(productId) {
@@ -4556,7 +4455,8 @@ function openAdminAuroraProductEditor(productId) {
     }
     const remove=event.target.closest('[data-admin-variant-delete]');
     if(remove){
-      if(!window.confirm('តើអ្នកចង់លុប Variant នេះមែនទេ?'))return;
+      const confirmed = await appDialog({ mode:'confirm', title:'លុប Variant', message:'តើអ្នកចង់លុប Variant នេះមែនទេ?', confirmLabel:'លុប Variant', danger:true });
+      if(!confirmed)return;
       try{await api('/api/admin/supplier-products/'+encodeURIComponent(p.id)+'/variants/'+encodeURIComponent(remove.dataset.adminVariantDelete),{method:'DELETE'});toast('បានលុប Variant។');closeAdminAuroraProductEditor();await renderAdminSupplierProducts();openAdminAuroraProductEditor(p.id);}
       catch(error){toast(error.message||'មិនអាចលុប Variant បានទេ។','error');}return;
     }
@@ -4601,7 +4501,7 @@ function openAdminAuroraProductEditor(productId) {
       toast('បានរក្សាទុកព័ត៌មានផលិតផល AURORA។');closeAdminAuroraProductEditor();await renderAdminSupplierProducts();
     }catch(error){toast(error.message||'មិនអាចរក្សាទុកផលិតផលបានទេ។','error');button.disabled=false;button.textContent='រក្សាទុកផលិតផល';}
   });
-  document.body.appendChild(modal);document.body.classList.add('overflow-hidden');
+  document.body.appendChild(modal);syncBodyScrollLock();
 }
 
 function renderSellerProductList() {
@@ -5252,6 +5152,9 @@ function loadYouTubeIframeApi() {
       script.onerror = () => reject(new Error('មិនអាចផ្ទុក YouTube Player API បានទេ។'));
       document.head.appendChild(script);
     }
+  }).catch(error => {
+    listingVideoApiPromise = null;
+    throw error;
   });
   return listingVideoApiPromise;
 }
@@ -5643,6 +5546,18 @@ async function syncVendorPresence() {
 /* --------------------------------------------------------------------------
    14. Event Bindings & Bootstrapping
    -------------------------------------------------------------------------- */
+function initNavIcons(root = document) {
+  root.querySelectorAll('[data-nav-icon]').forEach(node => {
+    const name = String(node.dataset.navIcon || '');
+    if (!Object.prototype.hasOwnProperty.call(ICON_PATHS, name)) {
+      console.warn('Unknown marketplace navigation icon:', name);
+      node.replaceChildren();
+      return;
+    }
+    node.innerHTML = ic(name, name === 'chat' ? 22 : 19);
+  });
+}
+
 function initIcons() {
   $('logoIcon').innerHTML = ic('bag', 20);
   $('searchIcon').innerHTML = ic('search', 17);
@@ -5678,7 +5593,7 @@ function initIcons() {
 
   document.querySelectorAll('[data-icon]').forEach((node) => { node.innerHTML = ic(node.dataset.icon, Number(node.dataset.iconSize) || 18); });
   document.querySelectorAll('[data-seller-icon]').forEach((node) => { node.innerHTML = ic(node.dataset.sellerIcon, 16); });
-  document.querySelectorAll('[data-nav-icon]').forEach((node) => { node.innerHTML = ic(node.dataset.navIcon, node.dataset.navIcon === 'chat' ? 22 : 19); });
+  initNavIcons();
   document.querySelectorAll('.close-btn').forEach((b) => { b.innerHTML = ic('x', 16); });
 }
 
@@ -6054,10 +5969,8 @@ function bindEvents() {
   $('homeJobsRail')?.addEventListener('click', (event) => {
     const quickPost = event.target.closest('#hubQuickPostBtn');
     if (quickPost) { $('postAdBtn')?.click(); return; }
-    const close = event.target.closest('#closeHomeDetailInspector');
-    if (close) { closeHomeDetailInspector(); return; }
     const card = event.target.closest('[data-hub-product-id]');
-    if (card) { void openProduct(card.dataset.hubProductId, { inlineInspector: true, preserveScroll: true }); }
+    if (card) { void openProduct(card.dataset.hubProductId, { preserveScroll: true }); }
   });
 
   $('productGrid').addEventListener('click', (e) => {
@@ -6460,6 +6373,7 @@ function bindEvents() {
       closeDropdowns();
       if (state.productLightboxOpen) closeProductLightbox();
       document.querySelector('.seller-chat-image-preview')?.remove();
+      syncBodyScrollLock();
     }
   });
 
@@ -6569,7 +6483,10 @@ function bindEvents() {
   document.querySelectorAll('[data-open-profile-modal]').forEach((button) => {
     button.addEventListener('click', () => {
       const dialog = $(button.dataset.openProfileModal);
-      if (dialog && !dialog.open) dialog.showModal();
+      if (dialog && !dialog.open) {
+        dialog.showModal();
+        syncBodyScrollLock();
+      }
     });
   });
   document.querySelectorAll('[data-close-profile-modal]').forEach((button) => {
@@ -6580,6 +6497,7 @@ function bindEvents() {
     dialog?.addEventListener('click', (event) => {
       if (event.target === dialog) dialog.close();
     });
+    dialog?.addEventListener('close', syncBodyScrollLock);
   });
 
   const uploadProfileImage = async (inputId, type) => {
@@ -6928,7 +6846,8 @@ function bindEvents() {
       const productId=deleteButton.dataset.adminAuroraDelete;
       const product=(state.adminSupplierProducts||[]).find(item=>String(item.id)===String(productId));
       if(!product)return;
-      if(!window.confirm('តើអ្នកប្រាកដថាចង់លុបផលិតផល "'+(product.title||'')+'"?'))return;
+      const confirmed = await appDialog({ mode:'confirm', title:'លុបផលិតផល AURORA', message:'តើអ្នកប្រាកដថាចង់លុបផលិតផល "'+(product.title||'')+'"?', confirmLabel:'លុបផលិតផល', danger:true });
+      if(!confirmed)return;
       deleteButton.disabled=true;
       try{
         const result=await api('/api/products/'+encodeURIComponent(productId),{method:'DELETE'});
@@ -6970,8 +6889,14 @@ function bindEvents() {
     fullImage.src = image.currentSrc || image.src;
     fullImage.alt = image.alt || 'រូបភាពក្នុងសារ';
     overlay.append(close, fullImage);
-    overlay.addEventListener('click', (event) => { if (event.target === overlay || event.target === close) overlay.remove(); });
+    overlay.addEventListener('click', (event) => {
+      if (event.target === overlay || event.target === close) {
+        overlay.remove();
+        syncBodyScrollLock();
+      }
+    });
     document.body.appendChild(overlay);
+    syncBodyScrollLock();
   });
   $('sellerChatMessages')?.addEventListener('keydown', (e) => {
     const productCard = e.target.closest('.seller-chat-product-card[data-chat-product-id]');
