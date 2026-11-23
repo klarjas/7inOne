@@ -6965,14 +6965,14 @@ body > footer {
   font-size: 12px;
   line-height: 1.65;
 }
-#view-product .product-detail-page:has(.product-primary-actions) .product-short-gift-card {
+#view-product .product-short-gift-card {
   padding: 12px 14px;
   border: 1px solid rgba(190, 238, 17, .22);
   border-radius: 11px;
   background: linear-gradient(135deg, rgba(190, 238, 17, .09), rgba(22, 32, 45, .72));
   color: #D7EBA0;
 }
-#view-product .product-detail-page:has(.product-primary-actions) .product-short-gift-card h3 {
+#view-product .product-short-gift-card h3 {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -6981,18 +6981,18 @@ body > footer {
   font-size: 12px;
   font-weight: 800;
 }
-#view-product .product-detail-page:has(.product-primary-actions) .product-short-gift-card h3 svg {
+#view-product .product-short-gift-card h3 svg {
   flex: 0 0 auto;
   color: #BEEE11;
 }
-#view-product .product-detail-page:has(.product-primary-actions) .product-short-gift-card ul {
+#view-product .product-short-gift-card ul {
   display: grid;
   gap: 5px;
   margin: 0;
   padding: 0 0 0 19px;
   list-style: disc;
 }
-#view-product .product-detail-page:has(.product-primary-actions) .product-short-gift-card li {
+#view-product .product-short-gift-card li {
   padding-left: 2px;
   color: #D7EBA0;
   font-size: 12px;
@@ -8627,8 +8627,7 @@ body > footer {
 
 
 /* Compact inline product gifts: product icon + name, separated by plus signs. */
-#view-product .product-detail-page:has(.product-primary-actions) .product-short-gift-card {
-  grid-column: 1 / -1;
+#view-product .product-short-gift-card {
   min-width: 0;
   margin-top: 14px;
   padding: 0;
@@ -8637,7 +8636,7 @@ body > footer {
   background: transparent;
   color: #D7EBA0;
 }
-#view-product .product-detail-page:has(.product-primary-actions) .product-short-gift-card h3 {
+#view-product .product-short-gift-card h3 {
   display: flex;
   align-items: center;
   gap: 7px;
@@ -8646,7 +8645,7 @@ body > footer {
   font-size: 12px;
   font-weight: 750;
 }
-#view-product .product-detail-page:has(.product-primary-actions) .product-short-gift-card h3 svg {
+#view-product .product-short-gift-card h3 svg {
   flex: 0 0 auto;
   color: #BEEE11;
 }
@@ -8693,7 +8692,7 @@ body > footer {
   height: 13px;
 }
 @media (max-width: 639px) {
-  #view-product .product-detail-page:has(.product-primary-actions) .product-short-gift-card { margin-top: 12px; }
+  #view-product .product-short-gift-card { margin-top: 12px; }
   #view-product .product-gift-flow { column-gap: 7px; row-gap: 7px; }
   #view-product .product-gift-name { font-size: 12px; }
   #view-product .product-gift-icon { width: 19px; height: 19px; }
