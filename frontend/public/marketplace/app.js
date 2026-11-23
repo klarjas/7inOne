@@ -1671,8 +1671,8 @@ function renderProductUpgradePanel(product = {}) {
   const aliases = {
     ramtype:'ram_type', memorytype:'ram_type', ddrtype:'ram_type',
     ramonboard:'ram_onboard', onboardram:'ram_onboard', solderedram:'ram_onboard',
-    ram slots:'ram_slots', ramslots:'ram_slots', memoryslots:'ram_slots',
-    ramslotsused:'ram_slots_used', ramslotsfree:'ram_slots_free', fre eramslots:'ram_slots_free',
+    ramslots:'ram_slots', memoryslots:'ram_slots',
+    ramslotsused:'ram_slots_used', ramslotsfree:'ram_slots_free', freeramslots:'ram_slots_free',
     maxram:'ram_max', maximumram:'ram_max', maxmemory:'ram_max', maximummemory:'ram_max',
     ramupgrade:'ram_upgrade', memoryupgrade:'ram_upgrade',
     m2slots:'ssd_slots', m2slotcount:'ssd_slots', storageslots:'ssd_slots', ssdslots:'ssd_slots',
