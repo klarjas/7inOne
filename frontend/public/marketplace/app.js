@@ -2953,7 +2953,6 @@ function renderProductDetail(options = {}) {
     const store = e.target.closest('[data-action="store"]');
     if (store) void openStorefront(store.dataset.vendorId);
   });
-  populateDetailsPopover($('productDetail'), options);
 }
 
 function updateProductLightbox() {
