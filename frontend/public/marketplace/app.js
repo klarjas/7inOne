@@ -7148,6 +7148,7 @@ function bindEvents() {
     }catch(error){toast(error.message||'មិនអាចបង្កើតផលិតផលបានទេ។','error');}
   });
   $('adminSupplierProductsList')?.addEventListener('click',async event=>{
+    if(event.target.closest('[data-aurora-product-select],[data-aurora-select-page],[data-aurora-publish-selected],[data-aurora-page]')){event.stopPropagation();return;}
     const deleteButton=event.target.closest('[data-admin-aurora-delete]');
     if(deleteButton){
       event.preventDefault();event.stopPropagation();
