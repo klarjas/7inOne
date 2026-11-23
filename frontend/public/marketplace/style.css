@@ -8647,7 +8647,7 @@ body > footer {
 #view-product [data-gift-image-reset] { color:#BEEE11; }
 @media(max-width:639px) {
   #view-product .product-short-gift-card { margin-top:12px; padding:11px; }
-  #view-product .product-gift-grid { grid-template-columns:repeat(3,minmax(0,1fr)); gap:7px; }
+  #view-product .product-gift-grid { grid-template-columns:repeat(auto-fit,minmax(90px,1fr)); gap:7px; }
   #view-product .product-gift-item { padding:8px 4px; }
   #view-product .product-gift-visual { width:60px; height:56px; }
 }
