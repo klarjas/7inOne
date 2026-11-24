@@ -11,7 +11,7 @@ const clean = (v,n=2000) => String(v ?? '').replace(/[\u0000-\u0008\u000B\u000C\
 async function ask(messages, max_tokens) {
   const key = token();
   if (!modelConfigured()) throw new Error('ANANTA Own Model is not configured. Set ANANTA_MODEL_URL and ANANTA_MODEL_NAME after deploying the model.');
-  const r = await fetch(URL,{method:'POST',headers:{authorization:'Bearer '+key,'content-type':'application/json'},body:JSON.stringify({model:MODEL,temperature:0.2,max_tokens,messages}),signal:AbortSignal.timeout(30000)});
+  const r = await fetch(URL,{method:'POST',headers:{...(key?{authorization:'Bearer '+key}:{}),'content-type':'application/json'},body:JSON.stringify({model:MODEL,temperature:0.2,max_tokens,messages}),signal:AbortSignal.timeout(30000)});
   const bodyText = await r.text();
   if (!r.ok) {
     let detail = bodyText;
@@ -35,6 +35,7 @@ async function ask(messages, max_tokens) {
 const lessonCode = x => (x.category||'general')+'-'+(String(x.title).match(/(?:មេរៀន|គោលការណ៍|នីតិវិធី)\s*(\d{1,4})/)?.[1]||String(x.id).slice(0,8));
 const level = n => n>=95?6:n>=90?5:n>=80?4:n>=70?3:n>=60?2:1;
 async function cycle({supabase,port}) {
+  if (process.env.ANANTA_LEGACY_SELF_EVAL_ENABLED !== 'true') { runtime.lastError='Legacy self-grading is disabled. Use the versioned fine-tuning dataset and independent benchmark pipeline.'; return false; }
   if(active) return false;
   if(!modelConfigured()){runtime.lastError='ANANTA Own Model is not deployed yet. Configure ANANTA_MODEL_URL and ANANTA_MODEL_NAME before training.';return false;}
   active=true; runtime.running=true; runtime.lastAttemptAt=new Date().toISOString(); runtime.lastError='';
@@ -87,7 +88,7 @@ export async function runAnantaTrainingNow({supabase,port}) {
 }
 export function getAnantaTrainingStatus() { return { ...runtime, tokenConfigured: modelConfigured(), model: MODEL || 'Not deployed', intervalSeconds: INTERVAL / 1000, enabled: runtime.enabled }; }
 export function startAnantaTrainingEngine({supabase,port}) {
-  if(!supabase||process.env.ANANTA_TRAINING_ENABLED==='false'||!modelConfigured()){runtime.enabled=false;runtime.started=false;runtime.lastError=!supabase?'Supabase is not configured.':process.env.ANANTA_TRAINING_ENABLED==='false'?'ANANTA_TRAINING_ENABLED=false':'Waiting for ANANTA Own Model deployment (ANANTA_MODEL_URL and ANANTA_MODEL_NAME).';console.log('[ANANTA Training] scheduler paused:',runtime.lastError);return ()=>{};}
+  if(!supabase||process.env.ANANTA_TRAINING_ENABLED==='false'||!modelConfigured()||process.env.ANANTA_LEGACY_SELF_EVAL_ENABLED!=='true'){runtime.enabled=false;runtime.started=false;runtime.lastError=!supabase?'Supabase is not configured.':process.env.ANANTA_TRAINING_ENABLED==='false'?'ANANTA_TRAINING_ENABLED=false':!modelConfigured()?'Waiting for ANANTA Own Model deployment (ANANTA_MODEL_URL and ANANTA_MODEL_NAME).':'Legacy self-grading scheduler disabled; use the independent fine-tuning and benchmark pipeline.';console.log('[ANANTA Training] scheduler paused:',runtime.lastError);return ()=>{};}
   runtime.enabled=true; runtime.started=true; runtime.lastError='';
   if(timer)return ()=>clearInterval(timer);
   const run=()=>cycle({supabase,port});
