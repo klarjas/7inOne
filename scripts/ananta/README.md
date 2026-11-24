@@ -15,7 +15,7 @@ Run: python scripts/ananta/build_dataset.py docs/ananta-sft-pilot-v0.1.jsonl --o
 
 The builder accepts approved records only, validates chat roles and source traceability, screens for common PII/secret patterns, groups by source lesson before deterministic train/validation/test splitting, and writes a manifest.
 
-The pilot has only 15 examples. It is a pipeline smoke test, not a sufficient fine-tuning corpus. Initial planning threshold: at least 100 train, 20 validation and 20 test records, with more varied examples preferred.
+The current teacher-reviewed pilot has 45 examples derived from 15 approved source lessons. It is enough to validate the data pipeline, but it is still too small and narrow for a meaningful production fine-tuning run. Initial planning threshold: at least 100 train, 20 validation and 20 test records, with more varied examples preferred.
 
 ## 2. Run the fixed benchmark against an own-model endpoint
 
