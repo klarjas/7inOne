@@ -15,7 +15,8 @@ llama.cpp Windows instructions: https://huggingface.co/google/gemma-4-E2B-it-qat
 1. Run `START-ANANTA-LOCAL.bat` from Windows. It installs llama.cpp with winget if missing and downloads the model on first run.
 2. Wait for the server to finish loading. The local health endpoint is `http://127.0.0.1:9931/health`.
 3. Keep the terminal open. The computer must remain on and connected to the internet while the model is in use.
-4. To let the 7inOne Render backend reach this local model, run `START-ANANTA-TUNNEL.bat` in a second terminal. It creates a temporary HTTPS Cloudflare Quick Tunnel. Keep that terminal open too.
+4. Run `TEST-ANANTA-LOCAL.bat` to execute the 20-case Khmer benchmark and save raw responses under `artifacts/ananta-evaluations/`.
+5. To let the 7inOne Render backend reach this local model, run `START-ANANTA-TUNNEL.bat` in a second terminal. It creates a temporary HTTPS Cloudflare Quick Tunnel. Keep that terminal open too.
 
 ## Render environment values
 
