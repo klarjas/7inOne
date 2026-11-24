@@ -23,8 +23,8 @@ Use Google Gemma 4 E2B IT as the first candidate to benchmark, not as a final pr
 ## Promotion gates
 1. Run the 20-case Khmer benchmark against the unmodified candidate.
 2. Human-review every answer for Khmer quality, factual restraint, privacy and shopping usefulness.
-3. Grow the reviewed dataset beyond the current 15 seed examples; current minimum gate is 100 train / 20 validation / 20 test records, with larger and more varied data preferred.
-4. Fine-tune a LoRA adapter only after data and compute gates pass.
+3. The current pilot now has 150 teacher-authored examples from 15 approved lessons, split into 110 train / 20 validation / 20 test. Expand scenario diversity and manually review quality before production.
+4. The guarded QLoRA script and free-GPU Colab notebook are prepared; execute only on a free CUDA GPU with at least the required VRAM.
 5. Re-run the same held-out benchmark and compare base vs. fine-tuned results.
 6. Deploy only after clear measured improvement and rollback readiness.
 
