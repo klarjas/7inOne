@@ -15,9 +15,23 @@ Run: python scripts/ananta/build_dataset.py docs/ananta-sft-pilot-v0.1.jsonl --o
 
 The builder accepts approved records only, validates chat roles and source traceability, screens for common PII/secret patterns, groups by source lesson before deterministic train/validation/test splitting, and writes a manifest.
 
-The current teacher-reviewed pilot has 45 examples derived from 15 approved source lessons. It is enough to validate the data pipeline, but it is still too small and narrow for a meaningful production fine-tuning run. Initial planning threshold: at least 100 train, 20 validation and 20 test records, with more varied examples preferred.
+The current teacher-authored pilot contains 150 examples across 15 approved source lessons. The source-aware split has passed the minimum technical gate: 110 train, 20 validation and 20 held-out test examples. These are synthetic teaching examples, not real customer conversations; this is enough to begin a controlled pilot run, not enough by itself to justify production deployment. Human review and broader real-world scenario coverage are still required.
 
-## 2. Run the fixed benchmark against an own-model endpoint
+## 2. Fine-tune the candidate model
+
+A guarded QLoRA script and a Google Colab notebook are included:
+
+- `scripts/ananta/train_lora.py`
+- `scripts/ananta/requirements-train.txt`
+- `notebooks/ANANTA-Gemma4-Free-Training.ipynb`
+
+Open the notebook in Google Colab, select a free GPU runtime only if offered, and run the cells in order. It refuses to train without CUDA, sufficient VRAM, an approved dataset manifest, and a Hugging Face read token. It does not start paid compute. Free GPU availability is not guaranteed. Never commit the Hugging Face token or adapter weights to the public repository.
+
+## 3. Evaluate base model vs. adapter
+
+Run `scripts/ananta/run_local_benchmark.py` twice against the same 20-case benchmark: once without `--adapter-dir` for the base model, then with `--adapter-dir artifacts/ananta-adapter` for the tuned model. Human-review both outputs; the runner does not self-grade.
+
+## 4. Run the fixed benchmark against an own-model endpoint
 
 Set environment variables outside Git: ANANTA_MODEL_URL (OpenAI-compatible chat-completions endpoint), ANANTA_MODEL_NAME, and optional ANANTA_MODEL_API_KEY. Never commit keys.
 
@@ -25,9 +39,9 @@ Run: python scripts/ananta/run_benchmark.py
 
 The runner stores raw answers and latency. It does not grade itself. A teacher/admin must score outputs against must_include and must_not_claim. Keep the benchmark fixed and never add its answers to the training set.
 
-## 3. Fine-tuning gate
+## 5. Deployment gate
 
-Do not fine-tune until the dataset is larger and manually reviewed. Choose the base model only after Khmer benchmark trials, license review, and GPU-memory feasibility checks. Fine-tune with LoRA/QLoRA on permitted GPU, record the base-model revision and dataset hash, then compare base vs. adapter on the same held-out benchmark.
+Do not deploy until all 20 held-out cases have been reviewed, the tuned model improves Khmer usefulness without increasing factual or privacy errors, and the adapter has a recorded model revision, dataset hash, and rollback plan.
 
 ## 4. Architecture rules
 
