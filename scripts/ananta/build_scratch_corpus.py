@@ -9,9 +9,9 @@ import argparse, hashlib, json, re
 from pathlib import Path
 
 PII = [
-    re.compile(r"(?i)\\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}\\b"),
-    re.compile(r"(?<!\\d)(?:\\+?855|0)(?:[ .-]?\\d){7,10}(?!\\d)"),
-    re.compile(r"(?i)\\b(?:sk-[A-Za-z0-9_-]{16,}|gh[pousr]_[A-Za-z0-9]{20,}|sb_secret_[A-Za-z0-9_-]{16,})\\b"),
+    re.compile(r"(?i)\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b"),
+    re.compile(r"(?<!\d)(?:\+?855|0)(?:[ .-]?\d){7,10}(?!\d)"),
+    re.compile(r"(?i)\b(?:sk-[A-Za-z0-9_-]{16,}|gh[pousr]_[A-Za-z0-9]{20,}|sb_secret_[A-Za-z0-9_-]{16,})\b"),
 ]
 
 def main():
@@ -47,12 +47,12 @@ def main():
                 raise SystemExit(f"Invalid message at line {line_no}")
             if any(pattern.search(text) for pattern in PII):
                 raise SystemExit(f"Possible PII/secret in record {rid}; remove it before training")
-            chunks.append(f"<|{role}|>\\n{text.strip()}")
-        rows.append((rid,"\\n".join(chunks)))
+            chunks.append(f"<|{role}|>\n{text.strip()}")
+        rows.append((rid,"\n".join(chunks)))
     if not rows:
         raise SystemExit("No approved records found")
     a.output_dir.mkdir(parents=True,exist_ok=True)
-    corpus="\\n\\n".join(text for _,text in rows)+"\\n"
+    corpus="\n\n".join(text for _,text in rows)+"\n"
     corpus_path=a.output_dir/"approved-teacher-corpus.txt"
     corpus_path.write_text(corpus,encoding="utf-8")
     manifest={
@@ -67,7 +67,7 @@ def main():
         "privacy_scan":"basic regex scan only; manual review still required",
         "purpose":"bootstrap/smoke experiments only; insufficient for capable foundation-model pretraining"
     }
-    (a.output_dir/"manifest.json").write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+"\\n",encoding="utf-8")
+    (a.output_dir/"manifest.json").write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
     print(json.dumps(manifest,ensure_ascii=False,indent=2))
 
 if __name__=="__main__":
