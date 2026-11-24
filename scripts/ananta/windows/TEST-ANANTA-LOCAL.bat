@@ -23,7 +23,7 @@ set "ANANTA_MODEL_URL=http://127.0.0.1:9931/v1/chat/completions"
 set "ANANTA_MODEL_NAME=ananta-gemma4-e2b"
 set /p ANANTA_MODEL_API_KEY=<"%ANANTA_HOME%\ananta-api-key.txt"
 
-cd /d "%~dp0\..\..\..\.."
+cd /d "%~dp0\..\..\.."
 where py >nul 2>&1
 if errorlevel 1 (
   echo ERROR: Python Launcher is not installed.
