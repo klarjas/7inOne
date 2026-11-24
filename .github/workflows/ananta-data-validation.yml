@@ -26,7 +26,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Compile ANANTA scripts
-        run: python -m py_compile scripts/ananta/build_dataset.py scripts/ananta/run_benchmark.py scripts/ananta/train_lora.py scripts/ananta/run_local_benchmark.py
+        run: python -m py_compile scripts/ananta/build_dataset.py scripts/ananta/run_benchmark.py scripts/ananta/train_lora.py scripts/ananta/run_local_benchmark.py scripts/ananta/scratch_model.py scripts/ananta/train_scratch.py
       - name: Validate and split approved dataset
         run: |
           python scripts/ananta/build_dataset.py docs/ananta-sft-pilot-v0.1.jsonl --output-dir /tmp/ananta-dataset
