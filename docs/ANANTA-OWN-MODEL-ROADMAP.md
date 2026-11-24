@@ -1,11 +1,11 @@
 # ANANTA Own Model — Roadmap
 
-**Status:** Data pipeline and first fine-tuning pilot prepared; model training not yet executed  
+**Status:** From-scratch model direction approved; data pipeline exists; scratch model not yet trained  
 **Product:** 7inOne  
 **Assistant identity:** ANANTA (អាណានតា)  
-**Principle:** Build a Khmer-capable, independently deployable model using approved 7inOne training data. Keep the existing marketplace and customer data intact.
+**Principle:** Build ANANTA's language model from randomly initialized weights, teach it progressively, and deploy only after measured evaluation. Do not use a third-party pretrained model as ANANTA's brain.
 
-## 1. Current verified baseline
+## 1. Verified baseline
 
 The connected Supabase project currently contains:
 - 1 primary knowledge space.
@@ -14,109 +14,113 @@ The connected Supabase project currently contains:
 - 1 training-progress row.
 
 The repository already contains:
-- `backend/ananta-brain-upload.js` for authenticated knowledge ingestion.
-- `backend/assistant-training-engine.js` for scenario generation, live ANANTA response, grading, and progress tracking.
-- Existing Admin learning-monitor routes and UI.
+- Knowledge ingestion, lesson review, training-data validation, and Admin learning-monitor code.
+- A source-aware 110 / 20 / 20 pilot dataset split and a fixed 20-case Khmer benchmark.
+- An existing Gemma-based experiment from the earlier plan. This is now **superseded for the main ANANTA path**. Keep its files for reference; do not describe that experiment as ANANTA's own from-scratch model and do not run it as the selected training path.
 
-The current training and shopping-assistant code has been changed to remove Qwen, Hugging Face, and OpenRouter defaults. It now waits for an ANANTA-owned, OpenAI-compatible model endpoint configured through `ANANTA_MODEL_URL` and `ANANTA_MODEL_NAME` (optional `ANANTA_MODEL_API_KEY`). The training scheduler stays paused until that endpoint exists. There are no completed training attempts yet, so there is not evidence of a successful training/evaluation cycle or a separately fine-tuned ANANTA model.
+No from-scratch language model has been trained yet. Existing lessons and examples are teaching material, not proof that a model has learned them.
 
-## 2. Target architecture
+## 2. The chosen direction: train from random initialization
 
-1. **Teacher layer — ChatGPT:** author Khmer lessons, realistic customer scenarios, ideal answers, evaluation criteria, and corrections. ChatGPT can prepare and review data when a teacher workflow is active; it does not run continuously after a chat is closed and its model weights cannot be copied into ANANTA.
-2. **Knowledge Center — Telegram:** provide a convenient place for lesson drafts, approved lesson posts, exercises, and review records. Telegram is an intake/archive interface, not the model itself or the canonical database.
-3. **Canonical knowledge — Supabase:** retain approved lessons, source references, review status, attempts, and progress. Existing tables must be reused where possible; never delete the existing 15 approved entries.
-4. **Dataset builder:** convert only approved, deduplicated, privacy-clean examples into versioned JSONL supervised fine-tuning (SFT) records. Preserve source IDs and review metadata outside the model-facing messages.
-5. **Quality gate:** validate format, Khmer readability, factual grounding, policy compliance, duplication, and train/validation/test separation before export.
-6. **Base model selection:** compare open-weight models for Khmer quality, commercial-use license, model size, inference memory, and fine-tuning compatibility. Do not lock the project to Qwen or another provider before testing.
-7. **Fine-tuning:** begin with a small LoRA/QLoRA experiment on a suitable base model. Save adapter, tokenizer/config, dataset version, training parameters, and evaluation results.
-8. **Evaluation and deployment:** compare the fine-tuned model against its base model on a held-out Khmer test set. Deploy only if it improves measured task performance without increasing hallucinations. Keep a rollback path and current live assistant until the replacement is verified.
+ANANTA's own model will start with randomly initialized parameters. It will not inherit another model's learned weights. The first version will be deliberately small so the training process can be tested with limited resources.
 
-The repository now includes 150 teacher-authored SFT examples sourced from 15 approved lessons, a leakage-safe split of 110 train / 20 validation / 20 test records, a fixed 20-case Khmer benchmark, a Gemma 4 E2B QLoRA training script, a free-GPU Colab notebook, a local base-vs-adapter benchmark runner, one-click Windows CPU inference scripts using the official-compatible Q4_0 GGUF, and passing GitHub Actions data-validation checks. The actual GPU training run has not been executed. A free local CPU inference path is prepared for the user's Windows PC; a temporary authenticated tunnel can connect it to the existing Render backend while that PC is online. See `scripts/ananta/README.md` and `docs/ANANTA-MODEL-DECISION.md`.
+Core components:
+1. **Khmer-first tokenizer:** build and version a tokenizer from legally usable, privacy-clean Khmer and multilingual text. Test Khmer word segmentation, Unicode normalization, punctuation, English terms, and mixed Khmer-English input.
+2. **Own decoder-only Transformer:** implement a compact causal language model with documented architecture, parameter count, context length, and reproducible initialization.
+3. **Pretraining corpus:** curate and deduplicate licensed/public-domain or user-authorized text. Record provenance and licensing. Do not scrape private conversations or include personal data.
+4. **Pretraining:** learn next-token prediction from the corpus. Save checkpoints, tokenizer version, corpus manifest/hash, training configuration, and loss curves.
+5. **Instruction teaching:** after language pretraining, teach question-answer behavior, Khmer explanations, product-support tasks, and safe uncertainty handling using approved examples.
+6. **Evaluation:** test on held-out text and unseen Khmer tasks. Measure validation loss/perplexity, Khmer readability, instruction-following, factuality, hallucination, and safety. Keep test data out of training.
+7. **Serving:** package the trained model and tokenizer as a versioned artifact. Run inference on a server with sufficient RAM/CPU/GPU; the existing 512 MB Render Free service is only the application backend and is not a suitable host for the language model.
+8. **Live marketplace facts:** retrieve current price, inventory, shop, warranty, delivery, and seller data from authorized 7inOne APIs/Supabase at answer time. Do not bake changing facts into model weights.
 
-## 3. What the model should learn
+## 3. Progressive learning levels
 
-Fine-tuning should teach stable behavior and task skills:
-- Understand Khmer customer intent and ask only necessary clarification questions.
-- Recommend and compare products using the customer's needs and budget.
-- Explain technical specifications in plain Khmer.
-- Never invent price, stock, product variants, warranty, seller identity, or delivery facts.
-- Use 7inOne's live product/shop/order data tools for changing facts instead of memorizing stale values.
-- Admit uncertainty, explain what must be checked, and escalate complaints or sensitive cases appropriately.
-- Follow 7inOne's tone, response structure, privacy, and safety rules.
+- **Level 0 — Foundation:** tokenizer, Unicode handling, basic token prediction, reproducible training and checkpointing.
+- **Level 1 — Language:** Khmer sentence patterns, common vocabulary, punctuation, simple English and mixed-language text.
+- **Level 2 — Understanding:** intent, question forms, context, summaries, and simple explanations.
+- **Level 3 — Instruction:** follow directions, answer clearly, ask only necessary clarifying questions, and admit uncertainty.
+- **Level 4 — 7inOne skills:** product discovery, comparisons, budget guidance, technical explanations, seller/customer support, and safe tool use.
+- **Level 5 — Advanced:** broader reasoning exercises, multi-step tasks, robust evaluation, and continuous approved curriculum updates.
 
-Dynamic catalogue facts (price, inventory, seller status, shipping, warranty changes) belong in live retrieval/API data, not in model weights.
+A level is earned only after passing its held-out evaluation gate. Adding lessons to Supabase does not automatically mean the model has learned them; the approved material must go through a training run and evaluation.
 
-## 4. Training-data contract
+## 4. Teacher and knowledge workflow
 
-Canonical format: UTF-8 JSONL, one record per line. Each record contains:
-- `record_id`: stable unique identifier.
-- `source_lesson_id` and `source_reference`: traceability to approved source material.
-- `category`, `difficulty`, `review_status`, and `split`.
-- `messages`: ordered chat messages with `system`, `user`, and `assistant` roles.
+1. ChatGPT acts as curriculum author/reviewer when the teacher workflow is active: it prepares lessons, exercises, ideal answers, rubrics, and corrections.
+2. Admin reviews and approves the material.
+3. Supabase remains the canonical store for lessons, provenance, approval state, attempts, and progress.
+4. Dataset builder exports only approved, deduplicated, privacy-clean records into versioned training files.
+5. Training jobs consume a fixed dataset version and record reproducible metadata.
+6. Evaluation compares the new checkpoint with the previous checkpoint on the same held-out tests.
+7. Promote a checkpoint only when measured quality improves and critical safety/factuality checks do not regress.
 
-Only records with `review_status = "approved"` may be exported. The trainer must pass only the `messages` field to the model; metadata must not become training text. The live assistant and training engine must use `ANANTA_MODEL_URL`, `ANANTA_MODEL_NAME`, and optionally `ANANTA_MODEL_API_KEY`; do not restore Qwen/OpenRouter/Hugging Face provider defaults. Do not include customer names, phone numbers, addresses, account IDs, private chat logs, credentials, or other personal data.
+ChatGPT does not run continuously after a chat closes, and its own model weights cannot be copied into ANANTA. The teacher workflow must explicitly save approved curriculum to the project's data store.
 
-Use a source-aware split (initial target 80% train / 10% validation / 10% test) so paraphrases or examples from the same source lesson/conversation cannot leak across splits. Keep the test set fixed and never train on it.
+## 5. Data and safety contract
 
-See `docs/ananta-sft-format.schema.json` and `docs/ananta-sft-example.jsonl`.
+- Use UTF-8 text and preserve Khmer Unicode correctly.
+- Record source, license/permission, collection date, deduplication result, and dataset version.
+- Do not train on customer names, phone numbers, addresses, account IDs, credentials, private chat logs, or other personal data.
+- Do not include secrets or service-role keys in GitHub or datasets.
+- Separate train, validation, and held-out test data by source to prevent leakage.
+- Keep the benchmark fixed and never train on it.
+- Only Admin-approved material may enter instruction training.
+- Dynamic product and transaction facts must be fetched live from permission-checked APIs.
 
-## 5. Milestones and acceptance gates
+## 6. Resource and deployment constraints
 
-### Phase 0 — Foundation (completed)
-- Record the existing architecture and baseline.
-- Define the canonical dataset contract.
-- Preserve current Supabase knowledge and live marketplace behavior.
+- No Cloudflare, third-party hosted inference API, or external model will be used as a substitute brain.
+- No paid API, paid GPU, paid hosting tier, or subscription without explicit approval.
+- Free GPU availability is not guaranteed. CPU training can validate a tiny prototype but will be too slow for meaningful large-scale pretraining.
+- Start with a tiny model and a small, legally usable corpus to validate the complete pipeline. Be transparent that this prototype will not initially match a large commercial assistant.
+- Scale model size and corpus only when compute, storage, and evaluation evidence justify it.
+- Model artifact storage is not the same as inference: a trained checkpoint must be loaded by a server process with sufficient resources.
+- Keep the current marketplace backend and user data intact. Do not deploy an untested model to production.
 
-**Exit gate:** data format and safety rules are documented.
+## 7. Milestones and acceptance gates
 
-### Phase 1 — Data pipeline (pilot completed; quality expansion ongoing)
-- Create an Admin review/export flow for approved lesson-derived examples.
-- Add deduplication, privacy checks, source traceability, and dataset versioning.
-- Export a small pilot dataset and inspect it manually.
+### Phase 0 — Preserve and document
+- Keep the existing Supabase lessons and approved examples.
+- Mark the previous pretrained-model experiment as superseded, not as completed training.
+- Define the from-scratch model specification and reproducible artifact format.
 
-**Exit gate:** the current pilot is valid and source-traceable; expand scenario diversity and complete manual quality review before production use.
+**Exit gate:** architecture, tokenizer plan, data permissions, and benchmark are documented.
 
-### Phase 2 — Khmer benchmark (test harness completed; model run pending)
-- Build a held-out set covering product advice, comparisons, budget, specs, uncertainty, seller/customer support, and policy compliance.
-- Score answer relevance, factuality, Khmer clarity, tool-use decisions, and safety.
+### Phase 1 — Tokenizer and corpus
+- Build Khmer-first tokenizer tests.
+- Assemble a small, licensed, privacy-clean corpus with source manifest.
+- Add corpus validation and deduplication.
 
-**Exit gate:** reproducible baseline results for Gemma 4 E2B on the fixed 20-case set.
+**Exit gate:** tokenizer passes Khmer Unicode and round-trip tests; corpus provenance is auditable.
 
-### Phase 3 — Base-model experiment (candidate selected; benchmark pending)
-- Compare candidate open-weight models by actual Khmer test results and license.
-- Check model memory requirements against the available hardware.
-- Prefer a small model for the first experiment; do not assume local fine-tuning is feasible on a CPU-only 16 GB machine.
+### Phase 2 — Tiny Transformer
+- Implement the decoder-only model from random initialization.
+- Add training, checkpoint save/resume, validation loss, and deterministic smoke tests.
+- Run a tiny CPU smoke test first.
 
-**Exit gate:** chosen model has an acceptable license, Khmer benchmark score, and feasible training/serving plan.
+**Exit gate:** a reproducible checkpoint is trained from random initialization and can generate text. This is a technical prototype, not yet a capable assistant.
 
-### Phase 4 — Fine-tuning pilot (training script and notebook prepared; execution pending)
-- Train a small LoRA/QLoRA adapter on approved examples.
-- Record all hyperparameters, dataset hash, model revision, and artifacts.
-- Compare base vs. tuned model on the unchanged test set.
+### Phase 3 — Language pretraining
+- Train on the approved corpus when suitable compute is available.
+- Track loss, throughput, resource use, and checkpoint versions.
 
-**Exit gate:** tuned model demonstrably improves target tasks and does not regress critical safety/factuality checks.
+**Exit gate:** validation loss improves against the random baseline and generated Khmer text is manually reviewed.
+
+### Phase 4 — Instruction curriculum
+- Teach approved lessons and task examples in staged levels.
+- Add held-out evaluation for every level.
+
+**Exit gate:** model passes the relevant unseen-task benchmark without critical factuality or safety regression.
 
 ### Phase 5 — Controlled deployment
-- Deploy behind an Admin-controlled feature flag.
-- Run internal tests and a limited rollout.
-- Monitor latency, cost, failure rate, answer quality, and rollback readiness.
+- Host the model on a runtime with sufficient resources.
+- Connect the 7inOne backend to ANANTA's own inference service.
+- Keep live product facts in the existing database/API path.
+- Use an Admin-controlled feature flag, monitoring, and rollback.
 
-**Exit gate:** Admin approves promotion to production after evidence-based evaluation.
+**Exit gate:** latency, stability, Khmer quality, and safety pass production checks.
 
-## 6. Free-first constraints
+## 8. Truthful status rule
 
-- Prefer open-weight models and local inference where hardware allows.
-- A free GPU notebook or hosted tier may be used for experiments only if its current limits and terms permit it; availability is not guaranteed.
-- Do not add a paid API, paid GPU, or paid model subscription without explicit approval.
-- A model being open-weight does not automatically mean every use is free; check license and compute costs.
-- Keep secrets out of GitHub. Never put API keys, service-role keys, Telegram bot tokens, or customer data in dataset files.
-
-## 7. Important distinction
-
-A knowledge base (RAG) gives ANANTA access to approved information. Fine-tuning changes model behavior through learned parameters. They complement each other; neither replaces the other. The intended final system combines:
-- a fine-tuned ANANTA model for Khmer behavior and 7inOne task skills;
-- Supabase/live APIs for current and permission-checked facts;
-- Telegram for knowledge intake and review workflow;
-- Admin evaluation, versioning, and rollback.
-
-**No claim of an own model or successful training is valid until a real fine-tuning artifact exists and passes the held-out evaluation.**
+At present, ANANTA has approved teaching material and a data pipeline, but **does not yet have a trained from-scratch language model**. Do not claim that ANANTA is trained, intelligent, or production-ready until a real random-initialized model checkpoint exists and passes held-out evaluation.
