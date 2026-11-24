@@ -49,7 +49,7 @@ The runner stores raw answers and latency. It does not grade itself. A teacher/a
 
 Do not deploy until all 20 held-out cases have been reviewed, the tuned model improves Khmer usefulness without increasing factual or privacy errors, and the adapter has a recorded model revision, dataset hash, and rollback plan.
 
-## 4. Architecture rules
+## 7. Architecture rules
 
 - Telegram is the lesson intake/archive interface, not the neural model.
 - Supabase remains the canonical store for approved knowledge and provenance.
