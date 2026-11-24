@@ -57,3 +57,26 @@ jobs:
               assert isinstance(row.get('must_not_claim'), list)
           print(f'Validated {len(rows)} benchmark cases')
           PY
+
+  scratch-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install CPU PyTorch
+        run: pip install torch --index-url https://download.pytorch.org/whl/cpu
+      - name: Create temporary Khmer smoke corpus
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          text = "សួស្តី! ខ្ញុំឈ្មោះអាណានតា។ ខ្ញុំកំពុងរៀនភាសាខ្មែរ។\n"
+          Path('/tmp/ananta-smoke.txt').write_text(text * 120, encoding='utf-8')
+          PY
+      - name: Train tiny model from random initialization
+        run: |
+          python scripts/ananta/train_scratch.py --corpus /tmp/ananta-smoke.txt --output /tmp/ananta-smoke-output --steps 2 --eval-interval 1 --batch-size 2 --seq-len 32 --d-model 32 --layers 1 --heads 2 --device cpu
+          test -s /tmp/ananta-smoke-output/checkpoint-latest.pt
+          test -s /tmp/ananta-smoke-output/tokenizer.json
+          test -s /tmp/ananta-smoke-output/training-manifest.json
