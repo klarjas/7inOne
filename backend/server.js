@@ -2118,6 +2118,92 @@ function parseAssistantKnowledgePost(message) {
   return { entryType, category, keywords, title, content };
 }
 
+async function handleAnantaTelegramCommand(message) {
+  const chatId = message?.chat?.id;
+  const telegramUserId = message?.from?.id;
+  const raw = clean(message?.text, 500);
+  const parts = raw.split(/\s+/).filter(Boolean);
+  const command = (parts[0] || '').split('@')[0].toLowerCase();
+  if (command !== '/ananta') return false;
+  if (!chatId || !telegramUserId || message?.chat?.type !== 'private') return true;
+  try {
+    const { data: link, error: linkError } = await supabase.from(telegramLinkTable)
+      .select('user_id').eq('telegram_user_id', telegramUserId).maybeSingle();
+    if (linkError) throw linkError;
+    if (!link?.user_id || !await isAdmin(link.user_id)) {
+      await sendTelegramMessage(chatId, '⛔ ពាក្យបញ្ជា ANANTA អនុញ្ញាតតែ Admin 7inOne ប៉ុណ្ណោះ។ សូមភ្ជាប់ Telegram ជាមួយគណនី Admin ជាមុនសិន។');
+      return true;
+    }
+    const action = (parts[1] || 'help').toLowerCase();
+    if (action === 'help') {
+      await sendTelegramMessage(chatId, '🤖 ANANTA Control\n/ananta status — មើលកម្រិត និងស្ថានភាព\n/ananta lessons — មើលមេរៀនដែលបានអនុម័ត\n/ananta train — ដាក់សំណើបណ្តុះបណ្តាលទៅ Queue\n/ananta help — ជំនួយ');
+      return true;
+    }
+    const { data: space, error: spaceError } = await supabase.from('assistant_knowledge_spaces')
+      .select('id,assistant_name,is_enabled').eq('space_code', 'ananta').maybeSingle();
+    if (spaceError) throw spaceError;
+    if (!space) {
+      await sendTelegramMessage(chatId, 'មិនទាន់មាន ANANTA Knowledge Space ទេ។ សូមបង្កើត Space ក្នុង Supabase ជាមុនសិន។');
+      return true;
+    }
+    if (action === 'status') {
+      const [progress, lessons, latestJob] = await Promise.all([
+        supabase.from('assistant_training_progress').select('current_level,current_level_name,lessons_completed,tests_passed,tests_failed,best_score,latest_score,weak_topics,last_assessed_at').eq('space_id', space.id).maybeSingle(),
+        supabase.from('assistant_knowledge_entries').select('id', { count: 'exact', head: true }).eq('space_id', space.id).eq('status', 'approved'),
+        supabase.from('assistant_training_jobs').select('job_type,status,created_at,started_at,finished_at,error_message').eq('space_id', space.id).order('created_at', { ascending: false }).limit(1).maybeSingle()
+      ]);
+      const error = progress.error || lessons.error || latestJob.error;
+      if (error) throw error;
+      const p = progress.data || {}, j = latestJob.data;
+      await sendTelegramMessage(chatId,
+        '📊 ANANTA Status\nLevel: ' + (p.current_level_name || 'Beginner') + ' (' + (p.current_level || 1) + ')' +
+        '\nApproved lessons: ' + (lessons.count || 0) + '\nLessons completed: ' + (p.lessons_completed || 0) +
+        '\nTests: ' + (p.tests_passed || 0) + ' passed / ' + (p.tests_failed || 0) + ' failed' +
+        '\nBest score: ' + (p.best_score ?? 0) + '\nLatest job: ' + (j ? j.status + ' (' + j.job_type + ')' : 'none') +
+        '\nSpace enabled: ' + (space.is_enabled ? 'yes' : 'no'));
+      return true;
+    }
+    if (action === 'lessons') {
+      const { data, error } = await supabase.from('assistant_knowledge_entries')
+        .select('title,category,entry_type,created_at').eq('space_id', space.id).eq('status', 'approved')
+        .order('created_at', { ascending: false }).limit(10);
+      if (error) throw error;
+      const list = (data || []).map((item, index) => (index + 1) + '. ' + clean(item.title, 100) + ' [' + clean(item.category, 40) + ']').join('\n');
+      await sendTelegramMessage(chatId, '📚 ANANTA Lessons (latest 10)\n' + (list || 'មិនទាន់មានមេរៀនដែលបានអនុម័តទេ។'));
+      return true;
+    }
+    if (action === 'train') {
+      if (!space.is_enabled) {
+        await sendTelegramMessage(chatId, '⏸️ ANANTA Space ត្រូវបានបិទ។ មិនបានដាក់ Training Job ទេ។');
+        return true;
+      }
+      const { data: existing, error: existingError } = await supabase.from('assistant_training_jobs')
+        .select('id,status').eq('space_id', space.id).in('status', ['queued', 'running'])
+        .order('created_at', { ascending: false }).limit(1).maybeSingle();
+      if (existingError) throw existingError;
+      if (existing) {
+        await sendTelegramMessage(chatId, '⏳ មាន Training Job កំពុងរង់ចាំ ឬកំពុងដំណើរការរួចហើយ។\nStatus: ' + existing.status);
+        return true;
+      }
+      const { data: job, error: insertError } = await supabase.from('assistant_training_jobs')
+        .insert({ space_id: space.id, job_type: 'scratch_train', status: 'queued',
+          requested_by_telegram_id: String(telegramUserId),
+          payload: { source: 'telegram', requested_at: new Date().toISOString(), language: ['km', 'en'] } })
+        .select('id,status,created_at').single();
+      if (insertError) throw insertError;
+      await sendTelegramMessage(chatId, '✅ បានដាក់សំណើបណ្តុះបណ្តាល ANANTA ទៅ Queue រួចរាល់។\nJob: ' + job.id +
+        '\nStatus: queued\nចំណាំ៖ នេះជាការដាក់សំណើប៉ុណ្ណោះ។ Training Worker សម្រាប់ Scratch Model ត្រូវដំណើរការ ដើម្បីយក Job នេះទៅហ្វឹកហាត់ពិតប្រាកដ។');
+      return true;
+    }
+    await sendTelegramMessage(chatId, 'ពាក្យបញ្ជាមិនស្គាល់ទេ។ សូមប្រើ /ananta help');
+    return true;
+  } catch (error) {
+    console.error('[ANANTA Telegram] command failed:', clean(error.message, 500));
+    await sendTelegramMessage(chatId, 'មិនអាចដំណើរការពាក្យបញ្ជា ANANTA បានទេ។ សូមពិនិត្យ Migration និង Backend Logs។');
+    return true;
+  }
+}
+
 async function ingestAssistantKnowledgePost(message) {
   const chat = message?.chat;
   const expectedChatId = telegramStorageChatId();
@@ -2187,7 +2273,12 @@ app.post('/api/telegram/webhook', async (req, res) => {
     const message = req.body?.message;
     const chat = message?.chat;
     const textValue = clean(message?.text, 500);
-    if (!message || chat?.type !== 'private' || !textValue.startsWith('/start')) return;
+    if (!message || chat?.type !== 'private') return;
+    if (textValue.startsWith('/ananta')) {
+      await handleAnantaTelegramCommand(message);
+      return;
+    }
+    if (!textValue.startsWith('/start')) return;
     const payload = textValue.split(/\s+/, 2)[1] || '';
     if (payload.startsWith('login_')) {
       const rawLoginToken = payload.slice(6);
