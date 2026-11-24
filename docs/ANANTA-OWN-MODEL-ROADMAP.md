@@ -1,6 +1,6 @@
 # ANANTA Own Model — Roadmap
 
-**Status:** Phase 0 / foundation design  
+**Status:** Data pipeline and first fine-tuning pilot prepared; model training not yet executed  
 **Product:** 7inOne  
 **Assistant identity:** ANANTA (អាណានតា)  
 **Principle:** Build a Khmer-capable, independently deployable model using approved 7inOne training data. Keep the existing marketplace and customer data intact.
@@ -9,7 +9,7 @@
 
 The connected Supabase project currently contains:
 - 1 primary knowledge space.
-- 15 approved knowledge entries and 45 teacher-reviewed SFT examples.
+- 15 approved knowledge entries and 150 teacher-authored SFT examples.
 - 0 training attempts.
 - 1 training-progress row.
 
@@ -31,7 +31,7 @@ The current training and shopping-assistant code has been changed to remove Qwen
 7. **Fine-tuning:** begin with a small LoRA/QLoRA experiment on a suitable base model. Save adapter, tokenizer/config, dataset version, training parameters, and evaluation results.
 8. **Evaluation and deployment:** compare the fine-tuned model against its base model on a held-out Khmer test set. Deploy only if it improves measured task performance without increasing hallucinations. Keep a rollback path and current live assistant until the replacement is verified.
 
-The repository now includes 45 teacher-reviewed SFT examples sourced from 15 approved lessons, an approved-data validator/splitter, a fixed 20-case Khmer benchmark, a raw-output benchmark runner, and passing GitHub Actions checks for these assets. See `scripts/ananta/README.md` and `docs/ANANTA-MODEL-DECISION.md`.
+The repository now includes 150 teacher-authored SFT examples sourced from 15 approved lessons, a leakage-safe split of 110 train / 20 validation / 20 test records, a fixed 20-case Khmer benchmark, a Gemma 4 E2B QLoRA training script, a free-GPU Colab notebook, a local base-vs-adapter benchmark runner, and passing GitHub Actions data-validation checks. The actual GPU training run has not been executed. See `scripts/ananta/README.md` and `docs/ANANTA-MODEL-DECISION.md`.
 
 ## 3. What the model should learn
 
@@ -62,34 +62,34 @@ See `docs/ananta-sft-format.schema.json` and `docs/ananta-sft-example.jsonl`.
 
 ## 5. Milestones and acceptance gates
 
-### Phase 0 — Foundation (current)
+### Phase 0 — Foundation (completed)
 - Record the existing architecture and baseline.
 - Define the canonical dataset contract.
 - Preserve current Supabase knowledge and live marketplace behavior.
 
 **Exit gate:** data format and safety rules are documented.
 
-### Phase 1 — Data pipeline
+### Phase 1 — Data pipeline (pilot completed; quality expansion ongoing)
 - Create an Admin review/export flow for approved lesson-derived examples.
 - Add deduplication, privacy checks, source traceability, and dataset versioning.
 - Export a small pilot dataset and inspect it manually.
 
-**Exit gate:** every exported record is approved, traceable, valid JSONL, and free of personal data.
+**Exit gate:** the current pilot is valid and source-traceable; expand scenario diversity and complete manual quality review before production use.
 
-### Phase 2 — Khmer benchmark
+### Phase 2 — Khmer benchmark (test harness completed; model run pending)
 - Build a held-out set covering product advice, comparisons, budget, specs, uncertainty, seller/customer support, and policy compliance.
 - Score answer relevance, factuality, Khmer clarity, tool-use decisions, and safety.
 
-**Exit gate:** reproducible baseline results for candidate base models.
+**Exit gate:** reproducible baseline results for Gemma 4 E2B on the fixed 20-case set.
 
-### Phase 3 — Base-model experiment
+### Phase 3 — Base-model experiment (candidate selected; benchmark pending)
 - Compare candidate open-weight models by actual Khmer test results and license.
 - Check model memory requirements against the available hardware.
 - Prefer a small model for the first experiment; do not assume local fine-tuning is feasible on a CPU-only 16 GB machine.
 
 **Exit gate:** chosen model has an acceptable license, Khmer benchmark score, and feasible training/serving plan.
 
-### Phase 4 — Fine-tuning pilot
+### Phase 4 — Fine-tuning pilot (training script and notebook prepared; execution pending)
 - Train a small LoRA/QLoRA adapter on approved examples.
 - Record all hyperparameters, dataset hash, model revision, and artifacts.
 - Compare base vs. tuned model on the unchanged test set.
