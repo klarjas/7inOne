@@ -1,11 +1,11 @@
-const MODEL = process.env.AI_MODEL || 'Qwen/Qwen2.5-7B-Instruct';
-const URL = process.env.AI_CHAT_COMPLETIONS_URL || 'https://router.huggingface.co/v1/chat/completions';
+const MODEL = process.env.AI_MODEL || 'qwen/qwen3-4b:free';
+const URL = process.env.AI_CHAT_COMPLETIONS_URL || 'https://openrouter.ai/api/v1/chat/completions';
 const rawInterval = Number(process.env.ANANTA_TRAINING_INTERVAL_SECONDS || 3600);
 const INTERVAL = (Number.isFinite(rawInterval) ? Math.max(3600, rawInterval) : 21600) * 1000;
 const LEVELS = ['Beginner','Learner','Intermediate','Advanced','Expert','Master'];
 let active = false, timer = null;
 const runtime = { started: false, running: false, lastAttemptAt: null, lastSuccessAt: null, lastError: '', intervalSeconds: INTERVAL / 1000, enabled: false };
-const token = () => process.env.HF_TOKEN || process.env.AI_API_KEY || '';
+const token = () => process.env.OPENROUTER_API_KEY || process.env.AI_API_KEY || '';
 const clean = (v,n=2000) => String(v ?? '').replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g,' ').trim().slice(0,n);
 async function ask(messages, max_tokens) {
   const key = token();
@@ -35,7 +35,7 @@ const lessonCode = x => (x.category||'general')+'-'+(String(x.title).match(/(?:á
 const level = n => n>=95?6:n>=90?5:n>=80?4:n>=70?3:n>=60?2:1;
 async function cycle({supabase,port}) {
   if(active) return false;
-  if(!token()){runtime.lastError='AI model token is not configured. Set HF_TOKEN or AI_API_KEY.';console.warn('[ANANTA Training] Paused: configure HF_TOKEN or AI_API_KEY.');return false;}
+  if(!token()){runtime.lastError='AI model token is not configured. Set OPENROUTER_API_KEY or AI_API_KEY.';console.warn('[ANANTA Training] Paused: configure HF_TOKEN or AI_API_KEY.');return false;}
   active=true; runtime.running=true; runtime.lastAttemptAt=new Date().toISOString(); runtime.lastError='';
   try {
     const {data:space,error:se}=await supabase.from('assistant_knowledge_spaces').select('id,is_enabled').eq('space_code','primary').maybeSingle();
