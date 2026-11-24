@@ -24,7 +24,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Compile ANANTA scripts
-        run: python -m py_compile scripts/ananta/build_dataset.py scripts/ananta/run_benchmark.py scripts/ananta/train_lora.py scripts/ananta/run_local_benchmark.py
+        run: python -m py_compile scripts/ananta/build_dataset.py scripts/ananta/run_benchmark.py scripts/ananta/train_lora.py scripts/ananta/run_local_benchmark.py scripts/ananta/train_lora.py scripts/ananta/run_local_benchmark.py
       - name: Validate and split approved pilot dataset
         run: python scripts/ananta/build_dataset.py docs/ananta-sft-pilot-v0.1.jsonl --output-dir /tmp/ananta-dataset
           python - <<'PY'
@@ -37,6 +37,8 @@ jobs:
           assert m['training_ready'] is True
           print('Minimum dataset gate passed:', m['counts'])
           PY
+      - name: Validate Colab notebook JSON
+        run: python -c "import json; json.load(open('notebooks/ANANTA-Gemma4-Free-Training.ipynb', encoding='utf-8')); print('Notebook JSON valid')"
       - name: Validate Colab notebook JSON
         run: python -c "import json; json.load(open('notebooks/ANANTA-Gemma4-Free-Training.ipynb', encoding='utf-8')); print('Notebook JSON valid')"
       - name: Validate fixed benchmark JSONL
