@@ -17,7 +17,13 @@ The builder accepts approved records only, validates chat roles and source trace
 
 The current teacher-authored pilot contains 150 examples across 15 approved source lessons. The source-aware split has passed the minimum technical gate: 110 train, 20 validation and 20 held-out test examples. These are synthetic teaching examples, not real customer conversations; this is enough to begin a controlled pilot run, not enough by itself to justify production deployment. Human review and broader real-world scenario coverage are still required.
 
-## 2. Fine-tune the candidate model
+## 2. Run the base model locally on Windows
+
+For the existing CPU-only Windows PC with 16 GB RAM, use `scripts/ananta/windows/START-ANANTA-LOCAL.bat`. It installs llama.cpp if needed and starts the Gemma 4 E2B Q4_0 GGUF model (about 2.84 GB) as an OpenAI-compatible API at `127.0.0.1:9931`. This is the untuned base model, not the fine-tuned ANANTA adapter. The optional `START-ANANTA-TUNNEL.bat` exposes the local endpoint through a temporary HTTPS tunnel protected by the generated API key. The PC must stay on and the tunnel URL changes when restarted. See `scripts/ananta/windows/README.md`.
+
+To test the local model, set `ANANTA_MODEL_URL=http://127.0.0.1:9931/v1/chat/completions`, `ANANTA_MODEL_NAME=ananta-gemma4-e2b`, and `ANANTA_MODEL_API_KEY` from the local key file, then run `python scripts/ananta/run_benchmark.py`.
+
+## 3. Fine-tune the candidate model
 
 A guarded QLoRA script and a Google Colab notebook are included:
 
@@ -27,11 +33,11 @@ A guarded QLoRA script and a Google Colab notebook are included:
 
 Open the notebook in Google Colab, select a free GPU runtime only if offered, and run the cells in order. It refuses to train without CUDA, sufficient VRAM, an approved dataset manifest, and a Hugging Face read token. It does not start paid compute. Free GPU availability is not guaranteed. Never commit the Hugging Face token or adapter weights to the public repository.
 
-## 3. Evaluate base model vs. adapter
+## 4. Evaluate base model vs. adapter
 
 Run `scripts/ananta/run_local_benchmark.py` twice against the same 20-case benchmark: once without `--adapter-dir` for the base model, then with `--adapter-dir artifacts/ananta-adapter` for the tuned model. Human-review both outputs; the runner does not self-grade.
 
-## 4. Run the fixed benchmark against an own-model endpoint
+## 5. Run the fixed benchmark against an own-model endpoint
 
 Set environment variables outside Git: ANANTA_MODEL_URL (OpenAI-compatible chat-completions endpoint), ANANTA_MODEL_NAME, and optional ANANTA_MODEL_API_KEY. Never commit keys.
 
@@ -39,7 +45,7 @@ Run: python scripts/ananta/run_benchmark.py
 
 The runner stores raw answers and latency. It does not grade itself. A teacher/admin must score outputs against must_include and must_not_claim. Keep the benchmark fixed and never add its answers to the training set.
 
-## 5. Deployment gate
+## 6. Deployment gate
 
 Do not deploy until all 20 held-out cases have been reviewed, the tuned model improves Khmer usefulness without increasing factual or privacy errors, and the adapter has a recorded model revision, dataset hash, and rollback plan.
 
