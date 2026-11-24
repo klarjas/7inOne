@@ -10,8 +10,6 @@ import { createClient } from '@supabase/supabase-js';
 import { registerSupportChat } from './support-chat.js';
 import { registerSellerChat } from './seller-chat.js';
 import { registerShoppingAssistant } from './shopping-assistant.js';
-import { startAnantaTrainingEngine, getAnantaTrainingStatus, runAnantaTrainingNow } from './assistant-training-engine.js';
-import { registerAnantaBrainUploadRoutes } from './ananta-brain-upload.js';
 import { registerMyPostsRoutes } from './my-posts.js';
 import { researchExternalProductCategory } from './product-research.js';
 import { randomUUID, randomBytes, randomInt, createHash, createHmac, timingSafeEqual, createCipheriv, createDecipheriv } from 'node:crypto';
@@ -326,7 +324,6 @@ function publicProduct(product) {
 }
 registerSellerChat(app, { supabase, authenticate, requireVendor, upload, telegram, telegramStorageChatId, clean, fail, productPublicMaxAgeMs: PRODUCT_PUBLIC_MAX_AGE_MS, mediaProxyUrl });
 registerShoppingAssistant(app, { supabase, clean, fail, ratingsFor, publicProduct, productPublicMaxAgeMs: PRODUCT_PUBLIC_MAX_AGE_MS });
-registerAnantaBrainUploadRoutes(app, { supabase });
 
 async function fetchTelegramWithRetry(url, options, stage, maxAttempts = 3) {
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -2118,101 +2115,6 @@ function parseAssistantKnowledgePost(message) {
   return { entryType, category, keywords, title, content };
 }
 
-async function handleAnantaTelegramCommand(message) {
-  const chatId = message?.chat?.id, telegramUserId = message?.from?.id;
-  const raw = clean(message?.text, 500), parts = raw.split(/\s+/).filter(Boolean);
-  const command = (parts[0] || '').split('@')[0].toLowerCase();
-  if (command !== '/ananta') return false;
-  if (!chatId || !telegramUserId || message?.chat?.type !== 'private') return true;
-  const quiz = [
-    {q:'1/5: តើ AI ជាអ្វី? / What is AI?',a:['ក. កម្មវិធីធម្មតាប៉ុណ្ណោះ','ខ. ប្រព័ន្ធដែលអាចអនុវត្តការងារដែលត្រូវការភាពឆ្លាតវៃ','គ. ឧបករណ៍ផ្ទុកឯកសារ','ឃ. ប្រព័ន្ធអ៊ីនធឺណិត'],correct:'B',why:'AI អាចអនុវត្តការងារដែលត្រូវការសមត្ថភាពឆ្លាតវៃ។'},
-    {q:'2/5: តើ Data និង Model ខុសគ្នាដូចម្តេច?',a:['ក. Data ជាទិន្នន័យសម្រាប់រៀន; Model ជាប្រព័ន្ធដែលរៀនពីទិន្នន័យ','ខ. ដូចគ្នាទាំងស្រុង','គ. Model ជាឯកសាររូបភាព','ឃ. Data គឺជា CPU'],correct:'A',why:'Data ជាព័ត៌មាន/ឧទាហរណ៍; Model រៀនលំនាំពី Data។'},
-    {q:'3/5: Training មានន័យដូចម្តេច?',a:['ក. បើកកម្មវិធី','ខ. លុបទិន្នន័យ','គ. កែប្រែប៉ារ៉ាម៉ែត្រ Model ដោយរៀនពីទិន្នន័យ','ឃ. ផ្ញើសារ Telegram'],correct:'C',why:'Training គឺដំណើរការរៀន និងកែប៉ារ៉ាម៉ែត្រ Model។'},
-    {q:'4/5: ហេតុអ្វីត្រូវ Test Model បន្ទាប់ពី Training?',a:['ក. ដើម្បីធ្វើឱ្យឈ្មោះវែង','ខ. ដើម្បីវាស់ថាវាឆ្លើយត្រឹមត្រូវលើសំណួរថ្មីឬអត់','គ. ដើម្បីលុប Model','ឃ. មិនចាំបាច់ទេ'],correct:'B',why:'តេស្តលើទិន្នន័យថ្មីជួយវាស់សមត្ថភាពពិត។'},
-    {q:'5/5: បើ ANANTA មិនដឹងចម្លើយ តើគួរធ្វើអ្វី?',a:['ក. ប្រឌិតចម្លើយ','ខ. បញ្ជាក់ថាមិនដឹង ហើយស្នើព័ត៌មានបន្ថែម','គ. បង្កើតតម្លៃក្លែងក្លាយ','ឃ. ធានាថាមានស្តុក'],correct:'B',why:'AI ត្រូវស្មោះត្រង់ និងមិនប្រឌិតព័ត៌មាន។'}
-  ];
-  const sendQuestion = async (index) => {
-    const item=quiz[index];
-    await sendTelegramMessage(chatId,'📝 ANANTA Beginner Test\n'+item.q+'\n'+item.a.join('\n')+'\n\nឆ្លើយ៖ /ananta answer A (ឬ B, C, D)');
-  };
-  try {
-    const {data:link,error:linkError}=await supabase.from(telegramLinkTable).select('user_id').eq('telegram_user_id',telegramUserId).maybeSingle();
-    if(linkError) throw linkError;
-    if(!link?.user_id || !await isAdmin(link.user_id)){
-      await sendTelegramMessage(chatId,'⛔ ពាក្យបញ្ជា ANANTA អនុញ្ញាតតែ Admin 7inOne ប៉ុណ្ណោះ។ សូមភ្ជាប់ Telegram ជាមួយគណនី Admin ជាមុនសិន។'); return true;
-    }
-    const action=(parts[1]||'help').toLowerCase();
-    if(action==='help'){
-      await sendTelegramMessage(chatId,'🤖 ANANTA — Telegram-only (Free)\n/ananta status — ស្ថានភាព និងកម្រិត\n/ananta lessons — បញ្ជីមេរៀន\n/ananta learn — រៀនមេរៀនថ្មី\n/ananta test — ចាប់ផ្តើមប្រឡង\n/ananta train — ហាត់រៀន/ប្រឡង (មិនមែន Model training)\n/ananta answer A — ឆ្លើយសំណួរ\n/ananta report — របាយការណ៍ពិន្ទុ\n/ananta help — ជំនួយ'); return true;
-    }
-    const {data:space,error:spaceError}=await supabase.from('assistant_knowledge_spaces').select('id,assistant_name,is_enabled').eq('space_code','ananta').maybeSingle();
-    if(spaceError) throw spaceError;
-    if(!space){await sendTelegramMessage(chatId,'មិនទាន់មាន ANANTA Knowledge Space ទេ។');return true;}
-    if(action==='status'||action==='report'){
-      const [progress,lessons,attempts]=await Promise.all([
-        supabase.from('assistant_training_progress').select('current_level,current_level_name,lessons_completed,tests_passed,tests_failed,best_score,latest_score,weak_topics,last_assessed_at').eq('space_id',space.id).maybeSingle(),
-        supabase.from('assistant_knowledge_entries').select('id',{count:'exact',head:true}).eq('space_id',space.id).eq('status','approved'),
-        supabase.from('assistant_training_attempts').select('score,passed,feedback,created_at').eq('space_id',space.id).order('created_at',{ascending:false}).limit(3)
-      ]);
-      const err=progress.error||lessons.error||attempts.error;if(err)throw err;
-      const p=progress.data||{};
-      const recent=(attempts.data||[]).map((x,i)=>(i+1)+'. '+(x.score??0)+'/100 — '+(x.passed?'PASS':'PRACTICE')+'\n'+clean(x.feedback,180)).join('\n');
-      await sendTelegramMessage(chatId,'📊 ANANTA Report\nLevel: '+(p.current_level_name||'Beginner')+' ('+(p.current_level||1)+')\nApproved lessons: '+(lessons.count||0)+'\nLessons completed: '+(p.lessons_completed||0)+'\nTests: '+(p.tests_passed||0)+' passed / '+(p.tests_failed||0)+' failed\nBest score: '+(p.best_score??0)+'\nLatest score: '+(p.latest_score??0)+'\n\nRecent attempts:\n'+(recent||'មិនទាន់មានការប្រឡង។')+'\n\nFree mode: saved learning records and quiz scores; no neural-network model training is running.'); return true;
-    }
-    if(action==='lessons'||action==='learn'){
-      const {data,error}=await supabase.from('assistant_knowledge_entries').select('id,title,content,category,entry_type').eq('space_id',space.id).eq('status','approved').order('created_at',{ascending:false}).limit(action==='learn'?1:10);
-      if(error)throw error;
-      if(action==='lessons'){
-        const list=(data||[]).map((x,i)=>(i+1)+'. '+clean(x.title,100)+' ['+clean(x.category,40)+']').join('\n');
-        await sendTelegramMessage(chatId,'📚 ANANTA Lessons\n'+(list||'មិនទាន់មានមេរៀនដែលបានអនុម័តទេ។')+'\n\nប្រើ /ananta learn ដើម្បីបើកមេរៀនថ្មី។');
-      }else if(!data?.length){await sendTelegramMessage(chatId,'មិនទាន់មានមេរៀនដែលបានអនុម័តទេ។');}
-      else{
-        const lesson=data[0];
-        await supabase.from('assistant_telegram_sessions').upsert({telegram_user_id:String(telegramUserId),space_id:space.id,state:{mode:'lesson',lesson_id:lesson.id,lesson_title:lesson.title},updated_at:new Date().toISOString()},{onConflict:'telegram_user_id'});
-        await sendTelegramMessage(chatId,'📖 ANANTA Lesson\n'+clean(lesson.title,180)+'\n\n'+clean(lesson.content,3000)+'\n\nពេលរួចរាល់ ប្រើ /ananta test ដើម្បីប្រឡង។');
-      } return true;
-    }
-    if(action==='test'||action==='train'){
-      if(!space.is_enabled){await sendTelegramMessage(chatId,'⏸️ ANANTA Space ត្រូវបានបិទ។');return true;}
-      await supabase.from('assistant_telegram_sessions').upsert({telegram_user_id:String(telegramUserId),space_id:space.id,state:{mode:'quiz',question_index:0,answers:[],started_at:new Date().toISOString()},updated_at:new Date().toISOString()},{onConflict:'telegram_user_id'});
-      if(action==='train') await sendTelegramMessage(chatId,'🧠 Free learning mode: នេះជាការហាត់តាមមេរៀន និងប្រឡង មិនមែន Neural Network Training ទេ។');
-      await sendQuestion(0);return true;
-    }
-    if(action==='answer'){
-      const answer=(parts[2]||'').toUpperCase().replace(/[^A-D]/g,'');
-      if(!answer){await sendTelegramMessage(chatId,'សូមឆ្លើយតាមទម្រង់ /ananta answer A');return true;}
-      const {data:session,error:sessionError}=await supabase.from('assistant_telegram_sessions').select('state').eq('telegram_user_id',String(telegramUserId)).eq('space_id',space.id).maybeSingle();
-      if(sessionError)throw sessionError;
-      const state=session?.state||{};
-      if(state.mode!=='quiz'||!Number.isInteger(state.question_index)){await sendTelegramMessage(chatId,'មិនមានប្រឡងកំពុងដំណើរការទេ។ ប្រើ /ananta test');return true;}
-      const index=state.question_index,item=quiz[index];
-      if(!item){await sendTelegramMessage(chatId,'ប្រឡងនេះបានបញ្ចប់ហើយ។ ប្រើ /ananta report');return true;}
-      const answers=[...(Array.isArray(state.answers)?state.answers:[]),answer];
-      if(index<quiz.length-1){
-        const {error:updateError}=await supabase.from('assistant_telegram_sessions').update({state:{...state,question_index:index+1,answers},updated_at:new Date().toISOString()}).eq('telegram_user_id',String(telegramUserId));
-        if(updateError)throw updateError;
-        await sendTelegramMessage(chatId,(answer===item.correct?'✅ ត្រឹមត្រូវ។ ':'❌ មិនត្រឹមត្រូវ។ ')+item.why);
-        await sendQuestion(index+1);return true;
-      }
-      const score=Math.round(answers.reduce((sum,value,i)=>sum+(value===quiz[i].correct?20:0),0)),passed=score>=70;
-      const feedback='បាន '+answers.filter((value,i)=>value===quiz[i].correct).length+'/5 សំណួរ។ '+(passed?'ជាប់កម្រិត Beginner!':'សូមរៀនមេរៀនម្ដងទៀត ហើយប្រឡងម្ដងទៀត។');
-      const {error:attemptError}=await supabase.from('assistant_training_attempts').insert({space_id:space.id,lesson_code:'ANANTA-L1-FUNDAMENTALS',level:1,question:quiz.map(x=>x.q).join('\n'),expected_criteria:quiz.map(x=>x.correct),answer:answers.join(','),score,passed,feedback,weak_topics:passed?[]:['AI Fundamentals']});
-      if(attemptError)throw attemptError;
-      const {data:prior,error:priorError}=await supabase.from('assistant_training_progress').select('*').eq('space_id',space.id).maybeSingle();
-      if(priorError)throw priorError;
-      const best=Math.max(Number(prior?.best_score||0),score),level=best>=70?2:1,names=['Beginner','Learner','Intermediate','Advanced','Expert','Master'];
-      const {error:progressError}=await supabase.from('assistant_training_progress').upsert({space_id:space.id,current_level:level,current_level_name:names[level-1],latest_score:score,best_score:best,lessons_completed:Math.max(Number(prior?.lessons_completed||0),passed?1:0),tests_passed:Number(prior?.tests_passed||0)+(passed?1:0),tests_failed:Number(prior?.tests_failed||0)+(passed?0:1),weak_topics:passed?[]:['AI Fundamentals'],last_assessed_at:new Date().toISOString(),updated_at:new Date().toISOString()},{onConflict:'space_id'});
-      if(progressError)throw progressError;
-      const {error:sessionSaveError}=await supabase.from('assistant_telegram_sessions').upsert({telegram_user_id:String(telegramUserId),space_id:space.id,state:{mode:'completed',score,passed,completed_at:new Date().toISOString()},updated_at:new Date().toISOString()},{onConflict:'telegram_user_id'});
-      if(sessionSaveError)throw sessionSaveError;
-      await sendTelegramMessage(chatId,'🏁 ANANTA Test Result\nScore: '+score+'/100\n'+feedback+'\nLevel: '+names[level-1]+'\n\nប្រើ /ananta learn ដើម្បីរៀន ឬ /ananta test ដើម្បីប្រឡងម្ដងទៀត។');return true;
-    }
-    await sendTelegramMessage(chatId,'ពាក្យបញ្ជាមិនស្គាល់ទេ។ សូមប្រើ /ananta help');return true;
-  }catch(error){
-    console.error('[ANANTA Telegram] command failed:',clean(error.message,500));
-    await sendTelegramMessage(chatId,'មិនអាចដំណើរការពាក្យបញ្ជា ANANTA បានទេ។ សូមពិនិត្យ Migration និង Backend Logs។');return true;
-  }
-}
 async function ingestAssistantKnowledgePost(message) {
   const chat = message?.chat;
   const expectedChatId = telegramStorageChatId();
@@ -2283,10 +2185,6 @@ app.post('/api/telegram/webhook', async (req, res) => {
     const chat = message?.chat;
     const textValue = clean(message?.text, 500);
     if (!message || chat?.type !== 'private') return;
-    if (textValue.startsWith('/ananta')) {
-      await handleAnantaTelegramCommand(message);
-      return;
-    }
     if (!textValue.startsWith('/start')) return;
     const payload = textValue.split(/\s+/, 2)[1] || '';
     if (payload.startsWith('login_')) {
@@ -5329,32 +5227,6 @@ app.patch('/api/admin/suppliers/:id', authenticate, requireAdmin, async (req, re
   res.json({ data: { ...data, adapter_ready: SUPPLIER_PARSER_ADAPTERS.has(data.parser_key) } });
 });
 
-app.post('/api/admin/ananta/learning/run', authenticate, requireAdmin, async (_req, res) => {
-  if (!db(res)) return;
-  if (process.env.ANANTA_TRAINING_ENABLED === 'false') return fail(res, 409, 'ANANTA_TRAINING_ENABLED is false.');
-  if (!process.env.HF_TOKEN && !process.env.AI_API_KEY) return fail(res, 503, 'AI model token is missing. Configure HF_TOKEN or AI_API_KEY in Render Environment.');
-  const result = await runAnantaTrainingNow({ supabase, port });
-  if (!result.started) return res.status(409).json({ error: result.message, data: { runtime: getAnantaTrainingStatus() } });
-  if (!result.success) return res.status(502).json({ error: result.message, data: { runtime: getAnantaTrainingStatus() } });
-  return res.json({ data: { ...result, runtime: getAnantaTrainingStatus() } });
-});
-
-app.get('/api/admin/ananta/learning', authenticate, requireAdmin, async (_req, res) => {
-  if (!db(res)) return;
-  const { data: space, error: spaceError } = await supabase.from('assistant_knowledge_spaces').select('id,assistant_name,is_enabled').eq('space_code','primary').maybeSingle();
-  if (spaceError) return fail(res, 500, 'Could not load ANANTA knowledge space.');
-  if (!space) return res.json({ data: { space: null, progress: null, approvedLessons: 0, attempts: [], totalAttempts: 0, runtime: getAnantaTrainingStatus() } });
-  const [progress, lessons, attempts, totals] = await Promise.all([
-    supabase.from('assistant_training_progress').select('*').eq('space_id', space.id).maybeSingle(),
-    supabase.from('assistant_knowledge_entries').select('id', { count: 'exact', head: true }).eq('space_id', space.id).eq('status','approved'),
-    supabase.from('assistant_training_attempts').select('id,lesson_code,level,question,answer,score,passed,feedback,weak_topics,created_at').eq('space_id', space.id).order('created_at',{ascending:false}).limit(30),
-    supabase.from('assistant_training_attempts').select('id', { count: 'exact', head: true }).eq('space_id', space.id)
-  ]);
-  const error = progress.error || lessons.error || attempts.error || totals.error;
-  if (error) return fail(res, 500, 'Could not load ANANTA training records.');
-  res.json({ data: { space, progress: progress.data || null, approvedLessons: lessons.count || 0, attempts: attempts.data || [], totalAttempts: totals.count || 0, runtime: getAnantaTrainingStatus() } });
-});
-
 // Return JSON for unknown API paths instead of Next.js HTML 404 pages. This
 // makes missing or stale upload endpoints visible to the marketplace client.
 app.use('/api', (req, res) => fail(res, 404, `API route not found: ${req.method} ${req.path}`));
@@ -5368,7 +5240,6 @@ app.use((error, _req, res, _next) => {
 await nextApp.prepare();
 app.use((req, res) => nextHandler(req, res));
 const server = app.listen(port, '0.0.0.0', () => console.log(`7inOne full-stack service listening on 0.0.0.0:${port}`));
-startAnantaTrainingEngine({ supabase, port });
 server.on('error', error => console.error('7inOne HTTP server failed to bind:', error));
 
 const productLifecycleTimer=setInterval(()=>{void cleanupExpiredProducts()},60*60*1000);
