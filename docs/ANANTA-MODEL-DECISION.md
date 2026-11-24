@@ -1,38 +1,41 @@
 # ANANTA model decision record — 2026-11-24
 
-## Decision
-Use Google Gemma 4 E2B IT as the first candidate to benchmark, not as a final production selection. Do not use Qwen.
+## Current decision
 
-## Why this candidate
-- Its official Hugging Face model card lists Apache 2.0 licensing for Gemma 4.
-- Google’s model card describes pretraining across 140+ languages and out-of-the-box multilingual support for 35+ languages.
-- The E2B size is intended for edge/mobile environments, making it a more realistic first inference candidate than 12B/31B variants.
-- Khmer is not assumed to be supported well enough. The 20-case 7inOne benchmark must measure actual Khmer response quality before adoption.
+The main ANANTA path is a language model trained from random initialization.
+Do not use Gemma, Qwen, or another pretrained model as ANANTA's brain.
 
-## Candidate identifier
-- Hugging Face: google/gemma-4-E2B-it
-- Model card: https://huggingface.co/google/gemma-4-E2B
-- Official technical card: https://github.com/google-gemma/docs/blob/main/docs/models/gemma-4/model-card.md
+## Implemented first prototype
 
-## Local inference path
-- For the CPU-only Windows development PC, use the Q4_0 GGUF distribution maintained by the llama.cpp project: `ggml-org/gemma-4-E2B-it-GGUF` (about 2.84 GB).
-- llama.cpp provides an OpenAI-compatible server and supports API-key authentication. The repository includes one-click Windows startup and optional temporary Cloudflare tunnel scripts.
-- This starts the instruction-tuned base model for inference/testing; it is not a fine-tuned ANANTA adapter.
-- The temporary tunnel requires the PC to remain on and its URL changes on restart. It is a development bridge, not an always-on production hosting plan.
+- Architecture: compact decoder-only Transformer implemented in scripts/ananta/scratch_model.py.
+- Initialization: random trainable weights; no pretrained checkpoint is loaded.
+- Tokenizer: reversible UTF-8 byte tokenizer (256 tokens), preserving Khmer Unicode exactly.
+- Training: CPU/CUDA selectable training loop with deterministic seed, train/validation split,
+  loss/perplexity tracking, checkpoint saving, and a corpus hash manifest.
+- This is only a technical prototype. It is not yet a capable Khmer assistant.
 
-## Hardware and cost constraints
-- Existing known development machine: CPU-only, Intel graphics, 16 GB RAM.
-- Data cleaning, dataset validation, benchmark review and possibly quantized inference are the first local tasks.
-- Official Gemma 4 tuning guidance estimates roughly 7 GB VRAM for E2B QLoRA; this is GPU VRAM, not system RAM. The user's CPU-only 16 GB Windows machine cannot meet this GPU requirement. Use a genuinely free GPU allocation only if available; otherwise keep building the dataset and benchmark locally. Do not pretend CPU-only 16 GB is enough for practical LoRA fine-tuning. Reference: https://gemma.ai/tuning/
-- Use only a genuinely free GPU allocation if available and permitted; quotas and availability can change. No paid compute without explicit user approval.
+## Next milestones
 
-## Promotion gates
-1. Run the 20-case Khmer benchmark against the unmodified candidate.
-2. Human-review every answer for Khmer quality, factual restraint, privacy and shopping usefulness.
-3. The current pilot now has 150 teacher-authored examples from 15 approved lessons, split into 110 train / 20 validation / 20 test. Expand scenario diversity and manually review quality before production.
-4. The guarded QLoRA script and free-GPU Colab notebook are prepared; execute only on a free CUDA GPU with at least the required VRAM.
-5. Re-run the same held-out benchmark and compare base vs. fine-tuned results.
-6. Deploy only after clear measured improvement and rollback readiness.
+1. Validate tokenizer round-trip behavior for Khmer, English, punctuation, and mixed text.
+2. Run a tiny smoke training job on a small, approved corpus and verify that loss/checkpoints work.
+3. Replace byte tokenization with a Khmer-first subword tokenizer after corpus and segmentation review.
+4. Curate a large, legally usable, privacy-clean pretraining corpus with provenance and deduplication.
+5. Scale pretraining on free compute only when genuinely available; do not start paid GPU jobs.
+6. Teach approved 7inOne instruction examples in stages and evaluate on held-out cases.
+7. Deploy only when a suitable runtime is available and the model passes quality, safety, and stability gates.
 
-## Important
-An open-weight base model plus a fine-tuned adapter is an ANANTA-customized model, not a model pretrained from scratch. Pretraining a foundation model from scratch is out of scope for the current free-first budget and hardware.
+## Data and deployment rules
+
+- Use public-domain, appropriately licensed, or explicitly user-authorized text only.
+- Do not train on private customer conversations, personal data, credentials, or secrets.
+- Supabase remains the canonical store for approved lessons, provenance, training attempts, and progress.
+- Live prices, stock, shop status, warranty, and delivery facts must be retrieved from 7inOne at answer time.
+- No third-party hosted inference API, paid model API, paid GPU, or paid hosting without explicit approval.
+- The existing Render Free backend (512 MB RAM) is not suitable for training or serving this model.
+
+## Truthful status
+
+Code for a tiny random-initialized prototype has been added. No actual training run has yet
+been completed because an approved corpus and a compute run are still required. Do not claim
+that ANANTA is trained or production-ready until a real checkpoint is produced and independently
+evaluated on held-out Khmer tasks.
