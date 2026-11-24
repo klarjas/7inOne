@@ -1,0 +1,44 @@
+name: ANANTA data validation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/ananta-sft-*.jsonl'
+      - 'docs/ananta-benchmark-*.jsonl'
+      - 'scripts/ananta/**'
+      - '.github/workflows/ananta-data-validation.yml'
+  pull_request:
+    paths:
+      - 'docs/ananta-sft-*.jsonl'
+      - 'docs/ananta-benchmark-*.jsonl'
+      - 'scripts/ananta/**'
+      - '.github/workflows/ananta-data-validation.yml'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile ANANTA scripts
+        run: python -m py_compile scripts/ananta/build_dataset.py scripts/ananta/run_benchmark.py
+      - name: Validate and split approved pilot dataset
+        run: python scripts/ananta/build_dataset.py docs/ananta-sft-pilot-v0.1.jsonl --output-dir /tmp/ananta-dataset
+      - name: Validate fixed benchmark JSONL
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          rows = [json.loads(line) for line in Path('docs/ananta-benchmark-v0.1.jsonl').read_text(encoding='utf-8').splitlines() if line.strip()]
+          assert len(rows) >= 20, f'Expected at least 20 benchmark cases, got {len(rows)}'
+          ids = [row['case_id'] for row in rows]
+          assert len(ids) == len(set(ids)), 'Duplicate benchmark case_id'
+          for row in rows:
+              assert row.get('prompt') and row.get('category')
+              assert isinstance(row.get('must_include'), list)
+              assert isinstance(row.get('must_not_claim'), list)
+          print(f'Validated {len(rows)} benchmark cases')
+          PY
