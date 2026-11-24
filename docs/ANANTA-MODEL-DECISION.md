@@ -17,7 +17,7 @@ Use Google Gemma 4 E2B IT as the first candidate to benchmark, not as a final pr
 ## Hardware and cost constraints
 - Existing known development machine: CPU-only, Intel graphics, 16 GB RAM.
 - Data cleaning, dataset validation, benchmark review and possibly quantized inference are the first local tasks.
-- Fine-tuning requires suitable GPU memory. Do not pretend CPU-only 16 GB is enough for practical LoRA fine-tuning.
+- Official Gemma 4 tuning guidance estimates roughly 7 GB VRAM for E2B QLoRA; this is GPU VRAM, not system RAM. The user's CPU-only 16 GB Windows machine cannot meet this GPU requirement. Use a genuinely free GPU allocation only if available; otherwise keep building the dataset and benchmark locally. Do not pretend CPU-only 16 GB is enough for practical LoRA fine-tuning. Reference: https://gemma.ai/tuning/
 - Use only a genuinely free GPU allocation if available and permitted; quotas and availability can change. No paid compute without explicit user approval.
 
 ## Promotion gates
