@@ -17,12 +17,13 @@ def main():
     if not torch.cuda.is_available(): raise SystemExit("A CUDA GPU is required for this benchmark runner. No cloud resources are started.")
     from transformers import AutoProcessor,AutoModelForMultimodalLM,BitsAndBytesConfig
     from peft import PeftModel
-    processor=AutoProcessor.from_pretrained(args.model_id,token=None)
+    token=__import__("os").environ.get("HF_TOKEN")
+    processor=AutoProcessor.from_pretrained(args.model_id,token=token)
     kwargs={"device_map":"auto","torch_dtype":"auto"}
     if args.load_in_4bit:
         dtype=torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
         kwargs["quantization_config"]=BitsAndBytesConfig(load_in_4bit=True,bnb_4bit_quant_type="nf4",bnb_4bit_compute_dtype=dtype,bnb_4bit_use_double_quant=True)
-    model=AutoModelForMultimodalLM.from_pretrained(args.model_id,**kwargs)
+    model=AutoModelForMultimodalLM.from_pretrained(args.model_id,token=token,**kwargs)
     if args.adapter_dir:
         model=PeftModel.from_pretrained(model,str(args.adapter_dir))
     model.eval()
