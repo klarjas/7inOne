@@ -9,3 +9,12 @@ dist/
 .DS_Store
 *.log
 coverage/
+
+# ANANTA local model weights, credentials, and generated training artifacts
+artifacts/
+ANANTA-Local/
+*.gguf
+*.safetensors
+*.key
+*.secret
+ananta-local.env
