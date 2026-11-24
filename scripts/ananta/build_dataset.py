@@ -65,7 +65,7 @@ def main():
     args.output_dir.mkdir(parents=True,exist_ok=True)
     for name, rows in splits.items():
         (args.output_dir/(name+".jsonl")).write_text("".join(json.dumps(r,ensure_ascii=False)+"\n" for r in rows),encoding="utf-8")
-    manifest={"dataset_version":"ananta-sft-v0.1","input":str(args.input),"approved_records":len(records),"source_groups":groups,"counts":{k:len(v) for k,v in splits.items()},"group_split":True,"privacy_scan":"basic-pattern-screen-only; manual review still required","training_ready":len(splits["train"])>=100 and len(splits["validation"])>=20 and len(splits["test"])>=20,"note":"Pilot split validates the pipeline only; it is not enough for a meaningful fine-tuning run."}
+    manifest={"dataset_version":"ananta-sft-v0.1","input":str(args.input),"approved_records":len(records),"source_groups":groups,"counts":{k:len(v) for k,v in splits.items()},"group_split":True,"privacy_scan":"basic-pattern-screen-only; manual review still required","training_ready":len(splits["train"])>=100 and len(splits["validation"])>=20 and len(splits["test"])>=20,"note":"Minimum record-count gate only; examples are teacher-authored synthetic data and still require human quality review and broader scenario coverage before production."}
     (args.output_dir/"manifest.json").write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
     print(json.dumps(manifest,ensure_ascii=False,indent=2))
     if not manifest["training_ready"]: print("WARNING: dataset is too small for a meaningful fine-tuning run.",file=sys.stderr)
