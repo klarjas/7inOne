@@ -14,6 +14,12 @@ Use Google Gemma 4 E2B IT as the first candidate to benchmark, not as a final pr
 - Model card: https://huggingface.co/google/gemma-4-E2B
 - Official technical card: https://github.com/google-gemma/docs/blob/main/docs/models/gemma-4/model-card.md
 
+## Local inference path
+- For the CPU-only Windows development PC, use the Q4_0 GGUF distribution maintained by the llama.cpp project: `ggml-org/gemma-4-E2B-it-GGUF` (about 2.84 GB).
+- llama.cpp provides an OpenAI-compatible server and supports API-key authentication. The repository includes one-click Windows startup and optional temporary Cloudflare tunnel scripts.
+- This starts the instruction-tuned base model for inference/testing; it is not a fine-tuned ANANTA adapter.
+- The temporary tunnel requires the PC to remain on and its URL changes on restart. It is a development bridge, not an always-on production hosting plan.
+
 ## Hardware and cost constraints
 - Existing known development machine: CPU-only, Intel graphics, 16 GB RAM.
 - Data cleaning, dataset validation, benchmark review and possibly quantized inference are the first local tasks.
