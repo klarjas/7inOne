@@ -18,7 +18,7 @@ The repository already contains:
 - `backend/assistant-training-engine.js` for scenario generation, live ANANTA response, grading, and progress tracking.
 - Existing Admin learning-monitor routes and UI.
 
-The current training engine still calls an external chat-completions model (currently configured with a Qwen3 free-model default). The latest database check shows no completed training attempts. Therefore, ANANTA has an approved knowledge base, but there is not yet evidence of a successful training/evaluation cycle or a separately fine-tuned ANANTA model.
+The current training and shopping-assistant code has been changed to remove Qwen, Hugging Face, and OpenRouter defaults. It now waits for an ANANTA-owned, OpenAI-compatible model endpoint configured through `ANANTA_MODEL_URL` and `ANANTA_MODEL_NAME` (optional `ANANTA_MODEL_API_KEY`). The training scheduler stays paused until that endpoint exists. There are no completed training attempts yet, so there is not evidence of a successful training/evaluation cycle or a separately fine-tuned ANANTA model.
 
 ## 2. Target architecture
 
@@ -52,7 +52,7 @@ Canonical format: UTF-8 JSONL, one record per line. Each record contains:
 - `category`, `difficulty`, `review_status`, and `split`.
 - `messages`: ordered chat messages with `system`, `user`, and `assistant` roles.
 
-Only records with `review_status = "approved"` may be exported. The trainer must pass only the `messages` field to the model; metadata must not become training text. Do not include customer names, phone numbers, addresses, account IDs, private chat logs, credentials, or other personal data.
+Only records with `review_status = "approved"` may be exported. The trainer must pass only the `messages` field to the model; metadata must not become training text. The live assistant and training engine must use `ANANTA_MODEL_URL`, `ANANTA_MODEL_NAME`, and optionally `ANANTA_MODEL_API_KEY`; do not restore Qwen/OpenRouter/Hugging Face provider defaults. Do not include customer names, phone numbers, addresses, account IDs, private chat logs, credentials, or other personal data.
 
 Use a source-aware split (initial target 80% train / 10% validation / 10% test) so paraphrases or examples from the same source lesson/conversation cannot leak across splits. Keep the test set fixed and never train on it.
 
