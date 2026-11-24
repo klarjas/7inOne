@@ -9,7 +9,7 @@
 
 The connected Supabase project currently contains:
 - 1 primary knowledge space.
-- 15 approved knowledge entries.
+- 15 approved knowledge entries and 45 teacher-reviewed SFT examples.
 - 0 training attempts.
 - 1 training-progress row.
 
@@ -31,7 +31,7 @@ The current training and shopping-assistant code has been changed to remove Qwen
 7. **Fine-tuning:** begin with a small LoRA/QLoRA experiment on a suitable base model. Save adapter, tokenizer/config, dataset version, training parameters, and evaluation results.
 8. **Evaluation and deployment:** compare the fine-tuned model against its base model on a held-out Khmer test set. Deploy only if it improves measured task performance without increasing hallucinations. Keep a rollback path and current live assistant until the replacement is verified.
 
-The repository now includes an approved-data validator/splitter, a fixed 20-case Khmer benchmark, a raw-output benchmark runner, and GitHub Actions checks for these assets. See `scripts/ananta/README.md` and `docs/ANANTA-MODEL-DECISION.md`.
+The repository now includes 45 teacher-reviewed SFT examples sourced from 15 approved lessons, an approved-data validator/splitter, a fixed 20-case Khmer benchmark, a raw-output benchmark runner, and passing GitHub Actions checks for these assets. See `scripts/ananta/README.md` and `docs/ANANTA-MODEL-DECISION.md`.
 
 ## 3. What the model should learn
 
