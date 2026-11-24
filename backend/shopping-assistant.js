@@ -1,7 +1,7 @@
 import rateLimit from 'express-rate-limit';
 
-const AI_DEFAULT_MODEL = process.env.AI_MODEL || 'Qwen/Qwen2.5-7B-Instruct';
-const AI_CHAT_URL = process.env.AI_CHAT_COMPLETIONS_URL || 'https://router.huggingface.co/v1/chat/completions';
+const AI_DEFAULT_MODEL = process.env.ANANTA_MODEL_NAME || '';
+const AI_CHAT_URL = process.env.ANANTA_MODEL_URL || '';
 
 function assistantText(value, max = 700) {
   return String(value ?? '').replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, ' ').trim().slice(0, max);
@@ -40,8 +40,8 @@ async function loadAssistantKnowledge(supabase) {
   } catch(error){console.warn('ANANTA knowledge lookup failed:',assistantText(error.message,200));return [];}
 }
 async function askOpenSourceModel(message, language, products, knowledge = []) {
-  const token = process.env.HF_TOKEN || process.env.AI_API_KEY;
-  if (!token) return null;
+  const token = process.env.ANANTA_MODEL_API_KEY || '';
+  if (!AI_DEFAULT_MODEL || !AI_CHAT_URL) return null;
   const compactProducts = products.map(product => ({
     id: product.id, title: product.title, description: product.description,
     price: product.display_price, category: product.category,
@@ -62,7 +62,7 @@ async function askOpenSourceModel(message, language, products, knowledge = []) {
   ].join(' ');
   const response = await fetch(AI_CHAT_URL, {
     method: 'POST',
-    headers: { authorization: 'Bearer ' + token, 'content-type': 'application/json' },
+    headers: { ...(token ? { authorization: 'Bearer ' + token } : {}), 'content-type': 'application/json' },
     body: JSON.stringify({
       model: AI_DEFAULT_MODEL,
       temperature: 0.2,
