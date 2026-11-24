@@ -1,15 +1,16 @@
-const MODEL = process.env.AI_MODEL || 'qwen/qwen3-4b:free';
-const URL = process.env.AI_CHAT_COMPLETIONS_URL || 'https://openrouter.ai/api/v1/chat/completions';
+const MODEL = process.env.ANANTA_MODEL_NAME || '';
+const URL = process.env.ANANTA_MODEL_URL || '';
 const rawInterval = Number(process.env.ANANTA_TRAINING_INTERVAL_SECONDS || 3600);
 const INTERVAL = (Number.isFinite(rawInterval) ? Math.max(3600, rawInterval) : 21600) * 1000;
 const LEVELS = ['Beginner','Learner','Intermediate','Advanced','Expert','Master'];
 let active = false, timer = null;
 const runtime = { started: false, running: false, lastAttemptAt: null, lastSuccessAt: null, lastError: '', intervalSeconds: INTERVAL / 1000, enabled: false };
-const token = () => process.env.OPENROUTER_API_KEY || process.env.AI_API_KEY || '';
+const token = () => process.env.ANANTA_MODEL_API_KEY || '';
+const modelConfigured = () => Boolean(MODEL && URL);
 const clean = (v,n=2000) => String(v ?? '').replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g,' ').trim().slice(0,n);
 async function ask(messages, max_tokens) {
   const key = token();
-  if (!key) throw new Error('AI model token is not configured.');
+  if (!modelConfigured()) throw new Error('ANANTA Own Model is not configured. Set ANANTA_MODEL_URL and ANANTA_MODEL_NAME after deploying the model.');
   const r = await fetch(URL,{method:'POST',headers:{authorization:'Bearer '+key,'content-type':'application/json'},body:JSON.stringify({model:MODEL,temperature:0.2,max_tokens,messages}),signal:AbortSignal.timeout(30000)});
   const bodyText = await r.text();
   if (!r.ok) {
@@ -35,7 +36,7 @@ const lessonCode = x => (x.category||'general')+'-'+(String(x.title).match(/(?:á
 const level = n => n>=95?6:n>=90?5:n>=80?4:n>=70?3:n>=60?2:1;
 async function cycle({supabase,port}) {
   if(active) return false;
-  if(!token()){runtime.lastError='AI model token is not configured. Set OPENROUTER_API_KEY or AI_API_KEY.';console.warn('[ANANTA Training] Paused: configure HF_TOKEN or AI_API_KEY.');return false;}
+  if(!modelConfigured()){runtime.lastError='ANANTA Own Model is not deployed yet. Configure ANANTA_MODEL_URL and ANANTA_MODEL_NAME before training.';return false;}
   active=true; runtime.running=true; runtime.lastAttemptAt=new Date().toISOString(); runtime.lastError='';
   try {
     const {data:space,error:se}=await supabase.from('assistant_knowledge_spaces').select('id,is_enabled').eq('space_code','primary').maybeSingle();
@@ -84,9 +85,9 @@ export async function runAnantaTrainingNow({supabase,port}) {
   const success=await cycle({supabase,port});
   return {started:true,success,message:success?'Training attempt saved.':runtime.lastError||'Training failed.'};
 }
-export function getAnantaTrainingStatus() { return { ...runtime, tokenConfigured: Boolean(token()), model: MODEL, intervalSeconds: INTERVAL / 1000, enabled: runtime.enabled }; }
+export function getAnantaTrainingStatus() { return { ...runtime, tokenConfigured: modelConfigured(), model: MODEL || 'Not deployed', intervalSeconds: INTERVAL / 1000, enabled: runtime.enabled }; }
 export function startAnantaTrainingEngine({supabase,port}) {
-  if(!supabase||process.env.ANANTA_TRAINING_ENABLED==='false'){runtime.enabled=false;runtime.started=false;runtime.lastError=!supabase?'Supabase is not configured.':'ANANTA_TRAINING_ENABLED=false';console.log('[ANANTA Training] scheduler disabled or Supabase missing.');return ()=>{};}
+  if(!supabase||process.env.ANANTA_TRAINING_ENABLED==='false'||!modelConfigured()){runtime.enabled=false;runtime.started=false;runtime.lastError=!supabase?'Supabase is not configured.':process.env.ANANTA_TRAINING_ENABLED==='false'?'ANANTA_TRAINING_ENABLED=false':'Waiting for ANANTA Own Model deployment (ANANTA_MODEL_URL and ANANTA_MODEL_NAME).';console.log('[ANANTA Training] scheduler paused:',runtime.lastError);return ()=>{};}
   runtime.enabled=true; runtime.started=true; runtime.lastError='';
   if(timer)return ()=>clearInterval(timer);
   const run=()=>cycle({supabase,port});
