@@ -1,0 +1,13 @@
+{
+  "appId": "com.seveninone.marketplace",
+  "appName": "7inOne",
+  "webDir": "capacitor-web",
+  "server": {
+    "url": "https://seveninone-t75g.onrender.com/marketplace/index.html#store/8e99155c-41ac-4d36-90bc-35ecb96ba698",
+    "cleartext": false,
+    "errorPath": "offline.html"
+  },
+  "android": {
+    "allowMixedContent": false
+  }
+}
