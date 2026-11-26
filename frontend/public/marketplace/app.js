@@ -5068,8 +5068,7 @@ function renderSellerChatInbox() {
   badge.textContent = total > 99 ? '99+' : String(total);
   badge.classList.toggle('hidden', !total);
 
-  const assistantPinned = '<button type="button" data-ai-assistant class="seller-chat-inbox-item seller-chat-ai-pinned"><span class="seller-chat-ai-mark">✦</span><span class="min-w-0 flex-1"><b class="block truncate">ANANTA AI</b><small class="block truncate text-slate-400">ស្វែងរក ប្រៀបធៀប និងពន្យល់ផលិតផល</small></span><span class="seller-chat-ai-pin" aria-label="Pinned">PIN</span></button>';
-  target.innerHTML = assistantPinned + state.chatInbox.map((chat) => {
+  target.innerHTML = state.chatInbox.map((chat) => {
     // Show the other participant: shop identity to buyers, personal identity to shop owners.
     const otherIsShop = String(chat.other_role || '').toLowerCase() === 'seller';
     const displayName = otherIsShop
@@ -6229,118 +6228,6 @@ function bindEvents() {
       category: videoButton.dataset.videoCategory
     });
   });
-  // 7inOne Smart Shopping Assistant — uses only live marketplace catalogue results.
-  (() => {
-    const panel = $('shoppingAssistant');
-    const closeButton = $('shoppingAssistantClose');
-    const form = $('shoppingAssistantForm');
-    const input = $('shoppingAssistantInput');
-    const messages = $('shoppingAssistantMessages');
-    const sendButton = $('shoppingAssistantSend');
-    const language = $('shoppingAssistantLanguage');
-    if (!panel || !closeButton || !form || !input || !messages || !sendButton) return;
-    const addMessage = (text, role) => {
-      const node = document.createElement('div');
-      node.className = 'shopping-assistant-message ' + role;
-      node.textContent = String(text || '');
-      messages.appendChild(node);
-      messages.scrollTop = messages.scrollHeight;
-      return node;
-    };
-    const renderProducts = products => {
-      if (!Array.isArray(products) || !products.length) return;
-      const wrap = document.createElement('div');
-      wrap.className = 'shopping-assistant-products';
-      products.forEach(product => {
-        const card = document.createElement('button');
-        card.type = 'button';
-        card.className = 'shopping-assistant-product';
-        card.dataset.assistantProductId = String(product.id || '');
-        const image = product.product_images?.find(item => item.image_url)?.image_url || '';
-        const verified = product.vendors?.status === 'approved';
-        const price = product.display_price != null ? money(product.display_price) : 'សួរតម្លៃហាង';
-        card.innerHTML =
-          (image ? '<img src="' + esc(image) + '" alt="" loading="lazy">' : '<span class="shopping-assistant-product-placeholder">7</span>') +
-          '<span class="shopping-assistant-product-info"><strong>' + esc(product.title || 'ផលិតផល') + '</strong>' +
-          '<b>' + esc(price) + '</b><small>' + esc(product.vendors?.store_name || 'ហាងអ្នកលក់') + (verified ? ' · ✓ Verified' : '') + '</small></span>';
-        wrap.appendChild(card);
-      });
-      messages.appendChild(wrap);
-      messages.scrollTop = messages.scrollHeight;
-    };
-    const regularThreadNodes = ['sellerChatProductContext','sellerChatMessages','sellerChatProductBanner','sellerChatForm'];
-    window.openShoppingAssistantInChat = () => {
-      state.chatConversationId = null;
-      state.chatDraftProduct = null;
-      renderSellerChatDraftProduct();
-      $('sellerChatHeaderDefault').classList.add('hidden');
-      $('sellerChatHeaderSubtitle').classList.add('hidden');
-      $('sellerChatHeaderIdentity').classList.remove('hidden');
-      $('sellerChatHeaderTitle').textContent = '✦ AI ជួយរកទំនិញ';
-      $('sellerChatHeaderAvatar').innerHTML = '<span class="grid h-full w-full place-items-center text-[#66C0F4]">✦</span>';
-      $('sellerChatHeaderBack').classList.remove('hidden');
-      $('sellerChatInboxPane').classList.add('mobile-hidden');
-      $('sellerChatThread').classList.add('mobile-active');
-      regularThreadNodes.forEach(id => { const node = $(id); if (node) node.hidden = true; });
-      panel.hidden = false;
-      openModal('sellerChatModal');
-      input.focus();
-    };
-    const exitAssistant = () => {
-      panel.hidden = true;
-      regularThreadNodes.forEach(id => { const node = $(id); if (node) node.hidden = false; });
-      $('sellerChatInboxPane').classList.remove('mobile-hidden');
-      $('sellerChatThread').classList.remove('mobile-active');
-      $('sellerChatHeaderIdentity').classList.add('hidden');
-      $('sellerChatHeaderDefault').classList.remove('hidden');
-      $('sellerChatHeaderSubtitle').classList.remove('hidden');
-      $('sellerChatHeaderBack').classList.add('hidden');
-    };
-    closeButton.addEventListener('click', exitAssistant);
-    $('sellerChatHeaderBack')?.addEventListener('click', () => { if (!panel.hidden) exitAssistant(); });
-    messages.addEventListener('click', event => {
-      const card = event.target.closest('[data-assistant-product-id]');
-      if (!card || !card.dataset.assistantProductId) return;
-      exitAssistant();
-      closeModal('sellerChatModal');
-      void openProduct(card.dataset.assistantProductId);
-    });
-    form.addEventListener('submit', async event => {
-      event.preventDefault();
-      const prompt = input.value.trim();
-      if (!prompt || sendButton.disabled) return;
-      addMessage(prompt, 'user');
-      input.value = '';
-      sendButton.disabled = true;
-      const waiting = addMessage('កំពុងស្វែងរកផលិតផលដែលសមស្រប...', 'assistant waiting');
-      try {
-        const response = await fetch('/api/assistant/chat', {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ message: prompt, language: language?.value || 'auto' })
-        });
-        const payload = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(payload.error || 'មិនអាចភ្ជាប់ជំនួយការបានទេ។');
-        waiting.remove();
-        addMessage(payload.message || 'ខ្ញុំរកឃើញផលិតផលខាងក្រោម។', 'assistant');
-        if (payload.ai_enabled === false) addMessage('ចំណាំ៖ ការស្វែងរកផលិតផលដំណើរការហើយ ប៉ុន្តែ Open-source AI Model មិនទាន់បានភ្ជាប់ទៅ Render នៅឡើយទេ។', 'assistant waiting');
-        renderProducts(payload.products);
-      } catch (error) {
-        waiting.remove();
-        addMessage(error.message || 'មានបញ្ហា។ សូមព្យាយាមម្ដងទៀត។', 'assistant');
-      } finally {
-        sendButton.disabled = false;
-        input.focus();
-      }
-    });
-    input.addEventListener('keydown', event => {
-      if (event.key === 'Enter' && !event.shiftKey) {
-        event.preventDefault();
-        form.requestSubmit();
-      }
-    });
-  })();
-
   $('searchForm').addEventListener('submit', (e) => {
     e.preventDefault();
     state.searchTerm = $('searchInput').value.trim();
@@ -6782,7 +6669,6 @@ function bindEvents() {
   $('sellerChatHeaderBack').addEventListener('click', () => void openSellerChatInbox());
   $('sellerChatInboxRefresh').addEventListener('click', () => void loadUnifiedSellerChatInbox());
   $('sellerChatInboxList').addEventListener('click', (e) => {
-    if (e.target.closest('[data-ai-assistant]')) { window.openShoppingAssistantInChat?.(); return; }
     const btn = e.target.closest('[data-unified-chat]');
     if (btn) void openSellerChat(btn.dataset.unifiedChat);
   });
