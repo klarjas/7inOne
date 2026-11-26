@@ -9288,42 +9288,7 @@ body.admin-management-popup-open{overflow:hidden}
 
 
 /* 7inOne Smart Shopping Assistant — Steam Dark glass surface. */
-.shopping-assistant-launcher{position:fixed;right:24px;bottom:86px;z-index:9900;display:flex;align-items:center;gap:9px;padding:12px 17px;border:1px solid rgba(102,192,244,.38);border-radius:999px;background:linear-gradient(135deg,#244d6b,#16202D);color:#EAF4FC;font-size:12px;font-weight:800;box-shadow:0 12px 34px rgba(0,0,0,.38),inset 0 1px 0 rgba(255,255,255,.08);cursor:pointer;backdrop-filter:blur(16px)}
-.shopping-assistant-launcher-icon{display:grid;width:25px;height:25px;place-items:center;border-radius:50%;background:rgba(102,192,244,.17);color:#66C0F4;font-size:17px}
-.shopping-assistant-launcher:hover{border-color:#66C0F4;transform:translateY(-1px)}
-.shopping-assistant[hidden],.shopping-assistant-launcher[hidden]{display:none!important}
-.shopping-assistant{position:fixed;right:24px;bottom:86px;z-index:9901;display:flex;width:min(410px,calc(100vw - 28px));height:min(650px,calc(100dvh - 120px));flex-direction:column;overflow:hidden;border:1px solid rgba(102,192,244,.27);border-radius:20px;background:rgba(23,26,33,.96);color:#E5EDF6;box-shadow:0 24px 70px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.045);backdrop-filter:blur(22px)}
-.shopping-assistant-head{display:flex;align-items:center;justify-content:space-between;padding:15px 16px;border-bottom:1px solid rgba(42,71,94,.65);background:rgba(22,32,45,.88)}
-.shopping-assistant-brand{display:flex;align-items:center;gap:10px}.shopping-assistant-brand>span:last-child{display:grid;gap:3px}.shopping-assistant-brand strong{font-size:13px;color:#F1F7FC}.shopping-assistant-brand small{font-size:10px;color:#91A6BA}
-.shopping-assistant-mark{display:grid;width:36px;height:36px;place-items:center;border:1px solid rgba(102,192,244,.35);border-radius:12px;background:linear-gradient(145deg,#2A475E,#16202D);color:#66C0F4;font-weight:900}
-.shopping-assistant-close{width:31px;height:31px;border:1px solid rgba(148,163,184,.2);border-radius:9px;background:rgba(255,255,255,.04);color:#C9D5E1;font-size:21px;cursor:pointer}
-.shopping-assistant-language{display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:8px 14px;color:#91A6BA;font-size:10px}
-.shopping-assistant-language select{border:1px solid rgba(102,192,244,.22);border-radius:8px;background:#16202D;color:#DCE8F2;padding:5px 8px;font-size:10px}
-.shopping-assistant-messages{display:flex;flex:1;flex-direction:column;gap:10px;overflow:auto;padding:14px}
-.shopping-assistant-message{max-width:91%;padding:10px 12px;border:1px solid rgba(102,192,244,.12);border-radius:13px;background:rgba(22,32,45,.86);color:#DCE8F2;font-size:12px;line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere}
-.shopping-assistant-message.user{align-self:flex-end;border-color:rgba(102,192,244,.22);background:rgba(42,71,94,.52);color:#F2F8FD}
-.shopping-assistant-message.waiting{color:#91A6BA}
-.shopping-assistant-products{display:grid;gap:8px;width:100%}
-.shopping-assistant-product{display:flex;align-items:center;gap:10px;width:100%;min-width:0;padding:8px;border:1px solid rgba(102,192,244,.16);border-radius:12px;background:rgba(22,32,45,.82);color:#E5EDF6;text-align:left;cursor:pointer}
-.shopping-assistant-product:hover{border-color:rgba(102,192,244,.55);background:rgba(42,71,94,.32)}
-.shopping-assistant-product img,.shopping-assistant-product-placeholder{width:58px;height:58px;flex:0 0 58px;border-radius:8px;object-fit:cover;background:#16202D}
-.shopping-assistant-product-placeholder{display:grid;place-items:center;color:#66C0F4;font-size:23px;font-weight:900}
-.shopping-assistant-product-info{display:grid;min-width:0;gap:4px}.shopping-assistant-product-info strong{overflow:hidden;color:#EAF4FC;font-size:11px;text-overflow:ellipsis;white-space:nowrap}.shopping-assistant-product-info b{color:#BEEE11;font-size:12px}.shopping-assistant-product-info small{overflow:hidden;color:#91A6BA;font-size:9px;text-overflow:ellipsis;white-space:nowrap}
-.shopping-assistant-form{display:flex;align-items:flex-end;gap:8px;padding:11px 12px;border-top:1px solid rgba(42,71,94,.65);background:rgba(22,32,45,.7)}
-.shopping-assistant-form textarea{flex:1;min-width:0;resize:none;border:1px solid rgba(116,145,170,.28);border-radius:11px;background:rgba(8,17,27,.72);padding:10px;color:#E5EDF6;font:inherit;font-size:11px;line-height:1.5;outline:none}
-.shopping-assistant-form textarea:focus{border-color:rgba(102,192,244,.65);box-shadow:0 0 0 3px rgba(102,192,244,.09)}
-.shopping-assistant-form button{width:39px;height:39px;flex:0 0 39px;border:1px solid rgba(102,192,244,.32);border-radius:11px;background:#2A475E;color:#EAF4FC;font-size:17px;cursor:pointer}.shopping-assistant-form button:disabled{opacity:.45;cursor:wait}
-.shopping-assistant-footnote{margin:0;padding:0 13px 9px;background:rgba(22,32,45,.7);color:#71879B;font-size:9px;text-align:center}
-@media(max-width:640px){.shopping-assistant-launcher{right:13px;bottom:82px;padding:10px 13px}.shopping-assistant{right:10px;bottom:78px;width:calc(100vw - 20px);height:min(72dvh,620px)}}
 
 
 /* Smart Shopping Assistant lives inside the existing unified chat as its pinned first inbox item. */
-.seller-chat-ai-pinned{order:-1;border:1px solid rgba(102,192,244,.38)!important;background:linear-gradient(110deg,rgba(42,71,94,.2),rgba(22,32,45,.05))!important}
-.seller-chat-ai-mark{display:grid;width:44px;height:44px;flex:0 0 44px;place-items:center;border:1px solid rgba(102,192,244,.4);border-radius:50%;background:linear-gradient(145deg,#2A475E,#16202D);color:#66C0F4;font-size:22px;font-weight:900}
-.seller-chat-ai-pin{padding:3px 6px;border:1px solid rgba(102,192,244,.28);border-radius:6px;color:#66C0F4;font-size:8px;font-weight:900;letter-spacing:.08em}
 .seller-chat-thread{position:relative}
-.seller-chat-thread>.shopping-assistant{position:absolute;inset:0;right:auto;bottom:auto;z-index:5;display:flex;width:100%;height:100%;max-height:none;border:0;border-radius:0;background:#171A21;box-shadow:none;backdrop-filter:none}
-.seller-chat-thread>.shopping-assistant[hidden]{display:none!important}
-.shopping-assistant-launcher{display:none!important}
-.seller-chat-thread>.shopping-assistant .shopping-assistant-head{flex:0 0 auto}
-.seller-chat-thread>.shopping-assistant .shopping-assistant-messages{min-height:0}
