@@ -94,7 +94,7 @@
   #view-home .home-main-content .dk { flex: 0 0 74px; }
   #view-home .home-main-content .dk .ico { width: 43px; height: 43px; }
   .bottom-pad { padding-bottom: max(18px, env(safe-area-inset-bottom)); }
-  .shopping-assistant { bottom: max(14px, env(safe-area-inset-bottom)); }
+
 }
 @media (max-width: 380px) {
   .hd .shell { padding-inline: 9px; }
