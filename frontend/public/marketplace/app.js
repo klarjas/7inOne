@@ -1969,7 +1969,6 @@ function renderCategorySpecFilters() {
     ['color','Color',['color','colour']],['resolution','Resolution',['resolution','display_resolution']],['os','Operating System',['operating_system','os']]
   ];
   const products = state.products.filter(item => item.listing_type === 'product');
-  const subcategories = [...new Set(products.map(item => String(item.subcategory || '').trim()).filter(Boolean))].sort((a,b) => a.localeCompare(b));
   const subcategoryProducts = state.activeSubcategory === 'all' ? products : products.filter(item => String(item.subcategory || '') === state.activeSubcategory);
   const detailTypes = [...new Set(subcategoryProducts.map(item => String(item.detail_type || '').trim()).filter(Boolean))].sort((a,b) => a.localeCompare(b));
   const scopedProducts = state.activeDetailType === 'all' ? subcategoryProducts : subcategoryProducts.filter(item => String(item.detail_type || '') === state.activeDetailType);
@@ -1980,10 +1979,9 @@ function renderCategorySpecFilters() {
     return `<div class="spec-filter-field"><b>${label}</b><div>${values.map(value => `<label><input type="checkbox" data-spec-filter="${key}" value="${esc(value)}" ${selected.has(value) ? 'checked' : ''}><span>${esc(value)}</span></label>`).join('')}</div></div>`;
   }).join('');
   const hasPrice = scopedProducts.some(item => Number.isFinite(Number(item.display_price ?? item.price)) && Number(item.display_price ?? item.price) > 0);
-  const subcategorySelect = subcategories.length ? '<div class="spec-filter-field"><b>ផ្នែករង / Subcategory</b><div><select data-subcategory-filter><option value="all">ទាំងអស់</option>' + subcategories.map(value => '<option value="' + esc(value) + '"' + (state.activeSubcategory === value ? ' selected' : '') + '>' + esc(value) + '</option>').join('') + '</select></div></div>' : '';
   const detailTypeSelect = detailTypes.length ? '<div class="spec-filter-field"><b>ប្រភេទលម្អិត / Detailed Type</b><div><select data-detail-type-filter><option value="all">ទាំងអស់</option>' + detailTypes.map(value => '<option value="' + esc(value) + '"' + (state.activeDetailType === value ? ' selected' : '') + '>' + esc(value) + '</option>').join('') + '</select></div></div>' : '';
-  group.hidden = !sections && !hasPrice && !subcategorySelect && !detailTypeSelect;
-  root.innerHTML = subcategorySelect + detailTypeSelect + (sections || '') + (hasPrice ? '<div class="spec-filter-field spec-price-filter"><b>Price Range ($)</b><div><input type="number" min="0" step="1" data-price-filter="min" placeholder="Min" value="' + esc(state.specPriceMin) + '"><input type="number" min="0" step="1" data-price-filter="max" placeholder="Max" value="' + esc(state.specPriceMax) + '"></div></div>' : '');
+  group.hidden = !sections && !hasPrice && !detailTypeSelect;
+  root.innerHTML = detailTypeSelect + (sections || '') + (hasPrice ? '<div class="spec-filter-field spec-price-filter"><b>Price Range ($)</b><div><input type="number" min="0" step="1" data-price-filter="min" placeholder="Min" value="' + esc(state.specPriceMin) + '"><input type="number" min="0" step="1" data-price-filter="max" placeholder="Max" value="' + esc(state.specPriceMax) + '"></div></div>' : '');
 }
 function verifiedStoreBadge(vendorId, showKhmerLabel = false) {
   const id = String(vendorId || '');
@@ -2131,6 +2129,28 @@ function marketplaceCard(item, index) {
   </article>`;
 }
 
+function renderMarketplaceSubcategoryFilters() {
+  const root = $('marketplaceSubcategoryFilters');
+  if (!root) return;
+  const productSubcategories = [...new Set(state.products
+    .filter(item => item.listing_type === 'product' && String(item.category || '') === state.activeCategory)
+    .map(item => String(item.subcategory || '').trim())
+    .filter(Boolean))].sort((a, b) => a.localeCompare(b));
+  const options = productSubcategories.length
+    ? productSubcategories
+    : (PRODUCT_TAXONOMY[state.activeCategory]?.subs || []);
+  if (state.activeListingType !== 'product' || !options.length) {
+    root.innerHTML = '';
+    root.hidden = true;
+    return;
+  }
+  root.hidden = false;
+  root.innerHTML = '<span class="marketplace-subcategory-label">ផ្នែករង</span>' +
+    [['all','ទាំងអស់'], ...options.map(value => [value,value])].map(([key,label]) =>
+      '<button type="button" class="store-filter-link' + (state.activeSubcategory === key ? ' active' : '') + '" data-marketplace-subcategory="' + esc(key) + '">' + esc(label) + '</button>'
+    ).join('');
+}
+
 function renderProducts() {
   const list = state.products.filter((item) => {
     if (item.listing_type === 'product' && state.activeCondition !== 'all') {
@@ -2176,6 +2196,7 @@ function renderProducts() {
     return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
   });
   $('productGrid').innerHTML = list.map(marketplaceCard).join('');
+  renderMarketplaceSubcategoryFilters();
   renderCategorySpecFilters();
   $('emptyHome').classList.toggle('hidden', list.length > 0);
   $('productGrid').classList.toggle('hidden', list.length === 0);
@@ -6246,7 +6267,14 @@ function bindEvents() {
   $('searchCategory').addEventListener('change', (e) => setCategory(e.target.value));
   document.addEventListener('click', (e) => {
   const b = e.target.closest('[data-category]');
-  if (b) setCategory(b.dataset.category);
+  if (b) { setCategory(b.dataset.category); return; }
+  const subcategory = e.target.closest('[data-marketplace-subcategory]');
+  if (subcategory) {
+    state.activeSubcategory = subcategory.dataset.marketplaceSubcategory || 'all';
+    state.activeDetailType = 'all';
+    state.activeSpecFilters = {};
+    renderProducts();
+  }
 });
   document.querySelectorAll('[data-tag]').forEach((b) => b.addEventListener('click', () => {
     state.searchTerm = b.dataset.tag;
