@@ -9292,3 +9292,18 @@ body.admin-management-popup-open{overflow:hidden}
 
 /* Smart Shopping Assistant lives inside the existing unified chat as its pinned first inbox item. */
 .seller-chat-thread{position:relative}
+
+
+/* Match the product-detail info and lower-panel skeleton surfaces to the gallery skeleton. */
+#view-product .product-detail-skeleton-info,
+#view-product .product-detail-skeleton-panel {
+  background: linear-gradient(105deg,
+    rgba(148,163,184,.025) 0%,
+    rgba(148,163,184,.045) 38%,
+    rgba(203,213,225,.075) 50%,
+    rgba(148,163,184,.045) 62%,
+    rgba(148,163,184,.025) 100%);
+  background-size: 240% 100%;
+  border-color: rgba(148,163,184,.045);
+  animation: sevenSkeletonFog 1.15s ease-in-out infinite;
+}
