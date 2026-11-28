@@ -3423,7 +3423,7 @@ select:focus-visible,
   }
 }
 
-/* Steam Blue Gradient Blurred Ring Loader */
+/* Fast rounded 3D-style dot ring loader */
 #skeletonGrid.hidden {
   display: none;
 }
@@ -3446,36 +3446,51 @@ select:focus-visible,
 }
 
 .loader {
+  --loader-dot: #3b82f6;
   height: 80px;
   width: 80px;
   aspect-ratio: 1;
-  padding: 10px;
-  border-radius: 50%;
   box-sizing: border-box;
   position: relative;
+  border-radius: 50%;
   background: transparent;
-  -webkit-mask: conic-gradient(#000 0 0) content-box exclude, conic-gradient(#000 0 0);
-  mask: conic-gradient(#000 0 0) content-box exclude, conic-gradient(#000 0 0);
-  filter: blur(8px);
+  filter: none;
 }
 
 .loader::before {
   content: "";
   position: absolute;
   inset: 0;
-  background: repeating-conic-gradient(
-    #0000 0 5%,
-    #1A9FFF 10%,
-    #66C0F4 16%,
-    #0000 22% 50%
-  );
-  animation: l2 1.5s linear infinite;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, #bfdbfe 0 28%, var(--loader-dot) 58%, #1d4ed8 100%) 50% 3% / 9px 9px no-repeat,
+    radial-gradient(circle, #bfdbfe 0 28%, var(--loader-dot) 58%, #1d4ed8 100%) 83% 17% / 9px 9px no-repeat,
+    radial-gradient(circle, #bfdbfe 0 28%, var(--loader-dot) 58%, #1d4ed8 100%) 97% 50% / 9px 9px no-repeat,
+    radial-gradient(circle, #bfdbfe 0 28%, var(--loader-dot) 58%, #1d4ed8 100%) 83% 83% / 9px 9px no-repeat,
+    radial-gradient(circle, #bfdbfe 0 28%, var(--loader-dot) 58%, #1d4ed8 100%) 50% 97% / 9px 9px no-repeat,
+    radial-gradient(circle, #bfdbfe 0 28%, var(--loader-dot) 58%, #1d4ed8 100%) 17% 83% / 9px 9px no-repeat,
+    radial-gradient(circle, #bfdbfe 0 28%, var(--loader-dot) 58%, #1d4ed8 100%) 3% 50% / 9px 9px no-repeat,
+    radial-gradient(circle, #bfdbfe 0 28%, var(--loader-dot) 58%, #1d4ed8 100%) 17% 17% / 9px 9px no-repeat;
+  animation: l2 2.2s linear infinite;
+}
+
+.loader::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(59,130,246,.22), transparent 68%);
+  animation: loader-dot-glow .9s ease-in-out infinite alternate;
+  pointer-events: none;
 }
 
 @keyframes l2 {
-  to {
-    rotate: 1turn;
-  }
+  to { transform: rotate(1turn); }
+}
+
+@keyframes loader-dot-glow {
+  from { opacity: .25; transform: scale(.88); }
+  to { opacity: .75; transform: scale(1.08); }
 }
 .global-loading {
   display: flex;
