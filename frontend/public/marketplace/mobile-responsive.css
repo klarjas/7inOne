@@ -377,3 +377,15 @@
     transition: none;
   }
 }
+
+/* Keep the home loading indicator as a centered dot ring on mobile. */
+@media (max-width: 700px) {
+  #view-home #skeletonGrid:not(.hidden) {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    min-height: 300px;
+  }
+}
