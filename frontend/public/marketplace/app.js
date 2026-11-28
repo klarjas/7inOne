@@ -2132,7 +2132,13 @@ function marketplaceCard(item, index) {
 function renderMarketplaceSubcategoryFilters() {
   const root = $('marketplaceSubcategoryFilters');
   if (!root) return;
-  const options = PRODUCT_TAXONOMY[state.activeCategory]?.subs || [];
+  const productSubcategories = [...new Set(state.products
+    .filter(item => item.listing_type === 'product' && String(item.category || '') === state.activeCategory)
+    .map(item => String(item.subcategory || '').trim())
+    .filter(Boolean))].sort((a, b) => a.localeCompare(b));
+  const options = productSubcategories.length
+    ? productSubcategories
+    : (PRODUCT_TAXONOMY[state.activeCategory]?.subs || []);
   if (state.activeListingType !== 'product' || !options.length) {
     root.innerHTML = '';
     root.hidden = true;
