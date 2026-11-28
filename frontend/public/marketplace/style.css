@@ -8237,6 +8237,28 @@ body > footer {
 }
 
 /* Marketplace subcategory chips: isolated styles for the left sidebar only. */
+#view-home .marketplace-subcategory-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0 2px;
+  padding: 8px 0 0 10px;
+  border-top: 1px solid rgba(102,192,244,.14);
+}
+#view-home .marketplace-subcategory-filters[hidden] { display: none; }
+#view-home .marketplace-subcategory-filters .marketplace-subcategory-label {
+  flex: 0 0 100%;
+  color: #8fa9bd;
+  font-size: 10px;
+  font-weight: 700;
+}
+#view-home .marketplace-subcategory-filters .store-filter-link {
+  min-height: 27px;
+  padding: 4px 9px;
+  border-radius: 7px;
+  font-size: 10px;
+}
+
 #view-home .amazon-filter-sidebar .marketplace-category-group:not([hidden]) {
   display: flex;
   flex-wrap: wrap;
