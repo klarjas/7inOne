@@ -2355,6 +2355,7 @@ function renderProductDetailSkeleton() {
           <div class="product-heading-block">
             ${bar('sk-title')}${bar('sk-title medium')}
             <div class="product-price-stock-row">${bar('sk-price')} ${bar('sk-stock')}</div>
+            <div class="product-detail-skeleton-variant">${bar('sk-variant')}</div>
             ${bar('sk-summary')}${bar('sk-summary short')}
           </div>
           <div class="product-detail-skeleton-actions">${bar('sk-action')}${bar('sk-action secondary')}</div>
